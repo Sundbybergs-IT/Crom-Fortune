@@ -9,21 +9,21 @@
     <fragment
             android:id="@+id/navigation_home"
             android:name="com.sundbybergsit.cromfortune.ui.home.HomeFragment"
-            android:label="@string/title_home"
+            android:label="@string/home_title"
             tools:layout="@layout/fragment_home"
             />
 
     <fragment
             android:id="@+id/navigation_dashboard"
             android:name="com.sundbybergsit.cromfortune.ui.dashboard.DashboardFragment"
-            android:label="@string/title_dashboard"
+            android:label="@string/dashboard_title"
             tools:layout="@layout/fragment_dashboard"
             />
 
     <fragment
             android:id="@+id/navigation_notifications"
             android:name="com.sundbybergsit.cromfortune.ui.notifications.NotificationsFragment"
-            android:label="@string/title_notifications"
+            android:label="@string/notifications_title"
             tools:layout="@layout/fragment_notifications"
             />
 </navigation>

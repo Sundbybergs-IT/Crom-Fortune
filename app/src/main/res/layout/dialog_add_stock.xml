@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/frameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        >
+
+    <TextView
+            android:id="@+id/textView_dialogAddStock_quantityLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_add_stock_quantity_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+
+    <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView_dialogAddStock_quantityInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="1"
+            android:imeOptions="actionDone"
+            android:inputType="numberSigned"
+            app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_quantityLabel"
+            app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_quantityLabel"
+            app:layout_constraintBottom_toTopOf="@id/textView_dialogAddStock_nameLabel"
+            />
+
+    <TextView
+            android:id="@+id/textView_dialogAddStock_nameLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_add_stock_name_label"
+            app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_quantityInput"
+            app:layout_constraintTop_toBottomOf="@id/autoCompleteTextView_dialogAddStock_quantityInput"
+            app:layout_constraintBottom_toTopOf="@id/autoCompleteTextView_dialogAddStock_nameInput"
+            />
+
+    <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView_dialogAddStock_nameInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint=""
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions"
+            app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_nameLabel"
+            app:layout_constraintBottom_toTopOf="@id/textView_dialogAddStock_priceLabel"
+            />
+
+    <TextView
+            android:id="@+id/textView_dialogAddStock_priceLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_add_stock_price_label"
+            app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_nameInput"
+            app:layout_constraintBottom_toTopOf="@id/autoCompleteTextView_dialogAddStock_priceInput"
+            />
+
+    <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView_dialogAddStock_priceInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint=""
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_priceLabel"
+            app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_priceLabel"
+            />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
