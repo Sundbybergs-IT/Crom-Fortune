@@ -5,10 +5,12 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.gson.GsonBuilder
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.stocks.StocksPreferences
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-private const val PREFERENCES_NAME = "Stocks"
 
 class HomeViewModel : ViewModel() {
 
@@ -19,7 +21,7 @@ class HomeViewModel : ViewModel() {
     val addStockState: LiveData<AddStockState> = _addStockState
 
     fun refresh(context: Context) {
-        val sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
         if (sharedPreferences.all.isEmpty()) {
             _viewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
         } else {
@@ -28,13 +30,12 @@ class HomeViewModel : ViewModel() {
     }
 
     fun save(context: Context, stockOrder: StockOrder) {
-        val gson = GsonBuilder().registerTypeAdapter(StockOrder::class.java, StockOrderTypeAdapter()).create()
-        val sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
         if (sharedPreferences.contains(stockOrder.name)) {
             _addStockState.postValue(AddStockState.Error(R.string.generic_error_not_supported))
         } else {
             sharedPreferences.edit()
-                    .putStringSet(stockOrder.name, setOf(gson.toJson(stockOrder))).apply()
+                    .putStringSet(stockOrder.name, setOf(Json.encodeToString(stockOrder))).apply()
             _addStockState.postValue(AddStockState.Saved)
         }
         refresh(context)

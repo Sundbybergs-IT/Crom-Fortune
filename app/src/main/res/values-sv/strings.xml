@@ -1,0 +1,37 @@
+<resources>
+    <string name="action_add_stock">Lägg till aktie</string>>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Avbryt</string>
+    <string name="action_delete">delete</string>
+
+    <string name="app_name">Crom Fortune</string>
+
+    <string name="dashboard_title">Instrumentbräda</string>
+
+    <string name="generic_acquisition_value">GAV</string>
+    <plurals name="generic_cost">
+        <item quantity="one">%1$s SEK</item>
+        <item quantity="other">%1$s SEK</item>
+    </plurals>
+    <string name="generic_commission_fee">Courtageavgift</string>
+    <string name="generic_error_not_supported">Denna funktion stöds inte.</string>
+    <string name="generic_name">Namn</string>
+    <string name="generic_quantity">Kvantitet</string>
+    <string name="generic_saved">Sparade framgångsrikt</string>
+
+    <string name="home_add_commission_fee_label">Courtageavgift</string>
+    <string name="home_add_stock_date_label">Datum</string>
+    <string name="home_add_stock_name_label">Namn</string>
+    <string name="home_add_stock_price_label">Pris per aktie</string>
+    <string name="home_add_stock_quantity_label">Kvantitet</string>
+    <string name="home_add_stock_message">Du kommer nu att lägga till aktier</string>
+    <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
+    <string name="home_stocks">Du har lagt till aktier. De visas inte (inte implementerat ännu).</string>
+    <string name="home_title">Hem</string>
+
+    <string name="notifications_title">Notifieringar</string>
+
+    <string name="recommendations_none">Inga rekommendationer</string>
+
+    <string name="settings_title">Inställningar</string>
+</resources>

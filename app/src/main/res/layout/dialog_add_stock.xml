@@ -1,19 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/frameLayout"
+        android:id="@+id/constraintLayout_dialogAddStock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
         >
 
     <TextView
+            android:id="@+id/textView_dialogAddStock_dateLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_add_stock_date_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+
+    <EditText
+            android:id="@+id/editText_dialogAddStock_dateInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionDone"
+            android:inputType="date"
+            app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_dateLabel"
+            app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_dateLabel"
+            />
+
+    <TextView
             android:id="@+id/textView_dialogAddStock_quantityLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/home_add_stock_quantity_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="@id/editText_dialogAddStock_dateInput"
+            app:layout_constraintTop_toBottomOf="@id/editText_dialogAddStock_dateInput"
             />
 
     <AutoCompleteTextView
@@ -25,7 +44,6 @@
             android:inputType="numberSigned"
             app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_quantityLabel"
             app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_quantityLabel"
-            app:layout_constraintBottom_toTopOf="@id/textView_dialogAddStock_nameLabel"
             />
 
     <TextView
@@ -35,7 +53,6 @@
             android:text="@string/home_add_stock_name_label"
             app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_quantityInput"
             app:layout_constraintTop_toBottomOf="@id/autoCompleteTextView_dialogAddStock_quantityInput"
-            app:layout_constraintBottom_toTopOf="@id/autoCompleteTextView_dialogAddStock_nameInput"
             />
 
     <AutoCompleteTextView
@@ -46,7 +63,7 @@
             android:imeOptions="actionDone"
             android:inputType="textNoSuggestions"
             app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_nameLabel"
-            app:layout_constraintBottom_toTopOf="@id/textView_dialogAddStock_priceLabel"
+            app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_nameLabel"
             />
 
     <TextView
@@ -55,7 +72,7 @@
             android:layout_height="wrap_content"
             android:text="@string/home_add_stock_price_label"
             app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_nameInput"
-            app:layout_constraintBottom_toTopOf="@id/autoCompleteTextView_dialogAddStock_priceInput"
+            app:layout_constraintTop_toBottomOf="@id/autoCompleteTextView_dialogAddStock_nameInput"
             />
 
     <AutoCompleteTextView
@@ -64,9 +81,29 @@
             android:layout_height="wrap_content"
             android:hint=""
             android:imeOptions="actionDone"
-            android:inputType="number"
+            android:inputType="numberDecimal"
             app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_priceLabel"
             app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_priceLabel"
+            />
+
+    <TextView
+            android:id="@+id/textView_dialogAddStock_commissionFeeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_add_commission_fee_label"
+            app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_priceInput"
+            app:layout_constraintTop_toBottomOf="@id/autoCompleteTextView_dialogAddStock_priceInput"
+            />
+
+    <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView_dialogAddStock_commissionFeeInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint=""
+            android:imeOptions="actionDone"
+            android:inputType="numberDecimal"
+            app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_commissionFeeLabel"
+            app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_commissionFeeLabel"
             />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,29 +1,27 @@
-package com.sundbybergsit.cromfortune.ui.notifications
+package com.sundbybergsit.cromfortune.ui.settings
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ui.home.StockPriceProducer
 import com.sundbybergsit.cromfortune.ui.home.StockPriceRetriever
 import kotlinx.android.synthetic.main.fragment_notifications.*
+import kotlinx.android.synthetic.main.fragment_notifications.text_notifications
+import kotlinx.android.synthetic.main.fragment_settings.*
 
-class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
+class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
-    private lateinit var notificationsViewModel: NotificationsViewModel
+    private lateinit var settingsViewModel: SettingsViewModel
     private val stockPriceRetriever: StockPriceRetriever = StockPriceRetriever(StockPriceProducer(),
-            3000L, 0)
+            10000L, 0)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        notificationsViewModel =
-                ViewModelProvider.NewInstanceFactory().create(NotificationsViewModel::class.java)
+        settingsViewModel =
+                ViewModelProvider.NewInstanceFactory().create(SettingsViewModel::class.java)
         setUpLiveDataListeners()
     }
 
@@ -38,8 +36,11 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
     }
 
     private fun setUpLiveDataListeners() {
-        notificationsViewModel.text.observe(viewLifecycleOwner, {
-            text_notifications.text = it
+        settingsViewModel.text.observe(viewLifecycleOwner, {
+            editText_fragmentSettings_commissionFee.setOnClickListener {
+                // TODO: Replace with logic to update commission fee
+                Toast.makeText(requireContext(), getString(R.string.generic_error_not_supported), Toast.LENGTH_SHORT).show()
+            }
         })
         stockPriceRetriever.stockPrices.observe(viewLifecycleOwner, { stockPrice ->
             Toast.makeText(requireContext(), stockPrice.toString(), Toast.LENGTH_SHORT).show()

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/background_white_selectable_item_background"
+        android:padding="16dp"
+        >
+
+    <TextView
+            android:id="@+id/textView_listrowStock_quantity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textAlignment="viewStart"
+            android:textIsSelectable="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="10"
+            />
+
+    <TextView
+            android:id="@+id/textView_listrowStock_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textIsSelectable="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/textView_listrowStock_quantity"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="lååååååååång text"
+            />
+
+    <TextView
+            android:id="@+id/textView_listrowStock_acquisitionValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textIsSelectable="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/textView_listrowStock_name"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="1500 SEK"
+            />
+
+    <ImageButton
+            android:id="@+id/button_listrowStock_delete"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_delete"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="@string/action_delete"
+            />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
