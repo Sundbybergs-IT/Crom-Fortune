@@ -17,8 +17,6 @@ import kotlinx.android.synthetic.main.fragment_notifications.*
 class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
 
     private lateinit var notificationsViewModel: NotificationsViewModel
-    private val stockPriceRetriever: StockPriceRetriever = StockPriceRetriever(StockPriceProducer(),
-            3000L, 0)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -27,22 +25,9 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
         setUpLiveDataListeners()
     }
 
-    override fun onResume() {
-        super.onResume()
-        stockPriceRetriever.start()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stockPriceRetriever.stop()
-    }
-
     private fun setUpLiveDataListeners() {
         notificationsViewModel.text.observe(viewLifecycleOwner, {
             text_notifications.text = it
-        })
-        stockPriceRetriever.stockPrices.observe(viewLifecycleOwner, { stockPrice ->
-            Toast.makeText(requireContext(), stockPrice.toString(), Toast.LENGTH_SHORT).show()
         })
     }
 

@@ -4,9 +4,10 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.*
+import yahoofinance.Stock
+import yahoofinance.YahooFinance
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
-import kotlin.random.Random
 
 class StockPriceRetriever(private val stockPriceProducer: StockPriceProducer, private val interval: Long,
                           private val initialDelay: Long?) :
@@ -14,6 +15,7 @@ class StockPriceRetriever(private val stockPriceProducer: StockPriceProducer, pr
 
     private val _stockPrices = MutableLiveData<StockPrice>()
     private val allStockPrices: MutableSet<StockPrice> = mutableSetOf()
+    private val symbols = arrayOf("MIPS.ST", "ASSA-B.ST", "AZELIO.ST")
 
     val stockPrices: LiveData<StockPrice> = _stockPrices
 
@@ -32,22 +34,38 @@ class StockPriceRetriever(private val stockPriceProducer: StockPriceProducer, pr
         initialDelay?.let {
             delay(it)
         }
-        while (isActive) {
-            val newStockPrice = stockPriceProducer.produce()
-            Log.i("StockPriceRetriever", "New stock price: $newStockPrice")
-            allStockPrices.add(newStockPrice)
-            _stockPrices.postValue(newStockPrice)
-            delay(interval)
+        GlobalScope.launch(Dispatchers.IO) {
+            StockPriceProducer.stocks = YahooFinance.get(symbols)
+            while (isActive) {
+                val newStockPrice = stockPriceProducer.produce()
+                Log.i("StockPriceRetriever", "New stock price: $newStockPrice")
+                allStockPrices.add(newStockPrice)
+                _stockPrices.postValue(newStockPrice)
+                delay(interval)
+            }
+            println("coroutine done")
         }
-        println("coroutine done")
     }
 
 }
 
 class StockPriceProducer {
 
+    companion object {
+
+        lateinit var stocks: Map<String, Stock>
+        var iterator: Iterator<Map.Entry<String, Stock>> = mapOf<String, Stock>().iterator()
+
+    }
+
+    @Synchronized
     fun produce(): StockPrice {
-        return StockPrice("Stock" + Random.nextInt(0, 20), Random.nextDouble())
+        if (!iterator.hasNext()) {
+            iterator = stocks.iterator()
+        }
+        val stockSymbol = iterator.next().key
+        val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
+        return StockPrice(stockSymbol, quote.price.toDouble())
     }
 
 }

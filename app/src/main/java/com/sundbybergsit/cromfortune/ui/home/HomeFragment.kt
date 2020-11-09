@@ -11,7 +11,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StocksPreferences
 
-private const val STOCK_PRICE_REFRESH_INTERVAL = 10
+private const val STOCK_PRICE_REFRESH_INTERVAL = 60
 private const val COMMISSION_FEE = 39.0
 
 class HomeFragment : Fragment() {
@@ -98,7 +98,7 @@ class HomeFragment : Fragment() {
             val recommendation = CromFortuneV1Decision(requireContext(),
                     requireContext().getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE))
                     .getRecommendation(stockPrice, COMMISSION_FEE)
-            Toast.makeText(requireContext(), "New fake stock price: $stockPrice", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "New real stock price: $stockPrice", Toast.LENGTH_SHORT).show()
             if (recommendation != null) {
                 textView.text = recommendation.toString()
                 Toast.makeText(requireContext(), recommendation.toString(), Toast.LENGTH_LONG).show()
