@@ -26,12 +26,13 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
         val inputStockPrice: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_priceInput)
         val inputStockName: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_nameInput)
         val inputCommissionFee: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_commissionFeeInput)
+        val currency = Currency.getInstance("SEK")
         val confirmListener: DialogInterface.OnClickListener = DialogInterface.OnClickListener { _, _ ->
             val date = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).parse(inputDate.text.toString())
             if (date == null) {
                 Toast.makeText(requireContext(), "Invalid date", Toast.LENGTH_LONG).show()
             } else {
-                val stockOrder = StockOrder("Buy", date.time, inputStockName.text.toString(),
+                val stockOrder = StockOrder("Buy", currency.toString(), date.time, inputStockName.text.toString(),
                         inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
                         inputStockQuantity.text.toString().toInt())
                 homeViewModel.save(requireContext(), stockOrder)

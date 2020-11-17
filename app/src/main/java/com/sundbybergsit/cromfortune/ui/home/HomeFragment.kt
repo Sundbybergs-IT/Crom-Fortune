@@ -10,7 +10,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StocksPreferences
+import java.util.*
 
+private val CURRENCY = Currency.getInstance("SEK")
 private const val STOCK_PRICE_REFRESH_INTERVAL = 60
 private const val COMMISSION_FEE = 39.0
 
@@ -97,7 +99,7 @@ class HomeFragment : Fragment() {
         stockPriceRetriever.stockPrices.observe(viewLifecycleOwner, { stockPrice ->
             val recommendation = CromFortuneV1Decision(requireContext(),
                     requireContext().getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE))
-                    .getRecommendation(stockPrice, COMMISSION_FEE)
+                    .getRecommendation(CURRENCY, stockPrice, COMMISSION_FEE)
             Toast.makeText(requireContext(), "New real stock price: $stockPrice", Toast.LENGTH_SHORT).show()
             if (recommendation != null) {
                 textView.text = recommendation.toString()

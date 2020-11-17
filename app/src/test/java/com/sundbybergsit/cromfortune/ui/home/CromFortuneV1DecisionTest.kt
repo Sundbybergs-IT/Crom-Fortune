@@ -14,6 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import java.util.*
 
 @Config(sdk = [Build.VERSION_CODES.Q])
 @RunWith(AndroidJUnit4::class)
@@ -32,10 +33,11 @@ class CromFortuneV1DecisionTest {
 
     @Test
     fun `getRecommendation - when stock price decreased to below limit and commission fee ok - returns buy recommendation`() {
-        val oldOrder = StockOrder("BUY", 0L, "Stock", 100.0, 39.0, 10)
+        val currency  =Currency.getInstance("SEK")
+        val oldOrder = StockOrder("BUY", currency.toString(),0L, "Stock", 100.0, 39.0, 10)
         sharedPreferences.edit().putStringSet("Stock", setOf(Json.encodeToString(
                 oldOrder))).commit()
-        val recommendation: Recommendation? = decision.getRecommendation(StockPrice("Stock",
+        val recommendation: Recommendation? = decision.getRecommendation(currency, StockPrice("Stock",
                 oldOrder.pricePerStock - (CromFortuneV1Decision.DIFF_PERCENTAGE + 0.1)
                         .times(oldOrder.pricePerStock)), 1.0)
 
@@ -45,10 +47,11 @@ class CromFortuneV1DecisionTest {
 
     @Test
     fun `getRecommendation - when stock price increased to limit but commission fee too high - returns null`() {
-        val oldOrder = StockOrder("BUY", 0L, "Stock", 100.0, 39.0, 1)
+        val currency  =Currency.getInstance("SEK")
+        val oldOrder = StockOrder("BUY", currency.toString(), 0L, "Stock", 100.0, 39.0, 1)
         sharedPreferences.edit().putStringSet("Stock", setOf(Json.encodeToString(
                 oldOrder))).commit()
-        val recommendation = decision.getRecommendation(StockPrice("Stock",
+        val recommendation = decision.getRecommendation(currency, StockPrice("Stock",
                 oldOrder.pricePerStock + CromFortuneV1Decision.DIFF_PERCENTAGE.times(oldOrder.pricePerStock)), 1.0)
 
         assertNull(recommendation)
@@ -56,26 +59,28 @@ class CromFortuneV1DecisionTest {
 
     @Test
     fun `getRecommendation - when stock price increased to above limit and commission fee ok but too few stocks - returns null`() {
-        val oldOrder = StockOrder("BUY", 0L, "Stock", 100.0, 1.0, 1)
+        val currency = Currency.getInstance("SEK")
+        val oldOrder = StockOrder("BUY", currency.toString(),0L, "Stock", 100.0, 1.0, 1)
         sharedPreferences.edit().putStringSet("Stock", setOf(Json.encodeToString(
                 oldOrder))).commit()
         val newPrice = oldOrder.pricePerStock + (CromFortuneV1Decision.DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        val recommendation = decision.getRecommendation(StockPrice("Stock", newPrice), 1.0)
+        val recommendation = decision.getRecommendation(currency, StockPrice("Stock", newPrice), 1.0)
 
         assertNull(recommendation)
     }
 
     @Test
     fun `getRecommendation - when stock price increased to above limit and commission fee ok but too few stocks - returns sell recommendation`() {
-        val oldOrder = StockOrder("BUY", 0L, "Stock", 100.0, 10.0, 10)
+        val currency = Currency.getInstance("SEK")
+        val oldOrder = StockOrder("BUY", currency.toString(), 0L, "Stock", 100.0, 10.0, 10)
         sharedPreferences.edit().putStringSet("Stock", setOf(Json.encodeToString(
                 oldOrder))).commit()
         val newPrice = oldOrder.pricePerStock + (CromFortuneV1Decision.DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        val recommendation = decision.getRecommendation(StockPrice("Stock", newPrice), 10.0)
+        val recommendation = decision.getRecommendation(currency, StockPrice("Stock", newPrice), 10.0)
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is SellStockCommand)

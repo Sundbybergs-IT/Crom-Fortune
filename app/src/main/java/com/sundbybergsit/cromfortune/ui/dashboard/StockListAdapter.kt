@@ -17,8 +17,8 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.listrow_stock -> StockViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false))
             R.layout.listrow_header -> HeaderViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false))
+            R.layout.listrow_stock -> StockViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false))
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -52,9 +52,10 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
             itemView.textView_listrowStock_quantity.text = item.stockOrder.quantity.toString()
             itemView.textView_listrowStock_name.text = item.stockOrder.name
             val acquisitionValue = item.stockOrder.getAcquisitionValue()
+            val roundedAcquisitionValue = if (acquisitionValue < 1) {String.format("%.3f", acquisitionValue)} else { String.format("%.2f", acquisitionValue) }
             itemView.textView_listrowStock_acquisitionValue.text = itemView.context.resources.getQuantityString(
                     R.plurals.generic_cost, acquisitionValue.toInt(),
-                    acquisitionValue.toString())
+                    roundedAcquisitionValue)
             itemView.button_listrowStock_delete.setOnClickListener {
                 Toast.makeText(itemView.context, itemView.context.getString(R.string.generic_error_not_supported),
                         Toast.LENGTH_LONG).show()
