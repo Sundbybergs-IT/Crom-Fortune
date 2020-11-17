@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ui.transformIntoDatePicker
+import yahoofinance.YahooFinance
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,6 +31,9 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
         val inputStockQuantity: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_quantityInput)
         val inputStockPrice: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_priceInput)
         val inputStockName: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_nameInput)
+        val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.toList())
+        val adapter = AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, android.R.id.text1, searchArrayList)
+        inputStockName.setAdapter(adapter)
         val inputCommissionFee: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_commissionFeeInput)
         val currency = Currency.getInstance("SEK")
         val confirmListener: DialogInterface.OnClickListener = DialogInterface.OnClickListener { _, _ ->

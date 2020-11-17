@@ -13,9 +13,14 @@ class StockPriceRetriever(private val stockPriceProducer: StockPriceProducer, pr
                           private val initialDelay: Long?) :
         CoroutineScope {
 
+    companion object {
+
+        val SYMBOLS = arrayOf("MIPS.ST", "ASSA-B.ST", "AZELIO.ST")
+
+    }
+
     private val _stockPrices = MutableLiveData<StockPrice>()
     private val allStockPrices: MutableSet<StockPrice> = mutableSetOf()
-    private val symbols = arrayOf("MIPS.ST", "ASSA-B.ST", "AZELIO.ST")
 
     val stockPrices: LiveData<StockPrice> = _stockPrices
 
@@ -35,7 +40,7 @@ class StockPriceRetriever(private val stockPriceProducer: StockPriceProducer, pr
             delay(it)
         }
         GlobalScope.launch(Dispatchers.IO) {
-            StockPriceProducer.stocks = YahooFinance.get(symbols)
+            StockPriceProducer.stocks = YahooFinance.get(SYMBOLS)
             while (isActive) {
                 val newStockPrice = stockPriceProducer.produce()
                 Log.i("StockPriceRetriever", "New stock price: $newStockPrice")
