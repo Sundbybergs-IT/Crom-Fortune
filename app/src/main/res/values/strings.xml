@@ -15,11 +15,13 @@
         <item quantity="other">%1$s SEK</item>
     </plurals>
     <string name="generic_error_not_supported">This feature is not yet supported.</string>
+    <string name="generic_hint">Select</string>
     <string name="generic_name">Name</string>
     <string name="generic_quantity">Quantity</string>
     <string name="generic_saved">Saved successfully</string>
 
     <string name="home_add_commission_fee_label">Commission fee</string>
+    <string name="home_add_stock_currency_label">Currency</string>
     <string name="home_add_stock_date_label">Date</string>
     <string name="home_add_stock_name_label">Name</string>
     <string name="home_add_stock_price_label">Price per stock</string>

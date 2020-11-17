@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
@@ -18,8 +19,12 @@ import java.util.*
 
 class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogFragment() {
 
+    // TODO: Implement support for multiple currencies
+    @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialogRootView: View = LayoutInflater.from(context).inflate(R.layout.dialog_add_stock, view as ViewGroup?, false)
+        val inputCurrency: EditText = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_currencyInput)
+        inputCurrency.setText("SEK")
         val inputDate: EditText = dialogRootView.findViewById(R.id.editText_dialogAddStock_dateInput)
         inputDate.transformIntoDatePicker(requireContext(), "MM/dd/yyyy", Date())
         val inputStockQuantity: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_quantityInput)

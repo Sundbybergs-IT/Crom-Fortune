@@ -18,18 +18,40 @@
 
     <EditText
             android:id="@+id/editText_dialogAddStock_dateInput"
-            android:layout_width="wrap_content"
+            android:layout_width="64dp"
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"
             android:inputType="date"
+            android:hint="@string/generic_hint"
             app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_dateLabel"
             app:layout_constraintTop_toBottomOf="@id/textView_dialogAddStock_dateLabel"
+            />
+
+    <TextView
+            android:id="@+id/textView_dialogAddStock_currencyLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:text="@string/home_add_stock_currency_label"
+            app:layout_constraintBottom_toBottomOf="@+id/autoCompleteTextView_dialogAddStock_currencyInput"
+            app:layout_constraintEnd_toStartOf="@id/autoCompleteTextView_dialogAddStock_currencyInput"
+            app:layout_constraintTop_toTopOf="@id/autoCompleteTextView_dialogAddStock_currencyInput"
+            />
+
+    <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView_dialogAddStock_currencyInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             />
 
     <TextView
             android:id="@+id/textView_dialogAddStock_quantityLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="@string/home_add_stock_quantity_label"
             app:layout_constraintStart_toStartOf="@id/editText_dialogAddStock_dateInput"
             app:layout_constraintTop_toBottomOf="@id/editText_dialogAddStock_dateInput"
@@ -37,7 +59,7 @@
 
     <AutoCompleteTextView
             android:id="@+id/autoCompleteTextView_dialogAddStock_quantityInput"
-            android:layout_width="wrap_content"
+            android:layout_width="64dp"
             android:layout_height="wrap_content"
             android:hint="1"
             android:imeOptions="actionDone"
@@ -50,6 +72,7 @@
             android:id="@+id/textView_dialogAddStock_nameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="@string/home_add_stock_name_label"
             app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_quantityInput"
             app:layout_constraintTop_toBottomOf="@id/autoCompleteTextView_dialogAddStock_quantityInput"
@@ -57,9 +80,9 @@
 
     <AutoCompleteTextView
             android:id="@+id/autoCompleteTextView_dialogAddStock_nameInput"
-            android:layout_width="wrap_content"
+            android:layout_width="64dp"
             android:layout_height="wrap_content"
-            android:hint=""
+            android:hint="Aktie.ST"
             android:imeOptions="actionDone"
             android:inputType="textNoSuggestions"
             app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_nameLabel"
@@ -70,6 +93,7 @@
             android:id="@+id/textView_dialogAddStock_priceLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="@string/home_add_stock_price_label"
             app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_nameInput"
             app:layout_constraintTop_toBottomOf="@id/autoCompleteTextView_dialogAddStock_nameInput"
@@ -77,9 +101,9 @@
 
     <AutoCompleteTextView
             android:id="@+id/autoCompleteTextView_dialogAddStock_priceInput"
-            android:layout_width="wrap_content"
+            android:layout_width="64dp"
             android:layout_height="wrap_content"
-            android:hint=""
+            android:hint="17.11"
             android:imeOptions="actionDone"
             android:inputType="numberDecimal"
             app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_priceLabel"
@@ -90,6 +114,7 @@
             android:id="@+id/textView_dialogAddStock_commissionFeeLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="@string/home_add_commission_fee_label"
             app:layout_constraintStart_toStartOf="@id/autoCompleteTextView_dialogAddStock_priceInput"
             app:layout_constraintTop_toBottomOf="@id/autoCompleteTextView_dialogAddStock_priceInput"
@@ -97,9 +122,9 @@
 
     <AutoCompleteTextView
             android:id="@+id/autoCompleteTextView_dialogAddStock_commissionFeeInput"
-            android:layout_width="wrap_content"
+            android:layout_width="64dp"
             android:layout_height="wrap_content"
-            android:hint=""
+            android:hint="39.0"
             android:imeOptions="actionDone"
             android:inputType="numberDecimal"
             app:layout_constraintStart_toStartOf="@id/textView_dialogAddStock_commissionFeeLabel"

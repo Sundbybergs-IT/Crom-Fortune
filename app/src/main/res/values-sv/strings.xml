@@ -14,7 +14,9 @@
         <item quantity="other">%1$s SEK</item>
     </plurals>
     <string name="generic_commission_fee">Courtageavgift</string>
+    <string name="home_add_stock_currency_label">Valuta</string>
     <string name="generic_error_not_supported">Denna funktion stöds inte.</string>
+    <string name="generic_hint">Välj</string>
     <string name="generic_name">Namn</string>
     <string name="generic_quantity">Kvantitet</string>
     <string name="generic_saved">Sparade framgångsrikt</string>
