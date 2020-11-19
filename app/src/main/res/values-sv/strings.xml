@@ -15,6 +15,10 @@
     </plurals>
     <string name="generic_commission_fee">Courtageavgift</string>
     <string name="home_add_stock_currency_label">Valuta</string>
+    <string name="generic_error_empty">Ange ett värde.</string>
+    <string name="generic_error_invalid_date">Ange ett giltigt datum.</string>
+    <string name="generic_error_invalid_number">Ange ett giltigt nummer.</string>
+    <string name="generic_error_invalid_stock_symbol">Ange en giltig aktiesymbol.</string>
     <string name="generic_error_not_supported">Denna funktion stöds inte.</string>
     <string name="generic_hint">Välj</string>
     <string name="generic_name">Namn</string>
@@ -26,7 +30,7 @@
     <string name="home_add_stock_name_label">Namn</string>
     <string name="home_add_stock_price_label">Pris per aktie</string>
     <string name="home_add_stock_quantity_label">Kvantitet</string>
-    <string name="home_add_stock_message">Du kommer nu att lägga till aktier</string>
+    <string name="home_add_stock_message">Lägg till ett köp av aktier i taget.</string>
     <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
     <string name="home_stocks">Du har lagt till aktier. De visas inte (inte implementerat ännu).</string>
     <string name="home_title">Hem</string>

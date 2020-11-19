@@ -3,10 +3,12 @@ package com.sundbybergsit.cromfortune.ui
 import android.app.DatePickerDialog
 import android.content.Context
 import android.widget.EditText
+import com.google.android.material.textfield.TextInputLayout
 import java.text.SimpleDateFormat
 import java.util.*
 
-fun EditText.transformIntoDatePicker(context: Context, format: String, maxDate: Date? = null) {
+fun EditText.transformIntoDatePicker(context: Context, format: String, maxDate: Date? = null, textInputLayout: TextInputLayout) {
+
     isFocusableInTouchMode = false
     isClickable = true
     isFocusable = false
@@ -19,6 +21,7 @@ fun EditText.transformIntoDatePicker(context: Context, format: String, maxDate: 
                 myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
                 val sdf = SimpleDateFormat(format, Locale.getDefault())
                 setText(sdf.format(myCalendar.time))
+                textInputLayout.error = null
             }
 
     setOnClickListener {
@@ -31,4 +34,5 @@ fun EditText.transformIntoDatePicker(context: Context, format: String, maxDate: 
             show()
         }
     }
+
 }
