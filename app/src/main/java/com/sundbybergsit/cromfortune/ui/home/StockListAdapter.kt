@@ -15,7 +15,7 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             R.layout.listrow_header -> HeaderViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false))
-            R.layout.listrow_stock -> StockViewHolder(this, stockRemovable, LayoutInflater.from(parent.context).inflate(viewType, parent, false))
+            R.layout.listrow_stock -> StockViewHolder(stockRemovable, LayoutInflater.from(parent.context).inflate(viewType, parent, false))
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -47,13 +47,17 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
 
     internal class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-    internal class StockViewHolder(private val adapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>, private val stockRemovable: StockRemovable, itemView: View) : RecyclerView.ViewHolder(itemView) {
+    internal class StockViewHolder(private val stockRemovable: StockRemovable, itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: StockAdapterItem) {
             itemView.textView_listrowStock_quantity.text = item.stockOrder.quantity.toString()
             itemView.textView_listrowStock_name.text = item.stockOrder.name
             val acquisitionValue = item.stockOrder.getAcquisitionValue()
-            val roundedAcquisitionValue = if (acquisitionValue < 1) {String.format("%.3f", acquisitionValue)} else { String.format("%.2f", acquisitionValue) }
+            val roundedAcquisitionValue = if (acquisitionValue < 1) {
+                String.format("%.3f", acquisitionValue)
+            } else {
+                String.format("%.2f", acquisitionValue)
+            }
             itemView.textView_listrowStock_acquisitionValue.text = itemView.context.resources.getQuantityString(
                     R.plurals.generic_cost, acquisitionValue.toInt(),
                     roundedAcquisitionValue)
