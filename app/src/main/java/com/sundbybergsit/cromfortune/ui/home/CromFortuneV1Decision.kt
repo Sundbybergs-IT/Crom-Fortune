@@ -30,23 +30,36 @@ class CromFortuneV1Decision(private val context: Context,
 
         fun getRecommendation(stockName: String, currency: Currency, orders: Set<String>, currentStockPrice: Double,
                               commissionFee: Double): Recommendation? {
+            var accumulatedCommissionFees = 0.0
+            var accumulatedQuantity = 0
+            var accumulatedCost = 0.0
             for (serializedOrder in orders) {
                 val stockOrder: StockOrder = Json.decodeFromString(serializedOrder)
-                if (currentStockPrice < (stockOrder.commissionFee + (1 - DIFF_PERCENTAGE) * stockOrder.pricePerStock)) {
-                    val quantity = stockOrder.quantity / 10
-                    if (quantity > 0) {
-                        return Recommendation(BuyStockCommand(context, System.currentTimeMillis(), currency, stockName,
-                                currentStockPrice, quantity, commissionFee))
-                    }
-                } else if (currentStockPrice > (1 + DIFF_PERCENTAGE) * stockOrder.pricePerStock) {
-                    val quantity = stockOrder.quantity / 10
-                    if (quantity > 0) {
-                        return Recommendation(SellStockCommand(context, currency, stockName, currentStockPrice, quantity))
-                    }
+                if (stockOrder.name == stockName) {
+                    accumulatedCommissionFees += stockOrder.commissionFee
+                    accumulatedQuantity += stockOrder.quantity
+                    accumulatedCost += stockOrder.pricePerStock * stockOrder.quantity
+                }
+            }
+            val totalPricePerStock = (accumulatedCost + accumulatedCommissionFees) / accumulatedQuantity
+            val currentTimeInMillis = System.currentTimeMillis()
+            val potentialBuyQuantity = accumulatedQuantity / 10
+            val pricePerStockAfterBuy = (accumulatedCost + accumulatedCommissionFees + commissionFee) / (accumulatedQuantity + potentialBuyQuantity)
+            if (currentStockPrice < (1 - DIFF_PERCENTAGE) * pricePerStockAfterBuy) {
+                if (potentialBuyQuantity > 0) {
+                    return Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
+                            currentStockPrice, potentialBuyQuantity, commissionFee))
+                }
+            } else if (currentStockPrice > (1 + DIFF_PERCENTAGE) * totalPricePerStock) {
+                val quantity = accumulatedQuantity / 10
+                if (quantity > 0) {
+                    return Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName, currentStockPrice, quantity))
                 }
             }
             return null
         }
+
     }
 
 }
+
