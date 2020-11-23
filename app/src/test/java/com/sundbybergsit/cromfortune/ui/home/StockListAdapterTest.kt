@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.ui.dashboard
+package com.sundbybergsit.cromfortune.ui.home
 
 import android.os.Build
 import android.widget.FrameLayout
@@ -6,10 +6,6 @@ import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ui.home.AdapterItem
-import com.sundbybergsit.cromfortune.ui.home.StockAdapterItem
-import com.sundbybergsit.cromfortune.ui.home.StockHeaderAdapterItem
-import com.sundbybergsit.cromfortune.ui.home.StockOrder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -34,6 +30,7 @@ class StockListAdapterTest {
                 StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, "Stock.A", 100.099, 0.0, 1)),
                 StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, "Stock.B", 0.0199, 0.0, 1)),
         )
+        adapter.setListener(HomeViewModel())
         adapter.submitList(list)
     }
 

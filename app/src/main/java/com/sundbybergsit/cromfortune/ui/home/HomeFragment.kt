@@ -1,20 +1,15 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.stocks.StocksPreferences
 import java.util.*
-
-private val CURRENCY = Currency.getInstance("SEK")
-private const val STOCK_PRICE_REFRESH_INTERVAL = 60
-private const val COMMISSION_FEE = 39.0
 
 class HomeFragment : Fragment() {
 
@@ -25,8 +20,7 @@ class HomeFragment : Fragment() {
     }
 
     private lateinit var homeViewModel: HomeViewModel
-    private val stockPriceRetriever: StockPriceRetriever = StockPriceRetriever(StockPriceProducer(),
-            STOCK_PRICE_REFRESH_INTERVAL * 1000L, 0)
+    private val stockListAdapter = StockListAdapter()
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -36,11 +30,14 @@ class HomeFragment : Fragment() {
         homeViewModel = ViewModelProvider.NewInstanceFactory().create(HomeViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_home, container, false)
         val infoText: TextView = root.findViewById(R.id.textView_fragmentHome)
-        val fab: FloatingActionButton = root.findViewById(R.id.floatingActionButton_fragmentHome);
+        val fab: FloatingActionButton = root.findViewById(R.id.floatingActionButton_fragmentHome)
         fab.setOnClickListener {
             val dialog = AddStockDialogFragment(homeViewModel)
             dialog.show(parentFragmentManager, TAG)
         }
+        val recyclerView: RecyclerView = root.findViewById(R.id.recyclerView_fragmentHome)
+        stockListAdapter.setListener(homeViewModel)
+        recyclerView.adapter = stockListAdapter
         setUpLiveDataListeners(infoText, fab)
         setHasOptionsMenu(true)
         return root
@@ -65,12 +62,6 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         homeViewModel.refresh(requireContext())
-        stockPriceRetriever.start()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stockPriceRetriever.stop()
     }
 
     private fun setUpLiveDataListeners(textView: TextView, fab: FloatingActionButton) {
@@ -79,10 +70,12 @@ class HomeFragment : Fragment() {
                 is HomeViewModel.ViewState.HasStocks -> {
                     textView.text = ""
                     fab.visibility = View.GONE
+                    stockListAdapter.submitList(viewState.adapterItems)
                 }
                 is HomeViewModel.ViewState.HasNoStocks -> {
                     textView.text = getText(viewState.textResId)
                     fab.visibility = View.VISIBLE
+                    stockListAdapter.submitList(Collections.emptyList())
                 }
             }
         })
@@ -96,16 +89,7 @@ class HomeFragment : Fragment() {
                 }
             }
         })
-        stockPriceRetriever.stockPrices.observe(viewLifecycleOwner, { stockPrice ->
-            val recommendation = CromFortuneV1Decision(requireContext(),
-                    requireContext().getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE))
-                    .getRecommendation(CURRENCY, stockPrice, COMMISSION_FEE)
-            Toast.makeText(requireContext(), "New real stock price: $stockPrice", Toast.LENGTH_SHORT).show()
-            if (recommendation != null) {
-                textView.text = recommendation.toString()
-                Toast.makeText(requireContext(), recommendation.toString(), Toast.LENGTH_LONG).show()
-            }
-        })
+
     }
 
 }
