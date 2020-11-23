@@ -45,21 +45,6 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
         val inputLayoutCommissionFee: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_commissionFeeInput)
         val currency = Currency.getInstance("SEK")
         val confirmListener: DialogInterface.OnClickListener = DialogInterface.OnClickListener { _, _ ->
-            try {
-                validateDate(inputDate, inputLayoutDate)
-                validateDouble(inputStockQuantity, inputLayoutStockQuantity)
-                validateStockName(inputStockName, inputLayoutStockName)
-                validateDouble(inputStockPrice, inputLayoutStockPrice)
-                validateDouble(inputCommissionFee, inputLayoutCommissionFee)
-                val inputDateAsString = inputDate.text.toString()
-                val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(inputDateAsString)
-                val stockOrder = StockOrder("Buy", currency.toString(), date.time, inputStockName.text.toString(),
-                        inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
-                        inputStockQuantity.text.toString().toInt())
-                homeViewModel.save(requireContext(), stockOrder)
-            } catch (e: ValidatorException) {
-                // Shit happens ...
-            }
         }
         val alertDialog = AlertDialog.Builder(requireContext())
                 .setView(dialogRootView)
@@ -74,12 +59,17 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
             val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
             button.setOnClickListener {
                 try {
-                    // TODO: Duplicates validation above...
                     validateDate(inputDate, inputLayoutDate)
                     validateDouble(inputStockQuantity, inputLayoutStockQuantity)
                     validateStockName(inputStockName, inputLayoutStockName)
                     validateDouble(inputStockPrice, inputLayoutStockPrice)
                     validateDouble(inputCommissionFee, inputLayoutCommissionFee)
+                    val inputDateAsString = inputDate.text.toString()
+                    val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(inputDateAsString)
+                    val stockOrder = StockOrder("Buy", currency.toString(), date.time, inputStockName.text.toString(),
+                            inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
+                            inputStockQuantity.text.toString().toInt())
+                    homeViewModel.save(requireContext(), stockOrder)
                     alertDialog.dismiss()
                 } catch (e : ValidatorException) {
                     // Shit happens ...
