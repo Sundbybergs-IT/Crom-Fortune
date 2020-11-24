@@ -12,14 +12,13 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-
 class HomeViewModel : ViewModel(), StockRemovable {
 
     private val _viewState = MutableLiveData<ViewState>()
-    private val _addStockState = MutableLiveData<AddStockState>()
+    private val _stockTransactionState = MutableLiveData<StockTransactionState>()
 
     val viewState: LiveData<ViewState> = _viewState
-    val addStockState: LiveData<AddStockState> = _addStockState
+    val stockTransactionState: LiveData<StockTransactionState> = _stockTransactionState
 
     @SuppressLint("ApplySharedPref")
     override fun remove(context: Context, stockName: String) {
@@ -41,39 +40,65 @@ class HomeViewModel : ViewModel(), StockRemovable {
     fun save(context: Context, stockOrder: StockOrder) {
         val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
         if (sharedPreferences.contains(stockOrder.name)) {
-            _addStockState.postValue(AddStockState.Error(R.string.generic_error_not_supported))
+            val existingOrders = sharedPreferences.getStringSet(stockOrder.name, emptySet())!!
+            sharedPreferences.edit().putStringSet(stockOrder.name, (existingOrders.toMutableSet() +
+                    mutableSetOf(Json.encodeToString(stockOrder))).toMutableSet()).commit()
+            _stockTransactionState.postValue(StockTransactionState.Saved)
         } else {
             sharedPreferences.edit()
                     .putStringSet(stockOrder.name, setOf(Json.encodeToString(stockOrder))).apply()
-            _addStockState.postValue(AddStockState.Saved)
+            _stockTransactionState.postValue(StockTransactionState.Saved)
         }
         refresh(context)
     }
 
     private fun stocks(context: Context): List<StockOrder> {
-        val stocks = mutableListOf<StockOrder>()
         val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
-        for (entry in sharedPreferences.all) {
-            val stock : Set<String> = entry.value as Set<String>
-            val iterator = stock.iterator()
-            while (iterator.hasNext()) {
-                stocks.add(Json.decodeFromString(iterator.next()))
+
+        val aggregatedStockOrders: MutableList<StockOrder> = mutableListOf()
+        for (stockName in sharedPreferences.all.keys) {
+            val stockOrders: Set<String> = sharedPreferences.all[stockName] as Set<String>
+            var quantity = 0
+            var accumulatedCost = 0.0
+            var currency: String? = null
+            for (stockOrderString in stockOrders) {
+                val stockOrder: StockOrder = Json.decodeFromString(stockOrderString)
+                if (currency == null) {
+                    currency = stockOrder.currency
+                }
+                when (stockOrder.orderAction) {
+                    "Buy" -> {
+                        quantity += stockOrder.quantity
+                        accumulatedCost += (stockOrder.pricePerStock * stockOrder.quantity + stockOrder.commissionFee)
+                    }
+                    "Sell" -> {
+                        quantity -= stockOrder.quantity
+                        accumulatedCost += (-stockOrder.pricePerStock * stockOrder.quantity + stockOrder.commissionFee)
+                    }
+                    else -> {
+                        throw IllegalStateException("Invalid stock order action: ${stockOrder.orderAction}")
+                    }
+                }
             }
+            aggregatedStockOrders.add(StockOrder("Buy", currency!!, System.currentTimeMillis(), stockName,
+                    accumulatedCost / quantity, 0.0, quantity))
         }
-        return stocks
+        return aggregatedStockOrders
     }
 
     sealed class ViewState {
 
-        data class HasStocks(@StringRes val textResId: Int, val adapterItems : List<AdapterItem>) : ViewState()
+        data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<AdapterItem>) : ViewState()
+
         data class HasNoStocks(@StringRes val textResId: Int) : ViewState()
 
     }
 
-    sealed class AddStockState {
+    sealed class StockTransactionState {
 
-        object Saved : AddStockState()
-        data class Error(@StringRes val errorResId: Int) : AddStockState()
+        object Saved : StockTransactionState()
+
+        data class Error(@StringRes val errorResId: Int) : StockTransactionState()
 
     }
 

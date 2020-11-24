@@ -32,7 +32,7 @@ class HomeFragment : Fragment() {
         val infoText: TextView = root.findViewById(R.id.textView_fragmentHome)
         val fab: FloatingActionButton = root.findViewById(R.id.floatingActionButton_fragmentHome)
         fab.setOnClickListener {
-            val dialog = AddStockDialogFragment(homeViewModel)
+            val dialog = RegisterBuyStockDialogFragment(homeViewModel)
             dialog.show(parentFragmentManager, TAG)
         }
         val recyclerView: RecyclerView = root.findViewById(R.id.recyclerView_fragmentHome)
@@ -50,8 +50,13 @@ class HomeFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_addStock -> {
-                val dialog = AddStockDialogFragment(homeViewModel)
+            R.id.action_buyStock -> {
+                val dialog = RegisterBuyStockDialogFragment(homeViewModel)
+                dialog.show(parentFragmentManager, TAG)
+                true
+            }
+            R.id.action_sellStock -> {
+                val dialog = RegisterSellStockDialogFragment(homeViewModel)
                 dialog.show(parentFragmentManager, TAG)
                 true
             }
@@ -79,12 +84,12 @@ class HomeFragment : Fragment() {
                 }
             }
         })
-        homeViewModel.addStockState.observe(viewLifecycleOwner, { viewState ->
+        homeViewModel.stockTransactionState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
-                is HomeViewModel.AddStockState.Error -> {
+                is HomeViewModel.StockTransactionState.Error -> {
                     Toast.makeText(requireContext(), getText(viewState.errorResId), Toast.LENGTH_SHORT).show()
                 }
-                is HomeViewModel.AddStockState.Saved -> {
+                is HomeViewModel.StockTransactionState.Saved -> {
                     Toast.makeText(requireContext(), getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
                 }
             }

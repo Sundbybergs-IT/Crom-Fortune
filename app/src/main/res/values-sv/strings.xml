@@ -1,8 +1,9 @@
 <resources>
-    <string name="action_add_stock">Lägg till aktie</string>>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Avbryt</string>
     <string name="action_delete">delete</string>
+    <string name="action_stock_buy">Registrera köp</string>>
+    <string name="action_stock_sell">Registrera försäljning</string>>
 
     <string name="app_name">Crom Fortune</string>
 
@@ -10,7 +11,6 @@
 
     <string name="generic_acquisition_value">GAV</string>
     <string name="generic_commission_fee">Courtageavgift</string>
-    <string name="home_add_stock_currency_label">Valuta</string>
     <string name="generic_error_empty">Ange ett värde.</string>
     <string name="generic_error_invalid_currency_symbol">Ange en giltig valutasymbol.</string>
     <string name="generic_error_invalid_date">Ange ett giltigt datum.</string>
@@ -23,12 +23,20 @@
     <string name="generic_saved">Sparade framgångsrikt</string>
 
     <string name="home_add_commission_fee_label">Courtageavgift</string>
+    <string name="home_add_stock_currency_label">Valuta</string>
     <string name="home_add_stock_date_label">Datum</string>
     <string name="home_add_stock_name_label">Namn</string>
     <string name="home_add_stock_price_label">Pris per aktie</string>
     <string name="home_add_stock_quantity_label">Kvantitet</string>
     <string name="home_add_stock_message">Lägg till ett köp av aktier i taget.</string>
     <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
+    <string name="home_remove_commission_fee_label">Courtageavgift</string>
+    <string name="home_remove_stock_currency_label">Valuta</string>
+    <string name="home_remove_stock_date_label">Datum</string>
+    <string name="home_remove_stock_name_label">Namn</string>
+    <string name="home_remove_stock_price_label">Pris per aktie</string>
+    <string name="home_remove_stock_quantity_label">Kvantitet</string>
+    <string name="home_remove_stock_message">Lägg till ett försäljning av aktier i taget.</string>
     <string name="home_stocks">Du har lagt till aktier. De visas inte (inte implementerat ännu).</string>
     <string name="home_title">Hem</string>
 

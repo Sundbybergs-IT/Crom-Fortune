@@ -21,9 +21,8 @@ import java.util.*
 
 private const val DATE_FORMAT = "MM/dd/yyyy"
 
-class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogFragment() {
+class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogFragment() {
 
-    // TODO: Implement support for multiple currencies
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialogRootView: View = LayoutInflater.from(context).inflate(R.layout.dialog_add_stock, view as ViewGroup?, false)

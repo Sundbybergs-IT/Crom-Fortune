@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/constraintLayout_dialogRemoveStock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        >
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogRemoveStock_dateInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/home_add_stock_date_label"
+            app:errorEnabled="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            >
+
+        <EditText
+                android:id="@+id/editText_dialogRemoveStock_dateInput"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="date"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogRemoveStock_currencyInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/home_add_stock_currency_label"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            >
+
+        <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextView_dialogRemoveStock_currencyInput"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="textAutoComplete|textAutoCorrect"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogRemoveStock_quantityInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/generic_quantity"
+            app:errorEnabled="true"
+            app:layout_constraintStart_toStartOf="@id/textInputLayout_dialogRemoveStock_dateInput"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayout_dialogRemoveStock_dateInput"
+            >
+
+        <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextView_dialogRemoveStock_quantityInput"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogRemoveStock_nameInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/home_add_stock_name_label"
+            app:errorEnabled="true"
+            app:layout_constraintStart_toStartOf="@id/textInputLayout_dialogRemoveStock_quantityInput"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayout_dialogRemoveStock_quantityInput"
+            >
+
+        <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextView_dialogRemoveStock_nameInput"
+                android:layout_width="192dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="textAutoComplete|textAutoCorrect"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogRemoveStock_priceInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/home_add_stock_price_label"
+            app:errorEnabled="true"
+            app:layout_constraintStart_toStartOf="@id/textInputLayout_dialogRemoveStock_nameInput"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayout_dialogRemoveStock_nameInput"
+            >
+
+        <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextView_dialogRemoveStock_priceInput"
+                android:layout_width="192dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogRemoveStock_commissionFeeInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/home_add_commission_fee_label"
+            app:errorEnabled="true"
+            app:layout_constraintStart_toStartOf="@id/textInputLayout_dialogRemoveStock_priceInput"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayout_dialogRemoveStock_priceInput"
+            >
+
+        <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextView_dialogRemoveStock_commissionFeeInput"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

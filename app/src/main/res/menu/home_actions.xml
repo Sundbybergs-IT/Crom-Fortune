@@ -5,8 +5,14 @@
         >
 
     <item
-            android:id="@+id/action_addStock"
-            android:title="@string/action_add_stock"
+            android:id="@+id/action_buyStock"
+            android:title="@string/action_stock_buy"
+            app:showAsAction="ifRoom"
+            />
+
+    <item
+            android:id="@+id/action_sellStock"
+            android:title="@string/action_stock_sell"
             app:showAsAction="ifRoom"
             />
 
