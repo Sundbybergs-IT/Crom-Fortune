@@ -8,7 +8,7 @@ import java.util.*
 
 class SellStockCommand(private val context: Context, private val currentTimeInMillis: Long,
                        private val currency: Currency, private val name: String, private val pricePerStock: Double,
-                       private val quantity: Int) : Command {
+                       private val quantity: Int, private val commissionFee: Double) : Command {
 
     override fun execute() {
         val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -23,7 +23,7 @@ class SellStockCommand(private val context: Context, private val currentTimeInMi
                     .putStringSet(name,
                             setOf(Json.encodeToString(StockOrder(orderAction = "Sell", currency = currency.toString(),
                                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
-                                    quantity = quantity))))
+                                    commissionFee = commissionFee, quantity = quantity))))
                     .apply()
         }
     }

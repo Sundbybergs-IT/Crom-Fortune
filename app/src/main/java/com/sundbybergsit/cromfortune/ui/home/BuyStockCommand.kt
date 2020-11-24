@@ -21,8 +21,9 @@ class BuyStockCommand(private val context: Context, private val currentTimeInMil
         } else {
             sharedPreferences.edit()
                     .putStringSet(name,
-                            setOf(Json.encodeToString(StockOrder("Buy", currency.toString(),
-                                    currentTimeInMillis, name, pricePerStock, commissionFee, quantity))))
+                            setOf(Json.encodeToString(StockOrder(orderAction = "Buy", currency = currency.toString(),
+                                    dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
+                                    commissionFee = commissionFee, quantity = quantity))))
                     .apply()
         }
     }
