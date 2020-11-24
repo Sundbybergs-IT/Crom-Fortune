@@ -27,8 +27,9 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialogRootView: View = LayoutInflater.from(context).inflate(R.layout.dialog_add_stock, view as ViewGroup?, false)
-        val inputCurrency: EditText = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_currencyInput)
-        inputCurrency.setText("SEK")
+        val inputCurrency: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_currencyInput)
+        inputCurrency.setAdapter(getCurrencyAutoCompleteAdapter())
+        val inputLayoutCurrency: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_currencyInput)
         val inputDate: EditText = dialogRootView.findViewById(R.id.editText_dialogAddStock_dateInput)
         val inputLayoutDate: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_dateInput)
         inputDate.transformIntoDatePicker(requireContext(), DATE_FORMAT, Date(), inputLayoutDate)
@@ -37,13 +38,10 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
         val inputStockPrice: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_priceInput)
         val inputLayoutStockPrice: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_priceInput)
         val inputStockName: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_nameInput)
+        inputStockName.setAdapter(getStockNameAutoCompleteAdapter())
         val inputLayoutStockName: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_nameInput)
-        val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.toList())
-        val adapter = AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, android.R.id.text1, searchArrayList)
-        inputStockName.setAdapter(adapter)
         val inputCommissionFee: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_commissionFeeInput)
         val inputLayoutCommissionFee: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_commissionFeeInput)
-        val currency = Currency.getInstance("SEK")
         val confirmListener: DialogInterface.OnClickListener = DialogInterface.OnClickListener { _, _ ->
         }
         val alertDialog = AlertDialog.Builder(requireContext())
@@ -56,16 +54,18 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
                 .setPositiveButton(getText(R.string.action_ok), confirmListener)
                 .create()
         alertDialog.setOnShowListener {
-            val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
             button.setOnClickListener {
                 try {
                     validateDate(inputDate, inputLayoutDate)
+                    validateCurrency(inputCurrency, inputLayoutCurrency)
                     validateDouble(inputStockQuantity, inputLayoutStockQuantity)
                     validateStockName(inputStockName, inputLayoutStockName)
                     validateDouble(inputStockPrice, inputLayoutStockPrice)
                     validateDouble(inputCommissionFee, inputLayoutCommissionFee)
-                    val inputDateAsString = inputDate.text.toString()
-                    val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(inputDateAsString)
+                    val dateAsString = inputDate.text.toString()
+                    val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+                    val currency = Currency.getInstance(inputCurrency.text.toString())
                     val stockOrder = StockOrder("Buy", currency.toString(), date.time, inputStockName.text.toString(),
                             inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
                             inputStockQuantity.text.toString().toInt())
@@ -75,8 +75,38 @@ class AddStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogF
                     // Shit happens ...
                 }
             }
-        };
+        }
         return alertDialog
+    }
+
+    private fun getCurrencyAutoCompleteAdapter() : AutoCompleteAdapter{
+        val searchArrayList = ArrayList(StockPriceRetriever.CURRENCIES.toList())
+        return  AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
+                android.R.id.text1, searchArrayList)
+    }
+
+    private fun getStockNameAutoCompleteAdapter() : AutoCompleteAdapter{
+        val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.toList())
+        return  AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
+                android.R.id.text1, searchArrayList)
+    }
+
+    private fun validateCurrency(input: AutoCompleteTextView, inputLayout: TextInputLayout) {
+        when {
+            input.text.toString().isEmpty() -> {
+                inputLayout.error = getString(R.string.generic_error_empty)
+                input.requestFocus()
+                throw ValidatorException()
+            }
+            !StockPriceRetriever.CURRENCIES.contains(input.text.toString()) -> {
+                inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
+                input.requestFocus()
+                throw ValidatorException()
+            }
+            else -> {
+                inputLayout.error = null
+            }
+        }
     }
 
     private fun validateStockName(input: AutoCompleteTextView, inputLayout: TextInputLayout) {

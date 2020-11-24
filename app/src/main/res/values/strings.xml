@@ -10,12 +10,9 @@
 
     <string name="generic_acquisition_value">Acquisition value</string>
     <string name="generic_commission_fee">Commission fee</string>
-    <plurals name="generic_cost">
-        <item quantity="one">%1$s SEK</item>
-        <item quantity="other">%1$s SEK</item>
-    </plurals>
     <string name="generic_error_empty">Enter a value.</string>
     <string name="generic_error_invalid_date">Enter a valid date.</string>
+    <string name="generic_error_invalid_currency_symbol">Enter a valid currency symbol.</string>
     <string name="generic_error_invalid_number">Enter a valid number.</string>
     <string name="generic_error_invalid_stock_symbol">Enter a valid stock symbol.</string>
     <string name="generic_error_not_supported">This feature is not yet supported.</string>
@@ -40,4 +37,5 @@
     <string name="recommendations_none">No recommendations</string>
 
     <string name="settings_title">Settings</string>
+    <string name="settings_default_values">Default values</string>
 </resources>

@@ -1,12 +1,11 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
-import android.view.View
-import android.view.ViewGroup
-
 import android.widget.ArrayAdapter
 import android.widget.Filter
 import android.widget.Filterable
+import java.util.*
+import kotlin.collections.ArrayList
 
 class AutoCompleteAdapter(context: Context, resource: Int, textViewResourceId: Int, objects: List<String>) :
         ArrayAdapter<String>(context, resource, textViewResourceId, objects), Filterable {
@@ -28,10 +27,6 @@ class AutoCompleteAdapter(context: Context, resource: Int, textViewResourceId: I
         return fullList[position]
     }
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        return super.getView(position, convertView, parent)
-    }
-
     override fun getFilter(): Filter {
         if (mFilter == null) {
             mFilter = ArrayFilter()
@@ -47,20 +42,20 @@ class AutoCompleteAdapter(context: Context, resource: Int, textViewResourceId: I
             if (mOriginalValues == null) {
                 synchronized(lock!!) { mOriginalValues = ArrayList(fullList) }
             }
-            if (prefix == null || prefix.length == 0) {
+            if (prefix == null || prefix.isEmpty()) {
                 synchronized(lock!!) {
-                    val list = ArrayList(mOriginalValues)
+                    val list = ArrayList(mOriginalValues!!.toMutableList())
                     results.values = list
                     results.count = list.size
                 }
             } else {
-                val prefixString = prefix.toString().toLowerCase()
+                val prefixString = prefix.toString().toLowerCase(Locale.ROOT)
                 val values = mOriginalValues
                 val count: Int = values!!.size
                 val newValues = ArrayList<String>(count)
                 for (i in 0 until count) {
                     val item = values[i]
-                    if (item.toLowerCase().contains(prefixString)) {
+                    if (item.toLowerCase(Locale.ROOT).contains(prefixString)) {
                         newValues.add(item)
                     }
                 }

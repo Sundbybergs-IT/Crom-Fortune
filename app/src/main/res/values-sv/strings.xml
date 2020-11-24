@@ -9,13 +9,10 @@
     <string name="dashboard_title">Instrumentbräda</string>
 
     <string name="generic_acquisition_value">GAV</string>
-    <plurals name="generic_cost">
-        <item quantity="one">%1$s SEK</item>
-        <item quantity="other">%1$s SEK</item>
-    </plurals>
     <string name="generic_commission_fee">Courtageavgift</string>
     <string name="home_add_stock_currency_label">Valuta</string>
     <string name="generic_error_empty">Ange ett värde.</string>
+    <string name="generic_error_invalid_currency_symbol">Ange en giltig valutasymbol.</string>
     <string name="generic_error_invalid_date">Ange ett giltigt datum.</string>
     <string name="generic_error_invalid_number">Ange ett giltigt nummer.</string>
     <string name="generic_error_invalid_stock_symbol">Ange en giltig aktiesymbol.</string>
@@ -40,4 +37,5 @@
     <string name="recommendations_none">Inga rekommendationer</string>
 
     <string name="settings_title">Inställningar</string>
+    <string name="settings_default_values">Standardvärden</string>
 </resources>

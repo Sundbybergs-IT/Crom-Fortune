@@ -41,7 +41,8 @@
                 android:id="@+id/autoCompleteTextView_dialogAddStock_currencyInput"
                 android:layout_width="128dp"
                 android:layout_height="wrap_content"
-                android:enabled="false"
+                android:imeOptions="actionDone"
+                android:inputType="textAutoComplete|textAutoCorrect"
                 />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -80,7 +81,7 @@
                 android:id="@+id/autoCompleteTextView_dialogAddStock_nameInput"
                 android:layout_width="192dp"
                 android:layout_height="wrap_content"
-                android:imeOptions="actionSearch"
+                android:imeOptions="actionDone"
                 android:inputType="textAutoComplete|textAutoCorrect"
                 />
 

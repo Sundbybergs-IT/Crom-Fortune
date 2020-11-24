@@ -8,38 +8,69 @@
         >
 
     <TextView
-            android:id="@+id/textView_fragmentSettings_commissionFeeLabel"
+            android:id="@+id/textView_fragmentHome_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:text="@string/generic_commission_fee"
-            android:textAlignment="center"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_margin="16dp"
+            android:text="@string/settings_default_values"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            />
+        />
 
-    <EditText
-            android:id="@+id/editText_fragmentSettings_commissionFee"
+    <TextView
+            android:id="@+id/textView_fragmentHome_subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:enabled="false"
-            android:hint="39.0"
-            android:inputType="numberDecimal"
-            android:textAlignment="center"
-            android:textSize="20sp"
+            android:text="@string/generic_error_not_supported"
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textView_fragmentSettings_commissionFeeLabel"
+            app:layout_constraintTop_toBottomOf="@id/textView_fragmentHome_title"
             />
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_fragmentSettings_commissionFee"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/home_add_commission_fee_label"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView_fragmentHome_subtitle"
+
+            >
+
+        <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextView_fragmentSettings_commissionFee"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_fragmentSettings_currency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/home_add_stock_currency_label"
+            app:errorEnabled="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayout_fragmentSettings_commissionFee"
+            >
+
+        <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextView_fragmentSettings_currency"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="textAutoComplete|textAutoCorrect"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

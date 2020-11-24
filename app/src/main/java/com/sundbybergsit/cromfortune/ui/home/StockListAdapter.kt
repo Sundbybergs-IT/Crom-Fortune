@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import kotlinx.android.synthetic.main.listrow_stock.view.*
+import java.text.NumberFormat
+import java.util.*
 
 class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()) {
 
@@ -53,14 +55,10 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
             itemView.textView_listrowStock_quantity.text = item.stockOrder.quantity.toString()
             itemView.textView_listrowStock_name.text = item.stockOrder.name
             val acquisitionValue = item.stockOrder.getAcquisitionValue()
-            val roundedAcquisitionValue = if (acquisitionValue < 1) {
-                String.format("%.3f", acquisitionValue)
-            } else {
-                String.format("%.2f", acquisitionValue)
-            }
-            itemView.textView_listrowStock_acquisitionValue.text = itemView.context.resources.getQuantityString(
-                    R.plurals.generic_cost, acquisitionValue.toInt(),
-                    roundedAcquisitionValue)
+            val format: NumberFormat = NumberFormat.getCurrencyInstance()
+            format.maximumFractionDigits = 3
+            format.currency = Currency.getInstance(item.stockOrder.currency)
+            itemView.textView_listrowStock_acquisitionValue.text = format.format(acquisitionValue)
             itemView.button_listrowStock_delete.setOnClickListener {
                 stockRemovable.remove(itemView.context, item.stockOrder.name)
             }

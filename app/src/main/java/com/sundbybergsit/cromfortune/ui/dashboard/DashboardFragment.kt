@@ -12,11 +12,9 @@ import com.sundbybergsit.cromfortune.stocks.StocksPreferences
 import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1Decision
 import com.sundbybergsit.cromfortune.ui.home.StockPriceProducer
 import com.sundbybergsit.cromfortune.ui.home.StockPriceRetriever
-import java.util.*
 
 private const val COMMISSION_FEE = 39.0
 private const val STOCK_PRICE_REFRESH_INTERVAL = 60
-private val CURRENCY = Currency.getInstance("SEK")
 
 class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
 
@@ -48,7 +46,7 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
         stockPriceRetriever.stockPrices.observe(viewLifecycleOwner, { stockPrice ->
             val recommendation = CromFortuneV1Decision(requireContext(),
                     requireContext().getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE))
-                    .getRecommendation(CURRENCY, stockPrice, COMMISSION_FEE)
+                    .getRecommendation(stockPrice, COMMISSION_FEE)
             Toast.makeText(requireContext(), "New real stock price: $stockPrice", Toast.LENGTH_SHORT).show()
             if (recommendation != null) {
                 infoText.text = recommendation.toString()

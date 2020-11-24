@@ -37,7 +37,7 @@ class CromFortuneV1DecisionTest {
         val oldOrder = StockOrder("BUY", currency.toString(),0L, "Stock", 100.0, 39.0, 10)
         sharedPreferences.edit().putStringSet("Stock", setOf(Json.encodeToString(
                 oldOrder))).commit()
-        val recommendation: Recommendation? = decision.getRecommendation(currency, StockPrice("Stock",
+        val recommendation: Recommendation? = decision.getRecommendation(StockPrice("Stock",
                 oldOrder.pricePerStock - (CromFortuneV1Decision.DIFF_PERCENTAGE + 0.1)
                         .times(oldOrder.pricePerStock)), 1.0)
 
@@ -51,7 +51,7 @@ class CromFortuneV1DecisionTest {
         val oldOrder = StockOrder("BUY", currency.toString(), 0L, "Stock", 100.0, 39.0, 1)
         sharedPreferences.edit().putStringSet("Stock", setOf(Json.encodeToString(
                 oldOrder))).commit()
-        val recommendation = decision.getRecommendation(currency, StockPrice("Stock",
+        val recommendation = decision.getRecommendation(StockPrice("Stock",
                 oldOrder.pricePerStock + CromFortuneV1Decision.DIFF_PERCENTAGE.times(oldOrder.pricePerStock)), 1.0)
 
         assertNull(recommendation)
@@ -66,7 +66,7 @@ class CromFortuneV1DecisionTest {
         val newPrice = oldOrder.pricePerStock + (CromFortuneV1Decision.DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        val recommendation = decision.getRecommendation(currency, StockPrice("Stock", newPrice), 1.0)
+        val recommendation = decision.getRecommendation(StockPrice("Stock", newPrice), 1.0)
 
         assertNull(recommendation)
     }
@@ -80,7 +80,7 @@ class CromFortuneV1DecisionTest {
         val newPrice = oldOrder.pricePerStock + (CromFortuneV1Decision.DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        val recommendation = decision.getRecommendation(currency, StockPrice("Stock", newPrice), 10.0)
+        val recommendation = decision.getRecommendation(StockPrice("Stock", newPrice), 10.0)
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is SellStockCommand)
