@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel
 class NotificationsViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "Att göra: Stöd för att ställa in standardvärden" +
-                "pollning 1 gång per dygn och lagring av pollade värden, insamling av historisk data sen första köpet," +
+        value = "Att göra: Stöd för att ställa in standardvärden (courtage och valuta), " +
+                "Ändra pollning till 1 gång per timme, lagring av rekommendationer, logik för att kontrollera om rekommendationer har följts, analys av historisk data sen första köpet," +
                 "en lista över alla aktiesymboler, notifieringar..."
     }
     val text: LiveData<String> = _text
