@@ -22,7 +22,7 @@
     <string name="generic_quantity">Kvantitet</string>
     <string name="generic_saved">Sparade framgångsrikt</string>
 
-    <string name="home_add_commission_fee_label">Courtageavgift</string>
+    <string name="home_add_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_add_stock_currency_label">Valuta</string>
     <string name="home_add_stock_date_label">Datum</string>
     <string name="home_add_stock_name_label">Namn</string>
@@ -30,7 +30,7 @@
     <string name="home_add_stock_quantity_label">Kvantitet</string>
     <string name="home_add_stock_message">Lägg till ett köp av aktier i taget.</string>
     <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
-    <string name="home_remove_commission_fee_label">Courtageavgift</string>
+    <string name="home_remove_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_remove_stock_currency_label">Valuta</string>
     <string name="home_remove_stock_date_label">Datum</string>
     <string name="home_remove_stock_name_label">Namn</string>

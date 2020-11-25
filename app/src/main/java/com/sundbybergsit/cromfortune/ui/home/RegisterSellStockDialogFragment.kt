@@ -65,6 +65,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                     val dateAsString = inputDate.text.toString()
                     val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
                     val currency = Currency.getInstance(inputCurrency.text.toString())
+                    // TODO: Convert commission fee (in SEK) to selected currency
                     val stockOrder = StockOrder("Sell", currency.toString(), date.time, inputStockName.text.toString(),
                             inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
                             inputStockQuantity.text.toString().toInt())

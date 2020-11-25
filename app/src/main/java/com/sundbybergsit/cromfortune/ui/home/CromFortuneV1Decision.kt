@@ -52,6 +52,7 @@ class CromFortuneV1Decision(private val context: Context,
             val totalPricePerStock = (accumulatedCost + accumulatedCommissionFees) / accumulatedQuantity
             val currentTimeInMillis = System.currentTimeMillis()
             val potentialBuyQuantity = accumulatedQuantity / 10
+            // TODO: Convert commission fee (in SEK) to selected currency
             val pricePerStockAfterBuy = (accumulatedCost + accumulatedCommissionFees + commissionFee) /
                     (accumulatedQuantity + potentialBuyQuantity)
             if (currentStockPrice < (1 - DIFF_PERCENTAGE) * pricePerStockAfterBuy) {
