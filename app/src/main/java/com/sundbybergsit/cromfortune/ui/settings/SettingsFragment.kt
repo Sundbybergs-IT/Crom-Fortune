@@ -4,18 +4,16 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import com.sundbybergsit.cromfortune.R
 import kotlinx.android.synthetic.main.fragment_settings.*
 
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
-    private lateinit var settingsViewModel: SettingsViewModel
+    private val viewModel: SettingsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        settingsViewModel =
-                ViewModelProvider.NewInstanceFactory().create(SettingsViewModel::class.java)
         setUpLiveDataListeners()
     }
 
@@ -28,7 +26,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             // TODO: Replace with logic to update currency
             Toast.makeText(requireContext(), getString(R.string.generic_error_not_supported), Toast.LENGTH_SHORT).show()
         }
-        settingsViewModel.text.observe(viewLifecycleOwner, {
+        viewModel.text.observe(viewLifecycleOwner, {
             textInputLayout_fragmentSettings_commissionFee.setOnClickListener {
             }
         })

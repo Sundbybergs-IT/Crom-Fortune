@@ -5,7 +5,7 @@ import android.view.*
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
@@ -19,7 +19,8 @@ class HomeFragment : Fragment() {
 
     }
 
-    private lateinit var homeViewModel: HomeViewModel
+    private val viewModel: HomeViewModel by viewModels()
+
     private val stockListAdapter = StockListAdapter()
 
     override fun onCreateView(
@@ -27,16 +28,15 @@ class HomeFragment : Fragment() {
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        homeViewModel = ViewModelProvider.NewInstanceFactory().create(HomeViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_home, container, false)
         val infoText: TextView = root.findViewById(R.id.textView_fragmentHome)
         val fab: FloatingActionButton = root.findViewById(R.id.floatingActionButton_fragmentHome)
         fab.setOnClickListener {
-            val dialog = RegisterBuyStockDialogFragment(homeViewModel)
+            val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.show(parentFragmentManager, TAG)
         }
         val recyclerView: RecyclerView = root.findViewById(R.id.recyclerView_fragmentHome)
-        stockListAdapter.setListener(homeViewModel)
+        stockListAdapter.setListener(viewModel)
         recyclerView.adapter = stockListAdapter
         setUpLiveDataListeners(infoText, fab)
         setHasOptionsMenu(true)
@@ -51,12 +51,12 @@ class HomeFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_buyStock -> {
-                val dialog = RegisterBuyStockDialogFragment(homeViewModel)
+                val dialog = RegisterBuyStockDialogFragment(viewModel)
                 dialog.show(parentFragmentManager, TAG)
                 true
             }
             R.id.action_sellStock -> {
-                val dialog = RegisterSellStockDialogFragment(homeViewModel)
+                val dialog = RegisterSellStockDialogFragment(viewModel)
                 dialog.show(parentFragmentManager, TAG)
                 true
             }
@@ -66,11 +66,11 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        homeViewModel.refresh(requireContext())
+        viewModel.refresh(requireContext())
     }
 
     private fun setUpLiveDataListeners(textView: TextView, fab: FloatingActionButton) {
-        homeViewModel.viewState.observe(viewLifecycleOwner, { viewState ->
+        viewModel.viewState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is HomeViewModel.ViewState.HasStocks -> {
                     textView.text = ""
@@ -84,7 +84,7 @@ class HomeFragment : Fragment() {
                 }
             }
         })
-        homeViewModel.stockTransactionState.observe(viewLifecycleOwner, { viewState ->
+        viewModel.stockTransactionState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is HomeViewModel.StockTransactionState.Error -> {
                     Toast.makeText(requireContext(), getText(viewState.errorResId), Toast.LENGTH_SHORT).show()
