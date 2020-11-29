@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.ui.home
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.sundbybergsit.cromfortune.roundTo
 import kotlinx.coroutines.*
 import yahoofinance.Stock
 import yahoofinance.YahooFinance
@@ -72,7 +73,7 @@ class StockPriceProducer {
         }
         val stockSymbol = iterator.next().key
         val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
-        return StockPrice(stockSymbol, quote.price.toDouble())
+        return StockPrice(stockSymbol, quote.price.toDouble().roundTo(3))
     }
 
 }

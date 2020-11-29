@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.ui.dashboard
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -8,12 +7,9 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.stocks.StocksPreferences
-import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1Decision
 import com.sundbybergsit.cromfortune.ui.home.StockPriceProducer
 import com.sundbybergsit.cromfortune.ui.home.StockPriceRetriever
 
-private const val COMMISSION_FEE = 39.0
 private const val STOCK_PRICE_REFRESH_INTERVAL = 60
 
 class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
@@ -26,8 +22,7 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        dashboardViewModel =
-                ViewModelProvider.NewInstanceFactory().create(DashboardViewModel::class.java)
+        dashboardViewModel = ViewModelProvider.NewInstanceFactory().create(DashboardViewModel::class.java)
         infoText = view.findViewById(R.id.textView_fragmentDashboard)
         setupDataListeners()
     }
@@ -44,15 +39,24 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
 
     private fun setupDataListeners() {
         stockPriceRetriever.stockPrices.observe(viewLifecycleOwner, { stockPrice ->
-            val recommendation = CromFortuneV1Decision(requireContext(),
-                    requireContext().getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE))
-                    .getRecommendation(stockPrice, COMMISSION_FEE)
             Toast.makeText(requireContext(), "New real stock price: $stockPrice", Toast.LENGTH_SHORT).show()
-            if (recommendation != null) {
-                infoText.text = recommendation.toString()
-                Toast.makeText(requireContext(), recommendation.toString(), Toast.LENGTH_LONG).show()
-            }
+            dashboardViewModel.refresh(requireContext(), stockPrice)
         })
+        dashboardViewModel.recommendationViewState.observe(viewLifecycleOwner, { viewState ->
+            when (viewState) {
+                is DashboardViewModel.RecommendationViewState.NONE -> {
+                    infoText.text = getString(R.string.recommendations_none)
+                }
+                is DashboardViewModel.RecommendationViewState.OK -> {
+                    infoText.text = viewState.recommendation.toString()
+                    requireActivity().runOnUiThread {
+                        Toast.makeText(requireContext(), viewState.recommendation.toString(), Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+        )
+
     }
 
 }

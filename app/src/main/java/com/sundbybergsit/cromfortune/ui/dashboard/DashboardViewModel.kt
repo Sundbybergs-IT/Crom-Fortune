@@ -4,18 +4,35 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.stocks.StocksPreferences
-import com.sundbybergsit.cromfortune.ui.home.StockOrder
+import com.sundbybergsit.cromfortune.ui.home.*
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
+private const val COMMISSION_FEE = 39.0
+
 class DashboardViewModel : ViewModel() {
 
-    private val _viewState = MutableLiveData<ViewState>().apply {
-        value = ViewState.OK
+    private val _viewState = MutableLiveData<RecommendationViewState>().apply {
+        value = RecommendationViewState.NONE
     }
 
-    val viewState: LiveData<ViewState> = _viewState
+    val recommendationViewState: LiveData<RecommendationViewState> = _viewState
+
+    fun refresh(context: Context, stockPrice: StockPrice) {
+
+        viewModelScope.launch {
+            val recommendation = CromFortuneV1Decision(context,
+                    context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE))
+                    .getRecommendation(stockPrice, COMMISSION_FEE, CurrencyConversionRateProducer())
+            _viewState.postValue(when(recommendation) {
+                is Recommendation -> RecommendationViewState.OK(recommendation)
+                else -> RecommendationViewState.NONE
+            })
+        }
+    }
 
     fun stocks(context: Context): List<StockOrder> {
         val stocks = mutableListOf<StockOrder>()
@@ -30,8 +47,9 @@ class DashboardViewModel : ViewModel() {
         return stocks
     }
 
-    sealed class ViewState {
-        object OK : ViewState()
+    sealed class RecommendationViewState {
+        object NONE : RecommendationViewState()
+        data class OK(val recommendation : Recommendation) : RecommendationViewState()
     }
 
 }

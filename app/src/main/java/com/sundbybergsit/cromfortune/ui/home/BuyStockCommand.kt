@@ -29,7 +29,7 @@ class BuyStockCommand(private val context: Context, private val currentTimeInMil
     }
 
     override fun toString(): String {
-        return "Buy: $quantity of $name at price $pricePerStock $currency with commission fee $commissionFee $currency"
+        return "Buy: $quantity of $name at price $pricePerStock $currency with commission fee $commissionFee SEK"
     }
 
 }
