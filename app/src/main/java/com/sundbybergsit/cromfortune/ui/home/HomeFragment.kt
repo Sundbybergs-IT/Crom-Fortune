@@ -2,6 +2,7 @@ package com.sundbybergsit.cromfortune.ui.home
 
 import android.os.Bundle
 import android.view.*
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -30,6 +31,7 @@ class HomeFragment : Fragment() {
     ): View? {
         val root = inflater.inflate(R.layout.fragment_home, container, false)
         val infoText: TextView = root.findViewById(R.id.textView_fragmentHome)
+        val infoImage: ImageView = root.findViewById(R.id.imageView_fragmentHome)
         val fab: FloatingActionButton = root.findViewById(R.id.floatingActionButton_fragmentHome)
         fab.setOnClickListener {
             val dialog = RegisterBuyStockDialogFragment(viewModel)
@@ -38,7 +40,7 @@ class HomeFragment : Fragment() {
         val recyclerView: RecyclerView = root.findViewById(R.id.recyclerView_fragmentHome)
         stockListAdapter.setListener(viewModel)
         recyclerView.adapter = stockListAdapter
-        setUpLiveDataListeners(infoText, fab)
+        setUpLiveDataListeners(infoText, infoImage, fab)
         setHasOptionsMenu(true)
         return root
     }
@@ -69,16 +71,18 @@ class HomeFragment : Fragment() {
         viewModel.refresh(requireContext())
     }
 
-    private fun setUpLiveDataListeners(textView: TextView, fab: FloatingActionButton) {
+    private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView, fab: FloatingActionButton) {
         viewModel.viewState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is HomeViewModel.ViewState.HasStocks -> {
                     textView.text = ""
+                    infoImage.visibility = View.GONE
                     fab.visibility = View.GONE
                     stockListAdapter.submitList(viewState.adapterItems)
                 }
                 is HomeViewModel.ViewState.HasNoStocks -> {
                     textView.text = getText(viewState.textResId)
+                    infoImage.visibility = View.VISIBLE
                     fab.visibility = View.VISIBLE
                     stockListAdapter.submitList(Collections.emptyList())
                 }
