@@ -1,9 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
-import com.sundbybergsit.cromfortune.stocks.StocksPreferences
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.util.*
 
 class BuyStockCommand(private val context: Context, private val currentTimeInMillis: Long,
@@ -12,19 +9,16 @@ class BuyStockCommand(private val context: Context, private val currentTimeInMil
     : Command {
 
     override fun execute() {
-        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
-        if (sharedPreferences.contains(name)) {
-            val stockOrders: MutableSet<String> = sharedPreferences.getStringSet(name, null) as MutableSet<String>
-            stockOrders.add(Json.encodeToString(StockOrder("Buy", currency.toString(), currentTimeInMillis,
-                    name, pricePerStock, commissionFee, quantity)))
-            sharedPreferences.edit().putStringSet(name, stockOrders).apply()
+        val stockOrderRepository = StockOrderRepositoryImpl(context)
+        if (stockOrderRepository.count(name) > 0) {
+            val stockOrders: MutableSet<StockOrder> = stockOrderRepository.list(name).toMutableSet()
+            stockOrders.add(StockOrder("Buy", currency.toString(), currentTimeInMillis,
+                    name, pricePerStock, commissionFee, quantity))
+            stockOrderRepository.putAll(name, stockOrders)
         } else {
-            sharedPreferences.edit()
-                    .putStringSet(name,
-                            setOf(Json.encodeToString(StockOrder(orderAction = "Buy", currency = currency.toString(),
+            stockOrderRepository.put(name, StockOrder(orderAction = "Buy", currency = currency.toString(),
                                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
-                                    commissionFee = commissionFee, quantity = quantity))))
-                    .apply()
+                                    commissionFee = commissionFee, quantity = quantity))
         }
     }
 

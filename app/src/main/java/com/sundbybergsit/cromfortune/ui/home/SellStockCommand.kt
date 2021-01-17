@@ -2,9 +2,6 @@ package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
 import com.sundbybergsit.cromfortune.roundTo
-import com.sundbybergsit.cromfortune.stocks.StocksPreferences
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.util.*
 
 class SellStockCommand(private val context: Context, private val currentTimeInMillis: Long,
@@ -12,20 +9,17 @@ class SellStockCommand(private val context: Context, private val currentTimeInMi
                        private val quantity: Int, private val commissionFee: Double) : Command {
 
     override fun execute() {
-        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
-        if (sharedPreferences.contains(name)) {
-            val stockOrders: MutableSet<String> = sharedPreferences.getStringSet(name, null) as MutableSet<String>
-            stockOrders.add(Json.encodeToString(StockOrder(orderAction = "Sell", currency = currency.toString(),
+        val stockOrderRepository = StockOrderRepositoryImpl(context)
+        if (stockOrderRepository.count(name) > 0) {
+            val stockOrders: MutableSet<StockOrder> = stockOrderRepository.list(name).toMutableSet()
+            stockOrders.add(StockOrder(orderAction = "Sell", currency = currency.toString(),
                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
-                    quantity = quantity)))
-            sharedPreferences.edit().putStringSet(name, stockOrders).apply()
+                    quantity = quantity))
+            stockOrderRepository.putAll(name, stockOrders)
         } else {
-            sharedPreferences.edit()
-                    .putStringSet(name,
-                            setOf(Json.encodeToString(StockOrder(orderAction = "Sell", currency = currency.toString(),
+            stockOrderRepository.put(name, StockOrder(orderAction = "Sell", currency = currency.toString(),
                                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
-                                    commissionFee = commissionFee, quantity = quantity))))
-                    .apply()
+                                    commissionFee = commissionFee, quantity = quantity))
         }
     }
 

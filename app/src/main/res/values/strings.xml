@@ -34,6 +34,7 @@
     <string name="home_remove_stock_date_label">Date</string>
     <string name="home_remove_stock_name_label">Name</string>
     <string name="home_remove_stock_price_label">Price per stock</string>
+    <string name="home_remove_stock_quantity_error_insufficient">You don\'t have this much.</string>
     <string name="home_remove_stock_quantity_label">Quantity</string>
     <string name="home_remove_stock_message">Add one sell of a stock at a time.</string>
     <string name="home_no_stocks">Add your first stock to get filthy rich!</string>

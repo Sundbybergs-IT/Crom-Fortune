@@ -56,7 +56,11 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
             itemView.textView_listrowStock_name.text = item.stockOrder.name
             val acquisitionValue = item.stockOrder.getAcquisitionValue()
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
-            format.maximumFractionDigits = 3
+            if (acquisitionValue < 1) {
+                format.maximumFractionDigits = 3
+            } else {
+                format.maximumFractionDigits = 2
+            }
             format.currency = Currency.getInstance(item.stockOrder.currency)
             itemView.textView_listrowStock_acquisitionValue.text = format.format(acquisitionValue)
             itemView.button_listrowStock_delete.setOnClickListener {

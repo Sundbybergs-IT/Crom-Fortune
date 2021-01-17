@@ -29,6 +29,7 @@ class StockListAdapterTest {
         val list: List<AdapterItem> = listOf(StockHeaderAdapterItem(),
                 StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, "Stock.A", 100.099, 0.0, 1)),
                 StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, "Stock.B", 0.0199, 0.0, 1)),
+                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, "Stock.C", 0.0109, 0.0, 1)),
         )
         adapter.setListener(HomeViewModel())
         adapter.submitList(list)
@@ -51,18 +52,29 @@ class StockListAdapterTest {
         adapter.onBindViewHolder(viewHolder, 1)
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStock_acquisitionValue)
-        assertEquals("100.10 $currency", acquisitionValue.text.toString())
+        assertEquals("${currency}100.10", acquisitionValue.text.toString())
     }
 
     @Test
-    fun `onBindViewHolder - when stock with price under 1 - shows correct price`() {
+    fun `onBindViewHolder - when stock with price under 1 and no need for third fraction - shows correct price`() {
         val frameLayout = FrameLayout(ApplicationProvider.getApplicationContext())
         val viewHolder = adapter.onCreateViewHolder(frameLayout, R.layout.listrow_stock)
 
         adapter.onBindViewHolder(viewHolder, 2)
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStock_acquisitionValue)
-        assertEquals("0.020 $currency", acquisitionValue.text.toString())
+        assertEquals("${currency}0.02", acquisitionValue.text.toString())
+    }
+
+    @Test
+    fun `onBindViewHolder - when stock with price under 1 and need for third fraction - shows correct price`() {
+        val frameLayout = FrameLayout(ApplicationProvider.getApplicationContext())
+        val viewHolder = adapter.onCreateViewHolder(frameLayout, R.layout.listrow_stock)
+
+        adapter.onBindViewHolder(viewHolder, 3)
+
+        val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStock_acquisitionValue)
+        assertEquals("${currency}0.011", acquisitionValue.text.toString())
     }
 
 }

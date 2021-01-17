@@ -7,10 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.stocks.StocksPreferences
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 
 class HomeViewModel : ViewModel(), StockRemovable {
 
@@ -22,14 +19,14 @@ class HomeViewModel : ViewModel(), StockRemovable {
 
     @SuppressLint("ApplySharedPref")
     override fun remove(context: Context, stockName: String) {
-        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
-        sharedPreferences.edit().remove(stockName).commit()
+        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
+        stockOrderRepository.remove(stockName)
         refresh(context)
     }
 
     fun refresh(context: Context) {
-        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
-        if (sharedPreferences.all.isEmpty()) {
+        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
+        if (stockOrderRepository.isEmpty()) {
             _viewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
         } else {
             _viewState.postValue(ViewState.HasStocks(R.string.home_stocks,
@@ -38,31 +35,27 @@ class HomeViewModel : ViewModel(), StockRemovable {
     }
 
     fun save(context: Context, stockOrder: StockOrder) {
-        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
-        if (sharedPreferences.contains(stockOrder.name)) {
-            val existingOrders = sharedPreferences.getStringSet(stockOrder.name, emptySet())!!
-            sharedPreferences.edit().putStringSet(stockOrder.name, (existingOrders.toMutableSet() +
-                    mutableSetOf(Json.encodeToString(stockOrder))).toMutableSet()).commit()
+        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
+        if (stockOrderRepository.list(stockOrder.name).isNotEmpty()) {
+            val existingOrders = stockOrderRepository.list(stockOrder.name)
+            stockOrderRepository.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
             _stockTransactionState.postValue(StockTransactionState.Saved)
         } else {
-            sharedPreferences.edit()
-                    .putStringSet(stockOrder.name, setOf(Json.encodeToString(stockOrder))).apply()
+            stockOrderRepository.put(stockOrder.name, stockOrder)
             _stockTransactionState.postValue(StockTransactionState.Saved)
         }
         refresh(context)
     }
 
     private fun stocks(context: Context): List<StockOrder> {
-        val sharedPreferences = context.getSharedPreferences(StocksPreferences.PREFERENCES_NAME, Context.MODE_PRIVATE)
-
+        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
         val aggregatedStockOrders: MutableList<StockOrder> = mutableListOf()
-        for (stockName in sharedPreferences.all.keys) {
-            val stockOrders: Set<String> = sharedPreferences.all[stockName] as Set<String>
+        for (stockName in stockOrderRepository.listOfStockNames()) {
+            val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockName)
             var quantity = 0
             var accumulatedCost = 0.0
             var currency: String? = null
-            for (stockOrderString in stockOrders) {
-                val stockOrder: StockOrder = Json.decodeFromString(stockOrderString)
+            for (stockOrder in stockOrders) {
                 if (currency == null) {
                     currency = stockOrder.currency
                 }
@@ -84,6 +77,10 @@ class HomeViewModel : ViewModel(), StockRemovable {
                     accumulatedCost / quantity, 0.0, quantity))
         }
         return aggregatedStockOrders
+    }
+
+    fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
+        return StockOrderRepositoryImpl(context).count(stockName) >= quantity
     }
 
     sealed class ViewState {

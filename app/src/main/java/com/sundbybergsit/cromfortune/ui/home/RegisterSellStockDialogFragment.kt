@@ -60,10 +60,11 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                     validateCurrency(inputCurrency, inputLayoutCurrency)
                     validateDouble(inputStockQuantity, inputLayoutStockQuantity)
                     validateStockName(inputStockName, inputLayoutStockName)
+                    validateHasStockQuantity(inputStockName.text.toString(), inputStockQuantity, inputLayoutStockQuantity)
                     validateDouble(inputStockPrice, inputLayoutStockPrice)
                     validateDouble(inputCommissionFee, inputLayoutCommissionFee)
                     val dateAsString = inputDate.text.toString()
-                    val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+                    val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)!!
                     val currency = Currency.getInstance(inputCurrency.text.toString())
                     // TODO: Convert commission fee (in SEK) to selected currency
                     val stockOrder = StockOrder("Sell", currency.toString(), date.time, inputStockName.text.toString(),
@@ -71,7 +72,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                             inputStockQuantity.text.toString().toInt())
                     homeViewModel.save(requireContext(), stockOrder)
                     alertDialog.dismiss()
-                } catch (e : ValidatorException) {
+                } catch (e: ValidatorException) {
                     // Shit happens ...
                 }
             }
@@ -79,13 +80,21 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
         return alertDialog
     }
 
-    private fun getCurrencyAutoCompleteAdapter() : AutoCompleteAdapter {
+    private fun validateHasStockQuantity(stockName: String, input: AutoCompleteTextView, inputLayout: TextInputLayout) {
+        if (!homeViewModel.hasNumberOfStocks(requireContext(), stockName, input.text.toString().toInt())) {
+            inputLayout.error = getString(R.string.home_remove_stock_quantity_error_insufficient)
+            input.requestFocus()
+            throw ValidatorException()
+        }
+    }
+
+    private fun getCurrencyAutoCompleteAdapter(): AutoCompleteAdapter {
         val searchArrayList = ArrayList(StockPriceRetriever.CURRENCIES.toList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
     }
 
-    private fun getStockNameAutoCompleteAdapter() : AutoCompleteAdapter {
+    private fun getStockNameAutoCompleteAdapter(): AutoCompleteAdapter {
         val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.toList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)

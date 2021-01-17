@@ -1,16 +1,14 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
-import android.content.SharedPreferences
+import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import java.util.*
 
 class CromFortuneV1Decision(private val context: Context,
-                            private val sharedPreferences: SharedPreferences =
-                                    context.getSharedPreferences("Stocks", Context.MODE_PRIVATE)) : Decision() {
+                            private val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context))
+    : Decision() {
 
     companion object {
 
@@ -22,7 +20,7 @@ class CromFortuneV1Decision(private val context: Context,
                                            currencyConversionRateProducer: CurrencyConversionRateProducer): Recommendation? {
         return withContext(Dispatchers.IO) {
             RecommendationGenerator(context, currencyConversionRateProducer).getRecommendation(stockPrice.name,
-                    sharedPreferences.getStringSet(stockPrice.name, emptySet()) as Set<String>, stockPrice.price,
+                    stockOrderRepository.list(stockPrice.name), stockPrice.price,
                     commissionFee)
         }
 
@@ -31,15 +29,14 @@ class CromFortuneV1Decision(private val context: Context,
     internal class RecommendationGenerator(private val context: Context,
                                            private val currencyConversationRateProducer: CurrencyConversionRateProducer) {
 
-        fun getRecommendation(stockName: String, orders: Set<String>, currentStockPriceInStockCurrency: Double,
+        fun getRecommendation(stockName: String, orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double,
                               commissionFeeInSek: Double): Recommendation? {
             var accumulatedCommissionFeesInSek = 0.0
             var accumulatedQuantity = 0
             var accumulatedCostInSek = 0.0
             var currency: Currency? = null
             var rate = 1.0
-            for (serializedOrder in orders) {
-                val stockOrder: StockOrder = Json.decodeFromString(serializedOrder)
+            for (stockOrder in orders) {
                 if (stockOrder.name == stockName) {
                     if (currency == null) {
                         currency = Currency.getInstance(stockOrder.currency)
