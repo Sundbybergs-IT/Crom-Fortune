@@ -17,6 +17,10 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
     }
 
     private fun setUpLiveDataListeners() {
+        viewModel.refreshScore(requireContext())
+        viewModel.score.observe(viewLifecycleOwner, {
+            textView_fragmentNotifications_score.text = it
+        })
         viewModel.text.observe(viewLifecycleOwner, {
             text_notifications.text = it
         })

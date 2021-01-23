@@ -31,17 +31,6 @@ class DashboardViewModel : ViewModel() {
         }
     }
 
-    fun stocks(context: Context): List<StockOrder> {
-        val stocks = mutableListOf<StockOrder>()
-        val repository = StockOrderRepositoryImpl(context)
-        for (stockName in repository.listOfStockNames()) {
-            for (entry in repository.list(stockName)) {
-                stocks.add(entry)
-            }
-        }
-        return stocks
-    }
-
     sealed class RecommendationViewState {
         object NONE : RecommendationViewState()
         data class OK(val recommendation: Recommendation) : RecommendationViewState()
