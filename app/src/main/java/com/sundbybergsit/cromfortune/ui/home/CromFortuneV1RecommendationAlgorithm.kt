@@ -6,9 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
 
-class CromFortuneV1Decision(private val context: Context,
-                            private val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context))
-    : Decision() {
+class CromFortuneV1RecommendationAlgorithm(private val context: Context,
+                                           private val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context))
+    : RecommendationAlgorithm() {
 
     companion object {
 
@@ -17,10 +17,11 @@ class CromFortuneV1Decision(private val context: Context,
     }
 
     override suspend fun getRecommendation(stockPrice: StockPrice, commissionFee: Double,
-                                           currencyConversionRateProducer: CurrencyConversionRateProducer): Recommendation? {
+                                           currencyConversionRateProducer: CurrencyConversionRateProducer,
+                                           previousOrders: Set<StockOrder>): Recommendation? {
         return withContext(Dispatchers.IO) {
             RecommendationGenerator(context, currencyConversionRateProducer).getRecommendation(stockPrice.name,
-                    stockOrderRepository.list(stockPrice.name), stockPrice.price,
+                    previousOrders, stockPrice.price,
                     commissionFee)
         }
 

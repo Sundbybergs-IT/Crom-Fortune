@@ -19,10 +19,11 @@ class DashboardViewModel : ViewModel() {
     val recommendationViewState: LiveData<RecommendationViewState> = _viewState
 
     fun refresh(context: Context, stockPrice: StockPrice) {
-
         viewModelScope.launch {
-            val recommendation = CromFortuneV1Decision(context, StockOrderRepositoryImpl(context))
-                    .getRecommendation(stockPrice, COMMISSION_FEE, CurrencyConversionRateProducer())
+            val stockOrderRepository = StockOrderRepositoryImpl(context)
+            val recommendation = CromFortuneV1RecommendationAlgorithm(context, stockOrderRepository)
+                    .getRecommendation(stockPrice, COMMISSION_FEE, CurrencyConversionRateProducer(),
+                            stockOrderRepository.list(stockPrice.name))
             _viewState.postValue(when (recommendation) {
                 is Recommendation -> RecommendationViewState.OK(recommendation)
                 else -> RecommendationViewState.NONE
