@@ -17,8 +17,10 @@ class StockPriceRetriever(private val stockPriceProducer: StockPriceProducer, pr
     companion object {
 
         val CURRENCIES = arrayOf("SEK", "NOK", "EUR", "USD")
-        val SYMBOLS = arrayOf("MIPS.ST", "ASSA-B.ST", "AZELIO.ST", "SAS.ST", "ANOT.ST", "IPCO.ST", "NAS.OL", "HIMX",
-                "TSLA")
+        val SYMBOLS = arrayOf("AC.TO", "ACST", "ANOT.ST", "ASSA-B.ST", "AZELIO.ST", "BUBL.ST", "CLOUD.OL", "EOLU-B.ST",
+                "FERRO.ST", "GGG.V", "HIMX", "IPCO.ST", "LHA.F", "MIPS.ST", "NAS.OL", "SALT-B.ST", "SAND.ST", "SAS.ST",
+                "TSLA"
+        )
 
     }
 
