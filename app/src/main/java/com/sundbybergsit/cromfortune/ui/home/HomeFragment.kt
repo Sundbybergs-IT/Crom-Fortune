@@ -40,7 +40,7 @@ class HomeFragment : Fragment() {
         val recyclerView: RecyclerView = root.findViewById(R.id.recyclerView_fragmentHome)
         stockListAdapter.setListener(viewModel)
         recyclerView.adapter = stockListAdapter
-        setUpLiveDataListeners(infoText, infoImage, fab)
+        setUpLiveDataListeners(infoText, infoImage)
         setHasOptionsMenu(true)
         return root
     }
@@ -71,19 +71,17 @@ class HomeFragment : Fragment() {
         viewModel.refresh(requireContext())
     }
 
-    private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView, fab: FloatingActionButton) {
+    private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView) {
         viewModel.viewState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is HomeViewModel.ViewState.HasStocks -> {
                     textView.text = ""
                     infoImage.visibility = View.GONE
-                    fab.visibility = View.GONE
                     stockListAdapter.submitList(viewState.adapterItems)
                 }
                 is HomeViewModel.ViewState.HasNoStocks -> {
                     textView.text = getText(viewState.textResId)
                     infoImage.visibility = View.VISIBLE
-                    fab.visibility = View.VISIBLE
                     stockListAdapter.submitList(Collections.emptyList())
                 }
             }
