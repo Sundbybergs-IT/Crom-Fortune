@@ -30,6 +30,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             textInputLayout_fragmentSettings_commissionFee.setOnClickListener {
             }
         })
+        viewModel.todoText.observe(viewLifecycleOwner, {
+            textView_fragmentSettings_todo.text = it
+        })
     }
 
 }

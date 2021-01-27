@@ -30,7 +30,7 @@ class HomeViewModel : ViewModel(), StockRemovable {
             _viewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
         } else {
             _viewState.postValue(ViewState.HasStocks(R.string.home_stocks,
-                    AdapterItemUtil.convertToAdapterItems(stocks(context))))
+                    StockAdapterItemUtil.convertToAdapterItems(stocks(context))))
         }
     }
 

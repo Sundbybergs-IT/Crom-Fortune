@@ -7,8 +7,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+const val PREFERENCES_NAME = "Stocks"
+
 class StockOrderRepositoryImpl(context: Context, private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("Stocks", Context.MODE_PRIVATE)) : StockOrderRepository {
+        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)) : StockOrderRepository {
 
     override fun count(stockName: String): Int {
         val list: Set<StockOrder> = list(stockName)

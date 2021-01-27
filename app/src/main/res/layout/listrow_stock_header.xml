@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@drawable/background_white_selectable_item_background"
@@ -9,7 +8,7 @@
         >
 
     <TextView
-            android:id="@+id/textView_listrowHeader_quantity"
+            android:id="@+id/textView_listrowStockHeader_quantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
@@ -25,33 +24,33 @@
             />
 
     <TextView
-            android:id="@+id/textView_listrowHeader_name"
+            android:id="@+id/textView_listrowStockHeader_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="1"
+            android:text="@string/generic_name"
             android:textIsSelectable="false"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowHeader_quantity"
+            app:layout_constraintStart_toEndOf="@id/textView_listrowStockHeader_quantity"
             app:layout_constraintTop_toTopOf="parent"
-            android:text="@string/generic_name"
             />
 
     <TextView
-            android:id="@+id/textView_listrowHeader_acquisitionValue"
+            android:id="@+id/textView_listrowStockHeader_acquisitionValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="1"
+            android:text="@string/generic_acquisition_value"
             android:textIsSelectable="false"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowHeader_name"
+            app:layout_constraintStart_toEndOf="@id/textView_listrowStockHeader_name"
             app:layout_constraintTop_toTopOf="parent"
-            android:text="@string/generic_acquisition_value"
             />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

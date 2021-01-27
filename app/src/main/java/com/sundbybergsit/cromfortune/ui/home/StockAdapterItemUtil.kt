@@ -1,6 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-internal object AdapterItemUtil {
+internal object StockAdapterItemUtil {
 
     @JvmStatic
     fun convertToAdapterItems(list: Iterable<StockOrder>): List<AdapterItem> {

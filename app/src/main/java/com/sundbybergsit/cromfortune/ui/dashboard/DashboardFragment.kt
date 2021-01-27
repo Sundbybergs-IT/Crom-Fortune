@@ -7,8 +7,12 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.ui.home.BuyStockCommand
+import com.sundbybergsit.cromfortune.ui.home.SellStockCommand
 import com.sundbybergsit.cromfortune.ui.home.StockPriceProducer
 import com.sundbybergsit.cromfortune.ui.home.StockPriceRetriever
+import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
+import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
 
 private const val STOCK_PRICE_REFRESH_INTERVAL = 60
 
@@ -51,6 +55,21 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
                     infoText.text = viewState.recommendation.toString()
                     requireActivity().runOnUiThread {
                         Toast.makeText(requireContext(), viewState.recommendation.toString(), Toast.LENGTH_LONG).show()
+                        val notification = NotificationMessage(System.currentTimeMillis(),
+                                viewState.recommendation.command.toString())
+                        // TODO: Move repository logic
+                        val notificationsRepository = NotificationsRepositoryImpl(requireContext())
+                        notificationsRepository.add(notification)
+                        val shortText: String =
+                                when (viewState.recommendation.command) {
+                                    is BuyStockCommand -> getString(R.string.action_stock_buy)
+                                    is SellStockCommand -> getString(R.string.action_stock_sell)
+                                    else -> ""
+                                }
+                        NotificationUtil.doPostRegularNotification(requireContext(),
+                                getString(R.string.notification_recommendation_title),
+                                shortText,
+                                "${getString(R.string.notification_recommendation_body)} ${notification.message}")
                     }
                 }
             }

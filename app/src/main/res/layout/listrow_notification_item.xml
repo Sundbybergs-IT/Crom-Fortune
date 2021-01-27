@@ -9,7 +9,7 @@
         >
 
     <TextView
-            android:id="@+id/textView_listrowStock_quantity"
+            android:id="@+id/textView_listrowNotificationItem_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
@@ -25,7 +25,7 @@
             />
 
     <TextView
-            android:id="@+id/textView_listrowStock_name"
+            android:id="@+id/textView_listrowNotificationItem_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
@@ -34,36 +34,9 @@
             android:maxLines="1"
             android:textIsSelectable="false"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowStock_quantity"
+            app:layout_constraintStart_toEndOf="@id/textView_listrowNotificationItem_date"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="lååååååååång text"
-            />
-
-    <TextView
-            android:id="@+id/textView_listrowStock_acquisitionValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowStock_name"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="1500 SEK"
-            />
-
-    <ImageButton
-            android:id="@+id/button_listrowStock_delete"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_delete"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="@string/action_delete"
             />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

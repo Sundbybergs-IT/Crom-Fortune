@@ -10,4 +10,12 @@ class SettingsViewModel : ViewModel() {
         value = "This is settings Fragment"
     }
     val text: LiveData<String> = _text
+
+    private val _todoText = MutableLiveData<String>().apply {
+        value = "Att göra: Stöd för att ställa in standardvärden (courtage och valuta), " +
+                "Ändra pollning till 1 gång per timme, lagring av rekommendationer," +
+                "förbättra så Croms vilja tar hänsyn till hur stora köp/försäljningar som gjordes, " +
+                "en lista över alla aktiesymboler..."
+    }
+    val todoText: LiveData<String> = _todoText
 }

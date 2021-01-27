@@ -11,6 +11,7 @@
 
     <string name="generic_acquisition_value">Acquisition value</string>
     <string name="generic_commission_fee">Commission fee</string>
+    <string name="generic_date">Date</string>
     <string name="generic_error_empty">Enter a value.</string>
     <string name="generic_error_invalid_date">Enter a valid date.</string>
     <string name="generic_error_invalid_currency_symbol">Enter a valid currency symbol.</string>
@@ -41,10 +42,14 @@
     <string name="home_stocks">You have added stocks. Not shown (not yet implemented).</string>
     <string name="home_title">Home</string>
 
+    <string name="notification_channel_name">Crom Fortune Events</string>
+    <string name="notification_recommendation_body">You are recommended to:</string>
+    <string name="notification_recommendation_title">Recommendation</string>
     <string name="notifications_title">Notifications</string>
 
     <string name="recommendations_none">No recommendations</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_default_values">Default values</string>
+
 </resources>
