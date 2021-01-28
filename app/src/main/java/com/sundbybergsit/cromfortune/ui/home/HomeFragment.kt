@@ -1,7 +1,10 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -12,7 +15,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
 import java.util.*
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(R.layout.fragment_home) {
 
     companion object {
 
@@ -24,25 +27,20 @@ class HomeFragment : Fragment() {
 
     private val stockListAdapter = StockListAdapter()
 
-    override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-    ): View? {
-        val root = inflater.inflate(R.layout.fragment_home, container, false)
-        val infoText: TextView = root.findViewById(R.id.textView_fragmentHome)
-        val infoImage: ImageView = root.findViewById(R.id.imageView_fragmentHome)
-        val fab: FloatingActionButton = root.findViewById(R.id.floatingActionButton_fragmentHome)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val infoText: TextView = view.findViewById(R.id.textView_fragmentHome)
+        val infoImage: ImageView = view.findViewById(R.id.imageView_fragmentHome)
+        val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton_fragmentHome)
         fab.setOnClickListener {
             val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.show(parentFragmentManager, TAG)
         }
-        val recyclerView: RecyclerView = root.findViewById(R.id.recyclerView_fragmentHome)
+        val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView_fragmentHome)
         stockListAdapter.setListener(viewModel)
         recyclerView.adapter = stockListAdapter
         setUpLiveDataListeners(infoText, infoImage)
         setHasOptionsMenu(true)
-        return root
+        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

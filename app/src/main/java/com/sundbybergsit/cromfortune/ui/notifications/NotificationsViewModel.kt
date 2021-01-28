@@ -8,25 +8,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ui.dashboard.NotificationsRepositoryImpl
-import com.sundbybergsit.cromfortune.ui.home.*
+import com.sundbybergsit.cromfortune.ui.home.AdapterItem
+import com.sundbybergsit.cromfortune.ui.home.NotificationAdapterItemUtil
 import kotlinx.coroutines.launch
 
 class NotificationsViewModel : ViewModel() {
 
-    private val _score = MutableLiveData<String>().apply {
-        value = ""
-    }
-    val score: LiveData<String> = _score
 
     private val _notifications = MutableLiveData<ViewState>()
     val notifications: LiveData<ViewState> = _notifications
 
     fun refresh(context: Context) {
         viewModelScope.launch {
-            val repository = StockOrderRepositoryImpl(context)
-            val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(
-                    CromFortuneV1RecommendationAlgorithm(context, repository), stocks(repository).toSet())
-            _score.postValue("Du följer Croms vilja till " + latestScore.score + "%")
             val notifications = NotificationsRepositoryImpl(context).list()
             if (notifications.isEmpty()) {
                 _notifications.postValue(ViewState.HasNoNotifications(R.string.generic_error_empty))
@@ -35,16 +28,6 @@ class NotificationsViewModel : ViewModel() {
                         NotificationAdapterItemUtil.convertToAdapterItems(notifications)))
             }
         }
-    }
-
-    private fun stocks(repository: StockOrderRepositoryImpl): List<StockOrder> {
-        val stocks = mutableListOf<StockOrder>()
-        for (stockName in repository.listOfStockNames()) {
-            for (entry in repository.list(stockName)) {
-                stocks.add(entry)
-            }
-        }
-        return stocks
     }
 
     sealed class ViewState {

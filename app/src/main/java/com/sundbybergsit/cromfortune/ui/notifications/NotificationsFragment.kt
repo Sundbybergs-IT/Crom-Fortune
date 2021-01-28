@@ -22,9 +22,6 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
     }
 
     private fun setUpLiveDataListeners() {
-        viewModel.score.observe(viewLifecycleOwner, {
-            textView_fragmentNotifications_score.text = it
-        })
         viewModel.notifications.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is NotificationsViewModel.ViewState.HasNotifications -> listAdapter.submitList(viewState.adapterItems)

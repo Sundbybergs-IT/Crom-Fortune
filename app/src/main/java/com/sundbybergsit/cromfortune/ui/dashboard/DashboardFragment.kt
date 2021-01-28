@@ -13,6 +13,7 @@ import com.sundbybergsit.cromfortune.ui.home.StockPriceProducer
 import com.sundbybergsit.cromfortune.ui.home.StockPriceRetriever
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
+import kotlinx.android.synthetic.main.fragment_dashboard.*
 
 private const val STOCK_PRICE_REFRESH_INTERVAL = 60
 
@@ -45,6 +46,9 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
         stockPriceRetriever.stockPrices.observe(viewLifecycleOwner, { stockPrice ->
             Toast.makeText(requireContext(), "New real stock price: $stockPrice", Toast.LENGTH_SHORT).show()
             dashboardViewModel.refresh(requireContext(), stockPrice)
+        })
+        dashboardViewModel.score.observe(viewLifecycleOwner, {
+            textView_fragmentDashboard_score.text = it
         })
         dashboardViewModel.recommendationViewState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
