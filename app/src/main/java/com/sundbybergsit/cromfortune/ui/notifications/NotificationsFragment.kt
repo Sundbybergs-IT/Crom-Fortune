@@ -24,8 +24,15 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
     private fun setUpLiveDataListeners() {
         viewModel.notifications.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
-                is NotificationsViewModel.ViewState.HasNotifications -> listAdapter.submitList(viewState.adapterItems)
-                is NotificationsViewModel.ViewState.HasNoNotifications -> listAdapter.submitList(Collections.emptyList())
+                is NotificationsViewModel.ViewState.HasNotifications -> {
+                    textView_fragmentNotifications.visibility = View.GONE
+                    listAdapter.submitList(viewState.adapterItems)
+                }
+                is NotificationsViewModel.ViewState.HasNoNotifications -> {
+                    listAdapter.submitList(Collections.emptyList())
+                    textView_fragmentNotifications.visibility = View.VISIBLE
+                    textView_fragmentNotifications.text = getString(R.string.notifications_empty)
+                }
             }
         })
     }

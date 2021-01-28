@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@drawable/background_white_selectable_item_background"
-        android:padding="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="horizontal"
         >
 
     <TextView
@@ -18,10 +19,7 @@
             android:maxLines="1"
             android:textAlignment="viewStart"
             android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="10"
+            tools:text="2001-01-01"
             />
 
     <TextView
@@ -29,14 +27,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:ellipsize="end"
             android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowNotificationItem_date"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="lååååååååång text"
+            android:maxLines="2"
+            tools:text="låååååååååååååå ååååååååå åååååååååååååååååå ååååååååååå ååååååååååååång text"
             />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

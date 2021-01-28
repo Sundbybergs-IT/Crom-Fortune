@@ -43,6 +43,7 @@
     <string name="home_title">Hem</string>
 
     <string name="notification_channel_name">Crom Fortune-händelser</string>
+    <string name="notifications_empty">Det finns inga notifieringar</string>
     <string name="notification_recommendation_body">Du rekommenderas att:</string>
     <string name="notification_recommendation_title">Rekommendation</string>
     <string name="notifications_title">Notifieringar</string>

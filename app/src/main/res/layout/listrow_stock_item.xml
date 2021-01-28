@@ -5,6 +5,8 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@drawable/background_white_selectable_item_background"
+        android:clickable="true"
+        android:focusable="true"
         android:padding="16dp"
         >
 
@@ -59,11 +61,11 @@
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/action_delete"
             android:src="@android:drawable/ic_delete"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="@string/action_delete"
             />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
