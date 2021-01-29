@@ -91,7 +91,7 @@
             android:id="@+id/textInputLayout_dialogRemoveStock_priceInput"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="@string/home_add_stock_price_label"
+            android:hint="@string/generic_price_per_stock"
             app:errorEnabled="true"
             app:layout_constraintStart_toStartOf="@id/textInputLayout_dialogRemoveStock_nameInput"
             app:layout_constraintTop_toBottomOf="@id/textInputLayout_dialogRemoveStock_nameInput"

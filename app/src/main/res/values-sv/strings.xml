@@ -1,6 +1,7 @@
 <resources>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Avbryt</string>
+    <string name="action_close">Stäng</string>
     <string name="action_delete">delete</string>
     <string name="action_stock_buy">Registrera köp</string>>
     <string name="action_stock_sell">Registrera försäljning</string>>
@@ -20,14 +21,15 @@
     <string name="generic_error_not_supported">Denna funktion stöds inte.</string>
     <string name="generic_hint">Välj</string>
     <string name="generic_name">Namn</string>
+    <string name="generic_price_per_stock">Pris per aktie</string>
     <string name="generic_quantity">Kvantitet</string>
     <string name="generic_saved">Sparade framgångsrikt</string>
+    <string name="generic_title_stock_orders">Transaktioner</string>
 
     <string name="home_add_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_add_stock_currency_label">Valuta</string>
     <string name="home_add_stock_date_label">Datum</string>
     <string name="home_add_stock_name_label">Namn</string>
-    <string name="home_add_stock_price_label">Pris per aktie</string>
     <string name="home_add_stock_quantity_label">Kvantitet</string>
     <string name="home_add_stock_message">Lägg till ett köp av aktier i taget.</string>
     <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
@@ -35,7 +37,6 @@
     <string name="home_remove_stock_currency_label">Valuta</string>
     <string name="home_remove_stock_date_label">Datum</string>
     <string name="home_remove_stock_name_label">Namn</string>
-    <string name="home_remove_stock_price_label">Pris per aktie</string>
     <string name="home_remove_stock_quantity_error_insufficient">Du har inte så många.</string>
     <string name="home_remove_stock_quantity_label">Kvantitet</string>
     <string name="home_remove_stock_message">Lägg till ett försäljning av aktier i taget.</string>

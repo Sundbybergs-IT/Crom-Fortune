@@ -24,7 +24,11 @@ class StockListAdapterTest {
 
     @Before
     fun setUp() {
-        adapter = StockListAdapter()
+        adapter = StockListAdapter(object : StockClickListener {
+            override fun onClick(stockName: String) {
+                // Do nothing
+            }
+        })
         val currency = currency
         val list: List<AdapterItem> = listOf(StockHeaderAdapterItem(),
                 StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, "Stock.A", 100.099, 0.0, 1)),

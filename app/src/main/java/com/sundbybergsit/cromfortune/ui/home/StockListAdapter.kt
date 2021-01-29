@@ -10,14 +10,18 @@ import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat
 import java.util.*
 
-class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()) {
+class StockListAdapter(private val stockClickListener: StockClickListener) :
+        ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()) {
 
     private lateinit var stockRemovable: StockRemovable
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.listrow_stock_header -> HeaderViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false))
-            R.layout.listrow_stock_item -> StockViewHolder(stockRemovable, LayoutInflater.from(parent.context).inflate(viewType, parent, false))
+            R.layout.listrow_stock_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
+                    .inflate(viewType, parent, false))
+            R.layout.listrow_stock_item -> StockViewHolder(stockClickListener = stockClickListener,
+                    stockRemovable = stockRemovable,
+                    itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false))
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -49,7 +53,9 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
 
     internal class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-    internal class StockViewHolder(private val stockRemovable: StockRemovable, itemView: View) : RecyclerView.ViewHolder(itemView) {
+    internal class StockViewHolder(private val stockClickListener: StockClickListener,
+                                   private val stockRemovable: StockRemovable,
+                                   itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: StockAdapterItem) {
             itemView.textView_listrowStockItem_quantity.text = item.stockOrder.quantity.toString()
@@ -66,7 +72,9 @@ class StockListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(Adapt
             itemView.button_listrowStockItem_delete.setOnClickListener {
                 stockRemovable.remove(itemView.context, item.stockOrder.name)
             }
-
+            itemView.setOnClickListener {
+                stockClickListener.onClick(item.stockOrder.name)
+            }
         }
 
     }

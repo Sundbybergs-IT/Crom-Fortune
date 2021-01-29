@@ -15,7 +15,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
 import java.util.*
 
-class HomeFragment : Fragment(R.layout.fragment_home) {
+class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
 
     companion object {
 
@@ -25,7 +25,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private val viewModel: HomeViewModel by viewModels()
 
-    private val stockListAdapter = StockListAdapter()
+    private val stockListAdapter = StockListAdapter(this)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val infoText: TextView = view.findViewById(R.id.textView_fragmentHome)
@@ -95,6 +95,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         })
 
+    }
+
+    override fun onClick(stockName: String) {
+        val dialog = StockOrdersDialogFragment(stockName)
+        dialog.show(parentFragmentManager, TAG)
     }
 
 }
