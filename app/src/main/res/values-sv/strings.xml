@@ -10,7 +10,7 @@
     <string name="app_name">Crom Fortune</string>
 
     <string name="dashboard_title">Instrumentbräda</string>
-
+    <string name="dashboard_croms_will_message">Du följer Croms vilja till %1$s\%%</string>
     <string name="generic_acquisition_value">GAV</string>
     <string name="generic_commission_fee">Courtageavgift</string>
     <string name="generic_date">Datum</string>

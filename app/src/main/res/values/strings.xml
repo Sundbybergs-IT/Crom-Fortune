@@ -10,6 +10,7 @@
     <string name="app_name">Crom Fortune</string>
 
     <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_croms_will_message">You follow the will of Crom to the extent of %1$s\%%</string>
 
     <string name="generic_acquisition_value">Acquisition value</string>
     <string name="generic_commission_fee">Commission fee</string>

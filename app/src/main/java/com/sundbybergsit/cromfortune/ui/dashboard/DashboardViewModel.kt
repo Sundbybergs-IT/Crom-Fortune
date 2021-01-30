@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.*
 import kotlinx.coroutines.launch
@@ -37,7 +38,7 @@ class DashboardViewModel : ViewModel() {
             val repository = StockOrderRepositoryImpl(context)
             val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(
                     CromFortuneV1RecommendationAlgorithm(context), stocks(repository).toSet())
-            _score.postValue("Du följer Croms vilja till " + latestScore.score + "%")
+            _score.postValue(context.getString(R.string.dashboard_croms_will_message, latestScore.score.toString()))
         }
     }
 
