@@ -13,14 +13,14 @@ import java.util.*
 class StockListAdapter(private val stockClickListener: StockClickListener) :
         ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()) {
 
-    private lateinit var stockRemovable: StockRemovable
+    private lateinit var stockRemoveClickListener: StockRemoveClickListener
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             R.layout.listrow_stock_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
                     .inflate(viewType, parent, false))
             R.layout.listrow_stock_item -> StockViewHolder(stockClickListener = stockClickListener,
-                    stockRemovable = stockRemovable,
+                    stockRemoveClickListener = stockRemoveClickListener,
                     itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false))
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
@@ -47,14 +47,14 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
         }
     }
 
-    fun setListener(stockRemovable: StockRemovable) {
-        this.stockRemovable = stockRemovable
+    fun setListener(stockRemoveClickListener: StockRemoveClickListener) {
+        this.stockRemoveClickListener = stockRemoveClickListener
     }
 
     internal class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
     internal class StockViewHolder(private val stockClickListener: StockClickListener,
-                                   private val stockRemovable: StockRemovable,
+                                   private val stockRemoveClickListener: StockRemoveClickListener,
                                    itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: StockAdapterItem) {
@@ -70,7 +70,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
             format.currency = Currency.getInstance(item.stockOrder.currency)
             itemView.textView_listrowStockItem_acquisitionValue.text = format.format(acquisitionValue)
             itemView.button_listrowStockItem_delete.setOnClickListener {
-                stockRemovable.remove(itemView.context, item.stockOrder.name)
+                stockRemoveClickListener.onClickRemove(itemView.context, item.stockOrder.name)
             }
             itemView.setOnClickListener {
                 stockClickListener.onClick(item.stockOrder.name)

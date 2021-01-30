@@ -94,7 +94,15 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
                 }
             }
         })
-
+        viewModel.dialogViewState.observe(viewLifecycleOwner, { viewState ->
+            when (viewState) {
+                is HomeViewModel.DialogViewState.ShowDeleteDialog -> {
+                    val dialog = DeleteStockOrdersDialogFragment(homeViewModel = viewModel,
+                            stockName = viewState.stockName)
+                    dialog.show(parentFragmentManager, TAG)
+                }
+            }
+        })
     }
 
     override fun onClick(stockName: String) {

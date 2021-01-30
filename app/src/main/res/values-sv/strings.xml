@@ -13,6 +13,7 @@
     <string name="generic_acquisition_value">GAV</string>
     <string name="generic_commission_fee">Courtageavgift</string>
     <string name="generic_date">Datum</string>
+    <string name="generic_dialog_title_are_you_sure">Är du säker?</string>
     <string name="generic_error_empty">Ange ett värde.</string>
     <string name="generic_error_invalid_currency_symbol">Ange en giltig valutasymbol.</string>
     <string name="generic_error_invalid_date">Ange ett giltigt datum.</string>
@@ -33,6 +34,7 @@
     <string name="home_add_stock_name_label">Namn</string>
     <string name="home_add_stock_quantity_label">Kvantitet</string>
     <string name="home_add_stock_message">Lägg till ett köp av aktier i taget.</string>
+    <string name="home_delete_all_stock_orders">Det här innebär att alla transaktioner för denna aktie kommer att raderas: %1$s.</string>
     <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
     <string name="home_remove_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_remove_stock_currency_label">Valuta</string>

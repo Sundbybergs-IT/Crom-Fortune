@@ -9,19 +9,19 @@ import androidx.lifecycle.ViewModel
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 
-class HomeViewModel : ViewModel(), StockRemovable {
+class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     private val _viewState = MutableLiveData<ViewState>()
+    private val _dialogViewState = MutableLiveData<DialogViewState>()
     private val _stockTransactionState = MutableLiveData<StockTransactionState>()
 
     val viewState: LiveData<ViewState> = _viewState
+    val dialogViewState: LiveData<DialogViewState> = _dialogViewState
     val stockTransactionState: LiveData<StockTransactionState> = _stockTransactionState
 
     @SuppressLint("ApplySharedPref")
-    override fun remove(context: Context, stockName: String) {
-        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
-        stockOrderRepository.remove(stockName)
-        refresh(context)
+    override fun onClickRemove(context: Context, stockName: String) {
+        _dialogViewState.postValue(DialogViewState.ShowDeleteDialog(stockName))
     }
 
     fun refresh(context: Context) {
@@ -81,6 +81,18 @@ class HomeViewModel : ViewModel(), StockRemovable {
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
         return StockOrderRepositoryImpl(context).count(stockName) >= quantity
+    }
+
+    fun confirmRemove(context: Context, stockName: String) {
+        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
+        stockOrderRepository.remove(stockName)
+        refresh(context)
+    }
+
+    sealed class DialogViewState {
+
+        data class ShowDeleteDialog(val stockName: String) : DialogViewState()
+
     }
 
     sealed class ViewState {

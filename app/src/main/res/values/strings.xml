@@ -13,6 +13,7 @@
     <string name="generic_acquisition_value">Acquisition value</string>
     <string name="generic_commission_fee">Commission fee</string>
     <string name="generic_date">Date</string>
+    <string name="generic_dialog_title_are_you_sure">Are you sure?</string>
     <string name="generic_error_empty">Enter a value.</string>
     <string name="generic_error_invalid_date">Enter a valid date.</string>
     <string name="generic_error_invalid_currency_symbol">Enter a valid currency symbol.</string>
@@ -33,6 +34,7 @@
     <string name="home_add_stock_name_label">Name</string>
     <string name="home_add_stock_quantity_label">Quantity</string>
     <string name="home_add_stock_message">Add one purchase of a stock at a time.</string>
+    <string name="home_delete_all_stock_orders">This will delete all transactions for the following stock: %1$s.</string>
     <string name="home_remove_commission_fee_label">Commission fee (in SEK)</string>
     <string name="home_remove_stock_currency_label">Currency</string>
     <string name="home_remove_stock_date_label">Date</string>
