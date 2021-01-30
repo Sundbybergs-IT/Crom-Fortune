@@ -77,7 +77,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
             aggregatedStockOrders.add(StockOrder("Buy", currency!!, System.currentTimeMillis(), stockName,
                     accumulatedCost / quantity, 0.0, quantity))
         }
-        return aggregatedStockOrders
+        return aggregatedStockOrders.sortedBy { stockOrder -> stockOrder.name }
     }
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
