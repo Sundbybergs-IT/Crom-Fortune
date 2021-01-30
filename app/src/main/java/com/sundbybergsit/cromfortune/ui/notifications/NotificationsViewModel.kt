@@ -20,7 +20,8 @@ class NotificationsViewModel : ViewModel() {
 
     fun refresh(context: Context) {
         viewModelScope.launch {
-            val notifications = NotificationsRepositoryImpl(context).list()
+            val notifications = NotificationsRepositoryImpl(context).list().sortedByDescending {
+                notificationMessage -> notificationMessage.dateInMillis }
             if (notifications.isEmpty()) {
                 _notifications.postValue(ViewState.HasNoNotifications(R.string.generic_error_empty))
             } else {
