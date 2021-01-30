@@ -1,56 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@drawable/background_white_selectable_item_background"
+        android:orientation="horizontal"
         android:padding="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         >
 
-    <TextView
-            android:id="@+id/textView_listrowStockHeader_quantity"
-            android:layout_width="wrap_content"
+    <GridLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="@string/generic_quantity"
-            android:textAlignment="viewStart"
-            android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            android:layout_weight="1"
+            android:columnCount="3"
+            >
+
+        <TextView
+                android:id="@+id/textView_listrowStockHeader_quantity"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:ellipsize="end"
+                android:includeFontPadding="false"
+                android:maxLines="2"
+                android:text="@string/generic_quantity"
+                android:textAlignment="viewStart"
+                android:textIsSelectable="false"
+                android:textStyle="bold"
+                />
+
+        <TextView
+                android:id="@+id/textView_listrowStockHeader_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:ellipsize="end"
+                android:includeFontPadding="false"
+                android:maxLines="2"
+                android:text="@string/generic_name"
+                android:textIsSelectable="false"
+                android:textStyle="bold"
+                />
+
+        <TextView
+                android:id="@+id/textView_listrowStockHeader_acquisitionValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:ellipsize="end"
+                android:includeFontPadding="false"
+                android:maxLines="2"
+                android:text="@string/generic_acquisition_value"
+                android:textIsSelectable="false"
+                android:textStyle="bold"
+                />
+
+    </GridLayout>
+
+    <View
+            android:layout_width="32dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.05"
             />
 
-    <TextView
-            android:id="@+id/textView_listrowStockHeader_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="@string/generic_name"
-            android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowStockHeader_quantity"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-
-    <TextView
-            android:id="@+id/textView_listrowStockHeader_acquisitionValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:text="@string/generic_acquisition_value"
-            android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowStockHeader_name"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

@@ -16,6 +16,7 @@
             android:layout_margin="8dp"
             android:maxLines="2"
             android:text="@string/generic_date"
+            android:textStyle="bold"
             />
 
     <TextView
@@ -26,6 +27,7 @@
             android:layout_margin="8dp"
             android:maxLines="2"
             android:text="@string/generic_quantity"
+            android:textStyle="bold"
             />
 
     <TextView
@@ -36,6 +38,7 @@
             android:layout_margin="8dp"
             android:maxLines="2"
             android:text="@string/generic_name"
+            android:textStyle="bold"
             />
 
     <TextView
@@ -46,6 +49,7 @@
             android:layout_margin="8dp"
             android:maxLines="2"
             android:text="@string/generic_price_per_stock"
+            android:textStyle="bold"
             />
 
 </GridLayout>

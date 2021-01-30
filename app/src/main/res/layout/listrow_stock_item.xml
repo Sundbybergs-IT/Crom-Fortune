@@ -1,71 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="48dp"
+        android:layout_centerVertical="true"
         android:background="@drawable/background_white_selectable_item_background"
         android:clickable="true"
+        android:columnCount="4"
         android:focusable="true"
-        android:padding="16dp"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
         >
 
     <TextView
             android:id="@+id/textView_listrowStockItem_quantity"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_columnWeight="1"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="1"
             android:textAlignment="viewStart"
             android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             tools:text="10"
             />
 
     <TextView
             android:id="@+id/textView_listrowStockItem_name"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_columnWeight="1"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="1"
+            android:textAlignment="viewStart"
             android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowStockItem_quantity"
-            app:layout_constraintTop_toTopOf="parent"
             tools:text="lååååååååång text"
             />
 
     <TextView
             android:id="@+id/textView_listrowStockItem_acquisitionValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_columnWeight="1"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="1"
+            android:textAlignment="viewStart"
             android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/textView_listrowStockItem_name"
-            app:layout_constraintTop_toTopOf="parent"
             tools:text="1500 SEK"
             />
 
     <ImageButton
             android:id="@+id/button_listrowStockItem_delete"
             style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
+            android:layout_width="32dp"
             android:layout_height="wrap_content"
             android:contentDescription="@string/action_delete"
+            android:padding="16dp"
             android:src="@android:drawable/ic_delete"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</GridLayout>
