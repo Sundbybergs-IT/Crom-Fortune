@@ -51,7 +51,7 @@
             android:id="@+id/textInputLayout_dialogRemoveStock_quantityInput"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="@string/generic_quantity"
+            android:hint="@string/generic_title_quantity"
             app:errorEnabled="true"
             app:layout_constraintStart_toStartOf="@id/textInputLayout_dialogRemoveStock_dateInput"
             app:layout_constraintTop_toBottomOf="@id/textInputLayout_dialogRemoveStock_dateInput"

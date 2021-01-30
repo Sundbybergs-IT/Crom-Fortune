@@ -53,7 +53,7 @@ class StockOrderListAdapter(private val context: Context) :
 
     internal class StockViewHolder(private val context: Context, itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var formatter = SimpleDateFormat("dd-MMMM-yyyy", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
+        var formatter = SimpleDateFormat("yyyy-MM-dd", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
 
         fun bind(item: StockAdapterItem) {
             itemView.textView_listrowStockOrderItem_date.text = formatter.format(Date(item.stockOrder.dateInMillis))

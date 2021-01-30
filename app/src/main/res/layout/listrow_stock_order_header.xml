@@ -13,9 +13,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="2"
             android:text="@string/generic_date"
+            android:textSize="12sp"
             android:textStyle="bold"
             />
 
@@ -24,9 +25,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="2"
-            android:text="@string/generic_quantity"
+            android:text="@string/generic_title_quantity"
+            android:textSize="12sp"
             android:textStyle="bold"
             />
 
@@ -35,9 +37,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="2"
             android:text="@string/generic_price_per_stock"
+            android:textSize="12sp"
             android:textStyle="bold"
             />
 
@@ -46,9 +49,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="2"
-            android:text="@string/generic_total_cost"
+            android:text="@string/generic_title_total_cost"
+            android:textSize="12sp"
             android:textStyle="bold"
             />
 

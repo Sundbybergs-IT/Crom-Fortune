@@ -2,7 +2,7 @@
 <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="32dp"
+        android:layout_height="wrap_content"
         android:background="@drawable/background_white_selectable_item_background"
         android:clickable="true"
         android:columnCount="4"
@@ -14,10 +14,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="1"
             android:textAlignment="viewStart"
             android:textIsSelectable="false"
+            android:textSize="12sp"
             tools:text="2001-01-01"
             />
 
@@ -26,8 +27,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="1"
+            android:textSize="12sp"
             tools:text="14"
             />
 
@@ -36,8 +38,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="1"
+            android:textSize="12sp"
             tools:text="15kr"
             />
 
@@ -46,8 +49,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_margin="8dp"
+            android:layout_margin="4dp"
             android:maxLines="1"
+            android:textSize="12sp"
             tools:text="9999kr"
             />
 

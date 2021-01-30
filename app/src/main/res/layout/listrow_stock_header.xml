@@ -24,7 +24,7 @@
                 android:ellipsize="end"
                 android:includeFontPadding="false"
                 android:maxLines="2"
-                android:text="@string/generic_quantity"
+                android:text="@string/generic_title_quantity"
                 android:textAlignment="viewStart"
                 android:textIsSelectable="false"
                 android:textStyle="bold"
@@ -38,7 +38,7 @@
                 android:ellipsize="end"
                 android:includeFontPadding="false"
                 android:maxLines="2"
-                android:text="@string/generic_name"
+                android:text="@string/generic_title_name"
                 android:textIsSelectable="false"
                 android:textStyle="bold"
                 />
