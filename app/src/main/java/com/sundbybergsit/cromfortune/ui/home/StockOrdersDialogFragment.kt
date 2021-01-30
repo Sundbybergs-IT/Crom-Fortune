@@ -25,7 +25,8 @@ class StockOrdersDialogFragment(val stockName: String) : DialogFragment() {
         listAdapter = StockOrderListAdapter(context)
         recyclerView.adapter = listAdapter
         val stockOrderRepository = StockOrderRepositoryImpl(context)
-        listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockName)))
+        listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockName)
+                .sortedBy { stockOrder -> stockOrder.dateInMillis }))
         return AlertDialog.Builder(context)
                 .setView(dialogRootView)
                 .setMessage("${getString(R.string.generic_title_stock_orders)} (${stockName})")
