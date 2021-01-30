@@ -25,6 +25,7 @@
     <string name="generic_quantity">Kvantitet</string>
     <string name="generic_saved">Sparade framgångsrikt</string>
     <string name="generic_title_stock_orders">Transaktioner</string>
+    <string name="generic_total_cost">Kostnad (total)</string>
 
     <string name="home_add_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_add_stock_currency_label">Valuta</string>

@@ -14,4 +14,12 @@ data class StockOrder(val orderAction: String, val currency: String, val dateInM
         }
     }
 
+    fun getTotalCost(): Double {
+        return if (orderAction == "Buy") {
+            quantity * pricePerStock + commissionFee
+        } else {
+            -quantity * pricePerStock + commissionFee
+        }
+    }
+
 }

@@ -25,6 +25,7 @@
     <string name="generic_quantity">Quantity</string>
     <string name="generic_saved">Saved successfully</string>
     <string name="generic_title_stock_orders">Transactions</string>
+    <string name="generic_total_cost">Cost (total)</string>
 
     <string name="home_add_commission_fee_label">Commission fee (in SEK)</string>
     <string name="home_add_stock_currency_label">Currency</string>

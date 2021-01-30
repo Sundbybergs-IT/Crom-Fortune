@@ -27,7 +27,7 @@ class StockOrdersDialogFragment(val stockName: String) : DialogFragment() {
         listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockName)))
         return AlertDialog.Builder(context)
                 .setView(dialogRootView)
-                .setMessage(R.string.generic_title_stock_orders)
+                .setMessage("${getString(R.string.generic_title_stock_orders)} (${stockName})")
                 .setPositiveButton(getText(R.string.action_close)) { _, _ ->
                 }.create()
     }

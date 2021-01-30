@@ -58,7 +58,6 @@ class StockOrderListAdapter(private val context: Context) :
         fun bind(item: StockAdapterItem) {
             itemView.textView_listrowStockOrderItem_date.text = formatter.format(Date(item.stockOrder.dateInMillis))
             itemView.textView_listrowStockOrderItem_quantity.text = item.stockOrder.quantity.toString()
-            itemView.textView_listrowStockOrderItem_name.text = item.stockOrder.name
             val pricePerStock = item.stockOrder.pricePerStock
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
             if (pricePerStock < 1) {
@@ -68,6 +67,7 @@ class StockOrderListAdapter(private val context: Context) :
             }
             format.currency = Currency.getInstance(item.stockOrder.currency)
             itemView.textView_listrowStockOrderItem_price.text = format.format(pricePerStock)
+            itemView.textView_listrowStockOrderItem_total.text = format.format(item.stockOrder.getTotalCost())
             itemView.setBackgroundColor(getBuyOrSellColor(item.stockOrder.orderAction))
         }
 

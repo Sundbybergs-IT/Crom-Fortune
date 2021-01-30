@@ -31,17 +31,6 @@
             />
 
     <TextView
-            android:id="@+id/textView_listrowStockOrderHeader_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_margin="8dp"
-            android:maxLines="2"
-            android:text="@string/generic_name"
-            android:textStyle="bold"
-            />
-
-    <TextView
             android:id="@+id/textView_listrowStockOrderHeader_price"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -49,6 +38,17 @@
             android:layout_margin="8dp"
             android:maxLines="2"
             android:text="@string/generic_price_per_stock"
+            android:textStyle="bold"
+            />
+
+    <TextView
+            android:id="@+id/textView_listrowStockOrderHeader_total"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:maxLines="2"
+            android:text="@string/generic_total_cost"
             android:textStyle="bold"
             />
 
