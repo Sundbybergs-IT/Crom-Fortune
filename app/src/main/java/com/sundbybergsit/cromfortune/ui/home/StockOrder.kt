@@ -7,7 +7,11 @@ data class StockOrder(val orderAction: String, val currency: String, val dateInM
                       val pricePerStock: Double, val commissionFee: Double = 0.0, val quantity: Int) {
 
     fun getAcquisitionValue(): Double {
-        return (quantity * pricePerStock + commissionFee) / quantity
+        return if (orderAction == "Buy") {
+            (quantity * pricePerStock + commissionFee) / quantity
+        } else {
+            0.0
+        }
     }
 
 }
