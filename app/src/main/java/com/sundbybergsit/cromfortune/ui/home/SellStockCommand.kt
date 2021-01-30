@@ -2,6 +2,7 @@ package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
 import com.sundbybergsit.cromfortune.roundTo
+import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import java.util.*
 
 class SellStockCommand(private val context: Context, private val currentTimeInMillis: Long,

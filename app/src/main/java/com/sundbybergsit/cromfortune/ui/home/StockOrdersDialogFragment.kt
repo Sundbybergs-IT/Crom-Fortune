@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 
 class StockOrdersDialogFragment(val stockName: String) : DialogFragment() {
 

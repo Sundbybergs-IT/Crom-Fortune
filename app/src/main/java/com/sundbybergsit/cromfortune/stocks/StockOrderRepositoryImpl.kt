@@ -1,8 +1,8 @@
-package com.sundbybergsit.cromfortune.ui.home
+package com.sundbybergsit.cromfortune.stocks
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
+import com.sundbybergsit.cromfortune.ui.home.StockOrder
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

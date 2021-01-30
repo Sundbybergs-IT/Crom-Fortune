@@ -5,6 +5,7 @@
     <string name="action_delete">delete</string>
     <string name="action_stock_buy">Registrera köp</string>>
     <string name="action_stock_sell">Registrera försäljning</string>>
+    <string name="action_stocks_supported">Aktier som stöds</string>
 
     <string name="app_name">Crom Fortune</string>
 

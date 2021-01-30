@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
+import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 
 class HomeViewModel : ViewModel(), StockRemoveClickListener {
 

@@ -1,13 +1,11 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
 
-class CromFortuneV1RecommendationAlgorithm(private val context: Context,
-                                           private val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context))
+class CromFortuneV1RecommendationAlgorithm(private val context: Context)
     : RecommendationAlgorithm() {
 
     companion object {
