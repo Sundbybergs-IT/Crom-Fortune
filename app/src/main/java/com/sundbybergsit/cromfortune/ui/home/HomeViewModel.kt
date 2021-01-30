@@ -53,7 +53,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         val aggregatedStockOrders: MutableList<StockOrder> = mutableListOf()
         for (stockName in stockOrderRepository.listOfStockNames()) {
             val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockName)
-            var quantity = 0
+            var grossQuantity = 0
+            var soldQuantity = 0
             var accumulatedCost = 0.0
             var currency: String? = null
             for (stockOrder in stockOrders) {
@@ -62,20 +63,22 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                 }
                 when (stockOrder.orderAction) {
                     "Buy" -> {
-                        quantity += stockOrder.quantity
+                        grossQuantity += stockOrder.quantity
                         accumulatedCost += (stockOrder.pricePerStock * stockOrder.quantity + stockOrder.commissionFee)
                     }
                     "Sell" -> {
-                        quantity -= stockOrder.quantity
-                        accumulatedCost += (-stockOrder.pricePerStock * stockOrder.quantity + stockOrder.commissionFee)
+                        soldQuantity += stockOrder.quantity
                     }
                     else -> {
                         throw IllegalStateException("Invalid stock order action: ${stockOrder.orderAction}")
                     }
                 }
             }
+            val netQuantity = grossQuantity - soldQuantity
+            val averageCost = accumulatedCost / grossQuantity
+            val costToExclude = averageCost * soldQuantity
             aggregatedStockOrders.add(StockOrder("Buy", currency!!, System.currentTimeMillis(), stockName,
-                    accumulatedCost / quantity, 0.0, quantity))
+                    (accumulatedCost - costToExclude) / netQuantity, 0.0, netQuantity))
         }
         return aggregatedStockOrders.sortedBy { stockOrder -> stockOrder.name }
     }
