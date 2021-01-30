@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.os.ConfigurationCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -31,7 +32,7 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
         val item = getItem(position)
         when (holder) {
             is NotificationViewHolder -> {
-                holder.bind(item as NotificationAdapterItem)
+                holder.bind(item as NotificationAdapterItem, position % 2 == 0)
             }
         }
     }
@@ -50,13 +51,16 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
 
     internal class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-    internal class NotificationViewHolder(context: Context, itemView: View) : RecyclerView.ViewHolder(itemView) {
+    internal class NotificationViewHolder(private val context: Context, itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var formatter = SimpleDateFormat("dd-MMMM-yyyy", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
+        var formatter = SimpleDateFormat("yyyy-MM-dd", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
 
-        fun bind(item: NotificationAdapterItem) {
+        fun bind(item: NotificationAdapterItem, evenRow: Boolean) {
             itemView.textView_listrowNotificationItem_date.text = formatter.format(Date(item.notificationMessage.dateInMillis))
             itemView.textView_listrowNotificationItem_name.text = item.notificationMessage.message
+            if (evenRow) {
+                itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent))
+            }
         }
 
     }
