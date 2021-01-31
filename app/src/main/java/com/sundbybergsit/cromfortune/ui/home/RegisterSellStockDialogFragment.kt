@@ -60,14 +60,16 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                     validateCurrency(inputCurrency, inputLayoutCurrency)
                     validateDouble(inputStockQuantity, inputLayoutStockQuantity)
                     validateStockName(inputStockName, inputLayoutStockName)
-                    validateHasStockQuantity(inputStockName.text.toString(), inputStockQuantity, inputLayoutStockQuantity)
+                    val stockSymbol = inputStockName.text.toString().substringAfterLast('(')
+                            .substringBeforeLast(')')
+                    validateHasStockQuantity(stockSymbol, inputStockQuantity, inputLayoutStockQuantity)
                     validateDouble(inputStockPrice, inputLayoutStockPrice)
                     validateDouble(inputCommissionFee, inputLayoutCommissionFee)
                     val dateAsString = inputDate.text.toString()
                     val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)!!
                     val currency = Currency.getInstance(inputCurrency.text.toString())
                     // TODO: Convert commission fee (in SEK) to selected currency
-                    val stockOrder = StockOrder("Sell", currency.toString(), date.time, inputStockName.text.toString(),
+                    val stockOrder = StockOrder("Sell", currency.toString(), date.time, stockSymbol,
                             inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
                             inputStockQuantity.text.toString().toInt())
                     homeViewModel.save(requireContext(), stockOrder)
@@ -95,7 +97,8 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
     }
 
     private fun getStockNameAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.toList())
+        val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+                .toMutableList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
     }
@@ -125,7 +128,8 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !StockPriceRetriever.SYMBOLS.contains(input.text.toString()) -> {
+            !StockPriceRetriever.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+                    .toMutableList().contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()
                 throw ValidatorException()

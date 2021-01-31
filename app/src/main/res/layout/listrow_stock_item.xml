@@ -11,8 +11,28 @@
         android:paddingTop="8dp"
         android:paddingEnd="16dp"
         android:paddingBottom="8dp"
-        android:rowCount="1"
+        android:rowCount="2"
         >
+
+    <TextView
+            android:id="@+id/textView_listrowStockItem_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="4"
+            android:layout_columnWeight="1"
+            android:layout_gravity="center_vertical"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textIsSelectable="false"
+            tools:text="lååååååååång text"
+            />
+
+    <View
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="1"
+            />
 
     <TextView
             android:id="@+id/textView_listrowStockItem_quantity"
@@ -25,19 +45,6 @@
             android:maxLines="1"
             android:textIsSelectable="false"
             tools:text="10"
-            />
-
-    <TextView
-            android:id="@+id/textView_listrowStockItem_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_gravity="center_vertical"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:textIsSelectable="false"
-            tools:text="lååååååååång text"
             />
 
     <TextView

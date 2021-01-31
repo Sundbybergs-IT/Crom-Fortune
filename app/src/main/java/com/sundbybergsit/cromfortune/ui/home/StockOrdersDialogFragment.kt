@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 
-class StockOrdersDialogFragment(val stockName: String) : DialogFragment() {
+class StockOrdersDialogFragment(private val stockSymbol: String) : DialogFragment() {
 
     private lateinit var listAdapter : StockOrderListAdapter
 
@@ -25,11 +25,13 @@ class StockOrdersDialogFragment(val stockName: String) : DialogFragment() {
         listAdapter = StockOrderListAdapter(context)
         recyclerView.adapter = listAdapter
         val stockOrderRepository = StockOrderRepositoryImpl(context)
-        listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockName)
+        listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockSymbol)
                 .sortedBy { stockOrder -> stockOrder.dateInMillis }))
+        val stockName = StockPriceRetriever.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
         return AlertDialog.Builder(context)
                 .setView(dialogRootView)
-                .setMessage("${getString(R.string.generic_title_stock_orders)} (${stockName})")
+                .setTitle(R.string.generic_title_stock_orders)
+                .setMessage("$stockName (${stockSymbol})")
                 .setPositiveButton(getText(R.string.action_close)) { _, _ ->
                 }.create()
     }
