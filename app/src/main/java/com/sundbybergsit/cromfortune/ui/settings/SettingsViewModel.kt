@@ -12,9 +12,8 @@ class SettingsViewModel : ViewModel() {
     val text: LiveData<String> = _text
 
     private val _todoText = MutableLiveData<String>().apply {
-        value = "Att göra: Stöd för att ställa in standardvärden (courtage och valuta), " +
-                "Ändra pollning till 1 gång per timme," +
-                "förbättra så Croms vilja tar hänsyn till hur stora köp/försäljningar som gjordes"
+        value = "Att göra: 1. Rekursion på Croms rekommendationer, 2. Introducera bakgrundstjänst, " +
+                "3. Ändra pollning till 1 gång per timme, 4. Jämför utfall med Crom"
     }
     val todoText: LiveData<String> = _todoText
 }
