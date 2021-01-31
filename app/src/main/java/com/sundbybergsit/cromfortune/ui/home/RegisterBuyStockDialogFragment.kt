@@ -71,7 +71,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
                             inputStockQuantity.text.toString().toInt())
                     homeViewModel.save(requireContext(), stockOrder)
                     alertDialog.dismiss()
-                } catch (e : ValidatorException) {
+                } catch (e: ValidatorException) {
                     // Shit happens ...
                 }
             }
@@ -79,15 +79,15 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
         return alertDialog
     }
 
-    private fun getCurrencyAutoCompleteAdapter() : AutoCompleteAdapter{
+    private fun getCurrencyAutoCompleteAdapter(): AutoCompleteAdapter {
         val searchArrayList = ArrayList(StockPriceRetriever.CURRENCIES.toList())
-        return  AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
+        return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
     }
 
-    private fun getStockNameAutoCompleteAdapter() : AutoCompleteAdapter{
+    private fun getStockNameAutoCompleteAdapter(): AutoCompleteAdapter {
         val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.toList())
-        return  AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
+        return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
     }
 
