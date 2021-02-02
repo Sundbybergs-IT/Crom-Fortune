@@ -18,7 +18,7 @@
             android:id="@+id/textView_listrowStockItem_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnSpan="4"
+            android:layout_columnSpan="3"
             android:layout_columnWeight="1"
             android:layout_gravity="center_vertical"
             android:ellipsize="end"
@@ -28,10 +28,12 @@
             tools:text="lååååååååång text"
             />
 
-    <View
-            android:layout_width="0dp"
+    <ImageView
+            android:id="@+id/imageView_listrowStockItem_overflowMenu"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_columnSpan="1"
+            android:src="@drawable/ic_overflow_menu"
             />
 
     <TextView
@@ -60,16 +62,46 @@
             tools:text="1500 SEK"
             />
 
-    <ImageButton
-            android:id="@+id/button_listrowStockItem_delete"
-            style="?android:attr/borderlessButtonStyle"
+    <LinearLayout
             android:layout_width="0dp"
+            style="?android:buttonBarStyle"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/action_delete"
-            android:src="@drawable/ic_delete"
-            android:tint="@android:color/holo_red_dark"
-            />
+            android:gravity="end"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            >
+
+        <Button
+                android:id="@+id/button_listrowStockItem_buy"
+                style="?android:buttonBarButtonStyle"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:background="@android:color/holo_green_dark"
+                android:clickable="true"
+                android:contentDescription="@string/action_stock_buy"
+                android:duplicateParentState="true"
+                android:focusable="true"
+                android:text="@string/action_stock_buy_short"
+                android:textSize="12sp"
+                />
+
+        <Button
+                android:id="@+id/button_listrowStockItem_sell"
+                style="?android:buttonBarButtonStyle"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:background="@android:color/holo_red_dark"
+                android:clickable="true"
+                android:contentDescription="@string/action_stock_sell"
+                android:focusable="true"
+                android:text="@string/action_stock_sell_short"
+                android:textSize="12sp"
+                />
+
+    </LinearLayout>
 
 </GridLayout>

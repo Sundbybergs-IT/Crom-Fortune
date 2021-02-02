@@ -10,6 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
@@ -36,6 +37,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
             dialog.show(parentFragmentManager, TAG)
         }
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView_fragmentHome)
+        recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockListAdapter.setListener(viewModel)
         recyclerView.adapter = stockListAdapter
         setUpLiveDataListeners(infoText, infoImage)

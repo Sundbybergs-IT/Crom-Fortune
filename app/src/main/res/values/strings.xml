@@ -4,7 +4,9 @@
     <string name="action_close">Close</string>
     <string name="action_delete">delete</string>
     <string name="action_stock_buy">Register purchase</string>>
+    <string name="action_stock_buy_short">B</string>>
     <string name="action_stock_sell">Register sale</string>>
+    <string name="action_stock_sell_short">S</string>>
     <string name="action_stocks_supported">Supported stocks</string>
 
     <string name="app_name">Crom Fortune</string>
