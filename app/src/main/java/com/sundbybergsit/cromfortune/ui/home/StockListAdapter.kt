@@ -89,7 +89,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
             itemView.textView_listrowStockItem_acquisitionValue.text = format.format(acquisitionValue)
             val overflowMenu = PopupMenu(context, itemView.imageView_listrowStockItem_overflowMenu)
             itemView.imageView_listrowStockItem_overflowMenu.setOnClickListener { overflowMenu.show() }
-            overflowMenu.inflate(R.menu.menu_stock_list)
+            overflowMenu.inflate(R.menu.home_listrow_actions)
             overflowMenu.setOnMenuItemClickListener(PopupMenuListener(context, stockRemoveClickListener,
                     item.stockOrder.name))
         }
