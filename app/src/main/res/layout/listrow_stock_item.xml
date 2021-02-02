@@ -65,7 +65,6 @@
     <LinearLayout
             android:layout_width="0dp"
             style="?android:buttonBarStyle"
-            android:background="?android:attr/selectableItemBackground"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:gravity="end"
@@ -82,7 +81,6 @@
                 android:background="@android:color/holo_green_dark"
                 android:clickable="true"
                 android:contentDescription="@string/action_stock_buy"
-                android:duplicateParentState="true"
                 android:focusable="true"
                 android:text="@string/action_stock_buy_short"
                 android:textSize="12sp"

@@ -77,6 +77,9 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
                 format.maximumFractionDigits = 2
             }
             format.currency = Currency.getInstance(item.stockOrder.currency)
+            itemView.setOnClickListener {
+                stockClickListener.onClick(item.stockOrder.name)
+            }
             itemView.button_listrowStockItem_buy.setOnClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
