@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
@@ -47,8 +46,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                 .setView(dialogRootView)
                 .setMessage(R.string.home_remove_stock_message)
                 .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
-                    Toast.makeText(requireContext(),
-                            getText(R.string.generic_error_not_supported), Toast.LENGTH_LONG).show()
+                    dismiss()
                 }
                 .setPositiveButton(getText(R.string.action_ok), confirmListener)
                 .create()
