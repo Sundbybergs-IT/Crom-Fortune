@@ -16,4 +16,5 @@ class SettingsViewModel : ViewModel() {
                 "3. Ändra pollning till 1 gång per timme, 4. Jämför utfall med Crom"
     }
     val todoText: LiveData<String> = _todoText
+
 }
