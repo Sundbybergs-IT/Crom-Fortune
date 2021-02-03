@@ -31,6 +31,11 @@ class NotificationsViewModel : ViewModel() {
         }
     }
 
+    fun clearNotifications(context: Context) {
+        NotificationsRepositoryImpl(context).clear()
+        _notifications.postValue(ViewState.HasNoNotifications(R.string.generic_error_empty))
+    }
+
     sealed class ViewState {
 
         data class HasNotifications(@StringRes val textResId: Int, val adapterItems: List<AdapterItem>) : ViewState()

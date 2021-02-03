@@ -26,4 +26,8 @@ class NotificationsRepositoryImpl(context: Context, private val sharedPreference
         sharedPreferences.edit().remove(notificationMessage.dateInMillis.toString()).apply()
     }
 
+    override fun clear() {
+        sharedPreferences.edit().clear().apply()
+    }
+
 }

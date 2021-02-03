@@ -8,4 +8,6 @@ interface NotificationsRepository {
 
     fun remove(notificationMessage: NotificationMessage)
 
+    fun clear()
+
 }
