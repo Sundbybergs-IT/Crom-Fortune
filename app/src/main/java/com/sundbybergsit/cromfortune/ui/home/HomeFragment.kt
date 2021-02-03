@@ -40,7 +40,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockListAdapter.setListener(viewModel)
         recyclerView.adapter = stockListAdapter
-        setUpLiveDataListeners(infoText, infoImage)
+        setUpLiveDataListeners(infoText, infoImage, fab)
         setHasOptionsMenu(true)
         super.onViewCreated(view, savedInstanceState)
     }
@@ -71,17 +71,19 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
         viewModel.refresh(requireContext())
     }
 
-    private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView) {
+    private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView, fab: FloatingActionButton) {
         viewModel.viewState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is HomeViewModel.ViewState.HasStocks -> {
                     textView.text = ""
                     infoImage.visibility = View.GONE
+                    fab.visibility = View.GONE
                     stockListAdapter.submitList(viewState.adapterItems)
                 }
                 is HomeViewModel.ViewState.HasNoStocks -> {
                     textView.text = getText(viewState.textResId)
                     infoImage.visibility = View.VISIBLE
+                    fab.visibility = View.VISIBLE
                     stockListAdapter.submitList(Collections.emptyList())
                 }
             }
