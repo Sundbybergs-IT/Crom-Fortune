@@ -3,7 +3,10 @@
 package com.sundbybergsit.cromfortune
 
 import android.app.Application
+import androidx.work.*
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class CromFortuneApp : Application(), Configuration.Provider {
 
