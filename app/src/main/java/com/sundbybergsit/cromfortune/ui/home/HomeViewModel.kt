@@ -68,6 +68,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                     }
                     "Sell" -> {
                         soldQuantity += stockOrder.quantity
+                        accumulatedCost += stockOrder.commissionFee
                     }
                     else -> {
                         throw IllegalStateException("Invalid stock order action: ${stockOrder.orderAction}")

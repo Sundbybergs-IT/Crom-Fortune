@@ -5,8 +5,8 @@ import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import java.util.*
 
 class BuyStockCommand(private val context: Context, private val currentTimeInMillis: Long,
-                      private val currency: Currency, private val name: String, private val pricePerStock: Double,
-                      private val quantity: Int, private val commissionFee: Double)
+                      val currency: Currency, val name: String, val pricePerStock: Double,
+                      val quantity: Int, val commissionFee: Double)
     : Command {
 
     override fun execute() {

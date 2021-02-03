@@ -10,11 +10,11 @@ object StockPriceRepository {
     private const val TAG = "StockPriceRepository"
 
     @Suppress("ObjectPropertyName")
-    private val _stockPrices = MutableLiveData<StockPrice>()
+    private val _stockPrices = MutableLiveData<Set<StockPrice>>()
 
-    val stockPrices: LiveData<StockPrice> = _stockPrices
+    val stockPrices: LiveData<Set<StockPrice>> = _stockPrices
 
-    fun put(stockPrice: StockPrice) {
+    fun put(stockPrice: Set<StockPrice>) {
         Log.v(TAG, "put(${stockPrice})")
         _stockPrices.postValue(stockPrice)
     }

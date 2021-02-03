@@ -29,11 +29,13 @@ class StockRetrievalCoroutineWorker(val context: Context, workerParameters: Work
                         val stocks: Map<String, Stock> = YahooFinance.get(StockPrice.SYMBOLS.map { pair -> pair.first }
                                 .toTypedArray())
                         val iterator = stocks.iterator()
+                        val stockPrices = mutableSetOf<StockPrice>()
                         while (iterator.hasNext()) {
                             val stockSymbol = iterator.next().key
                             val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
-                            StockPriceRepository.put(StockPrice(stockSymbol, quote.price.toDouble().roundTo(3)))
+                            stockPrices.add(StockPrice(stockSymbol, quote.price.toDouble().roundTo(3)))
                         }
+                        StockPriceRepository.put(stockPrices)
                     }
             jobs.await()
             Result.success()

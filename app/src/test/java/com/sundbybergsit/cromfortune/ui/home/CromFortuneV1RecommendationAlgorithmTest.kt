@@ -45,6 +45,11 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is BuyStockCommand)
+            val buyStockCommand = recommendation.command as BuyStockCommand
+            assertTrue(buyStockCommand.commissionFee == 1.0)
+            assertTrue(buyStockCommand.quantity == 1)
+            assertTrue(buyStockCommand.pricePerStock == 80.0)
+            assertTrue(buyStockCommand.currency == currency)
         }
     }
 
@@ -61,6 +66,11 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is BuyStockCommand)
+            val buyStockCommand = recommendation.command as BuyStockCommand
+            assertTrue(buyStockCommand.commissionFee == 1.0)
+            assertTrue(buyStockCommand.quantity == 1)
+            assertTrue(buyStockCommand.pricePerStock == 80.0)
+            assertTrue(buyStockCommand.currency == currency)
         }
     }
 
@@ -108,6 +118,11 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is SellStockCommand)
+            val sellStockCommand = recommendation.command as SellStockCommand
+            assertTrue(sellStockCommand.commissionFee == 10.0)
+            assertTrue(sellStockCommand.quantity == 1)
+            assertTrue(sellStockCommand.pricePerStock == 120.0)
+            assertTrue(sellStockCommand.currency == currency)
         }
     }
 
@@ -124,6 +139,11 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is BuyStockCommand)
+            val buyStockCommand = recommendation.command as BuyStockCommand
+            assertTrue(buyStockCommand.commissionFee == 1.0)
+            assertTrue(buyStockCommand.quantity == 1)
+            assertTrue(buyStockCommand.pricePerStock == 8.0)
+            assertTrue(buyStockCommand.currency == currency)
         }
     }
 
@@ -171,6 +191,11 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is SellStockCommand)
+            val sellStockCommand = recommendation.command as SellStockCommand
+            assertTrue(sellStockCommand.commissionFee == 10.0)
+            assertTrue(sellStockCommand.quantity == 1)
+            assertTrue(sellStockCommand.pricePerStock == 12.0)
+            assertTrue(sellStockCommand.currency == currency)
         }
     }
 

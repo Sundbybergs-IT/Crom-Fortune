@@ -6,8 +6,8 @@ import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import java.util.*
 
 class SellStockCommand(private val context: Context, private val currentTimeInMillis: Long,
-                       private val currency: Currency, private val name: String, private val pricePerStock: Double,
-                       private val quantity: Int, private val commissionFee: Double) : Command {
+                       val currency: Currency, val name: String, val pricePerStock: Double,
+                       val quantity: Int, val commissionFee: Double) : Command {
 
     override fun execute() {
         val stockOrderRepository = StockOrderRepositoryImpl(context)
@@ -25,7 +25,7 @@ class SellStockCommand(private val context: Context, private val currentTimeInMi
     }
 
     override fun toString(): String {
-        return "Sell: $quantity of $name at price ${pricePerStock.roundTo(3)} $currency"
+        return "Sell: $quantity of $name at price ${pricePerStock.roundTo(3)} $currency with commission fee $commissionFee SEK"
     }
 
 }
