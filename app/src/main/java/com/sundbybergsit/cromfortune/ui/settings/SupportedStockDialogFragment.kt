@@ -7,14 +7,14 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ui.home.StockPriceRetriever
+import com.sundbybergsit.cromfortune.ui.home.StockPrice
 
 class SupportedStockDialogFragment : DialogFragment() {
 
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
-        val allStocks = StockPriceRetriever.SYMBOLS
+        val allStocks = StockPrice.SYMBOLS
         var message = ""
         for (stock in allStocks) {
             message += "$stock, "

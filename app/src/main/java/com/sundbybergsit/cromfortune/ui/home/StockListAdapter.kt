@@ -67,7 +67,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
 
         fun bind(item: StockAdapterItem) {
             itemView.textView_listrowStockItem_quantity.text = item.stockOrder.quantity.toString()
-            val stockName = StockPriceRetriever.SYMBOLS.find { pair -> pair.first == item.stockOrder.name }!!.second
+            val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == item.stockOrder.name }!!.second
             itemView.textView_listrowStockItem_name.text = "$stockName (${item.stockOrder.name})"
             val acquisitionValue = item.stockOrder.getAcquisitionValue()
             val format: NumberFormat = NumberFormat.getCurrencyInstance()

@@ -31,9 +31,9 @@ class StockListAdapterTest {
         })
         val currency = currency
         val list: List<AdapterItem> = listOf(StockHeaderAdapterItem(),
-                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPriceRetriever.SYMBOLS[0].first, 100.099, 0.0, 1)),
-                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPriceRetriever.SYMBOLS[1].first, 0.0199, 0.0, 1)),
-                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPriceRetriever.SYMBOLS[2].first, 0.0109, 0.0, 1)),
+                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first, 100.099, 0.0, 1)),
+                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[1].first, 0.0199, 0.0, 1)),
+                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[2].first, 0.0109, 0.0, 1)),
         )
         adapter.setListener(HomeViewModel())
         adapter.submitList(list)

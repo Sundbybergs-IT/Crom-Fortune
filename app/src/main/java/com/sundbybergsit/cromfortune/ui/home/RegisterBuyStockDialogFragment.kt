@@ -80,13 +80,13 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
     }
 
     private fun getCurrencyAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(StockPriceRetriever.CURRENCIES.toList())
+        val searchArrayList = ArrayList(StockPrice.CURRENCIES.toList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
     }
 
     private fun getStockNameAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(StockPriceRetriever.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+        val searchArrayList = ArrayList(StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
                 .toMutableList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
@@ -99,7 +99,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !StockPriceRetriever.CURRENCIES.contains(input.text.toString()) -> {
+            !StockPrice.CURRENCIES.contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()
                 throw ValidatorException()
@@ -117,7 +117,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !StockPriceRetriever.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+            !StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
                     .toMutableList().contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()

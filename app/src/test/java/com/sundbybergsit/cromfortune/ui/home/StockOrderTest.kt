@@ -16,7 +16,7 @@ class StockOrderTest {
 
     @Test
     fun `getAcquisitionValue - when buy a stock without commission fee - returns correct value`() {
-        val acquisitionValue = StockOrder("Buy", currency.toString(), 0L, StockPriceRetriever.SYMBOLS[0].first,
+        val acquisitionValue = StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
                 100.099, 0.0, 1).getAcquisitionValue()
 
         assertEquals(100.099, acquisitionValue, 0.0001)
@@ -24,7 +24,7 @@ class StockOrderTest {
 
     @Test
     fun `getAcquisitionValue - when buy a stock with commission fee - returns correct value`() {
-        val acquisitionValue = StockOrder("Buy", currency.toString(), 0L, StockPriceRetriever.SYMBOLS[0].first,
+        val acquisitionValue = StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
                 100.099, 10.0, 1).getAcquisitionValue()
 
         assertEquals(110.099, acquisitionValue, 0.0001)
@@ -32,7 +32,7 @@ class StockOrderTest {
 
     @Test
     fun `getAcquisitionValue - when sell a stock - returns correct value`() {
-        val acquisitionValue = StockOrder("Sell", currency.toString(), 0L, StockPriceRetriever.SYMBOLS[0].first,
+        val acquisitionValue = StockOrder("Sell", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
                 100.099, 10.0, 1).getAcquisitionValue()
 
         assertEquals(0.0, acquisitionValue, 0.0001)

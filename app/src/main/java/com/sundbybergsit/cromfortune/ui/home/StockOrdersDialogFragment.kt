@@ -27,7 +27,7 @@ class StockOrdersDialogFragment(private val stockSymbol: String) : DialogFragmen
         val stockOrderRepository = StockOrderRepositoryImpl(context)
         listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockSymbol)
                 .sortedBy { stockOrder -> stockOrder.dateInMillis }))
-        val stockName = StockPriceRetriever.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
+        val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
         return AlertDialog.Builder(context)
                 .setView(dialogRootView)
                 .setTitle(R.string.generic_title_stock_orders)
