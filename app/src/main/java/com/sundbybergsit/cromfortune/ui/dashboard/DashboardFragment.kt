@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.home.BuyStockCommand
@@ -16,22 +16,23 @@ import kotlinx.android.synthetic.main.fragment_dashboard.*
 
 class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
 
-    private lateinit var dashboardViewModel: DashboardViewModel
+    private val dashboardViewModel: DashboardViewModel by activityViewModels()
 
     private lateinit var infoText: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        dashboardViewModel = ViewModelProvider.NewInstanceFactory().create(DashboardViewModel::class.java)
         infoText = view.findViewById(R.id.textView_fragmentDashboard)
         setupDataListeners()
     }
 
     private fun setupDataListeners() {
-        StockPriceRepository.stockPrices.observe(
-                viewLifecycleOwner, { stockPrice ->
-            Toast.makeText(requireContext(), "New real stock price: $stockPrice", Toast.LENGTH_SHORT).show()
-            dashboardViewModel.refresh(requireContext(), stockPrice)
+        StockPriceRepository.stockPrices.observe(viewLifecycleOwner, { viewState ->
+            when (viewState) {
+                is StockPriceRepository.ViewState.VALUES -> {
+                    dashboardViewModel.refresh(requireContext(), viewState.instant, viewState.stockPrices)
+                }
+            }
         }
         )
         dashboardViewModel.score.observe(viewLifecycleOwner, {

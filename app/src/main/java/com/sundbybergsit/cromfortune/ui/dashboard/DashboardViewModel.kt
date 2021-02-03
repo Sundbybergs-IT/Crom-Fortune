@@ -10,6 +10,7 @@ import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.*
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 private const val COMMISSION_FEE = 39.0
 
@@ -24,6 +25,7 @@ class DashboardViewModel : ViewModel() {
     private val _recommendationViewState = MutableLiveData<RecommendationViewState>().apply {
         value = RecommendationViewState.NONE
     }
+    private var lastUpdated: Instant = Instant.ofEpochMilli(0L)
 
     val recommendationViewState: LiveData<RecommendationViewState> = _recommendationViewState
 
@@ -32,23 +34,28 @@ class DashboardViewModel : ViewModel() {
     }
     val score: LiveData<String> = _score
 
-    fun refresh(context: Context, stockPrices: Set<StockPrice>) {
+    fun refresh(context: Context, timestamp: Instant, stockPrices: Set<StockPrice>) {
         Log.i(TAG, "refresh(${stockPrices})")
-        viewModelScope.launch {
-            val stockOrderRepository = StockOrderRepositoryImpl(context)
-            for (stockPrice in stockPrices) {
-                val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                        .getRecommendation(stockPrice, COMMISSION_FEE, CurrencyConversionRateProducer(),
-                                stockOrderRepository.list(stockPrice.name))
-                _recommendationViewState.postValue(when (recommendation) {
-                    is Recommendation -> RecommendationViewState.OK(recommendation)
-                    else -> RecommendationViewState.NONE
-                })
+        if (timestamp.isAfter(lastUpdated)) {
+            lastUpdated = timestamp
+            viewModelScope.launch {
+                val stockOrderRepository = StockOrderRepositoryImpl(context)
+                for (stockPrice in stockPrices) {
+                    val recommendation = CromFortuneV1RecommendationAlgorithm(context)
+                            .getRecommendation(stockPrice, COMMISSION_FEE, CurrencyConversionRateProducer(),
+                                    stockOrderRepository.list(stockPrice.name))
+                    _recommendationViewState.postValue(when (recommendation) {
+                        is Recommendation -> RecommendationViewState.OK(recommendation)
+                        else -> RecommendationViewState.NONE
+                    })
+                }
+                val repository = StockOrderRepositoryImpl(context)
+                val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(
+                        CromFortuneV1RecommendationAlgorithm(context), stocks(repository).toSet())
+                _score.postValue(context.getString(R.string.dashboard_croms_will_message, latestScore.score.toString()))
             }
-            val repository = StockOrderRepositoryImpl(context)
-            val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(
-                    CromFortuneV1RecommendationAlgorithm(context), stocks(repository).toSet())
-            _score.postValue(context.getString(R.string.dashboard_croms_will_message, latestScore.score.toString()))
+        } else {
+            Log.w(TAG, "Ignoring old data...")
         }
     }
 
