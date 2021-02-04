@@ -51,9 +51,8 @@ class StockOrderRepositoryImpl(context: Context, private val sharedPreferences: 
 
     override fun putAll(stockName: String, stockOrders: Set<StockOrder>) {
         val serializedStockOrders = mutableSetOf<String>()
-        for (stockOrder in stockOrders) {
-            serializedStockOrders.add(Json.encodeToString(stockOrders))
-        }
+        // TODO: Yes, accidentally wrapped a collection too much... Must make upgrade script
+        serializedStockOrders.add(Json.encodeToString(stockOrders))
         sharedPreferences.edit().putStringSet(stockName, serializedStockOrders).apply()
     }
 
