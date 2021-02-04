@@ -12,9 +12,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 
-class StockOrdersDialogFragment(private val stockSymbol: String) : DialogFragment() {
+class StockOrdersDialogFragment(
+        private val homeViewModel: HomeViewModel,
+        private val stockSymbol: String,
+) : DialogFragment() {
 
-    private lateinit var listAdapter : StockOrderListAdapter
+    private lateinit var listAdapter: StockOrderListAdapter
 
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -22,7 +25,7 @@ class StockOrdersDialogFragment(private val stockSymbol: String) : DialogFragmen
                 .inflate(R.layout.dialog_stock_orders, view as ViewGroup?, false)
         val recyclerView = dialogRootView.findViewById<RecyclerView>(R.id.recyclerView_dialogStockOrders)
         val context = requireContext()
-        listAdapter = StockOrderListAdapter(context)
+        listAdapter = StockOrderListAdapter(context = context, fragmentManager = parentFragmentManager)
         recyclerView.adapter = listAdapter
         val stockOrderRepository = StockOrderRepositoryImpl(context)
         listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockSymbol)

@@ -9,8 +9,11 @@ import kotlinx.serialization.json.Json
 
 const val PREFERENCES_NAME = "Stocks"
 
-class StockOrderRepositoryImpl(context: Context, private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)) : StockOrderRepository {
+class StockOrderRepositoryImpl(
+        context: Context,
+        private val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE),
+) : StockOrderRepository {
 
     override fun count(stockName: String): Int {
         val list: Set<StockOrder> = list(stockName)
@@ -62,6 +65,14 @@ class StockOrderRepositoryImpl(context: Context, private val sharedPreferences: 
 
     override fun remove(stockName: String) {
         sharedPreferences.edit().remove(stockName).apply()
+    }
+
+    override fun remove(stockOrder: StockOrder) {
+        val stockOrders =  list(stockOrder.name).toMutableSet()
+        stockOrders.remove(stockOrder)
+        val serializedStockOrders = mutableSetOf<String>()
+        serializedStockOrders.add(Json.encodeToString(stockOrders))
+        sharedPreferences.edit().putStringSet(stockOrder.name, serializedStockOrders).apply()
     }
 
 }

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.os.ConfigurationCompat
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.CromFortuneApp
@@ -16,7 +17,9 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-class StockOrderListAdapter(private val context: Context) :
+class StockOrderListAdapter(
+        private val context: Context, private val fragmentManager: FragmentManager,
+) :
         ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()) {
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -44,21 +47,30 @@ class StockOrderListAdapter(private val context: Context) :
         return when (viewType) {
             R.layout.listrow_stock_order_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
                     .inflate(viewType, parent, false))
-            R.layout.listrow_stock_order_item -> StockViewHolder(context = context,
-                    itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false))
+            R.layout.listrow_stock_order_item -> StockViewHolder(context = context, adapter = this, fragmentManager = fragmentManager, itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false))
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
 
     internal class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-    internal class StockViewHolder(private val context: Context, itemView: View) : RecyclerView.ViewHolder(itemView) {
+    internal class StockViewHolder(
+            private val context: Context,
+            private val fragmentManager: FragmentManager,
+            itemView: View,
+            private val adapter: StockOrderListAdapter,
+    ) : RecyclerView.ViewHolder(itemView) {
 
         var formatter = SimpleDateFormat("yyyy-MM-dd", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
 
         fun bind(item: StockAdapterItem) {
             itemView.textView_listrowStockOrderItem_date.text = formatter.format(Date(item.stockOrder.dateInMillis))
             itemView.textView_listrowStockOrderItem_quantity.text = item.stockOrder.quantity.toString()
+            itemView.setOnLongClickListener {
+                val dialog = DeleteStockOrderDialogFragment(context = context,adapter = adapter, stockOrder = item.stockOrder)
+                dialog.show(fragmentManager, HomeFragment.TAG)
+                true
+            }
             val pricePerStock = item.stockOrder.pricePerStock
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
             if (pricePerStock < 1) {

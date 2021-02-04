@@ -18,4 +18,6 @@ interface StockOrderRepository {
 
     fun remove(stockName: String)
 
+    fun remove(stockOrder: StockOrder)
+
 }
