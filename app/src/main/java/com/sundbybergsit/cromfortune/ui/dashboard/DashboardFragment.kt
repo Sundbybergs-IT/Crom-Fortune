@@ -3,7 +3,6 @@ package com.sundbybergsit.cromfortune.ui.dashboard
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.sundbybergsit.cromfortune.R
@@ -46,7 +45,6 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
                 is DashboardViewModel.RecommendationViewState.OK -> {
                     infoText.text = viewState.recommendation.toString()
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), viewState.recommendation.toString(), Toast.LENGTH_LONG).show()
                         val notification = NotificationMessage(System.currentTimeMillis(),
                                 viewState.recommendation.command.toString())
                         // TODO: Move repository logic
