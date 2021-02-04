@@ -14,7 +14,10 @@ import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat
 import java.util.*
 
-class StockListAdapter(private val stockClickListener: StockClickListener) :
+class StockListAdapter(
+        private val stockClickListener: StockClickListener,
+        private val currencyConversionRateProducer: CurrencyConversionRateProducer,
+) :
         ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()) {
 
     private lateinit var stockRemoveClickListener: StockRemoveClickListener
@@ -24,6 +27,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
             R.layout.listrow_stock_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
                     .inflate(viewType, parent, false))
             R.layout.listrow_stock_item -> StockViewHolder(stockClickListener = stockClickListener,
+                    currencyConversionRateProducer = currencyConversionRateProducer,
                     stockRemoveClickListener = stockRemoveClickListener,
                     itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
                     context = parent.context)
@@ -60,6 +64,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
 
     internal class StockViewHolder(
             private val context: Context,
+            private val currencyConversionRateProducer: CurrencyConversionRateProducer,
             private val stockClickListener: StockClickListener,
             private val stockRemoveClickListener: StockRemoveClickListener,
             itemView: View,
@@ -69,7 +74,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
             itemView.textView_listrowStockItem_quantity.text = item.stockOrder.quantity.toString()
             val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == item.stockOrder.name }!!.second
             itemView.textView_listrowStockItem_name.text = "$stockName (${item.stockOrder.name})"
-            val acquisitionValue = item.stockOrder.getAcquisitionValue()
+            val acquisitionValue = item.stockOrder.getAcquisitionValue(currencyConversionRateProducer)
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
             if (acquisitionValue < 1) {
                 format.maximumFractionDigits = 3

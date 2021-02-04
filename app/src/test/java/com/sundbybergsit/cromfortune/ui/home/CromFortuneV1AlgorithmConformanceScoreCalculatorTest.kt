@@ -25,23 +25,23 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     @Test
     fun `getScore - when no orders - returns 100`() {
         runBlocking {
-            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), emptySet())
+            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), emptySet(), StubbedCurrencyConversionRateProducer())
 
             assertTrue(score.score == 100)
         }
     }
 
-    @Test (expected = IllegalStateException::class)
+    @Test(expected = IllegalStateException::class)
     fun `getScore - when initial sell order - throws exception`() {
         runBlocking {
-            calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newSellStockOrder(1)))
+            calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newSellStockOrder(1)), StubbedCurrencyConversionRateProducer())
         }
     }
 
     @Test
     fun `getScore - when initial buy order - returns 100`() {
         runBlocking {
-            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1)))
+            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1)), StubbedCurrencyConversionRateProducer())
 
             assertTrue(score.score == 100)
         }
@@ -51,7 +51,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     fun `getScore - when 0 out of 1 correct decisions - returns 0`() {
         runBlocking {
             val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
-                    newBuyStockOrder(2)))
+                    newBuyStockOrder(2)), StubbedCurrencyConversionRateProducer())
 
             assertTrue(score.score == 0)
         }
@@ -61,7 +61,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     fun `getScore - when 1 out of 1 correct decisions - returns 100`() {
         runBlocking {
             val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
-                    newSellStockOrder(2)))
+                    newSellStockOrder(2)), StubbedCurrencyConversionRateProducer())
 
             assertTrue(score.score == 100)
         }
@@ -71,7 +71,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     fun `getScore - when 1 out of 2 correct decisions - returns 50`() {
         runBlocking {
             val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
-                    newSellStockOrder(2), newBuyStockOrder(3)))
+                    newSellStockOrder(2), newBuyStockOrder(3)), StubbedCurrencyConversionRateProducer())
 
             assertTrue(score.score == 50)
         }
@@ -87,11 +87,21 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     class SellRecommendationDummyAlgorithm : RecommendationAlgorithm() {
 
-        override suspend fun getRecommendation(stockPrice: StockPrice, commissionFee: Double,
-                                               currencyConversionRateProducer: CurrencyConversionRateProducer,
-                                               previousOrders: Set<StockOrder>): Recommendation? {
+        override suspend fun getRecommendation(
+                stockPrice: StockPrice, commissionFee: Double,
+                currencyConversionRateProducer: CurrencyConversionRateProducer,
+                previousOrders: Set<StockOrder>,
+        ): Recommendation {
             return Recommendation(SellStockCommand(ApplicationProvider.getApplicationContext(), 0L, Currency.getInstance("SEK"),
                     "", 0.0, 1, 0.0))
+        }
+
+    }
+
+    class StubbedCurrencyConversionRateProducer : CurrencyConversionRateProducer(ApplicationProvider.getApplicationContext()) {
+
+        override fun getRateInSek(currency: Currency): Double {
+            return 1.0
         }
 
     }

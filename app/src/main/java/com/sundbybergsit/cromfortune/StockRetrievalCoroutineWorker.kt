@@ -22,9 +22,9 @@ class StockRetrievalCoroutineWorker(val context: Context, workerParameters: Work
     }
 
     override suspend fun doWork(): Result = coroutineScope {
-        Log.i(TAG, "startWork()")
+        Log.i(TAG, "doWork()")
         try {
-            val jobs =
+            val asyncWork =
                     async {
                         val stocks: Map<String, Stock> = YahooFinance.get(StockPrice.SYMBOLS.map { pair -> pair.first }
                                 .toTypedArray())
@@ -37,7 +37,7 @@ class StockRetrievalCoroutineWorker(val context: Context, workerParameters: Work
                         }
                         StockPriceRepository.put(stockPrices)
                     }
-            jobs.await()
+            asyncWork.await()
             Result.success()
         } catch (error: Throwable) {
             Result.failure()

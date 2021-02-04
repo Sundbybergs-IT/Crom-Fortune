@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.ConfigurationCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
 import kotlinx.android.synthetic.main.listrow_stock_order_item.view.*
 import java.text.NumberFormat
@@ -67,7 +68,8 @@ class StockOrderListAdapter(private val context: Context) :
             }
             format.currency = Currency.getInstance(item.stockOrder.currency)
             itemView.textView_listrowStockOrderItem_price.text = format.format(pricePerStock)
-            itemView.textView_listrowStockOrderItem_total.text = format.format(item.stockOrder.getTotalCost())
+            itemView.textView_listrowStockOrderItem_total.text = format.format(item.stockOrder.getTotalCost(
+                    CurrencyConversionRateProducer(context.applicationContext as CromFortuneApp)))
             itemView.setBackgroundColor(getBuyOrSellColor(item.stockOrder.orderAction))
         }
 

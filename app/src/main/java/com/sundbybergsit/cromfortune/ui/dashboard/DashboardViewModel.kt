@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.*
@@ -42,7 +43,7 @@ class DashboardViewModel : ViewModel() {
                 val stockOrderRepository = StockOrderRepositoryImpl(context)
                 for (stockPrice in stockPrices) {
                     val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                            .getRecommendation(stockPrice, COMMISSION_FEE, CurrencyConversionRateProducer(),
+                            .getRecommendation(stockPrice, COMMISSION_FEE, CurrencyConversionRateProducer(context.applicationContext as CromFortuneApp),
                                     stockOrderRepository.list(stockPrice.name))
                     _recommendationViewState.postValue(when (recommendation) {
                         is Recommendation -> RecommendationViewState.OK(recommendation)
@@ -51,7 +52,9 @@ class DashboardViewModel : ViewModel() {
                 }
                 val repository = StockOrderRepositoryImpl(context)
                 val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(
-                        CromFortuneV1RecommendationAlgorithm(context), stocks(repository).toSet())
+                        CromFortuneV1RecommendationAlgorithm(context), stocks(repository).toSet(),
+                        CurrencyConversionRateProducer(context.applicationContext as CromFortuneApp)
+                )
                 _score.postValue(context.getString(R.string.dashboard_croms_will_message, latestScore.score.toString()))
             }
         } else {

@@ -28,7 +28,7 @@ class StockListAdapterTest {
             override fun onClick(stockName: String) {
                 // Do nothing
             }
-        })
+        }, StubbedCurrencyConversionRateProducer())
         val currency = currency
         val list: List<AdapterItem> = listOf(StockHeaderAdapterItem(),
                 StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first, 100.099, 0.0, 1)),
@@ -79,6 +79,14 @@ class StockListAdapterTest {
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         assertEquals("${currency}0.011", acquisitionValue.text.toString())
+    }
+
+    class StubbedCurrencyConversionRateProducer : CurrencyConversionRateProducer(ApplicationProvider.getApplicationContext()) {
+
+        override fun getRateInSek(currency: Currency): Double {
+            return 1.0
+        }
+
     }
 
 }

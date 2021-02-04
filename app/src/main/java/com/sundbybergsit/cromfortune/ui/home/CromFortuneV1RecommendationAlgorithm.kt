@@ -14,9 +14,11 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context)
 
     }
 
-    override suspend fun getRecommendation(stockPrice: StockPrice, commissionFee: Double,
-                                           currencyConversionRateProducer: CurrencyConversionRateProducer,
-                                           previousOrders: Set<StockOrder>): Recommendation? {
+    override suspend fun getRecommendation(
+            stockPrice: StockPrice, commissionFee: Double,
+            currencyConversionRateProducer: CurrencyConversionRateProducer,
+            previousOrders: Set<StockOrder>,
+    ): Recommendation? {
         return withContext(Dispatchers.IO) {
             RecommendationGenerator(context, currencyConversionRateProducer).getRecommendation(stockPrice.name,
                     previousOrders, stockPrice.price,
@@ -25,52 +27,54 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context)
 
     }
 
-    internal class RecommendationGenerator(private val context: Context,
-                                           private val currencyConversationRateProducer: CurrencyConversionRateProducer) {
+    internal class RecommendationGenerator(
+            private val context: Context,
+            private val currencyConversationRateProducer: CurrencyConversionRateProducer,
+    ) {
 
-        fun getRecommendation(stockName: String, orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double,
-                              commissionFeeInSek: Double): Recommendation? {
-            var accumulatedCommissionFeesInSek = 0.0
+        fun getRecommendation(
+                stockName: String, orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double,
+                commissionFeeInSek: Double,
+        ): Recommendation? {
             var grossQuantity = 0
             var soldQuantity = 0
             var accumulatedCostInSek = 0.0
-            var currency: Currency? = null
             var rate = 1.0
+            var currency: Currency? = null
             for (stockOrder in orders) {
                 if (stockOrder.name == stockName) {
                     if (currency == null) {
                         currency = Currency.getInstance(stockOrder.currency)
-                        rate = currencyConversationRateProducer.getRateInSek(stockName)
+                        rate = currencyConversationRateProducer.getRateInSek(currency)
                     } else {
                         if (currency != Currency.getInstance(stockOrder.currency)) {
                             throw IllegalStateException("Cannot mix currencies for a stock!")
                         }
                     }
                     if (stockOrder.orderAction == "Buy") {
-                        accumulatedCommissionFeesInSek += stockOrder.commissionFee
                         grossQuantity += stockOrder.quantity
-                        accumulatedCostInSek += rate * stockOrder.pricePerStock * stockOrder.quantity
+                        accumulatedCostInSek += rate * stockOrder.pricePerStock * stockOrder.quantity +
+                                stockOrder.commissionFee
                     } else {
-                        accumulatedCommissionFeesInSek += stockOrder.commissionFee
                         soldQuantity += stockOrder.quantity
                     }
                 }
             }
             val netQuantity = grossQuantity - soldQuantity
-            val averageCost = (accumulatedCostInSek + accumulatedCommissionFeesInSek) / grossQuantity
-            val costToExclude = averageCost * soldQuantity
-            val totalPricePerStockInSek = (accumulatedCostInSek + accumulatedCommissionFeesInSek - costToExclude) / netQuantity
+            val averageCostInSek = accumulatedCostInSek / grossQuantity
+            val costToExcludeInSek = averageCostInSek * soldQuantity
+
+            val totalPricePerStockInSek = (accumulatedCostInSek - costToExcludeInSek) / netQuantity
             val totalPricePerStockInStockCurrency = totalPricePerStockInSek / rate
             val currentTimeInMillis = System.currentTimeMillis()
             val potentialBuyQuantity = netQuantity / 10
-            val pricePerStockAfterBuyInStockCurrency = ((accumulatedCostInSek + accumulatedCommissionFeesInSek +
-                    commissionFeeInSek) / (netQuantity + potentialBuyQuantity) / rate)
+            val pricePerStockAfterBuyInStockCurrency = ((netQuantity * totalPricePerStockInStockCurrency + potentialBuyQuantity * currentStockPriceInStockCurrency + commissionFeeInSek) / (netQuantity + potentialBuyQuantity))
             if (currentStockPriceInStockCurrency < (1 - DIFF_PERCENTAGE) * pricePerStockAfterBuyInStockCurrency) {
                 if (potentialBuyQuantity > 0) {
                     return Recommendation(BuyStockCommand(context, currentTimeInMillis, currency!!, stockName,
                             currentStockPriceInStockCurrency, potentialBuyQuantity, commissionFeeInSek))
                 }
-            } else if (currentStockPriceInStockCurrency > (1 + DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) {
+            } else if (currentStockPriceInStockCurrency > ((1 + DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) + commissionFeeInSek / rate) {
                 val quantity = netQuantity / 10
                 if (quantity > 0) {
                     return Recommendation(SellStockCommand(context, currentTimeInMillis, currency!!, stockName,

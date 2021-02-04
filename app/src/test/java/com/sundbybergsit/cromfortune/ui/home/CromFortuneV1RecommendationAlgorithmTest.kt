@@ -75,7 +75,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price increased to limit but commission fee too high - returns null`() {
+    fun `getRecommendation - when stock price increased to limit but buy commission fee too high - returns null`() {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0, 39.0, 1)
         repository.put(DOMESTIC_STOCK_NAME, oldOrder)
@@ -83,6 +83,20 @@ class CromFortuneV1RecommendationAlgorithmTest {
             val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME,
                     oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE.times(oldOrder.pricePerStock)),
                     1.0, currencyConversionRateProducer, setOf(oldOrder))
+
+            assertNull(recommendation)
+        }
+    }
+
+    @Test
+    fun `getRecommendation - when stock price increased to limit but sell commission fee too high - returns null`() {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0, 1.0, 1)
+        repository.put(DOMESTIC_STOCK_NAME, oldOrder)
+        runBlocking {
+            val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME,
+                    oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE.times(oldOrder.pricePerStock)),
+                    39.0, currencyConversionRateProducer, setOf(oldOrder))
 
             assertNull(recommendation)
         }
@@ -105,7 +119,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price increased to above limit and commission fee ok but too few stocks - returns sell recommendation`() {
+    fun `getRecommendation - when stock price increased to above limit and commission fee ok and enough stocks - returns sell recommendation`() {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0, 10.0, 10)
         repository.put(DOMESTIC_STOCK_NAME, oldOrder)
@@ -113,13 +127,13 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 .times(oldOrder.pricePerStock)
 
         runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, newPrice), 10.0,
+            val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, newPrice), 0.0,
                     currencyConversionRateProducer, setOf(oldOrder))
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is SellStockCommand)
             val sellStockCommand = recommendation.command as SellStockCommand
-            assertTrue(sellStockCommand.commissionFee == 10.0)
+            assertTrue(sellStockCommand.commissionFee == 0.0)
             assertTrue(sellStockCommand.quantity == 1)
             assertTrue(sellStockCommand.pricePerStock == 120.0)
             assertTrue(sellStockCommand.currency == currency)
@@ -144,6 +158,22 @@ class CromFortuneV1RecommendationAlgorithmTest {
             assertTrue(buyStockCommand.quantity == 1)
             assertTrue(buyStockCommand.pricePerStock == 8.0)
             assertTrue(buyStockCommand.currency == currency)
+        }
+    }
+
+    @Test
+    fun `getRecommendation - when foreign stock price increased to over limit and including sell - returns buy recommendation`() {
+        val currency = Currency.getInstance("NOK")
+        val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, 9.0, 39.0, 70)
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, 1000.0, 39.0, 35)
+        repository.putAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, setOf(oldOrder, oldOrder2))
+        runBlocking {
+            val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
+                    oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.09)
+                            .times(oldOrder.pricePerStock)), 39.0,
+                    currencyConversionRateProducer, setOf(oldOrder, oldOrder2))
+
+            assertNull(recommendation)
         }
     }
 
@@ -178,7 +208,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when foreign stock price increased to above limit and commission fee ok but too few stocks - returns sell recommendation`() {
+    fun `getRecommendation - when foreign stock price increased to above limit and commission fee and enough stocks - returns sell recommendation`() {
         val currency = Currency.getInstance("NOK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, 10.0, 10.0, 10)
         repository.put(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
@@ -187,23 +217,23 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         runBlocking {
             val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, newPrice),
-                    10.0, currencyConversionRateProducer, setOf(oldOrder))
+                    0.0, currencyConversionRateProducer, setOf(oldOrder))
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is SellStockCommand)
             val sellStockCommand = recommendation.command as SellStockCommand
-            assertTrue(sellStockCommand.commissionFee == 10.0)
+            assertTrue(sellStockCommand.commissionFee == 0.0)
             assertTrue(sellStockCommand.quantity == 1)
             assertTrue(sellStockCommand.pricePerStock == 12.0)
             assertTrue(sellStockCommand.currency == currency)
         }
     }
 
-    class StubbedCurrencyConversionRateProducer : CurrencyConversionRateProducer() {
+    class StubbedCurrencyConversionRateProducer : CurrencyConversionRateProducer(ApplicationProvider.getApplicationContext()) {
 
-        override fun getRateInSek(stockSymbol: String) = when (stockSymbol) {
-            DOMESTIC_STOCK_NAME -> 1.0
-            FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME -> 10.0
+        override fun getRateInSek(currency: Currency) = when (currency) {
+            Currency.getInstance("SEK") -> 1.0
+            Currency.getInstance("NOK") -> 10.0
             else -> throw UnsupportedOperationException()
         }
 

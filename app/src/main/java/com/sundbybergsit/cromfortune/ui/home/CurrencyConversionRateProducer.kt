@@ -1,19 +1,10 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import yahoofinance.YahooFinance
+import com.sundbybergsit.cromfortune.CromFortuneApp
+import java.util.*
 
-open class CurrencyConversionRateProducer {
+open class CurrencyConversionRateProducer(private val app : CromFortuneApp) {
 
-    open fun getRateInSek(stockSymbol: String) = when {
-        stockSymbol.endsWith(".OL") -> {
-            YahooFinance.getFx("NOKSEK=X").price.toDouble()
-        }
-        stockSymbol.endsWith(".ST") -> {
-            1.0
-        }
-        else -> {
-            YahooFinance.getFx("USDSEK=X").price.toDouble()
-        }
-    }
+    open fun getRateInSek(currency: Currency) : Double = app.currencyRates[currency.currencyCode]!!
 
 }

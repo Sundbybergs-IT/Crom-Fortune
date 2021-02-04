@@ -12,7 +12,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.WorkManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
 import java.util.*
 
@@ -26,9 +28,11 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
 
     private val viewModel: HomeViewModel by viewModels()
 
-    private val stockListAdapter = StockListAdapter(this)
+    private lateinit var stockListAdapter: StockListAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        stockListAdapter = StockListAdapter(this,
+                CurrencyConversionRateProducer(requireContext().applicationContext as CromFortuneApp))
         val infoText: TextView = view.findViewById(R.id.textView_fragmentHome)
         val infoImage: ImageView = view.findViewById(R.id.imageView_fragmentHome)
         val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton_fragmentHome)
@@ -68,7 +72,14 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
 
     override fun onResume() {
         super.onResume()
-        viewModel.refresh(requireContext())
+        val workManager = WorkManager.getInstance(requireContext().applicationContext)
+        val cromFortuneApp = requireContext().applicationContext as CromFortuneApp
+        workManager.getWorkInfoByIdLiveData((cromFortuneApp).currencyRateWorkRequestId)
+                .observe(viewLifecycleOwner, { workInfo ->
+                    if (workInfo.state.isFinished) {
+                        viewModel.refresh(requireContext())
+                    }
+                })
     }
 
     private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView, fab: FloatingActionButton) {
