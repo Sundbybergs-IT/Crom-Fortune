@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ui.home.StockPrice
@@ -21,10 +20,6 @@ class SupportedStockDialogFragment : DialogFragment() {
         }
         return AlertDialog.Builder(context)
                 .setMessage(message)
-                .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
-                    Toast.makeText(context,
-                            getText(R.string.generic_error_not_supported), Toast.LENGTH_LONG).show()
-                }
                 .setPositiveButton(getText(R.string.action_close)) { _, _ -> }
                 .create()
     }
