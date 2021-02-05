@@ -121,7 +121,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
     }
 
     override fun onClick(stockName: String) {
-        val dialog = StockOrdersDialogFragment(stockName)
+        val dialog = StockOrdersDialogFragment(viewModel, stockName)
         dialog.show(parentFragmentManager, TAG)
     }
 
