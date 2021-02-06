@@ -15,7 +15,7 @@ class SettingsViewModel : ViewModel() {
         value = "Att göra: 1. Rekursion på Croms rekommendationer, " +
                 "2. Fixa så notifieringar skapas utan att man går in i dashboard " +
                 "3. Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge) " +
-                "4. Förbättra beräkning av GAV att inte ta hänsyn till gamla irrelevanta transaktioner + "
+                "4. Förbättra beräkning av GAV att inte ta hänsyn till gamla irrelevanta transaktioner " +
                 "5. Home: Lägg till sorteringsmöjligheter (Bäst idag, sämst idag, alfabetisk sortering) " +
                 "6. Dashboard: Lägg till Croms skugghandel " +
                 "7. Home: Implementera köp/sälj-knappar" +
