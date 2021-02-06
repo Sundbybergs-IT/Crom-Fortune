@@ -47,7 +47,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
         is StockHeaderAdapterItem -> {
             R.layout.listrow_stock_header
         }
-        is StockAdapterItem -> {
+        is StockAggregateAdapterItem -> {
             R.layout.listrow_stock_item
         }
         else -> {
