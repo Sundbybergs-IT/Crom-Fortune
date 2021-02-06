@@ -23,7 +23,7 @@ class DeleteStockOrderDialogFragment(
 
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        var formatter = SimpleDateFormat("yyyy-MM-dd", ConfigurationCompat.getLocales(requireContext().resources.configuration).get(0))
+        val formatter = SimpleDateFormat("yyyy-MM-dd", ConfigurationCompat.getLocales(requireContext().resources.configuration).get(0))
         val context = requireContext()
         return AlertDialog.Builder(context)
                 .setTitle(R.string.generic_dialog_title_are_you_sure)
