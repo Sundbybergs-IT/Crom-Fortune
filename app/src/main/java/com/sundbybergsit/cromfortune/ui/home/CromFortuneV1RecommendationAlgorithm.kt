@@ -49,8 +49,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                     if (rateInSek == null) {
                         val latestCurrencyRatesViewState = CurrencyRateRepository.currencyRates.value
                                 as CurrencyRateRepository.ViewState.VALUES
-                        rateInSek =
-                                latestCurrencyRatesViewState.currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek
+                        rateInSek = latestCurrencyRatesViewState.currencyRates
+                                .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!
+                                .rateInSek
                     }
                     if (stockOrder.orderAction == "Buy") {
                         grossQuantity += stockOrder.quantity
