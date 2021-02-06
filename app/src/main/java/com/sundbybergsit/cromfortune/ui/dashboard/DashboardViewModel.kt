@@ -43,7 +43,7 @@ class DashboardViewModel : ViewModel() {
                 val stockOrderRepository = StockOrderRepositoryImpl(context)
                 for (stockPrice in stockPrices) {
                     val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                            .getRecommendation(stockPrice, COMMISSION_FEE, stockOrderRepository.list(stockPrice.name))
+                            .getRecommendation(stockPrice, COMMISSION_FEE, stockOrderRepository.list(stockPrice.stockSymbol))
                     _recommendationViewState.postValue(when (recommendation) {
                         is Recommendation -> RecommendationViewState.OK(recommendation)
                         else -> RecommendationViewState.NONE

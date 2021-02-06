@@ -30,9 +30,9 @@ class StockListAdapterTest {
     fun setUp() {
         CurrencyRateRepository.add(setOf(CurrencyRate("SEK", 1.0)))
         StockPriceRepository.put(setOf(
-                StockPrice(StockPrice.SYMBOLS[0].first, 100.0),
-                StockPrice(StockPrice.SYMBOLS[1].first, 0.02),
-                StockPrice(StockPrice.SYMBOLS[2].first, 0.01),
+                StockPrice(StockPrice.SYMBOLS[0].first, currency, 100.0),
+                StockPrice(StockPrice.SYMBOLS[1].first, currency, 0.02),
+                StockPrice(StockPrice.SYMBOLS[2].first, currency, 0.01),
                 ))
         ShadowLooper.runUiThreadTasks()
         adapter = StockListAdapter(object : StockClickListener {

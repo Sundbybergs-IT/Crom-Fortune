@@ -10,6 +10,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock
 import yahoofinance.YahooFinance
+import java.util.*
 
 @Suppress("BlockingMethodInNonBlockingContext")
 class StockPriceRetrievalCoroutineWorker(val context: Context, workerParameters: WorkerParameters) :
@@ -28,12 +29,13 @@ class StockPriceRetrievalCoroutineWorker(val context: Context, workerParameters:
                     async {
                         val stocks: Map<String, Stock> = YahooFinance.get(StockPrice.SYMBOLS.map { pair -> pair.first }
                                 .toTypedArray())
-                        val iterator = stocks.iterator()
                         val stockPrices = mutableSetOf<StockPrice>()
-                        while (iterator.hasNext()) {
-                            val stockSymbol = iterator.next().key
+                        for (triple in StockPrice.SYMBOLS.iterator()) {
+                            val stockSymbol = triple.first
                             val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
-                            stockPrices.add(StockPrice(stockSymbol, quote.price.toDouble().roundTo(3)))
+                            val currency = triple.third
+                            stockPrices.add(StockPrice(stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
+                                    price = quote.price.toDouble().roundTo(3)))
                         }
                         StockPriceRepository.put(stockPrices)
                     }

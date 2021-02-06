@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.work.Data
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
@@ -31,10 +30,7 @@ class CurrencyRateRetrievalCoroutineWorkerTest {
         val worker = TestListenableWorkerBuilder<TestableCurrencyRateRetrievalCoroutineWorker>(context).build()
         runBlocking {
             val result: ListenableWorker.Result = worker.doWork()
-            assertTrue(result == ListenableWorker.Result.success(Data.Builder()
-                    .putStringArray(CurrencyRateRetrievalCoroutineWorker.EXTRA_STRING_ARRAY_CURRENCIES,
-                            arrayOf("{\"symbol\":\"SEK\",\"rate\":1}", "{\"symbol\":\"CAD\",\"rate\":1}",
-                            "{\"symbol\":\"NOK\",\"rate\":1}", "{\"symbol\":\"USD\",\"rate\":1}")).build()))
+            assertTrue(result == ListenableWorker.Result.success())
         }
     }
 

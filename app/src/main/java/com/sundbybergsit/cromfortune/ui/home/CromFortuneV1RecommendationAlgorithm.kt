@@ -18,7 +18,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             stockPrice: StockPrice, commissionFee: Double, previousOrders: Set<StockOrder>,
     ): Recommendation? {
         return withContext(Dispatchers.IO) {
-            RecommendationGenerator(context).getRecommendation(stockPrice.name, previousOrders, stockPrice.price,
+            RecommendationGenerator(context).getRecommendation(stockPrice.stockSymbol, stockPrice.currency, previousOrders, stockPrice.price,
                     commissionFee)
         }
 
@@ -27,7 +27,8 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
     internal class RecommendationGenerator(private val context: Context) {
 
         fun getRecommendation(
-                stockName: String, orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
+                stockName: String, currency: Currency, orders: Set<StockOrder>,
+                currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
         ): Recommendation? {
             if (orders.isEmpty()) {
                 return null
@@ -35,17 +36,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             var grossQuantity = 0
             var soldQuantity = 0
             var accumulatedCostInSek = 0.0
-            var currency: Currency? = null
             var rateInSek: Double? = null
             for (stockOrder in orders) {
                 if (stockOrder.name == stockName) {
-                    if (currency == null) {
-                        currency = Currency.getInstance(stockOrder.currency)
-                    } else {
-                        if (currency != Currency.getInstance(stockOrder.currency)) {
-                            throw IllegalStateException("Cannot mix currencies for a stock!")
-                        }
-                    }
                     if (rateInSek == null) {
                         rateInSek = (CurrencyRateRepository.currencyRates.value
                                 as CurrencyRateRepository.ViewState.VALUES).currencyRates
@@ -74,13 +67,13 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                     (netQuantity + potentialBuyQuantity)) / rateInSek
             if (currentStockPriceInStockCurrency < (1 - DIFF_PERCENTAGE) * pricePerStockAfterBuyInStockCurrency) {
                 if (potentialBuyQuantity > 0) {
-                    return Recommendation(BuyStockCommand(context, currentTimeInMillis, currency!!, stockName,
+                    return Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
                             currentStockPriceInStockCurrency, potentialBuyQuantity, commissionFeeInSek))
                 }
             } else if (currentStockPriceInStockCurrency > ((1 + DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) + commissionFeeInSek / rateInSek) {
                 val quantity = netQuantity / 10
                 if (quantity > 0) {
-                    return Recommendation(SellStockCommand(context, currentTimeInMillis, currency!!, stockName,
+                    return Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
                             currentStockPriceInStockCurrency, quantity, commissionFeeInSek))
                 }
             }

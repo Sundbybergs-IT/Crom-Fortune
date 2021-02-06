@@ -128,7 +128,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
 
     override fun getStockPrice(stockSymbol: String): StockPrice {
         return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES)
-                .stockPrices.find { stockPrice -> stockPrice.name == stockSymbol }!!
+                .stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
     }
 
 }
