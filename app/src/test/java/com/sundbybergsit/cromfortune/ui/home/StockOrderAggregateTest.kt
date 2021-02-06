@@ -52,4 +52,54 @@ class StockOrderAggregateTest {
         assertEquals(110.099, acquisitionValue, 0.0001)
     }
 
+    @Test
+    fun `getProfit - when nothing aggregated - returns correct value`() {
+        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+                currency)
+
+        val profit = stockOrderAggregate.getProfit(1.0)
+
+        assertEquals(0.0, profit, 0.000001)
+    }
+
+    @Test
+    fun `getProfit - after purchase - returns correct value`() {
+        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+                currency)
+        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1))
+
+        val profit = stockOrderAggregate.getProfit(0.099)
+
+        assertEquals(-110.0, profit, 0.000001)
+    }
+
+    @Test
+    fun `getProfit - after purchase and sale when nothing left - returns correct value`() {
+        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+                currency)
+        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1))
+        stockOrderAggregate.aggregate(StockOrder("Sell", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1))
+
+        val profit = stockOrderAggregate.getProfit(10000000.0)
+
+        assertEquals(0.0, profit, 0.000001)
+    }
+
+    @Test
+    fun `getProfit - after purchase and sale when stocks left - returns correct value`() {
+        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+                currency)
+        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 2))
+        stockOrderAggregate.aggregate(StockOrder("Sell", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1))
+
+        val profit = stockOrderAggregate.getProfit(10000000.0)
+
+        assertEquals(9999899.901, profit, 0.000001)
+    }
+
 }
