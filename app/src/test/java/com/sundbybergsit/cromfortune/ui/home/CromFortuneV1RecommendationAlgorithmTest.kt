@@ -49,7 +49,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
         runBlocking {
             val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                     oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
-                            .times(oldOrder.pricePerStock)), 1.0, setOf(oldOrder))
+                            .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is BuyStockCommand)
@@ -72,7 +72,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
         runBlocking {
             val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                     oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
-                            .times(oldOrder.pricePerStock)), 1.0, setOf(oldOrder))
+                            .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is BuyStockCommand)
@@ -94,7 +94,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                     oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE
                             .times(oldOrder.pricePerStock)),
-                    1.0, setOf(oldOrder))
+                    1.0, 1.0, setOf(oldOrder))
 
             assertNull(recommendation)
         }
@@ -110,7 +110,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                     oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE
                             .times(oldOrder.pricePerStock)),
-                    39.0, setOf(oldOrder))
+                    1.0, 39.0, setOf(oldOrder))
 
             assertNull(recommendation)
         }
@@ -127,7 +127,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         runBlocking {
             val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
-                    1.0, setOf(oldOrder))
+                    1.0, 1.0, setOf(oldOrder))
 
             assertNull(recommendation)
         }
@@ -144,7 +144,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         runBlocking {
             val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
-                    0.0, setOf(oldOrder))
+                    1.0, 0.0, setOf(oldOrder))
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is SellStockCommand)
@@ -166,7 +166,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(
                     FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
                     oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
-                            .times(oldOrder.pricePerStock)), 1.0, setOf(oldOrder))
+                            .times(oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is BuyStockCommand)
@@ -190,7 +190,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             val recommendation: Recommendation? = algorithm.getRecommendation(
                     StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
                             oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.09)
-                                    .times(oldOrder.pricePerStock)), 39.0, setOf(oldOrder, oldOrder2))
+                                    .times(oldOrder.pricePerStock)), 10.0, 39.0, setOf(oldOrder, oldOrder2))
 
             assertNull(recommendation)
         }
@@ -204,7 +204,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
         runBlocking {
             val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
                     oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE.times(
-                            oldOrder.pricePerStock)), 1.0, setOf(oldOrder))
+                            oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
 
             assertNull(recommendation)
         }
@@ -221,7 +221,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         runBlocking {
             val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                    newPrice), 1.0, setOf(oldOrder))
+                    newPrice), 10.0, 1.0, setOf(oldOrder))
 
             assertNull(recommendation)
         }
@@ -238,7 +238,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         runBlocking {
             val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                    newPrice), 0.0, setOf(oldOrder))
+                    newPrice), 10.0, 0.0, setOf(oldOrder))
 
             assertNotNull(recommendation)
             assertTrue(recommendation!!.command is SellStockCommand)

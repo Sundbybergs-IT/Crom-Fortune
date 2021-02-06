@@ -1,7 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
-import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -15,14 +14,10 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
     }
 
     override suspend fun getRecommendation(
-            stockPrice: StockPrice, commissionFee: Double, previousOrders: Set<StockOrder>,
+            stockPrice: StockPrice, currencyRateInSek : Double, commissionFee: Double, previousOrders: Set<StockOrder>,
     ): Recommendation? {
-        val rateInSek: Double = (CurrencyRateRepository.currencyRates.value
-                as CurrencyRateRepository.ViewState.VALUES).currencyRates
-                .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!
-                .rateInSek
         return withContext(Dispatchers.IO) {
-            RecommendationGenerator(context).getRecommendation(stockPrice.stockSymbol, stockPrice.currency, rateInSek,
+            RecommendationGenerator(context).getRecommendation(stockPrice.stockSymbol, stockPrice.currency, currencyRateInSek,
                     previousOrders, stockPrice.price, commissionFee)
         }
 

@@ -9,11 +9,12 @@ import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
-import com.sundbybergsit.cromfortune.ui.home.*
+import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1AlgorithmConformanceScoreCalculator
+import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.ui.home.StockOrder
+import com.sundbybergsit.cromfortune.ui.home.StockPrice
 import kotlinx.coroutines.launch
 import java.time.Instant
-
-private const val COMMISSION_FEE = 39.0
 
 class DashboardViewModel : ViewModel() {
 
@@ -23,16 +24,12 @@ class DashboardViewModel : ViewModel() {
 
     }
 
-    private val _recommendationViewState = MutableLiveData<RecommendationViewState>().apply {
-        value = RecommendationViewState.NONE
-    }
     private var lastUpdated: Instant = Instant.ofEpochMilli(0L)
-
-    val recommendationViewState: LiveData<RecommendationViewState> = _recommendationViewState
 
     private val _score = MutableLiveData<String>().apply {
         value = ""
     }
+
     val score: LiveData<String> = _score
 
     fun refresh(context: Context, timestamp: Instant, stockPrices: Set<StockPrice>) {
@@ -40,15 +37,6 @@ class DashboardViewModel : ViewModel() {
         if (timestamp.isAfter(lastUpdated)) {
             lastUpdated = timestamp
             viewModelScope.launch {
-                val stockOrderRepository = StockOrderRepositoryImpl(context)
-                for (stockPrice in stockPrices) {
-                    val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                            .getRecommendation(stockPrice, COMMISSION_FEE, stockOrderRepository.list(stockPrice.stockSymbol))
-                    _recommendationViewState.postValue(when (recommendation) {
-                        is Recommendation -> RecommendationViewState.OK(recommendation)
-                        else -> RecommendationViewState.NONE
-                    })
-                }
                 val repository = StockOrderRepositoryImpl(context)
                 val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(recommendationAlgorithm =
                 CromFortuneV1RecommendationAlgorithm(context), orders = stocks(repository).toSet(),
@@ -69,11 +57,6 @@ class DashboardViewModel : ViewModel() {
             }
         }
         return stocks
-    }
-
-    sealed class RecommendationViewState {
-        object NONE : RecommendationViewState()
-        data class OK(val recommendation: Recommendation) : RecommendationViewState()
     }
 
 }

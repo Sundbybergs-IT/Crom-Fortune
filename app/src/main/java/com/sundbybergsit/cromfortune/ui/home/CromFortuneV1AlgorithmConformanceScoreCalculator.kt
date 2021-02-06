@@ -19,10 +19,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                     throw IllegalStateException("First order must be a buy order!")
                 }
             } else {
+                val currencyRateInSek = (currencyRateRepository.currencyRates.value as
+                        CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == order.currency }!!.rateInSek
                 val recommendation = recommendationAlgorithm.getRecommendation(StockPrice(order.name,
                         Currency.getInstance(order.currency),
-                        order.pricePerStock),
-                        order.commissionFee, sortedOrders.subList(0, index).toSet())
+                        order.pricePerStock), currencyRateInSek, order.commissionFee, sortedOrders.subList(0, index).toSet())
                 if (order.orderAction == "Buy") {
                     if (recommendation != null && recommendation.command is BuyStockCommand) {
                         correctDecision += 1

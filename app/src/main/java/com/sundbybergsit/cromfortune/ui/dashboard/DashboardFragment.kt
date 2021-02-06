@@ -7,10 +7,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.ui.home.BuyStockCommand
-import com.sundbybergsit.cromfortune.ui.home.SellStockCommand
-import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
-import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
 import kotlinx.android.synthetic.main.fragment_dashboard.*
 
 class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
@@ -36,35 +32,6 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
         dashboardViewModel.score.observe(viewLifecycleOwner, {
             textView_fragmentDashboard_score.text = it
         })
-        dashboardViewModel.recommendationViewState.observe(viewLifecycleOwner, { viewState ->
-            when (viewState) {
-                is DashboardViewModel.RecommendationViewState.NONE -> {
-                    infoText.text = getString(R.string.recommendations_none)
-                }
-                is DashboardViewModel.RecommendationViewState.OK -> {
-                    infoText.text = viewState.recommendation.toString()
-                    requireActivity().runOnUiThread {
-                        val notification = NotificationMessage(System.currentTimeMillis(),
-                                viewState.recommendation.command.toString())
-                        // TODO: Move repository logic
-                        val notificationsRepository = NotificationsRepositoryImpl(requireContext())
-                        notificationsRepository.add(notification)
-                        val shortText: String =
-                                when (viewState.recommendation.command) {
-                                    is BuyStockCommand -> getString(R.string.action_stock_buy)
-                                    is SellStockCommand -> getString(R.string.action_stock_sell)
-                                    else -> ""
-                                }
-                        NotificationUtil.doPostRegularNotification(requireContext(),
-                                getString(R.string.notification_recommendation_title),
-                                shortText,
-                                "${getString(R.string.notification_recommendation_body)} ${notification.message}")
-                    }
-                }
-            }
-        }
-        )
-
     }
 
 }

@@ -14,20 +14,12 @@ class CromFortuneApp : Application(), Configuration.Provider {
         super.onCreate()
         NotificationUtil.createChannel(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
-        retrieveCurrencyRatesInBackground(workManager)
-        retrieveStockPricesInBackground(workManager)
+        retrieveDataInBackground(workManager)
     }
 
-    private fun retrieveCurrencyRatesInBackground(workManager: WorkManager) {
+    private fun retrieveDataInBackground(workManager: WorkManager) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-        val currencyRateRetrievalWorkRequest = OneTimeWorkRequestBuilder<CurrencyRateRetrievalCoroutineWorker>()
-                .setConstraints(constraints).build()
-        workManager.enqueue(currencyRateRetrievalWorkRequest)
-    }
-
-    private fun retrieveStockPricesInBackground(workManager: WorkManager) {
-        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-        val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<StockPriceRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
+        val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<StockDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
                 .setConstraints(constraints).build()
         workManager.enqueue(stockRetrievalWorkRequest)
     }
