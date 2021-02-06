@@ -6,8 +6,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before

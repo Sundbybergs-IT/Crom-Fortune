@@ -6,7 +6,7 @@ import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ui.home.StockPrice
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 
 class SupportedStockDialogFragment : DialogFragment() {
 

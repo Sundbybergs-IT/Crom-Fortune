@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.ui.home
+package com.sundbybergsit.cromfortune.stocks
 
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import kotlinx.serialization.Serializable

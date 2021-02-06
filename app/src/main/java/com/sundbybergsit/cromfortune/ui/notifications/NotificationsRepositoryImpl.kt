@@ -1,9 +1,7 @@
-package com.sundbybergsit.cromfortune.ui.dashboard
+package com.sundbybergsit.cromfortune.ui.notifications
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
-import com.sundbybergsit.cromfortune.ui.notifications.NotificationsRepository
 
 const val PREFERENCES_NAME = "Notifications"
 

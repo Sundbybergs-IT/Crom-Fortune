@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import kotlinx.coroutines.Dispatchers

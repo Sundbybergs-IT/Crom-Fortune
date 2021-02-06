@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

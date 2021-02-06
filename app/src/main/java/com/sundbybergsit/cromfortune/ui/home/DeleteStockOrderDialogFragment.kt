@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.core.os.ConfigurationCompat
 import androidx.fragment.app.DialogFragment
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import java.text.SimpleDateFormat

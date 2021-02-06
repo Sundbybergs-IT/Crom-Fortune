@@ -4,6 +4,8 @@ import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockOrder
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

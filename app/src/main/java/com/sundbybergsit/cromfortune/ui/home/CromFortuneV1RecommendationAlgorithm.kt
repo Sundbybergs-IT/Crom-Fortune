@@ -1,6 +1,8 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.content.Context
+import com.sundbybergsit.cromfortune.stocks.StockOrder
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*

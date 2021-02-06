@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat

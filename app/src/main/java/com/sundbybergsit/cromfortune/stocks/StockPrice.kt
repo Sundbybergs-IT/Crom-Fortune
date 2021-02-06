@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.ui.home
+package com.sundbybergsit.cromfortune.stocks
 
 import java.util.*
 

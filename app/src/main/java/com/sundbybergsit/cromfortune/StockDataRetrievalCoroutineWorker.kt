@@ -7,11 +7,15 @@ import androidx.work.WorkerParameters
 import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.ui.dashboard.NotificationsRepositoryImpl
-import com.sundbybergsit.cromfortune.ui.home.*
+import com.sundbybergsit.cromfortune.ui.home.BuyStockCommand
+import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.ui.home.Recommendation
+import com.sundbybergsit.cromfortune.ui.home.SellStockCommand
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
+import com.sundbybergsit.cromfortune.ui.notifications.NotificationsRepositoryImpl
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock

@@ -14,6 +14,8 @@ import android.widget.EditText
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.stocks.StockOrder
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.ui.transformIntoDatePicker
 import java.text.SimpleDateFormat
 import java.util.*

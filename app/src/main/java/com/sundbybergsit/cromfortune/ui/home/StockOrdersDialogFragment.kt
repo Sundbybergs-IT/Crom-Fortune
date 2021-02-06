@@ -11,6 +11,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 
 class StockOrdersDialogFragment(
         private val homeViewModel: HomeViewModel,

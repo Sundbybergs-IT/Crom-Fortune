@@ -1,6 +1,8 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockOrder
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import java.util.*
 
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {

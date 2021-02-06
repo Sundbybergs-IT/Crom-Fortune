@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
+import com.sundbybergsit.cromfortune.stocks.StockOrder
 import java.util.*
 
 data class StockOrderAggregate(

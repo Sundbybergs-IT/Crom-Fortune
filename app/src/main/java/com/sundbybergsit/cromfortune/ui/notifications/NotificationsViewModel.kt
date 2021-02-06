@@ -7,7 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ui.dashboard.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.AdapterItem
 import com.sundbybergsit.cromfortune.ui.home.NotificationAdapterItemUtil
 import kotlinx.coroutines.launch

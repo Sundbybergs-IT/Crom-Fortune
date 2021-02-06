@@ -8,11 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1AlgorithmConformanceScoreCalculator
 import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.ui.home.StockOrder
-import com.sundbybergsit.cromfortune.ui.home.StockPrice
 import kotlinx.coroutines.launch
 import java.time.Instant
 

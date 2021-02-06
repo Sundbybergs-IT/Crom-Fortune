@@ -2,6 +2,8 @@ package com.sundbybergsit.cromfortune.ui.home
 
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.stocks.StockOrder
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

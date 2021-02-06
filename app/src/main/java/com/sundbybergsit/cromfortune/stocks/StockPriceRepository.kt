@@ -3,7 +3,6 @@ package com.sundbybergsit.cromfortune.stocks
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.sundbybergsit.cromfortune.ui.home.StockPrice
 import java.time.Instant
 
 object StockPriceRepository {
