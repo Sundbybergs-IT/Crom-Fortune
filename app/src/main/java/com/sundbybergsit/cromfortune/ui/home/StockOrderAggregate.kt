@@ -10,7 +10,7 @@ data class StockOrderAggregate(
         private var accumulatedPurchases: Double = 0.0,
         private var accumulatedSales: Double = 0.0,
         private var buyQuantity: Int = 0,
-        private var sellQuantity: Int = 0
+        private var sellQuantity: Int = 0,
 ) {
 
     fun aggregate(stockOrder: StockOrder) {
@@ -39,9 +39,9 @@ data class StockOrderAggregate(
     }
 
     fun getProfit(currentStockPrice: Double): Double {
+        val realizedProfit = sellQuantity * accumulatedSales - currentStockPrice * sellQuantity
         val currentQuantity = getQuantity()
-        val realizedProfit = sellQuantity * accumulatedSales - currentStockPrice * buyQuantity
-        val unrealizedProfit = currentQuantity * getAcquisitionValue() - currentStockPrice * currentQuantity
+        val unrealizedProfit = currentStockPrice * currentQuantity - currentQuantity * getAcquisitionValue()
         return realizedProfit + unrealizedProfit
     }
 
