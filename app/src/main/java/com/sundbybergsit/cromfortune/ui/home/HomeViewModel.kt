@@ -7,8 +7,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +18,7 @@ import java.util.*
 
 class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
-    private val _viewState = MutableLiveData<ViewState>()
+    private val _viewState = MutableLiveData<ViewState>(ViewState.Loading)
     private val _dialogViewState = MutableLiveData<DialogViewState>()
     private val _stockTransactionState = MutableLiveData<StockTransactionState>()
 
@@ -38,9 +38,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         } else {
             viewModelScope.launch {
                 _viewState.postValue(ViewState.HasStocks(R.string.home_stocks,
-                        StockAdapterItemUtil.convertToAdapterItems(
-                                stocks(context,
-                                        CurrencyConversionRateProducer(context.applicationContext as CromFortuneApp)))))
+                        StockAggregateAdapterItemUtil.convertToAdapterItems(stocks(context))))
             }
         }
     }
@@ -58,43 +56,29 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         refresh(context)
     }
 
-    private suspend fun stocks(context: Context, currencyConversationRateProducer: CurrencyConversionRateProducer):
-            List<StockOrder> {
+    private suspend fun stocks(context: Context):
+            List<StockOrderAggregate> {
         return withContext(Dispatchers.IO) {
             val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
-            val aggregatedStockOrders: MutableList<StockOrder> = mutableListOf()
+            val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
             for (stockName in stockOrderRepository.listOfStockNames()) {
                 val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockName)
-                var grossQuantity = 0
-                var soldQuantity = 0
-                var accumulatedCost = 0.0
-                var rate = 1.0
-                var currency: String? = null
+                var stockOrderAggregate: StockOrderAggregate? = null
                 for (stockOrder in stockOrders) {
-                    if (currency == null) {
-                        currency = stockOrder.currency
-                        rate = currencyConversationRateProducer.getRateInSek(Currency.getInstance(currency))
-                    }
-                    when (stockOrder.orderAction) {
-                        "Buy" -> {
-                            grossQuantity += stockOrder.quantity
-                            accumulatedCost += stockOrder.pricePerStock * stockOrder.quantity +
-                                    stockOrder.commissionFee / rate
-                        }
-                        "Sell" -> {
-                            soldQuantity += stockOrder.quantity
-                        }
-                        else -> {
-                            throw IllegalStateException("Invalid stock order action: ${stockOrder.orderAction}")
-                        }
+                    if (stockOrderAggregate == null) {
+                        stockOrderAggregate = StockOrderAggregate(
+                                (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+                                        .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                                stockOrder.name, stockOrder.name,
+                                Currency.getInstance(stockOrder.currency))
+                        stockOrderAggregate.aggregate(stockOrder)
+                    } else {
+                        stockOrderAggregate.aggregate(stockOrder)
                     }
                 }
-                val netQuantity = grossQuantity - soldQuantity
-                val averageCostPerStock = accumulatedCost / grossQuantity
-                aggregatedStockOrders.add(StockOrder("Buy", currency!!, System.currentTimeMillis(), stockName,
-                        averageCostPerStock, 0.0, netQuantity))
+                stockOrderAggregates.add(stockOrderAggregate!!)
             }
-            aggregatedStockOrders.sortedBy { stockOrder -> stockOrder.name }
+            stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
         }
     }
 
@@ -115,6 +99,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     }
 
     sealed class ViewState {
+
+        object Loading : ViewState()
 
         data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<AdapterItem>) : ViewState()
 

@@ -12,7 +12,7 @@ import yahoofinance.Stock
 import yahoofinance.YahooFinance
 
 @Suppress("BlockingMethodInNonBlockingContext")
-class StockRetrievalCoroutineWorker(val context: Context, workerParameters: WorkerParameters) :
+class StockPriceRetrievalCoroutineWorker(val context: Context, workerParameters: WorkerParameters) :
         CoroutineWorker(context, workerParameters) {
 
     companion object {

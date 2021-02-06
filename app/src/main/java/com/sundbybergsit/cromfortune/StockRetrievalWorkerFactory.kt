@@ -12,7 +12,7 @@ class StockRetrievalWorkerFactory : WorkerFactory() {
             workerClassName: String,
             workerParameters: WorkerParameters,
     ): ListenableWorker {
-        return StockRetrievalCoroutineWorker(context = appContext, workerParameters = workerParameters)
+        return StockPriceRetrievalCoroutineWorker(context = appContext, workerParameters = workerParameters)
     }
 
 }

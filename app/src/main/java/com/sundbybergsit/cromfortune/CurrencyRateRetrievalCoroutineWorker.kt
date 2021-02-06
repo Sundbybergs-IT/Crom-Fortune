@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.sundbybergsit.cromfortune.currencies.CurrencyRate
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.YahooFinance
@@ -19,16 +21,16 @@ open class CurrencyRateRetrievalCoroutineWorker(val context: Context, workerPara
     }
 
     override suspend fun doWork(): Result = coroutineScope {
-        Log.i(StockRetrievalCoroutineWorker.TAG, "doWork()")
+        Log.i(StockPriceRetrievalCoroutineWorker.TAG, "doWork()")
         try {
-            val cromFortuneApp = context.applicationContext as CromFortuneApp
             val asyncWork =
                     async {
-                        cromFortuneApp.currencyRates["SEK"] = 1.0
+                        val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
+                        currencyRates.add(CurrencyRate("SEK", 1.0))
                         for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
-                            cromFortuneApp.currencyRates[currency] = getRateInSek(currency)
+                            currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
                         }
-
+                        CurrencyRateRepository.add(currencyRates)
                     }
             asyncWork.await()
             Result.success()

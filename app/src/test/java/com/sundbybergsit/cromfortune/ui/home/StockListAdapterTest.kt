@@ -6,12 +6,16 @@ import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.currencies.CurrencyRate
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLooper
 import java.util.*
 
 @Config(sdk = [Build.VERSION_CODES.Q])
@@ -24,16 +28,23 @@ class StockListAdapterTest {
 
     @Before
     fun setUp() {
+        CurrencyRateRepository.add(setOf(CurrencyRate("SEK", 1.0)))
+        StockPriceRepository.put(setOf(
+                StockPrice(StockPrice.SYMBOLS[0].first, 100.0),
+                StockPrice(StockPrice.SYMBOLS[1].first, 0.02),
+                StockPrice(StockPrice.SYMBOLS[2].first, 0.01),
+                ))
+        ShadowLooper.runUiThreadTasks()
         adapter = StockListAdapter(object : StockClickListener {
             override fun onClick(stockName: String) {
                 // Do nothing
             }
-        }, StubbedCurrencyConversionRateProducer())
-        val currency = currency
-        val list: List<AdapterItem> = listOf(StockHeaderAdapterItem(),
-                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first, 100.099, 0.0, 1)),
-                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[1].first, 0.0199, 0.0, 1)),
-                StockAdapterItem(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[2].first, 0.0109, 0.0, 1)),
+        })
+        val list: List<AdapterItem> = listOf(
+                StockHeaderAdapterItem(),
+                StockAggregateAdapterItem(StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first, currency, 100.099, 0.0, 1)),
+                StockAggregateAdapterItem(StockOrderAggregate(1.0, StockPrice.SYMBOLS[1].first, StockPrice.SYMBOLS[1].first, currency, 0.0199, 0.0, 1)),
+                StockAggregateAdapterItem(StockOrderAggregate(1.0, StockPrice.SYMBOLS[2].first, StockPrice.SYMBOLS[2].first, currency, 0.0109, 0.0, 1)),
         )
         adapter.setListener(HomeViewModel())
         adapter.submitList(list)
@@ -79,14 +90,6 @@ class StockListAdapterTest {
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         assertEquals("${currency}0.011", acquisitionValue.text.toString())
-    }
-
-    class StubbedCurrencyConversionRateProducer : CurrencyConversionRateProducer(ApplicationProvider.getApplicationContext()) {
-
-        override fun getRateInSek(currency: Currency): Double {
-            return 1.0
-        }
-
     }
 
 }

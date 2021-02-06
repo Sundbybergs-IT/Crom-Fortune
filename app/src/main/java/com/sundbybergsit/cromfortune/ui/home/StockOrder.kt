@@ -1,7 +1,7 @@
 package com.sundbybergsit.cromfortune.ui.home
 
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import kotlinx.serialization.Serializable
-import java.util.*
 
 // Name == Stock symbol
 @Serializable
@@ -10,20 +10,25 @@ data class StockOrder(
         val pricePerStock: Double, val commissionFee: Double = 0.0, val quantity: Int,
 ) {
 
-    fun getAcquisitionValue(currencyConversionRateProducer: CurrencyConversionRateProducer): Double {
+    fun getAcquisitionValue(): Double {
+        val rateInSek = getRateInSek()
         return if (orderAction == "Buy") {
-            (quantity * pricePerStock + (commissionFee / currencyConversionRateProducer.getRateInSek(Currency.getInstance(currency)))) / quantity
+            (quantity * pricePerStock + (commissionFee / rateInSek)) / quantity
         } else {
             0.0
         }
     }
 
-    fun getTotalCost(currencyConversionRateProducer: CurrencyConversionRateProducer): Double {
+    fun getTotalCost(): Double {
+        val rateInSek = getRateInSek()
         return if (orderAction == "Buy") {
-            quantity * pricePerStock + (commissionFee / currencyConversionRateProducer.getRateInSek(Currency.getInstance(currency)))
+            quantity * pricePerStock + (commissionFee / rateInSek)
         } else {
-            -quantity * pricePerStock + (commissionFee / currencyConversionRateProducer.getRateInSek(Currency.getInstance(currency)))
+            -quantity * pricePerStock + (commissionFee / rateInSek)
         }
     }
+
+    private fun getRateInSek(): Double = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+            .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == currency }!!.rateInSek
 
 }

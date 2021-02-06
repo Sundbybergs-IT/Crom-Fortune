@@ -6,16 +6,17 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
-import androidx.work.WorkManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import java.util.*
 
 class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
@@ -29,10 +30,11 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
     private val viewModel: HomeViewModel by viewModels()
 
     private lateinit var stockListAdapter: StockListAdapter
+    private var currencyRatesLoaded = false
+    private var stockPricesLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        stockListAdapter = StockListAdapter(this,
-                CurrencyConversionRateProducer(requireContext().applicationContext as CromFortuneApp))
+        stockListAdapter = StockListAdapter(this)
         val infoText: TextView = view.findViewById(R.id.textView_fragmentHome)
         val infoImage: ImageView = view.findViewById(R.id.imageView_fragmentHome)
         val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton_fragmentHome)
@@ -70,35 +72,27 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val workManager = WorkManager.getInstance(requireContext().applicationContext)
-        val cromFortuneApp = requireContext().applicationContext as CromFortuneApp
-        workManager.getWorkInfoByIdLiveData((cromFortuneApp).currencyRateWorkRequestId)
-                .observe(viewLifecycleOwner, { workInfo ->
-                    if (workInfo.state.isFinished) {
-                        viewModel.refresh(requireContext())
-                    }
-                })
+    private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView, fab: FloatingActionButton) {
+        setUpCurrencyRateListener()
+        setUpStockPriceListener()
+        setUpUiViewStateListener(textView, fab, infoImage)
+        setUpStockTransactionStateListener()
+        setUpDialogViewStateListener()
     }
 
-    private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView, fab: FloatingActionButton) {
-        viewModel.viewState.observe(viewLifecycleOwner, { viewState ->
+    private fun setUpDialogViewStateListener() {
+        viewModel.dialogViewState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
-                is HomeViewModel.ViewState.HasStocks -> {
-                    textView.text = ""
-                    infoImage.visibility = View.GONE
-                    fab.visibility = View.GONE
-                    stockListAdapter.submitList(viewState.adapterItems)
-                }
-                is HomeViewModel.ViewState.HasNoStocks -> {
-                    textView.text = getText(viewState.textResId)
-                    infoImage.visibility = View.VISIBLE
-                    fab.visibility = View.VISIBLE
-                    stockListAdapter.submitList(Collections.emptyList())
+                is HomeViewModel.DialogViewState.ShowDeleteDialog -> {
+                    val dialog = DeleteStockOrdersDialogFragment(homeViewModel = viewModel,
+                            stockName = viewState.stockName)
+                    dialog.show(parentFragmentManager, TAG)
                 }
             }
         })
+    }
+
+    private fun setUpStockTransactionStateListener() {
         viewModel.stockTransactionState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is HomeViewModel.StockTransactionState.Error -> {
@@ -109,12 +103,58 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
                 }
             }
         })
-        viewModel.dialogViewState.observe(viewLifecycleOwner, { viewState ->
+    }
+
+    private fun setUpUiViewStateListener(textView: TextView, fab: FloatingActionButton, infoImage: ImageView) {
+        viewModel.viewState.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
-                is HomeViewModel.DialogViewState.ShowDeleteDialog -> {
-                    val dialog = DeleteStockOrdersDialogFragment(homeViewModel = viewModel,
-                            stockName = viewState.stockName)
-                    dialog.show(parentFragmentManager, TAG)
+                is HomeViewModel.ViewState.Loading -> {
+                    requireView().findViewById<ProgressBar>(R.id.progressBar_fragmentHome).visibility = View.VISIBLE
+                    textView.text = ""
+                    fab.visibility = View.GONE
+                    infoImage.visibility = View.GONE
+                }
+                is HomeViewModel.ViewState.HasStocks -> {
+                    requireView().findViewById<ProgressBar>(R.id.progressBar_fragmentHome).visibility = View.GONE
+                    textView.text = ""
+                    infoImage.visibility = View.GONE
+                    fab.visibility = View.GONE
+                    stockListAdapter.submitList(viewState.adapterItems)
+                }
+                is HomeViewModel.ViewState.HasNoStocks -> {
+                    requireView().findViewById<ProgressBar>(R.id.progressBar_fragmentHome).visibility = View.GONE
+                    textView.text = getText(viewState.textResId)
+                    infoImage.visibility = View.VISIBLE
+                    fab.visibility = View.VISIBLE
+                    stockListAdapter.submitList(Collections.emptyList())
+                }
+            }
+        })
+    }
+
+    private fun setUpStockPriceListener() {
+        StockPriceRepository.stockPrices.observe(viewLifecycleOwner, { viewState: StockPriceRepository.ViewState ->
+            when (viewState) {
+                is StockPriceRepository.ViewState.VALUES -> {
+                    stockPricesLoaded = true
+                    if (currencyRatesLoaded) {
+                        (requireView().findViewById(R.id.floatingActionButton_fragmentHome) as FloatingActionButton).isEnabled = true
+                        viewModel.refresh(requireContext())
+                    }
+                }
+            }
+        })
+    }
+
+    private fun setUpCurrencyRateListener() {
+        CurrencyRateRepository.currencyRates.observe(viewLifecycleOwner, { viewState ->
+            when (viewState) {
+                is CurrencyRateRepository.ViewState.VALUES -> {
+                    currencyRatesLoaded = true
+                    if (stockPricesLoaded) {
+                        (requireView().findViewById(R.id.floatingActionButton_fragmentHome) as FloatingActionButton).isEnabled = true
+                        viewModel.refresh(requireContext())
+                    }
                 }
             }
         })

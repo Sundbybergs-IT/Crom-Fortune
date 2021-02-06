@@ -31,11 +31,11 @@
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="1"
+            android:text="@string/generic_title_name"
             android:textIsSelectable="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/textView_listrowNotificationHeader_date"
             app:layout_constraintTop_toTopOf="parent"
-            android:text="@string/generic_title_name"
             />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

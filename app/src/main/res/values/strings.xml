@@ -27,6 +27,7 @@
     <string name="generic_error_not_supported">This feature is not yet supported.</string>
     <string name="generic_hint">Select</string>
     <string name="generic_price_per_stock">Price per stock</string>
+    <string name="generic_profit">Profit</string>
     <string name="generic_saved">Saved successfully</string>
     <string name="generic_title_name">Name</string>
     <string name="generic_title_quantity">Quantity</string>

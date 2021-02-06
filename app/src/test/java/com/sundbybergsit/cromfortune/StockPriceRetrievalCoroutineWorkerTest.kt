@@ -15,7 +15,7 @@ import org.robolectric.annotation.Config
 
 @Config(sdk = [Build.VERSION_CODES.Q])
 @RunWith(AndroidJUnit4::class)
-class StockRetrievalCoroutineWorkerTest {
+class StockPriceRetrievalCoroutineWorkerTest {
 
     private lateinit var context: Context
 
@@ -26,7 +26,7 @@ class StockRetrievalCoroutineWorkerTest {
 
     @Test
     fun `doWork - always - works`() {
-        val worker = TestListenableWorkerBuilder<StockRetrievalCoroutineWorker>(context).build()
+        val worker = TestListenableWorkerBuilder<StockPriceRetrievalCoroutineWorker>(context).build()
         runBlocking {
             val result: ListenableWorker.Result = worker.doWork()
             assertTrue(result == ListenableWorker.Result.success())

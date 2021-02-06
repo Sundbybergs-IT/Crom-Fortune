@@ -26,6 +26,7 @@
     <string name="generic_error_not_supported">Denna funktion stöds inte.</string>
     <string name="generic_hint">Välj</string>
     <string name="generic_price_per_stock">Pris per aktie</string>
+    <string name="generic_profit">Profit</string>
     <string name="generic_saved">Sparade framgångsrikt</string>
     <string name="generic_title_name">Namn</string>
     <string name="generic_title_quantity">Kvantitet</string>

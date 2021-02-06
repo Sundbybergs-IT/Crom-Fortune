@@ -32,8 +32,7 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
                     dashboardViewModel.refresh(requireContext(), viewState.instant, viewState.stockPrices)
                 }
             }
-        }
-        )
+        })
         dashboardViewModel.score.observe(viewLifecycleOwner, {
             textView_fragmentDashboard_score.text = it
         })

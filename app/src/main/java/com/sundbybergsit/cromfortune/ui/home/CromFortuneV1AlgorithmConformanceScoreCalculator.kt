@@ -1,10 +1,14 @@
 package com.sundbybergsit.cromfortune.ui.home
 
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {
 
-    override suspend fun getScore(recommendationAlgorithm: RecommendationAlgorithm,
-                                  orders: Set<StockOrder>,
-                                  currencyConversionRateProducer: CurrencyConversionRateProducer): ConformanceScore {
+    override suspend fun getScore(
+            recommendationAlgorithm: RecommendationAlgorithm,
+            orders: Set<StockOrder>,
+            currencyRateRepository: CurrencyRateRepository,
+    ): ConformanceScore {
         var correctDecision = 0
         val sortedOrders: MutableList<StockOrder> = orders.toMutableList()
         sortedOrders.sortBy { order -> order.dateInMillis }
@@ -15,8 +19,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 }
             } else {
                 val recommendation = recommendationAlgorithm.getRecommendation(StockPrice(order.name, order.pricePerStock),
-                        order.commissionFee, currencyConversionRateProducer,
-                        sortedOrders.subList(0, index).toSet())
+                        order.commissionFee, sortedOrders.subList(0, index).toSet())
                 if (order.orderAction == "Buy") {
                     if (recommendation != null && recommendation.command is BuyStockCommand) {
                         correctDecision += 1

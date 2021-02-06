@@ -34,6 +34,19 @@
             android:textStyle="bold"
             />
 
+    <TextView
+            android:id="@+id/textView_listrowStockHeader_profit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="2"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:text="@string/generic_profit"
+            android:textIsSelectable="false"
+            android:textStyle="bold"
+            />
+
     <View
             android:layout_width="24dp"
             android:layout_height="wrap_content"
