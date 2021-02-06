@@ -8,7 +8,17 @@ import java.util.*
 
 class SellStockCommand(private val context: Context, private val currentTimeInMillis: Long,
                        val currency: Currency, val name: String, val pricePerStock: Double,
-                       val quantity: Int, val commissionFee: Double) : Command {
+                       val quantity: Int, val commissionFee: Double) : StockOrderCommand {
+
+    override fun quantity(): Int = quantity
+
+    override fun stockSymbol(): String = name
+
+    override fun currency(): Currency = currency
+
+    override fun commissionFee(): Double = commissionFee
+
+    override fun price(): Double = pricePerStock
 
     override fun execute() {
         val stockOrderRepository = StockOrderRepositoryImpl(context)

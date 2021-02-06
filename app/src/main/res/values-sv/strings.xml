@@ -32,6 +32,8 @@
     <string name="generic_title_quantity">Kvantitet</string>
     <string name="generic_title_stock_orders">Transaktioner</string>
     <string name="generic_title_total_cost">Total kostnad</string>
+    <string name="generic_urge_buy">Köp!</string>
+    <string name="generic_urge_sell">Sälj!</string>
 
     <string name="home_add_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_add_stock_currency_label">Valuta</string>
@@ -54,7 +56,8 @@
 
     <string name="notification_channel_name">Crom Fortune-händelser</string>
     <string name="notifications_empty">Det finns inga notifieringar</string>
-    <string name="notification_recommendation_body">Du rekommenderas att:</string>
+    <string name="notification_recommendation_body_buy">Du rekommenderas att köpa %1$d av %2$s till %3$s %4$s (courtage %5$d SEK)</string>
+    <string name="notification_recommendation_body_sell">Du rekommenderas att sälja %1$d av %2$s till %3$s %4$s (courtage %5$d SEK)</string>
     <string name="notification_recommendation_title">Rekommendation</string>
     <string name="notifications_title">Notifieringar</string>
 

@@ -21,6 +21,7 @@ import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock
 import yahoofinance.YahooFinance
 import java.util.*
+import kotlin.math.roundToInt
 
 @Suppress("BlockingMethodInNonBlockingContext")
 open class StockDataRetrievalCoroutineWorker(val context: Context, workerParameters: WorkerParameters) :
@@ -54,8 +55,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                             val stockPrice = StockPrice(stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
                                     price = quote.price.toDouble().roundTo(3))
                             val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                                    .getRecommendation(stockPrice, currencyRates.find {
-                                        currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
+                                    .getRecommendation(stockPrice, currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
                                             COMMISSION_FEE, StockOrderRepositoryImpl(context).list(stockSymbol))
                             if (recommendation != null) {
                                 notifyRecommendation(recommendation)
@@ -74,21 +74,37 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
     open fun getRateInSek(currency: String) = YahooFinance.getFx("${currency}SEK=X").price.toDouble()
 
     private fun notifyRecommendation(recommendation: Recommendation) {
-        val notification = NotificationMessage(System.currentTimeMillis(),
-                recommendation.command.toString())
+        val message = when (recommendation.command) {
+            is BuyStockCommand -> {
+                context.getString(R.string.notification_recommendation_body_buy, recommendation.command.quantity,
+                        recommendation.command.name, recommendation.command.pricePerStock.roundTo(3).toString(),
+                        recommendation.command.currency.currencyCode, recommendation.command.commissionFee.roundToInt())
+            }
+            is SellStockCommand -> {
+                context.getString(R.string.notification_recommendation_body_sell, recommendation.command.quantity,
+                        recommendation.command.name, recommendation.command.pricePerStock.roundTo(3).toString(),
+                        recommendation.command.currency.currencyCode, recommendation.command.commissionFee.roundToInt())
+            }
+            else -> {
+                ""
+            }
+        }
+
+        val notification = NotificationMessage(System.currentTimeMillis(), message)
+
         // TODO: Move repository logic
         val notificationsRepository = NotificationsRepositoryImpl(context)
         notificationsRepository.add(notification)
         val shortText: String =
                 when (recommendation.command) {
-                    is BuyStockCommand -> context.getString(R.string.action_stock_buy)
-                    is SellStockCommand -> context.getString(R.string.action_stock_sell)
+                    is BuyStockCommand -> context.getString(R.string.generic_urge_buy)
+                    is SellStockCommand -> context.getString(R.string.generic_urge_sell)
                     else -> ""
                 }
         NotificationUtil.doPostRegularNotification(context,
                 context.getString(R.string.notification_recommendation_title),
                 shortText,
-                "${context.getString(R.string.notification_recommendation_body)} ${notification.message}")
+                notification.message)
     }
 
 }
