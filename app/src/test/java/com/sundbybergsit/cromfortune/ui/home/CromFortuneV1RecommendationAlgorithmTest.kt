@@ -43,213 +43,264 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price decreased to below limit and commission fee ok - returns buy recommendation`() {
+    fun `getRecommendation - when stock price decreased to below normal limit and commission fee ok and overbought - returns no recommendation`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 39.0, 2)
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 39.0, 2)
+        val oldOrder3 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 39.0, 10)
+        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
+
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder3.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
+                        .times(oldOrder3.pricePerStock)), 1.0, 1.0, setOf(oldOrder1, oldOrder2, oldOrder3))
+
+        assertNull(recommendation)
+    }
+
+    @Test
+    fun `getRecommendation - when stock price decreased to below normal limit and commission fee ok - returns buy recommendation`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 10)
         repository.put(DOMESTIC_STOCK_NAME, oldOrder)
-        runBlocking {
-            val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
-                    oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
-                            .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
 
-            assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is BuyStockCommand)
-            val buyStockCommand = recommendation.command as BuyStockCommand
-            assertTrue(buyStockCommand.commissionFee == 1.0)
-            assertTrue(buyStockCommand.quantity == 1)
-            assertTrue(buyStockCommand.pricePerStock == 80.0)
-            assertTrue(buyStockCommand.currency == currency)
-        }
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
+                        .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
+
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is BuyStockCommand)
+        val buyStockCommand = recommendation.command as BuyStockCommand
+        assertTrue(buyStockCommand.commissionFee == 1.0)
+        assertQuantity(2, buyStockCommand.quantity)
+        assertStockPrice(70.0, buyStockCommand.pricePerStock)
+        assertTrue(buyStockCommand.currency == currency)
     }
 
     @Test
-    fun `getRecommendation - when stock price decreased to below limit and commission fee ok including sell - returns buy recommendation`() {
+    fun `getRecommendation - when stock price decreased to below high limit and commission fee ok and not overbought - returns no recommendation`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 39.0, 300)
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 39.0, 30)
+        val oldOrder3 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 39.0, 10)
+        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
+
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder3.pricePerStock - (CromFortuneV1RecommendationAlgorithm.MAX_EXTREME_BUY_PERCENTAGE + 0.1)
+                        .times(oldOrder3.pricePerStock)), 1.0, 1.0, setOf(oldOrder1, oldOrder2, oldOrder3))
+
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is BuyStockCommand)
+        val buyStockCommand = recommendation.command as BuyStockCommand
+        assertTrue(buyStockCommand.commissionFee == 1.0)
+        assertQuantity(32, buyStockCommand.quantity)
+        assertStockPrice(70.0, buyStockCommand.pricePerStock)
+        assertTrue(buyStockCommand.currency == currency)
+    }
+
+    @Test
+    fun `getRecommendation - when stock price decreased to below limit and commission fee ok including sell - returns buy recommendation`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 11)
         val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 1000.0, 1)
         repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
-        runBlocking {
-            val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
-                    oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
-                            .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
 
-            assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is BuyStockCommand)
-            val buyStockCommand = recommendation.command as BuyStockCommand
-            assertTrue(buyStockCommand.commissionFee == 1.0)
-            assertTrue(buyStockCommand.quantity == 1)
-            assertTrue(buyStockCommand.pricePerStock == 80.0)
-            assertTrue(buyStockCommand.currency == currency)
-        }
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
+                        .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
+
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is BuyStockCommand)
+        val buyStockCommand = recommendation.command as BuyStockCommand
+        assertTrue(buyStockCommand.commissionFee == 1.0)
+        assertQuantity(2, buyStockCommand.quantity)
+        assertStockPrice(70.0, buyStockCommand.pricePerStock)
+        assertTrue(buyStockCommand.currency == currency)
     }
 
     @Test
-    fun `getRecommendation - when stock price increased to limit but buy commission fee too high - returns null`() {
+    fun `getRecommendation - when stock price increased to limit but buy commission fee too high - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 1)
         repository.put(DOMESTIC_STOCK_NAME, oldOrder)
-        runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
-                    oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE
-                            .times(oldOrder.pricePerStock)),
-                    1.0, 1.0, setOf(oldOrder))
 
-            assertNull(recommendation)
-        }
+        val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE
+                        .times(oldOrder.pricePerStock)),
+                1.0, 1.0, setOf(oldOrder))
+
+        assertNull(recommendation)
     }
 
     @Test
-    fun `getRecommendation - when stock price increased to limit but sell commission fee too high - returns null`() {
+    fun `getRecommendation - when stock price increased to limit but sell commission fee too high - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0,
                 1.0, 1)
         repository.put(DOMESTIC_STOCK_NAME, oldOrder)
-        runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
-                    oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE
-                            .times(oldOrder.pricePerStock)),
-                    1.0, 39.0, setOf(oldOrder))
 
-            assertNull(recommendation)
-        }
+        val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE
+                        .times(oldOrder.pricePerStock)),
+                1.0, 39.0, setOf(oldOrder))
+
+        assertNull(recommendation)
     }
 
     @Test
-    fun `getRecommendation - when stock price increased to above limit and commission fee ok but too few stocks - returns null`() {
+    fun `getRecommendation - when stock price increased to max limit - returns null`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0,
+                1.0, 10)
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 200.0,
+                1.0, 5)
+        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
+
+        val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder.pricePerStock + 100
+                        .times(oldOrder.pricePerStock)),
+                1.0, 39.0, setOf(oldOrder, oldOrder2))
+
+        assertNull(recommendation)
+    }
+
+    @Test
+    fun `getRecommendation - when stock price increased to above limit and commission fee ok but too few stocks - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0,
                 1.0, 1)
         repository.put(DOMESTIC_STOCK_NAME, oldOrder)
-        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
+        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
-                    1.0, 1.0, setOf(oldOrder))
+        val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
+                1.0, 1.0, setOf(oldOrder))
 
-            assertNull(recommendation)
-        }
+        assertNull(recommendation)
     }
 
     @Test
-    fun `getRecommendation - when stock price increased to above limit and commission fee ok and enough stocks - returns sell recommendation`() {
+    fun `getRecommendation - when stock price increased to above limit and commission fee ok and enough stocks - returns sell recommendation`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
-                100.0, 10.0, 10)
+                100.0, 10.0, 13)
         repository.put(DOMESTIC_STOCK_NAME, oldOrder)
-        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
+        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
-                    1.0, 0.0, setOf(oldOrder))
+        val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
+                1.0, 0.0, setOf(oldOrder))
 
-            assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is SellStockCommand)
-            val sellStockCommand = recommendation.command as SellStockCommand
-            assertTrue(sellStockCommand.commissionFee == 0.0)
-            assertTrue(sellStockCommand.quantity == 1)
-            assertTrue(sellStockCommand.pricePerStock == 120.0)
-            assertTrue(sellStockCommand.currency == currency)
-        }
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is SellStockCommand)
+        val sellStockCommand = recommendation.command as SellStockCommand
+        assertTrue(sellStockCommand.commissionFee == 0.0)
+        assertQuantity(9, sellStockCommand.quantity)
+        assertStockPrice(130.0, sellStockCommand.pricePerStock)
+        assertTrue(sellStockCommand.currency == currency)
     }
 
     @Test
-    fun `getRecommendation - when foreign stock price decreased to below limit and commission fee ok - returns buy recommendation`() {
+    fun `getRecommendation - when foreign stock price decreased to below limit and commission fee ok - returns buy recommendation`() = runBlocking {
         val currency = Currency.getInstance("NOK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 10.0, 39.0, 10)
         repository.put(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
-        runBlocking {
-            val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(
-                    FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                    oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
-                            .times(oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
 
-            assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is BuyStockCommand)
-            val buyStockCommand = recommendation.command as BuyStockCommand
-            assertTrue(buyStockCommand.commissionFee == 1.0)
-            assertTrue(buyStockCommand.quantity == 1)
-            assertTrue(buyStockCommand.pricePerStock == 8.0)
-            assertTrue(buyStockCommand.currency == currency)
-        }
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(
+                FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
+                oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
+                        .times(oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
+
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is BuyStockCommand)
+        val buyStockCommand = recommendation.command as BuyStockCommand
+        assertTrue(buyStockCommand.commissionFee == 1.0)
+        assertQuantity(2, buyStockCommand.quantity)
+        assertStockPrice(7.0, buyStockCommand.pricePerStock)
+        assertTrue(buyStockCommand.currency == currency)
     }
 
     @Test
-    fun `getRecommendation - when foreign stock price increased to over limit and including sell - returns buy recommendation`() {
+    fun `getRecommendation - when foreign stock price increased to over limit and including sell - returns buy recommendation`() = runBlocking {
         val currency = Currency.getInstance("NOK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 9.0, 39.0, 70)
         val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 1000.0, 39.0, 35)
         repository.putAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, setOf(oldOrder, oldOrder2))
-        runBlocking {
-            val recommendation: Recommendation? = algorithm.getRecommendation(
-                    StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                            oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.09)
-                                    .times(oldOrder.pricePerStock)), 10.0, 39.0, setOf(oldOrder, oldOrder2))
 
-            assertNull(recommendation)
-        }
+        val recommendation: Recommendation? = algorithm.getRecommendation(
+                StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
+                        oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.09)
+                                .times(oldOrder.pricePerStock)), 10.0, 39.0, setOf(oldOrder, oldOrder2))
+
+        assertNull(recommendation)
     }
 
     @Test
-    fun `getRecommendation - when foreign stock price increased to limit but commission fee too high - returns null`() {
+    fun `getRecommendation - when foreign stock price increased to limit but commission fee too high - returns null`() = runBlocking {
         val currency = Currency.getInstance("NOK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, 10.0, 39.0, 1)
         repository.put(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
-        runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                    oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE.times(
-                            oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
+        val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
+                oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE.times(
+                        oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
 
-            assertNull(recommendation)
-        }
+        assertNull(recommendation)
     }
 
     @Test
-    fun `getRecommendation - when foreign stock price increased to above limit and commission fee ok but too few stocks - returns null`() {
+    fun `getRecommendation - when foreign stock price increased to above limit and commission fee ok but too few stocks - returns null`() = runBlocking {
         val currency = Currency.getInstance("NOK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 10.0, 1.0, 1)
         repository.put(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
-        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
+        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                    newPrice), 10.0, 1.0, setOf(oldOrder))
+        val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
+                newPrice), 10.0, 1.0, setOf(oldOrder))
 
-            assertNull(recommendation)
-        }
+        assertNull(recommendation)
     }
 
     @Test
-    fun `getRecommendation - when foreign stock price increased to above limit and commission fee and enough stocks - returns sell recommendation`() {
+    fun `getRecommendation - when foreign stock price increased to above limit and commission fee and enough stocks - returns sell recommendation`() = runBlocking {
         val currency = Currency.getInstance("NOK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 10.0, 10.0, 10)
         repository.put(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
-        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.DIFF_PERCENTAGE + 0.1)
+        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
-        runBlocking {
-            val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                    newPrice), 10.0, 0.0, setOf(oldOrder))
+        val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
+                newPrice), 10.0, 0.0, setOf(oldOrder))
 
-            assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is SellStockCommand)
-            val sellStockCommand = recommendation.command as SellStockCommand
-            assertTrue(sellStockCommand.commissionFee == 0.0)
-            assertTrue(sellStockCommand.quantity == 1)
-            assertTrue(sellStockCommand.pricePerStock == 12.0)
-            assertTrue(sellStockCommand.currency == currency)
-        }
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is SellStockCommand)
+        val sellStockCommand = recommendation.command as SellStockCommand
+        assertTrue(sellStockCommand.commissionFee == 0.0)
+        assertQuantity(7, sellStockCommand.quantity)
+        assertStockPrice(13.0, sellStockCommand.pricePerStock)
+        assertTrue(sellStockCommand.currency == currency)
+    }
+
+    private fun assertStockPrice(expected: Double, actual: Double) {
+        assertTrue("Expected stock price to be $expected but was $actual", actual == expected)
+    }
+
+    private fun assertQuantity(expected: Int, actual: Int) {
+        assertTrue("Expected quantity $expected but was $actual", actual == expected)
     }
 
 }

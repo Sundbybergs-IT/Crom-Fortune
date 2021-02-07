@@ -11,12 +11,16 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
 
     companion object {
 
-        const val DIFF_PERCENTAGE: Double = .10
+        const val NORMAL_DIFF_PERCENTAGE: Double = .20
+        const val MAX_BUY_PERCENTAGE: Double = 0.1
+        const val MAX_SOLD_PERCENTAGE: Double = .10
+        const val MAX_EXTREME_BUY_PERCENTAGE: Double = .20
+        const val MAX_EXTREME_SOLD_PERCENTAGE: Double = .75
 
     }
 
     override suspend fun getRecommendation(
-            stockPrice: StockPrice, currencyRateInSek : Double, commissionFee: Double, previousOrders: Set<StockOrder>,
+            stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
     ): Recommendation? {
         return withContext(Dispatchers.IO) {
             RecommendationGenerator(context).getRecommendation(stockPrice.stockSymbol, stockPrice.currency, currencyRateInSek,
@@ -55,25 +59,76 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             val totalPricePerStockInSek = (accumulatedCostInSek - costToExcludeInSek) / netQuantity
             val totalPricePerStockInStockCurrency = totalPricePerStockInSek / rateInSek
             val currentTimeInMillis = System.currentTimeMillis()
-            val potentialBuyQuantity = netQuantity / 10
-            val pricePerStockAfterBuyInStockCurrency = ((netQuantity * averageCostInSek +
-                    potentialBuyQuantity * currentStockPriceInStockCurrency * rateInSek + commissionFeeInSek) /
-                    (netQuantity + potentialBuyQuantity)) / rateInSek
-            if (currentStockPriceInStockCurrency < (1 - DIFF_PERCENTAGE) * pricePerStockAfterBuyInStockCurrency) {
-                if (potentialBuyQuantity > 0) {
-                    return Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
-                            currentStockPriceInStockCurrency, potentialBuyQuantity, commissionFeeInSek))
-                }
-            } else if (currentStockPriceInStockCurrency > ((1 + DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) +
-                    commissionFeeInSek / rateInSek) {
-                val quantity = netQuantity / 10
-                if (quantity > 0) {
-                    return Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
-                            currentStockPriceInStockCurrency, quantity, commissionFeeInSek))
+            var tradeQuantity = netQuantity / 10
+            var recommendation: Recommendation? = null
+            var isOkToContinue = true
+            while (isOkToContinue) {
+                val pricePerStockAfterBuyInStockCurrency = ((netQuantity * averageCostInSek +
+                        tradeQuantity * currentStockPriceInStockCurrency * rateInSek + commissionFeeInSek) /
+                        (netQuantity + tradeQuantity)) / rateInSek
+                if (isCurrentStockPriceHighEnoughToBuy(currentStockPriceInStockCurrency, totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek)) {
+                    if (isNotOverSoldForMediumStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity)) {
+                        isOkToContinue = true
+                        recommendation = Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
+                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                        tradeQuantity += 1
+                    } else {
+                        if (isNotOverSoldForHighStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity)) {
+                            isOkToContinue = true
+                            recommendation = Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
+                                    currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                            tradeQuantity += 1
+                        } else {
+                            return recommendation
+                        }
+                    }
+                } else if (currentStockPriceLowEnoughForBuy(currentStockPriceInStockCurrency, pricePerStockAfterBuyInStockCurrency)) {
+                    if (isNotOverBoughtForMediumStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity)) {
+                        isOkToContinue = true
+                        recommendation = Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
+                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                        tradeQuantity += 1
+                    } else {
+                        if (isNotOverBoughtForHighStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity)) {
+                            isOkToContinue = true
+                            recommendation = Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
+                                    currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                            tradeQuantity += 1
+                        } else {
+                            isOkToContinue = false
+                        }
+                    }
+                } else {
+                    isOkToContinue = false
                 }
             }
-            return null
+            return recommendation
         }
+
+        private fun isCurrentStockPriceHighEnoughToBuy(
+                stockPrice: Double, totalPricePerStockInStockCurrency: Double, commissionFee: Double,
+        ) = stockPrice > ((1 + NORMAL_DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) + commissionFee
+
+        private fun isNotOverBoughtForHighStockPriceDecrease(tradeQuantity: Int, soldQuantity: Int, grossQuantity: Int) =
+                isNotOverBought(tradeQuantity, soldQuantity, grossQuantity, MAX_EXTREME_BUY_PERCENTAGE)
+
+        private fun isNotOverBoughtForMediumStockPriceDecrease(tradeQuantity: Int, soldQuantity: Int, grossQuantity: Int) =
+                isNotOverBought(tradeQuantity, soldQuantity, grossQuantity, MAX_BUY_PERCENTAGE)
+
+        private fun isNotOverSoldForHighStockPriceIncrease(tradeQuantity: Int, soldQuantity: Int, grossQuantity: Int) =
+                isNotOverSold(tradeQuantity, soldQuantity, grossQuantity, MAX_EXTREME_SOLD_PERCENTAGE)
+
+        private fun isNotOverSoldForMediumStockPriceIncrease(tradeQuantity: Int, soldQuantity: Int, grossQuantity: Int) =
+                isNotOverSold(tradeQuantity, soldQuantity, grossQuantity, MAX_SOLD_PERCENTAGE)
+
+        private fun isNotOverBought(tradeQuantity: Int, soldQuantity: Int, grossQuantity: Int, threshold: Double) =
+                tradeQuantity > 0 && (soldQuantity + tradeQuantity) <= grossQuantity * threshold
+
+        private fun isNotOverSold(tradeQuantity: Int, soldQuantity: Int, grossQuantity: Int, threshold: Double) =
+                tradeQuantity > 0 && (soldQuantity + tradeQuantity) <= grossQuantity * threshold
+
+        private fun currentStockPriceLowEnoughForBuy(stockPrice: Double, predictedStockPriceAfterBuy: Double) =
+                stockPrice < (1 - NORMAL_DIFF_PERCENTAGE) * predictedStockPriceAfterBuy
 
     }
 
