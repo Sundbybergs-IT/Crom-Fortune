@@ -3,15 +3,18 @@ package com.sundbybergsit.cromfortune.ui.home
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockPrice
+import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLooper
 import java.util.*
 
 @Config(sdk = [Build.VERSION_CODES.Q])
@@ -22,16 +25,19 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     @Before
     fun setUp() {
+        CurrencyRateRepository.add(setOf(CurrencyRate("SEK", 1.0)))
+        StockPriceRepository.put(setOf(
+                StockPrice(StockPrice.SYMBOLS[0].first, Currency.getInstance("SEK"), 1.0)
+        ))
+        ShadowLooper.runUiThreadTasks()
         calculator = CromFortuneV1AlgorithmConformanceScoreCalculator()
     }
 
     @Test
-    fun `getScore - when no orders - returns 100`() {
-        runBlocking {
-            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), emptySet(), CurrencyRateRepository)
+    fun `getScore - when no orders - returns 100`() = runBlocking {
+        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), emptySet(), CurrencyRateRepository)
 
-            assertTrue(score.score == 100)
-        }
+        assertScore(100, score)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -42,59 +48,63 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     }
 
     @Test
-    fun `getScore - when initial buy order - returns 100`() {
-        runBlocking {
-            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1)), CurrencyRateRepository)
+    fun `getScore - when initial buy order - returns 100`() = runBlocking {
+        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1)), CurrencyRateRepository)
 
-            assertTrue(score.score == 100)
-        }
+        assertScore(100, score)
     }
 
     @Test
-    fun `getScore - when 0 out of 1 correct decisions - returns 0`() {
-        runBlocking {
-            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
-                    newBuyStockOrder(2)), CurrencyRateRepository)
+    fun `getScore - when 0 out of 1 correct decisions - returns 0`() = runBlocking {
+        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
+                newBuyStockOrder(2)), CurrencyRateRepository)
 
-            assertTrue(score.score == 0)
-        }
+        assertScore(0, score)
     }
 
     @Test
-    fun `getScore - when 1 out of 1 correct decisions - returns 100`() {
-        runBlocking {
-            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
-                    newSellStockOrder(2)), CurrencyRateRepository)
+    fun `getScore - when 1 out of 1 correct decisions - returns 100`() = runBlocking {
+        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
+                newSellStockOrder(2)), CurrencyRateRepository)
 
-            assertTrue(score.score == 100)
-        }
+        assertScore(100, score)
     }
 
     @Test
-    fun `getScore - when 1 out of 2 correct decisions - returns 50`() {
-        runBlocking {
-            val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
-                    newSellStockOrder(2), newBuyStockOrder(3)), CurrencyRateRepository)
+    fun `getScore - when 1 out of 2 correct decisions - returns 50`() = runBlocking {
+        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
+                newSellStockOrder(2), newBuyStockOrder(3)), CurrencyRateRepository)
 
-            assertTrue(score.score == 50)
-        }
+        assertScore(50, score)
+    }
+
+    @Test
+    fun `getScore - when 1 out of 3 correct decisions - returns 50`() = runBlocking {
+        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
+                newSellStockOrder(2), newBuyStockOrder(3), newBuyStockOrder(4)), CurrencyRateRepository)
+
+        assertScore(33, score)
+    }
+
+    private fun assertScore(expectedValue: Int, score: ConformanceScore) {
+        assertTrue("Expected score $expectedValue but was ${score.score}", score.score == expectedValue)
     }
 
     private fun newSellStockOrder(dateInMillis: Long): StockOrder {
-        return StockOrder("Sell", "SEK", dateInMillis, "", 1.0, 0.0, 1)
+        return StockOrder("Sell", "SEK", dateInMillis, StockPrice.SYMBOLS[0].first, 1.0, 0.0, 1)
     }
 
     private fun newBuyStockOrder(dateInMillis: Long): StockOrder {
-        return StockOrder("Buy", "SEK", dateInMillis, "", 1.0, 0.0, 1)
+        return StockOrder("Buy", "SEK", dateInMillis, StockPrice.SYMBOLS[0].first, 1.0, 0.0, 1)
     }
 
     class SellRecommendationDummyAlgorithm : RecommendationAlgorithm() {
 
         override suspend fun getRecommendation(
-                stockPrice: StockPrice, currencyRateInSek : Double, commissionFee: Double, previousOrders: Set<StockOrder>,
+                stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
         ): Recommendation {
             return Recommendation(SellStockCommand(ApplicationProvider.getApplicationContext(), 0L, Currency.getInstance("SEK"),
-                    "", 0.0, 1, 0.0))
+                    StockPrice.SYMBOLS[0].first, 0.0, 1, 0.0))
         }
 
     }
