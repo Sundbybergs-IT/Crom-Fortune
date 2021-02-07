@@ -72,9 +72,8 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
 
         fun bind(item: StockAggregateAdapterItem) {
             itemView.textView_listrowStockItem_quantity.text = item.stockOrderAggregate.getQuantity().toString()
-            val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == item.stockOrderAggregate.stockSymbol }!!.second
             @SuppressLint("SetTextI18n")
-            itemView.textView_listrowStockItem_name.text = "$stockName (${item.stockOrderAggregate.stockSymbol})"
+            itemView.textView_listrowStockItem_name.text = item.stockOrderAggregate.displayName
             val acquisitionValue = item.stockOrderAggregate.getAcquisitionValue()
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
             if (acquisitionValue < 1) {

@@ -12,6 +12,7 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockPrice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,15 +63,16 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         return withContext(Dispatchers.IO) {
             val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
             val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
-            for (stockName in stockOrderRepository.listOfStockNames()) {
-                val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockName)
+            for (stockSymbol in stockOrderRepository.listOfStockNames()) {
+                val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
                 var stockOrderAggregate: StockOrderAggregate? = null
                 for (stockOrder in stockOrders) {
                     if (stockOrderAggregate == null) {
+                        val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
                         stockOrderAggregate = StockOrderAggregate(
                                 (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
                                         .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
-                                stockOrder.name, stockOrder.name,
+                                "$stockName ($stockSymbol)", stockSymbol,
                                 Currency.getInstance(stockOrder.currency))
                         stockOrderAggregate.aggregate(stockOrder)
                     } else {
