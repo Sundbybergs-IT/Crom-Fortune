@@ -15,7 +15,7 @@ class SettingsViewModel : ViewModel() {
         value = "Att göra: " +
                 "1. Fyll i valutafältet automatiskt vid val av aktier, " +
                 "2. Förbättra beräkning av GAV att inte ta hänsyn till gamla irrelevanta transaktioner, " +
-                "3. Ställ in när appen inte ska 'sova' och inte hetsa om rekommendationer, " +
+                "3. Ställ in när appen ska 'sova' och inte hetsa om rekommendationer, " +
                 "4. Home: Lägg till sorteringsmöjligheter (Bäst idag, sämst idag, alfabetisk sortering), " +
                 "5. Home: Implementera köp/sälj-knappar, " +
                 "6. Dashboard: Lägg till Croms skugghandel, " +
