@@ -15,13 +15,14 @@ class SettingsViewModel : ViewModel() {
         value = "Att göra: " +
                 "1. Fyll i valutafältet automatiskt vid val av aktier, " +
                 "2. Förbättra beräkning av GAV att inte ta hänsyn till gamla irrelevanta transaktioner, " +
-                "3. Home: Lägg till sorteringsmöjligheter (Bäst idag, sämst idag, alfabetisk sortering), " +
-                "4. Home: Implementera köp/sälj-knappar, " +
-                "5. Dashboard: Lägg till Croms skugghandel, " +
-                "6. Snygga till Croms 'compliance score', " +
-                "7. Dark theme vid vissa klockslag, " +
-                "8. Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge), " +
-                "9. Home: Total vinst"
+                "3. Ställ in när appen inte ska 'sova' och inte hetsa om rekommendationer, " +
+                "4. Home: Lägg till sorteringsmöjligheter (Bäst idag, sämst idag, alfabetisk sortering), " +
+                "5. Home: Implementera köp/sälj-knappar, " +
+                "6. Dashboard: Lägg till Croms skugghandel, " +
+                "7. Snygga till Croms 'compliance score', " +
+                "8. Dark theme vid vissa klockslag, " +
+                "9. Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge), " +
+                "10. Home: Total vinst"
     }
     val todoText: LiveData<String> = _todoText
 
