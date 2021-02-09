@@ -30,6 +30,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
         val inputCurrency: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_currencyInput)
         inputCurrency.setAdapter(getCurrencyAutoCompleteAdapter())
         val inputLayoutCurrency: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_currencyInput)
+        inputLayoutCurrency.isEnabled = false
         val inputDate: EditText = dialogRootView.findViewById(R.id.editText_dialogAddStock_dateInput)
         val inputLayoutDate: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_dateInput)
         inputDate.transformIntoDatePicker(requireContext(), DATE_FORMAT, Date(), inputLayoutDate)
@@ -39,6 +40,14 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
         val inputLayoutStockPrice: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_priceInput)
         val inputStockName: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_nameInput)
         inputStockName.setAdapter(getStockNameAutoCompleteAdapter())
+        inputStockName.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val find = StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == inputStockName.text.toString() }
+                if (find != null) {
+                    inputCurrency.setText(find.third)
+                }
+            }
+        }
         val inputLayoutStockName: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_nameInput)
         val inputCommissionFee: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_commissionFeeInput)
         val inputLayoutCommissionFee: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_commissionFeeInput)
