@@ -61,12 +61,12 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             val currentTimeInMillis = System.currentTimeMillis()
             var tradeQuantity = netQuantity / 10
             var recommendation: Recommendation? = null
-            var isOkToContinue = true
+             var isOkToContinue = true
             while (isOkToContinue) {
                 val pricePerStockAfterBuyInStockCurrency = ((netQuantity * averageCostInSek +
                         tradeQuantity * currentStockPriceInStockCurrency * rateInSek + commissionFeeInSek) /
                         (netQuantity + tradeQuantity)) / rateInSek
-                if (isCurrentStockPriceHighEnoughToBuy(currentStockPriceInStockCurrency, totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek)) {
+                if (isCurrentStockPriceHighEnoughToBuy(tradeQuantity, currentStockPriceInStockCurrency, totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek)) {
                     if (isNotOverSoldForMediumStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity)) {
                         isOkToContinue = true
                         recommendation = Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
@@ -106,8 +106,8 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
         }
 
         private fun isCurrentStockPriceHighEnoughToBuy(
-                stockPrice: Double, totalPricePerStockInStockCurrency: Double, commissionFee: Double,
-        ) = stockPrice > ((1 + NORMAL_DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) + commissionFee
+                tradeQuantity: Int, stockPrice: Double, totalPricePerStockInStockCurrency: Double, commissionFee: Double,
+        ) = tradeQuantity * stockPrice > (tradeQuantity * ((1 + NORMAL_DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) + commissionFee)
 
         private fun isNotOverBoughtForHighStockPriceDecrease(tradeQuantity: Int, soldQuantity: Int, grossQuantity: Int) =
                 isNotOverBought(tradeQuantity, soldQuantity, grossQuantity, MAX_EXTREME_BUY_PERCENTAGE)
