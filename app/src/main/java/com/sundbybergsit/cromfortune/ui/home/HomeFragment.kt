@@ -68,6 +68,10 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
                 dialog.show(parentFragmentManager, TAG)
                 true
             }
+            R.id.action_refresh -> {
+                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

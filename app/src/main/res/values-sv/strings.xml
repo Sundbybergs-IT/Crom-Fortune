@@ -4,6 +4,7 @@
     <string name="action_clear">Rensa</string>
     <string name="action_close">Stäng</string>
     <string name="action_delete">Radera</string>
+    <string name="action_refresh">Uppdatera</string>
     <string name="action_stock_buy">Registrera köp</string>>
     <string name="action_stock_buy_short">K</string>>
     <string name="action_stock_sell">Registrera försäljning</string>>
