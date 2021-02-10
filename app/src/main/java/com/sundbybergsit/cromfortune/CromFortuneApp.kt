@@ -21,7 +21,9 @@ class CromFortuneApp : Application(), Configuration.Provider {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<StockDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
                 .setConstraints(constraints).build()
-        workManager.enqueue(stockRetrievalWorkRequest)
+        workManager.enqueueUniquePeriodicWork("fetchFromYahoo", ExistingPeriodicWorkPolicy.REPLACE,
+                stockRetrievalWorkRequest)
+
     }
 
     override fun getWorkManagerConfiguration(): Configuration =
