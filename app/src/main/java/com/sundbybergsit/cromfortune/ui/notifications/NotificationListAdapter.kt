@@ -41,7 +41,7 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
         is StockHeaderAdapterItem -> {
             R.layout.listrow_notification_header
         }
-        is AdapterItem -> {
+        is NotificationAdapterItem -> {
             R.layout.listrow_notification_item
         }
         else -> {
