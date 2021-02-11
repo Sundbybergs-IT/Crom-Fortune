@@ -18,7 +18,7 @@ class SettingsViewModel : ViewModel() {
                 "3. Home: Lägg till sorteringsmöjligheter (Bäst idag, sämst idag, alfabetisk sortering), " +
                 "4. Home: Implementera köp/sälj-knappar, " +
                 "5. Humpnotiser om en aktie (som man inte har) har en kurs som är under senaste säljorderns kurs,  " +
-                "6 Dashboard: Lägg till Croms skugghandel, " +
+                "6. Dashboard: Lägg till Croms skugghandel, " +
                 "7. Snygga till Croms 'compliance score', " +
                 "8. Dark theme vid vissa klockslag, " +
                 "9. Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge), " +
