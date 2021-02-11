@@ -23,7 +23,6 @@ class CromFortuneApp : Application(), Configuration.Provider {
                 .setConstraints(constraints).build()
         workManager.enqueueUniquePeriodicWork("fetchFromYahoo", ExistingPeriodicWorkPolicy.REPLACE,
                 stockRetrievalWorkRequest)
-
     }
 
     override fun getWorkManagerConfiguration(): Configuration =
