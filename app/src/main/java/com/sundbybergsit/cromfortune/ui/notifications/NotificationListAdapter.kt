@@ -53,7 +53,7 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
 
     internal class NotificationViewHolder(private val context: Context, itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var formatter = SimpleDateFormat("yyyy-MM-dd", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
+        var formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
 
         fun bind(item: NotificationAdapterItem, evenRow: Boolean) {
             itemView.textView_listrowNotificationItem_date.text = formatter.format(Date(item.notificationMessage.dateInMillis))
