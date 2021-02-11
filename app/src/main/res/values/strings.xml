@@ -45,6 +45,7 @@
     <string name="home_add_stock_message">Add one purchase of a stock at a time.</string>
     <string name="home_delete_stock_order">This will delete the transaction for the following date %1$s.</string>
     <string name="home_delete_all_stock_orders">This will delete all transactions for the following stock: %1$s.</string>
+    <string name="home_information_data_refreshed">The app is now refreshed with the latest rates. Note: Refreshes automatically every hour.</string>
     <string name="home_remove_commission_fee_label">Commission fee (in SEK)</string>
     <string name="home_remove_stock_currency_label">Currency</string>
     <string name="home_remove_stock_date_label">Date</string>

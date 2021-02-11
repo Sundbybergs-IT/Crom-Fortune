@@ -2,12 +2,15 @@ package com.sundbybergsit.cromfortune.ui.home
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
@@ -19,6 +22,12 @@ import kotlinx.coroutines.withContext
 import java.util.*
 
 class HomeViewModel : ViewModel(), StockRemoveClickListener {
+
+    companion object {
+
+        const val TAG: String = "HomeViewModel"
+
+    }
 
     private val _viewState = MutableLiveData<ViewState>(ViewState.Loading)
     private val _dialogViewState = MutableLiveData<DialogViewState>()
@@ -93,6 +102,13 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
         stockOrderRepository.remove(stockName)
         refresh(context)
+    }
+
+    fun refreshData(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context)
+            Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
+        }
     }
 
     sealed class DialogViewState {

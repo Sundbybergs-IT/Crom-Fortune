@@ -69,7 +69,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
                 true
             }
             R.id.action_refresh -> {
-                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+                viewModel.refreshData(requireContext())
+                Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
                 true
             }
             else -> super.onOptionsItemSelected(item)
