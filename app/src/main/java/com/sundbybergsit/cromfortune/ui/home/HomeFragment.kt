@@ -29,12 +29,12 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
 
     private val viewModel: HomeViewModel by viewModels()
 
-    private lateinit var stockListAdapter: StockListAdapter
+    private lateinit var stockOrderAggregateListAdapter: StockOrderAggregateListAdapter
     private var currencyRatesLoaded = false
     private var stockPricesLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        stockListAdapter = StockListAdapter(this)
+        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(this)
         val infoText: TextView = view.findViewById(R.id.textView_fragmentHome)
         val infoImage: ImageView = view.findViewById(R.id.imageView_fragmentHome)
         val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton_fragmentHome)
@@ -44,8 +44,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
         }
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView_fragmentHome)
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
-        stockListAdapter.setListener(viewModel)
-        recyclerView.adapter = stockListAdapter
+        stockOrderAggregateListAdapter.setListener(viewModel)
+        recyclerView.adapter = stockOrderAggregateListAdapter
         setUpLiveDataListeners(infoText, infoImage, fab)
         setHasOptionsMenu(true)
         super.onViewCreated(view, savedInstanceState)
@@ -124,14 +124,14 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
                     textView.text = ""
                     infoImage.visibility = View.GONE
                     fab.visibility = View.GONE
-                    stockListAdapter.submitList(viewState.adapterItems)
+                    stockOrderAggregateListAdapter.submitList(viewState.adapterItems)
                 }
                 is HomeViewModel.ViewState.HasNoStocks -> {
                     requireView().findViewById<ProgressBar>(R.id.progressBar_fragmentHome).visibility = View.GONE
                     textView.text = getText(viewState.textResId)
                     infoImage.visibility = View.VISIBLE
                     fab.visibility = View.VISIBLE
-                    stockListAdapter.submitList(Collections.emptyList())
+                    stockOrderAggregateListAdapter.submitList(Collections.emptyList())
                 }
             }
         })

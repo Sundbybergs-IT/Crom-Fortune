@@ -17,7 +17,7 @@ import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat
 
-class StockListAdapter(private val stockClickListener: StockClickListener) :
+class StockOrderAggregateListAdapter(private val stockClickListener: StockClickListener) :
         ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()), StockPriceListener {
 
     private lateinit var stockRemoveClickListener: StockRemoveClickListener
@@ -26,7 +26,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
         return when (viewType) {
             R.layout.listrow_stock_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
                     .inflate(viewType, parent, false))
-            R.layout.listrow_stock_item -> StockViewHolder(stockClickListener = stockClickListener,
+            R.layout.listrow_stock_item -> StockOrderAggregateViewHolder(stockClickListener = stockClickListener,
                     stockRemoveClickListener = stockRemoveClickListener,
                     stockPriceListener = this,
                     itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
@@ -38,7 +38,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when (holder) {
-            is StockViewHolder -> {
+            is StockOrderAggregateViewHolder -> {
                 holder.bind(item as StockAggregateAdapterItem)
             }
         }
@@ -62,7 +62,7 @@ class StockListAdapter(private val stockClickListener: StockClickListener) :
 
     internal class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-    internal class StockViewHolder(
+    internal class StockOrderAggregateViewHolder(
             private val context: Context,
             private val stockPriceListener: StockPriceListener,
             private val stockClickListener: StockClickListener,

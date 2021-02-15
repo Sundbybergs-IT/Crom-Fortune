@@ -21,9 +21,9 @@ import java.util.*
 
 @Config(sdk = [Build.VERSION_CODES.Q])
 @RunWith(AndroidJUnit4::class)
-class StockListAdapterTest {
+class StockOrderAggregateListAdapterTest {
 
-    private lateinit var adapter: StockListAdapter
+    private lateinit var adapterOrderAggregate: StockOrderAggregateListAdapter
 
     private val currency: Currency = Currency.getInstance("SEK")
 
@@ -36,7 +36,7 @@ class StockListAdapterTest {
                 StockPrice(StockPrice.SYMBOLS[2].first, currency, 0.01),
                 ))
         ShadowLooper.runUiThreadTasks()
-        adapter = StockListAdapter(object : StockClickListener {
+        adapterOrderAggregate = StockOrderAggregateListAdapter(object : StockClickListener {
             override fun onClick(stockName: String) {
                 // Do nothing
             }
@@ -47,25 +47,25 @@ class StockListAdapterTest {
                 StockAggregateAdapterItem(StockOrderAggregate(1.0, StockPrice.SYMBOLS[1].first, StockPrice.SYMBOLS[1].first, currency, 0.0199, 0.0, 1)),
                 StockAggregateAdapterItem(StockOrderAggregate(1.0, StockPrice.SYMBOLS[2].first, StockPrice.SYMBOLS[2].first, currency, 0.0109, 0.0, 1)),
         )
-        adapter.setListener(HomeViewModel())
-        adapter.submitList(list)
+        adapterOrderAggregate.setListener(HomeViewModel())
+        adapterOrderAggregate.submitList(list)
     }
 
     @Test
     fun `onCreateViewHolder - when stock type  - returns view holder`() {
         val frameLayout = FrameLayout(ApplicationProvider.getApplicationContext())
 
-        val viewHolder = adapter.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
+        val viewHolder = adapterOrderAggregate.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
 
-        assertTrue(viewHolder is StockListAdapter.StockViewHolder)
+        assertTrue(viewHolder is StockOrderAggregateListAdapter.StockOrderAggregateViewHolder)
     }
 
     @Test
     fun `onBindViewHolder - when stock with price over 1 - shows correct price`() {
         val frameLayout = FrameLayout(ApplicationProvider.getApplicationContext())
-        val viewHolder = adapter.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
+        val viewHolder = adapterOrderAggregate.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
 
-        adapter.onBindViewHolder(viewHolder, 1)
+        adapterOrderAggregate.onBindViewHolder(viewHolder, 1)
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         assertEquals("${currency}100.10", acquisitionValue.text.toString())
@@ -74,9 +74,9 @@ class StockListAdapterTest {
     @Test
     fun `onBindViewHolder - when stock with price under 1 and no need for third fraction - shows correct price`() {
         val frameLayout = FrameLayout(ApplicationProvider.getApplicationContext())
-        val viewHolder = adapter.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
+        val viewHolder = adapterOrderAggregate.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
 
-        adapter.onBindViewHolder(viewHolder, 2)
+        adapterOrderAggregate.onBindViewHolder(viewHolder, 2)
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         assertEquals("${currency}0.02", acquisitionValue.text.toString())
@@ -85,9 +85,9 @@ class StockListAdapterTest {
     @Test
     fun `onBindViewHolder - when stock with price under 1 and need for third fraction - shows correct price`() {
         val frameLayout = FrameLayout(ApplicationProvider.getApplicationContext())
-        val viewHolder = adapter.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
+        val viewHolder = adapterOrderAggregate.onCreateViewHolder(frameLayout, R.layout.listrow_stock_item)
 
-        adapter.onBindViewHolder(viewHolder, 3)
+        adapterOrderAggregate.onBindViewHolder(viewHolder, 3)
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         assertEquals("${currency}0.011", acquisitionValue.text.toString())
