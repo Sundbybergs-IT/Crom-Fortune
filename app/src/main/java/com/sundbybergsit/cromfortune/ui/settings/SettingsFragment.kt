@@ -9,10 +9,15 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ui.home.HomeFragment
 import kotlinx.android.synthetic.main.fragment_settings.*
 
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
+
+    companion object {
+
+        const val TAG = "SettingsFragment"
+
+    }
 
     private val viewModel: SettingsViewModel by viewModels()
 
@@ -31,7 +36,12 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         return when (item.itemId) {
             R.id.action_showSupportedStocks -> {
                 val dialog = SupportedStockDialogFragment()
-                dialog.show(parentFragmentManager, HomeFragment.TAG)
+                dialog.show(parentFragmentManager, TAG)
+                true
+            }
+            R.id.action_todo -> {
+                val dialog = ToDoDialogFragment()
+                dialog.show(parentFragmentManager, TAG)
                 true
             }
             else -> super.onOptionsItemSelected(item)

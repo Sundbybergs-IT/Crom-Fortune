@@ -34,6 +34,7 @@
     <string name="generic_title_quantity">Quantity</string>
     <string name="generic_title_stock_orders">Transactions</string>
     <string name="generic_title_total_cost">Total Cost</string>
+    <string name="generic_to_do">To do</string>
     <string name="generic_urge_buy">Buy!</string>
     <string name="generic_urge_sell">Sell!</string>
 
