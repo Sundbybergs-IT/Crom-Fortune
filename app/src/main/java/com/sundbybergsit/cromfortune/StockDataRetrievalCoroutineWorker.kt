@@ -95,7 +95,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                     notification.message)
         }
 
-        open fun getRateInSek(currency: String) = YahooFinance.getFx("${currency}SEK=X").price.toDouble()
+        private fun getRateInSek(currency: String) = YahooFinance.getFx("${currency}SEK=X").price.toDouble()
 
     }
 

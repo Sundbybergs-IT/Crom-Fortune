@@ -5,7 +5,7 @@ internal object StockAggregateAdapterItemUtil {
     @JvmStatic
     fun convertToAdapterItems(list: Iterable<StockOrderAggregate>): List<AdapterItem> {
         val result: MutableList<AdapterItem> = ArrayList()
-        result.add(StockHeaderAdapterItem())
+        result.add(StockAggregateHeaderAdapteritem(list.toSet()))
         for (connection in list) {
             val pdAdapterItem = StockAggregateAdapterItem(connection)
             result.add(pdAdapterItem)

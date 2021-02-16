@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/background_white_selectable_item_background"
-        android:orientation="horizontal"
         android:padding="16dp"
         >
 
@@ -38,7 +38,7 @@
             android:id="@+id/textView_listrowStockHeader_profit"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="2"
+            android:layout_columnWeight="1"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="2"
@@ -50,6 +50,19 @@
     <View
             android:layout_width="24dp"
             android:layout_height="wrap_content"
+            />
+
+
+    <TextView
+            android:id="@+id/textView_listrowStockHeader_totalProfit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:textIsSelectable="false"
+            android:textStyle="bold"
+            tools:text="1000kr"
             />
 
 </GridLayout>

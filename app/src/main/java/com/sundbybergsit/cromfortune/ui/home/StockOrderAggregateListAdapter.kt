@@ -12,10 +12,13 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
+import kotlinx.android.synthetic.main.listrow_stock_header.view.*
 import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat
+import java.util.*
 
 class StockOrderAggregateListAdapter(private val stockClickListener: StockClickListener) :
         ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()), StockPriceListener {
@@ -24,8 +27,9 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.listrow_stock_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(viewType, parent, false))
+            R.layout.listrow_stock_header -> StockOrderAggregateHeaderViewHolder(stockPriceListener = this,
+                    itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
+                    context = parent.context)
             R.layout.listrow_stock_item -> StockOrderAggregateViewHolder(stockClickListener = stockClickListener,
                     stockRemoveClickListener = stockRemoveClickListener,
                     stockPriceListener = this,
@@ -38,6 +42,9 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when (holder) {
+            is StockOrderAggregateHeaderViewHolder -> {
+                holder.bind(item as StockAggregateHeaderAdapteritem)
+            }
             is StockOrderAggregateViewHolder -> {
                 holder.bind(item as StockAggregateAdapterItem)
             }
@@ -45,7 +52,7 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)!!) {
-        is StockHeaderAdapterItem -> {
+        is StockAggregateHeaderAdapteritem -> {
             R.layout.listrow_stock_header
         }
         is StockAggregateAdapterItem -> {
@@ -60,7 +67,37 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
         this.stockRemoveClickListener = stockRemoveClickListener
     }
 
-    internal class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+    internal class StockOrderAggregateHeaderViewHolder(
+            private val stockPriceListener: StockPriceListener,
+            itemView: View,
+            private val context: Context,
+    ) : RecyclerView.ViewHolder(itemView) {
+
+        fun bind(item: StockAggregateHeaderAdapteritem) {
+            var count = 0.0
+            val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+                    .currencyRates.toList()
+            for (stockOrderAggregate in item.stockOrderAggregates.toList()) {
+                for (currencyRate in currencyRates) {
+                    if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
+                        count += (stockOrderAggregate.getProfit(stockPriceListener.getStockPrice(
+                                stockOrderAggregate.stockSymbol).price)) * currencyRate.rateInSek
+                        break
+                    }
+                }
+            }
+            val format: NumberFormat = NumberFormat.getCurrencyInstance()
+            format.currency = Currency.getInstance("SEK")
+            format.maximumFractionDigits = 2
+            itemView.textView_listrowStockHeader_totalProfit.text = format.format(count)
+            itemView.textView_listrowStockHeader_totalProfit.setTextColor(ContextCompat.getColor(context, if (count >= 0.0) {
+                R.color.colorProfit
+            } else {
+                R.color.colorLoss
+            }))
+        }
+
+    }
 
     internal class StockOrderAggregateViewHolder(
             private val context: Context,
