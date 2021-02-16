@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
-import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
@@ -27,20 +26,11 @@ class StockDataRetrievalCoroutineWorkerTest {
 
     @Test
     fun `doWork - always - works`() {
-        val worker = TestListenableWorkerBuilder<TestableStockDataRetrievalCoroutineWorker>(context).build()
+        val worker = TestListenableWorkerBuilder<StockDataRetrievalCoroutineWorker>(context).build()
         runBlocking {
             val result: ListenableWorker.Result = worker.doWork()
             assertTrue(result == ListenableWorker.Result.success())
         }
-    }
-
-    class TestableStockDataRetrievalCoroutineWorker(context: Context, workerParameters: WorkerParameters) :
-            StockDataRetrievalCoroutineWorker(context, workerParameters) {
-
-        override fun getRateInSek(currency: String): Double {
-            return 1.0
-        }
-
     }
 
 }
