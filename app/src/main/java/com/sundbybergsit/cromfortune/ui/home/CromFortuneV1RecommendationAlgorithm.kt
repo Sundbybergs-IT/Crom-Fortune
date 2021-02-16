@@ -66,7 +66,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 val pricePerStockAfterBuyInStockCurrency = ((netQuantity * averageCostInSek +
                         tradeQuantity * currentStockPriceInStockCurrency * rateInSek + commissionFeeInSek) /
                         (netQuantity + tradeQuantity)) / rateInSek
-                if (isCurrentStockPriceHighEnoughToBuy(tradeQuantity, currentStockPriceInStockCurrency, totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek)) {
+                if (isCurrentStockPriceHighEnoughToSell(tradeQuantity, currentStockPriceInStockCurrency, totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek)) {
                     if (isNotOverSoldForMediumStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity)) {
                         isOkToContinue = true
                         recommendation = Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
@@ -105,7 +105,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             return recommendation
         }
 
-        private fun isCurrentStockPriceHighEnoughToBuy(
+        private fun isCurrentStockPriceHighEnoughToSell(
                 tradeQuantity: Int, stockPrice: Double, totalPricePerStockInStockCurrency: Double, commissionFee: Double,
         ) = tradeQuantity * stockPrice > (tradeQuantity * ((1 + NORMAL_DIFF_PERCENTAGE) * totalPricePerStockInStockCurrency) + commissionFee)
 
