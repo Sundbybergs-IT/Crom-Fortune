@@ -33,6 +33,7 @@
     <string name="generic_title_quantity">Kvantitet</string>
     <string name="generic_title_stock_orders">Transaktioner</string>
     <string name="generic_title_total_cost">Total kostnad</string>
+    <string name="generic_title_total">Total</string>
     <string name="generic_to_do">Att göra</string>
     <string name="generic_urge_buy">Köp!</string>
     <string name="generic_urge_sell">Sälj!</string>

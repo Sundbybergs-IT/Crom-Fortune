@@ -16,7 +16,6 @@
             android:includeFontPadding="false"
             android:maxLines="2"
             android:text="@string/generic_title_quantity"
-            android:textAlignment="viewStart"
             android:textIsSelectable="false"
             android:textStyle="bold"
             />
@@ -41,28 +40,42 @@
             android:layout_columnWeight="1"
             android:ellipsize="end"
             android:includeFontPadding="false"
-            android:maxLines="2"
+            android:maxLines="1"
             android:text="@string/generic_profit"
             android:textIsSelectable="false"
             android:textStyle="bold"
             />
 
-    <View
+    <LinearLayout
             android:layout_width="24dp"
             android:layout_height="wrap_content"
-            />
+            android:layout_columnWeight="1"
+            android:orientation="vertical"
+            >
 
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/generic_title_total"
+                android:textIsSelectable="false"
+                android:textStyle="bold"
+                />
 
-    <TextView
-            android:id="@+id/textView_listrowStockHeader_totalProfit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:maxLines="2"
-            android:textIsSelectable="false"
-            android:textStyle="bold"
-            tools:text="1000kr"
-            />
+        <TextView
+                android:id="@+id/textView_listrowStockHeader_totalProfit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ellipsize="end"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:textIsSelectable="false"
+                android:textStyle="bold"
+                tools:text="1000kr"
+                />
+
+    </LinearLayout>
 
 </GridLayout>
