@@ -85,9 +85,9 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val currency = Currency.getInstance("SEK")
         val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 300)
-        val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 30)
-        val oldOrder3 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+        val oldOrder3 = StockOrder("Buy", currency.toString(), 2L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 10)
         repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
 
@@ -161,7 +161,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0,
                 1.0, 10)
-        val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 200.0,
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME, 200.0,
                 1.0, 5)
         repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
 
@@ -235,7 +235,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val currency = Currency.getInstance("NOK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 9.0, 39.0, 70)
-        val oldOrder2 = StockOrder("Sell", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 1L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 1000.0, 39.0, 35)
         repository.putAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, setOf(oldOrder, oldOrder2))
 

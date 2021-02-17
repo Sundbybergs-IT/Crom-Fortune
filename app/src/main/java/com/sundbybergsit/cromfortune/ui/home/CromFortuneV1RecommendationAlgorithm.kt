@@ -38,10 +38,11 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             if (orders.isEmpty()) {
                 return null
             }
+            val sortedOrders = orders.toSortedSet { s1, s2 -> s1.dateInMillis.compareTo(s2.dateInMillis) }
             var grossQuantity = 0
             var soldQuantity = 0
             var accumulatedCostInSek = 0.0
-            for (stockOrder in orders) {
+            for (stockOrder in sortedOrders) {
                 if (stockOrder.name == stockName) {
                     if (stockOrder.orderAction == "Buy") {
                         grossQuantity += stockOrder.quantity
@@ -61,7 +62,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             val currentTimeInMillis = System.currentTimeMillis()
             var tradeQuantity = netQuantity / 10
             var recommendation: Recommendation? = null
-             var isOkToContinue = true
+            var isOkToContinue = true
             while (isOkToContinue) {
                 val pricePerStockAfterBuyInStockCurrency = ((netQuantity * averageCostInSek +
                         tradeQuantity * currentStockPriceInStockCurrency * rateInSek + commissionFeeInSek) /
