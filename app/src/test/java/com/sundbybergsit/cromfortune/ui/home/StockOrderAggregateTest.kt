@@ -51,7 +51,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(110.099, acquisitionValue, 0.0001)
+        assertEquals(0.0, acquisitionValue, 0.0001)
     }
 
     @Test

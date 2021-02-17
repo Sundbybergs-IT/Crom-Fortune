@@ -75,7 +75,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
             for (stockSymbol in stockOrderRepository.listOfStockNames()) {
                 val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
                 var stockOrderAggregate: StockOrderAggregate? = null
-                for (stockOrder in stockOrders) {
+                for (stockOrder in stockOrders.toSortedSet { s1, s2 -> s1.dateInMillis.compareTo(s2.dateInMillis) }) {
                     if (stockOrderAggregate == null) {
                         val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
                         stockOrderAggregate = StockOrderAggregate(

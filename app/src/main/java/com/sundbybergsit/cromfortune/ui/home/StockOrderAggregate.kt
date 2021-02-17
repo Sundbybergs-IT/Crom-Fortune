@@ -12,17 +12,25 @@ data class StockOrderAggregate(
         private var accumulatedSales: Double = 0.0,
         private var buyQuantity: Int = 0,
         private var sellQuantity: Int = 0,
+        private var acquisitionValue: Double = 0.0,
 ) {
 
     fun aggregate(stockOrder: StockOrder) {
         when (stockOrder.orderAction) {
             "Buy" -> {
+                acquisitionValue = ((buyQuantity - sellQuantity) * acquisitionValue +
+                        stockOrder.quantity * stockOrder.getAcquisitionValue(rateInSek)) /
+                        ((buyQuantity - sellQuantity) + stockOrder.quantity)
                 buyQuantity += stockOrder.quantity
+                stockOrder.getAcquisitionValue(rateInSek)
                 accumulatedPurchases += stockOrder.pricePerStock * stockOrder.quantity +
                         stockOrder.commissionFee / rateInSek
             }
             "Sell" -> {
                 sellQuantity += stockOrder.quantity
+                if (buyQuantity - sellQuantity == 0) {
+                    acquisitionValue = 0.0
+                }
                 accumulatedSales += stockOrder.pricePerStock * stockOrder.quantity + stockOrder.commissionFee / rateInSek
             }
             else -> {
@@ -36,7 +44,7 @@ data class StockOrderAggregate(
     }
 
     fun getAcquisitionValue(): Double {
-        return accumulatedPurchases / buyQuantity
+        return acquisitionValue
     }
 
     fun getProfit(currentStockPrice: Double): Double {

@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import kotlinx.android.synthetic.main.listrow_stock_order_item.view.*
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -79,7 +80,9 @@ class StockOrderListAdapter(
             }
             format.currency = Currency.getInstance(item.stockOrder.currency)
             itemView.textView_listrowStockOrderItem_price.text = format.format(pricePerStock)
-            itemView.textView_listrowStockOrderItem_total.text = format.format(item.stockOrder.getTotalCost())
+             val rateInSek: Double = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+                    .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == item.stockOrder.currency }!!.rateInSek
+            itemView.textView_listrowStockOrderItem_total.text = format.format(item.stockOrder.getTotalCost(rateInSek))
             itemView.setBackgroundColor(getBuyOrSellColor(item.stockOrder.orderAction))
         }
 
