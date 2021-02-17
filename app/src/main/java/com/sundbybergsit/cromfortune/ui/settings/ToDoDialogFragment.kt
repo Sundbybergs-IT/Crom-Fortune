@@ -22,10 +22,11 @@ class ToDoDialogFragment : DialogFragment() {
                 "8. Dark theme vid vissa klockslag\n" +
                 "9. Hem: Implementera köp/sälj-knappar\n" +
                 "10. Hem: Sortering (bäst/sämst/ABC)\n" +
-                "11. Hem: Lägg till Croms skugghandel\n" +
-                "12. Hem: Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge)\n" +
-                "13. Dashboard: Snygga till Croms compliance score\n" +
-                "14. Inställningar: Implementera stöd för individuell courtageplan\n"
+                "11. Inställningar: Lägg till alarm\n" +
+                "12. Hem: Lägg till Croms skugghandel\n" +
+                "13. Hem: Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge)\n" +
+                "14. Dashboard: Snygga till Croms compliance score\n" +
+                "15. Inställningar: Implementera stöd för individuell courtageplan\n"
         val context = requireContext()
         return AlertDialog.Builder(context)
                 .setMessage(message)
