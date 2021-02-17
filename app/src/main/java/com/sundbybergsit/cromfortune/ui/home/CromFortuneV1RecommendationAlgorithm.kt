@@ -5,6 +5,7 @@ import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockPrice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import java.util.*
 
 class CromFortuneV1RecommendationAlgorithm(private val context: Context) : RecommendationAlgorithm() {
@@ -36,7 +37,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
         ): Recommendation? {
             if (orders.isEmpty()) {
-                return null
+                // Dummy recommendation to mimic first buy
+                return Recommendation(BuyStockCommand(context, Instant.now().toEpochMilli(), currency, stockName,
+                        currentStockPriceInStockCurrency, 1, commissionFeeInSek))
             }
             val sortedOrders = orders.toSortedSet { s1, s2 -> s1.dateInMillis.compareTo(s2.dateInMillis) }
             var grossQuantity = 0

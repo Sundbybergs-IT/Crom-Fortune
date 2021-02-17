@@ -55,15 +55,15 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     }
 
     @Test
-    fun `getScore - when 0 out of 1 correct decisions - returns 0`() = runBlocking {
+    fun `getScore - when 1 out of 2 correct decisions - returns 50`() = runBlocking {
         val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
                 newBuyStockOrder(2)), CurrencyRateRepository)
 
-        assertScore(0, score)
+        assertScore(50, score)
     }
 
     @Test
-    fun `getScore - when 1 out of 1 correct decisions - returns 100`() = runBlocking {
+    fun `getScore - when 2 out of 2 correct decisions - returns 100`() = runBlocking {
         val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
                 newSellStockOrder(2)), CurrencyRateRepository)
 
@@ -71,19 +71,19 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     }
 
     @Test
-    fun `getScore - when 1 out of 2 correct decisions - returns 50`() = runBlocking {
+    fun `getScore - when 2 out of 3 correct decisions - returns 66`() = runBlocking {
         val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
                 newSellStockOrder(2), newBuyStockOrder(3)), CurrencyRateRepository)
 
-        assertScore(50, score)
+        assertScore(66, score)
     }
 
     @Test
-    fun `getScore - when 1 out of 3 correct decisions - returns 50`() = runBlocking {
+    fun `getScore - when 2 out of 4 correct decisions - returns 50`() = runBlocking {
         val score = calculator.getScore(SellRecommendationDummyAlgorithm(), setOf(newBuyStockOrder(1),
                 newSellStockOrder(2), newBuyStockOrder(3), newBuyStockOrder(4)), CurrencyRateRepository)
 
-        assertScore(33, score)
+        assertScore(50, score)
     }
 
     private fun assertScore(expectedValue: Int, score: ConformanceScore) {

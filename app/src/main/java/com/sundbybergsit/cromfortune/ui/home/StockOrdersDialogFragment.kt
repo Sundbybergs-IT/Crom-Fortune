@@ -12,13 +12,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockPrice
+import kotlinx.coroutines.runBlocking
 
 class StockOrdersDialogFragment(
         private val homeViewModel: HomeViewModel,
         private val stockSymbol: String,
 ) : DialogFragment() {
 
-    private lateinit var listAdapter: StockOrderListAdapter
+    private lateinit var listAdapter: OpinionatedStockOrderWrapperListAdapter
 
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -26,11 +27,15 @@ class StockOrdersDialogFragment(
                 .inflate(R.layout.dialog_stock_orders, view as ViewGroup?, false)
         val recyclerView = dialogRootView.findViewById<RecyclerView>(R.id.recyclerView_dialogStockOrders)
         val context = requireContext()
-        listAdapter = StockOrderListAdapter(context = context, fragmentManager = parentFragmentManager)
+        listAdapter = OpinionatedStockOrderWrapperListAdapter(context = context, fragmentManager = parentFragmentManager)
         recyclerView.adapter = listAdapter
         val stockOrderRepository = StockOrderRepositoryImpl(context)
-        listAdapter.submitList(StockAdapterItemUtil.convertToAdapterItems(stockOrderRepository.list(stockSymbol)
-                .sortedBy { stockOrder -> stockOrder.dateInMillis }))
+        val listOfStockOrders = stockOrderRepository.list(stockSymbol)
+        runBlocking {
+            listAdapter.submitList(OpinionatedStockOrderWrapperAdapterItemUtil
+                    .convertToAdapterItems(CromFortuneV1RecommendationAlgorithm(context),
+                    listOfStockOrders.sortedBy { stockOrder -> stockOrder.dateInMillis }))
+        }
         val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
         return AlertDialog.Builder(context)
                 .setView(dialogRootView)

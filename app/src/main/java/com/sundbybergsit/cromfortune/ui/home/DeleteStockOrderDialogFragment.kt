@@ -18,7 +18,7 @@ class DeleteStockOrderDialogFragment(
         context: Context,
         private val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context),
         val stockOrder: StockOrder,
-        val adapter: StockOrderListAdapter,
+        val adapter: OpinionatedStockOrderWrapperListAdapter,
 ) : DialogFragment() {
 
     @SuppressLint("SetTextI18n")
