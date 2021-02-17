@@ -21,10 +21,8 @@ class ToDoDialogFragment : DialogFragment() {
                 "7. Hem: Implementera köp/sälj-knappar\n" +
                 "8. Hem: Sortering (bäst/sämst/ABC)\n" +
                 "9. Inställningar: Lägg till alarm\n" +
-                "10. Hem: Lägg till Croms skugghandel\n" +
-                "11. Hem: Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge)\n" +
-                "12. Dashboard: Snygga till Croms compliance score\n" +
-                "13. Inställningar: Implementera stöd för individuell courtageplan\n"
+                "10. Hem: Fixa refresh-bugg för när man har tagit bort en transaktion (byt tabb och tillbaka så länge)\n" +
+                "11. Inställningar: Implementera stöd för individuell courtageplan\n"
         val context = requireContext()
         return AlertDialog.Builder(context)
                 .setMessage(message)
