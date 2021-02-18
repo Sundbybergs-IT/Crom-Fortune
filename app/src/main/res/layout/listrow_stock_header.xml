@@ -4,14 +4,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/background_white_selectable_item_background"
+        android:columnCount="6"
         android:padding="16dp"
+        android:rowCount="2"
         >
 
     <TextView
             android:id="@+id/textView_listrowStockHeader_quantity"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
+            android:layout_columnWeight="0.8"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="2"
@@ -24,11 +26,24 @@
             android:id="@+id/textView_listrowStockHeader_acquisitionValue"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="2"
+            android:layout_columnWeight="1.5"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="2"
             android:text="@string/generic_acquisition_value"
+            android:textIsSelectable="false"
+            android:textStyle="bold"
+            />
+
+    <TextView
+            android:id="@+id/textView_listrowStockHeader_latestValue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1.5"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:text="@string/generic_title_latest"
             android:textIsSelectable="false"
             android:textStyle="bold"
             />
@@ -46,36 +61,31 @@
             android:textStyle="bold"
             />
 
-    <LinearLayout
+    <TextView
             android:layout_width="24dp"
             android:layout_height="wrap_content"
+            />
+
+    <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="3"
             android:layout_columnWeight="1"
-            android:orientation="vertical"
-            >
+            />
 
-        <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/generic_title_total"
-                android:textIsSelectable="false"
-                android:textStyle="bold"
-                />
-
-        <TextView
-                android:id="@+id/textView_listrowStockHeader_totalProfit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:ellipsize="end"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:textIsSelectable="false"
-                android:textStyle="bold"
-                tools:text="1000kr"
-                />
-
-    </LinearLayout>
+    <TextView
+            android:id="@+id/textView_listrowStockHeader_totalProfit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="1"
+            android:layout_gravity="start"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textIsSelectable="false"
+            android:textStyle="bold"
+            tools:text="1000kr"
+            />
 
 </GridLayout>

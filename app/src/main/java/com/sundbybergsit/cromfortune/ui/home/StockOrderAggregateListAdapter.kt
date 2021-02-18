@@ -129,8 +129,9 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
             itemView.textView_listrowStockItem_acquisitionValue.text = format.format(acquisitionValue)
-            val profit = item.stockOrderAggregate.getProfit(stockPriceListener.getStockPrice(
-                    item.stockOrderAggregate.stockSymbol).price)
+            val currentStockPrice = stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price
+            val profit = item.stockOrderAggregate.getProfit(currentStockPrice)
+            itemView.textView_listrowStockItem_latestValue.text = format.format(currentStockPrice)
             itemView.textView_listrowStockItem_profit.text = format.format(profit)
             itemView.textView_listrowStockItem_profit.setTextColor(ContextCompat.getColor(context, if (profit > 0) {
                 R.color.colorProfit

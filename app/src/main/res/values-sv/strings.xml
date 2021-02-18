@@ -29,8 +29,9 @@
     <string name="generic_price_per_stock">Pris per aktie</string>
     <string name="generic_profit">Vinst</string>
     <string name="generic_saved">Sparade framgångsrikt</string>
+    <string name="generic_title_latest">Senast</string>
     <string name="generic_title_name">Namn</string>
-    <string name="generic_title_quantity">Kvantitet</string>
+    <string name="generic_title_quantity">#</string>
     <string name="generic_title_stock_orders">Transaktioner</string>
     <string name="generic_title_total_cost">Total kostnad</string>
     <string name="generic_title_total">Total</string>

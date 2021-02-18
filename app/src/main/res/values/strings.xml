@@ -30,8 +30,9 @@
     <string name="generic_price_per_stock">Price per stock</string>
     <string name="generic_profit">Profit</string>
     <string name="generic_saved">Saved successfully</string>
+    <string name="generic_title_latest">Latest</string>
     <string name="generic_title_name">Name</string>
-    <string name="generic_title_quantity">Quantity</string>
+    <string name="generic_title_quantity">#</string>
     <string name="generic_title_stock_orders">Transactions</string>
     <string name="generic_title_total_cost">Total Cost</string>
     <string name="generic_title_total">Total</string>

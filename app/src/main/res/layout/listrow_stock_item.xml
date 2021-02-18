@@ -5,7 +5,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/background_white_selectable_item_background"
         android:clickable="true"
-        android:columnCount="5"
+        android:columnCount="6"
         android:focusable="true"
         android:paddingStart="16dp"
         android:paddingTop="8dp"
@@ -18,7 +18,7 @@
             android:id="@+id/textView_listrowStockItem_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnSpan="4"
+            android:layout_columnSpan="5"
             android:layout_columnWeight="1"
             android:layout_gravity="center_vertical"
             android:ellipsize="end"
@@ -42,7 +42,7 @@
             android:id="@+id/textView_listrowStockItem_quantity"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
+            android:layout_columnWeight="0.8"
             android:layout_gravity="center_vertical"
             android:ellipsize="end"
             android:includeFontPadding="false"
@@ -55,8 +55,7 @@
             android:id="@+id/textView_listrowStockItem_acquisitionValue"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="2"
-            android:layout_gravity="center_vertical"
+            android:layout_columnWeight="1.5"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:maxLines="1"
@@ -65,10 +64,23 @@
             />
 
     <TextView
-            android:id="@+id/textView_listrowStockItem_profit"
+            android:id="@+id/textView_listrowStockItem_latestValue"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="2"
+            android:layout_columnWeight="1.5"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textIsSelectable="false"
+            android:textStyle="bold"
+            tools:text="1500 SEK"
+            />
+
+    <TextView
+            android:id="@+id/textView_listrowStockItem_profit"
+            android:layout_width="24dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
             android:layout_gravity="center_vertical"
             android:ellipsize="end"
             android:includeFontPadding="false"
@@ -76,6 +88,7 @@
             android:textIsSelectable="false"
             tools:text="1 000 000 SEK"
             />
+
 
     <LinearLayout
             style="?android:buttonBarStyle"
