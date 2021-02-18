@@ -49,11 +49,14 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                 val currency = triple.third
                 val stockPrice = StockPrice(stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
                         price = quote.price.toDouble().roundTo(3))
-                val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                        .getRecommendation(stockPrice, currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
-                                COMMISSION_FEE, StockOrderRepositoryImpl(context).list(stockSymbol))
-                if (recommendation != null) {
-                    notifyRecommendation(context, recommendation)
+                val previousOrders = StockOrderRepositoryImpl(context).list(stockSymbol)
+                if (previousOrders.isNotEmpty()) {
+                    val recommendation = CromFortuneV1RecommendationAlgorithm(context)
+                            .getRecommendation(stockPrice, currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
+                                    COMMISSION_FEE, previousOrders)
+                    if (recommendation != null) {
+                        notifyRecommendation(context, recommendation)
+                    }
                 }
                 stockPrices.add(stockPrice)
             }
