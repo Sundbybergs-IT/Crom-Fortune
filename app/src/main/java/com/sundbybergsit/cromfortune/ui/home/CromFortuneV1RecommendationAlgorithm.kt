@@ -13,7 +13,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
     companion object {
 
         const val NORMAL_DIFF_PERCENTAGE: Double = .20
-        const val MAX_BUY_PERCENTAGE: Double = 0.1
+        const val MAX_BUY_PERCENTAGE: Double = .10
         const val MAX_SOLD_PERCENTAGE: Double = .10
         const val MAX_EXTREME_BUY_PERCENTAGE: Double = .20
         const val MAX_EXTREME_SOLD_PERCENTAGE: Double = .75
