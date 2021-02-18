@@ -24,8 +24,8 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
     ): Recommendation? {
         return withContext(Dispatchers.IO) {
-            RecommendationGenerator(context).getRecommendation(stockPrice.stockSymbol, stockPrice.currency, currencyRateInSek,
-                    previousOrders, stockPrice.price, commissionFee)
+            RecommendationGenerator(context).getRecommendation(stockPrice.stockSymbol, stockPrice.currency,
+                    currencyRateInSek, previousOrders, stockPrice.price, commissionFee)
         }
 
     }
