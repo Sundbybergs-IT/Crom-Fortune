@@ -88,7 +88,9 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                         stockOrderAggregate.aggregate(stockOrder)
                     }
                 }
-                stockOrderAggregates.add(stockOrderAggregate!!)
+                if (stockOrderAggregate != null) {
+                    stockOrderAggregates.add(stockOrderAggregate)
+                }
             }
             stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
         }
