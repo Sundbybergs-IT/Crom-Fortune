@@ -13,6 +13,7 @@ data class StockPrice(val stockSymbol: String, val currency: Currency, val price
                 Triple("CLOUD.OL", "Cloudberry Clean Energy AS", "NOK"), Triple("EOLU-B.ST", "Eolus Vind AB (publ)", "SEK"),
                 Triple("FERRO.ST", "Ferroamp Elektronik AB (publ)", "SEK"), Triple("FIA1S.HE", "Finnair Oyj", "EUR"),
                 Triple("GGG.V", "G6 Materials Corp.", "CAD"), Triple("HIMX", "Himax Technologies, Inc.", "USD"),
+                Triple("IMMR", "Immersion Corporation", "USD"),
                 Triple("IPCO.ST", "International Petroleum Corporation", "SEK"), Triple("LHA.F", "Deutsche Lufthansa AG", "EUR"),
                 Triple("LPK.DE", "LPKF Laser & Electronics AG", "EUR"), Triple("MIPS.ST", "MIPS AB (publ)", "SEK"),
                 Triple("NAS.OL", "Norwegian Air Shuttle ASA", "NOK"), Triple("SALT-B.ST", "SaltX Technology Holding AB", "SEK"),
