@@ -128,6 +128,9 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
             itemView.button_listrowStockItem_sell.setOnClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
+            itemView.imageButton_listrowStockItem_muteUnmute.setOnClickListener {
+                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+            }
             itemView.textView_listrowStockItem_acquisitionValue.text = format.format(acquisitionValue)
             val currentStockPrice = stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price
             val profit = item.stockOrderAggregate.getProfit(currentStockPrice)

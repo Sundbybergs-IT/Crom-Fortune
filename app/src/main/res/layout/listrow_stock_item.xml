@@ -129,6 +129,13 @@
                 android:textSize="12sp"
                 />
 
+        <ImageButton
+                android:id="@+id/imageButton_listrowStockItem_muteUnmute"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_fas_bell"
+                />
+
     </LinearLayout>
 
 </GridLayout>
