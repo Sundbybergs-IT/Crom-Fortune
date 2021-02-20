@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -9,8 +10,13 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.InstallState
+import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 
 class MainActivity : AppCompatActivity() {
@@ -45,6 +51,7 @@ class MainActivity : AppCompatActivity() {
                         APP_UPDATE_REQUEST_CODE)
             }
         }
+        appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this, appUpdateManager))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -58,6 +65,30 @@ class MainActivity : AppCompatActivity() {
         } else {
             Log.w(TAG, "Unknown activity result. Ignoring.")
         }
+    }
+
+    class UpdateInstallStateUpdatedListener(private val activity : Activity,
+                                            private val appUpdateManager: AppUpdateManager) : InstallStateUpdatedListener {
+
+        override fun onStateUpdate(state: InstallState) {
+            if (state.installStatus() == InstallStatus.DOWNLOADED) {
+                popupSnackbarForCompleteUpdate()
+            }
+        }
+
+        /* Displays the snackbar notification and call to action. */
+        private fun popupSnackbarForCompleteUpdate() {
+            Snackbar.make(
+                    activity.findViewById(R.id.constraintLayout_activityMain),
+                    activity.getString(R.string.generic_update_completed),
+                    Snackbar.LENGTH_INDEFINITE
+            ).apply {
+                setAction("RESTART") { appUpdateManager.completeUpdate() }
+                setActionTextColor(activity.resources.getColor(R.color.colorAccent, null))
+                show()
+            }
+        }
+
     }
 
 }

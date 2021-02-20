@@ -37,6 +37,7 @@
     <string name="generic_title_total_cost">Total Cost</string>
     <string name="generic_title_total">Total</string>
     <string name="generic_to_do">To do</string>
+    <string name="generic_update_completed">An update has just been downloaded.</string>
     <string name="generic_urge_buy">Buy!</string>
     <string name="generic_urge_sell">Sell!</string>
 
