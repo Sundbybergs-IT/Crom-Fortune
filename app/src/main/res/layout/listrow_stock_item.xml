@@ -133,6 +133,7 @@
                 android:id="@+id/imageButton_listrowStockItem_muteUnmute"
                 android:layout_width="32dp"
                 android:layout_height="24dp"
+                android:background="@android:color/transparent"
                 android:src="@drawable/ic_fas_bell"
                 />
 
