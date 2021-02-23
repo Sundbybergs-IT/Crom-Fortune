@@ -42,9 +42,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView_fragmentHome)
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockOrderAggregateListAdapter.setListener(viewModel)
-//        recyclerViewAdapterDataObserver = RefreshAdapterHeaderRecyclerViewAdapterDataObserver(requireContext(),
-//                stockOrderAggregateListAdapter, recyclerView)
-//        stockOrderAggregateListAdapter.registerAdapterDataObserver(recyclerViewAdapterDataObserver)
         recyclerView.adapter = stockOrderAggregateListAdapter
         setUpLiveDataListeners(infoText, infoImage, fab)
         setHasOptionsMenu(true)
