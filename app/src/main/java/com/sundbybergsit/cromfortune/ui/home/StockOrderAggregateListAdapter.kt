@@ -129,6 +129,12 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
             itemView.imageButton_listrowStockItem_muteUnmute.setOnClickListener {
+                itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(if (item.muted) {
+                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash)
+                } else {
+                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
+                })
+                item.muted = !item.muted
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
             itemView.textView_listrowStockItem_acquisitionValue.text = format.format(acquisitionValue)
