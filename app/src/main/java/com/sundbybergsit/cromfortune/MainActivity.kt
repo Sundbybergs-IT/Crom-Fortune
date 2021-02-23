@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
         /* Displays the snackbar notification and call to action. */
         private fun popupSnackbarForCompleteUpdate() {
             Snackbar.make(
-                    activity.findViewById(R.id.constraintLayout_activityMain),
+                    activity.findViewById(R.id.coordinatorLayout_activityMain),
                     activity.getString(R.string.generic_update_completed),
                     Snackbar.LENGTH_INDEFINITE
             ).apply {
