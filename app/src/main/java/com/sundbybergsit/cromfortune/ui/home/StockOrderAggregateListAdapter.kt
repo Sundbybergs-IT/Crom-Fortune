@@ -43,7 +43,7 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
         val item = getItem(position)
         when (holder) {
             is StockOrderAggregateHeaderViewHolder -> {
-                holder.bind(item as StockAggregateHeaderAdapteritem)
+                holder.bind(item as StockAggregateHeaderAdapterItem)
             }
             is StockOrderAggregateViewHolder -> {
                 holder.bind(item as StockAggregateAdapterItem)
@@ -52,7 +52,7 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)!!) {
-        is StockAggregateHeaderAdapteritem -> {
+        is StockAggregateHeaderAdapterItem -> {
             R.layout.listrow_stock_header
         }
         is StockAggregateAdapterItem -> {
@@ -73,7 +73,7 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
             private val context: Context,
     ) : RecyclerView.ViewHolder(itemView) {
 
-        fun bind(item: StockAggregateHeaderAdapteritem) {
+        fun bind(item: StockAggregateHeaderAdapterItem) {
             var count = 0.0
             val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
                     .currencyRates.toList()

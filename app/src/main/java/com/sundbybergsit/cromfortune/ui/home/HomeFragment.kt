@@ -1,10 +1,7 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
+import android.view.*
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -45,6 +42,9 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView_fragmentHome)
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockOrderAggregateListAdapter.setListener(viewModel)
+//        recyclerViewAdapterDataObserver = RefreshAdapterHeaderRecyclerViewAdapterDataObserver(requireContext(),
+//                stockOrderAggregateListAdapter, recyclerView)
+//        stockOrderAggregateListAdapter.registerAdapterDataObserver(recyclerViewAdapterDataObserver)
         recyclerView.adapter = stockOrderAggregateListAdapter
         setUpLiveDataListeners(infoText, infoImage, fab)
         setHasOptionsMenu(true)
@@ -143,8 +143,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
                 is StockPriceRepository.ViewState.VALUES -> {
                     stockPricesLoaded = true
                     if (currencyRatesLoaded) {
-                        (requireView().findViewById(R.id.floatingActionButton_fragmentHome) as FloatingActionButton).isEnabled = true
-                        viewModel.refresh(requireContext())
+                        refreshEverything()
                     }
                 }
             }
@@ -157,12 +156,24 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
                 is CurrencyRateRepository.ViewState.VALUES -> {
                     currencyRatesLoaded = true
                     if (stockPricesLoaded) {
-                        (requireView().findViewById(R.id.floatingActionButton_fragmentHome) as FloatingActionButton).isEnabled = true
-                        viewModel.refresh(requireContext())
+                        refreshEverything()
                     }
                 }
             }
         })
+    }
+
+    private fun refreshEverything() {
+        (requireView().findViewById(R.id.floatingActionButton_fragmentHome) as FloatingActionButton).isEnabled = true
+        viewModel.refresh(requireContext())
+        if (stockOrderAggregateListAdapter.itemCount > 0) {
+            stockOrderAggregateListAdapter.onBindViewHolder(
+                    StockOrderAggregateListAdapter.StockOrderAggregateHeaderViewHolder(stockPriceListener = stockOrderAggregateListAdapter,
+                            itemView = LayoutInflater.from(context).inflate(R.layout.listrow_stock_header, requireView()
+                                    .findViewById(R.id.recyclerView_fragmentHome), false),
+                            context = requireContext()), 0)
+            stockOrderAggregateListAdapter.notifyDataSetChanged()
+        }
     }
 
     override fun onClick(stockName: String) {
