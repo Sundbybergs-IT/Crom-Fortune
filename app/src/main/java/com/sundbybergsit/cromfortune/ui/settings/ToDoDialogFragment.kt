@@ -12,11 +12,11 @@ class ToDoDialogFragment : DialogFragment() {
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val message = "Att göra:\n" +
-                "1. Hem: Mute/unmute aktie\n" +
-                "2. Inställningar: Ställ in tidsintervall då kurser ska hämtas\n" +
-                "3. Notifieringar: Lägg till arkiv\n" +
-                "4. Notiferingar: Lägg till humpnotiser då en kurs är lägre än senaste sälj (vid 0 aktier)\n" +
-                "5. Lägg till anteckningar per aktie\n" +
+                "1. Inställningar: Ställ in tidsintervall då kurser ska hämtas\n" +
+                "2. Notifieringar: Lägg till arkiv\n" +
+                "3. Notiferingar: Lägg till humpnotiser då en kurs är lägre än senaste sälj (vid 0 aktier)\n" +
+                "4. Lägg till anteckningar per aktie\n" +
+                "5. Fixa 'bugg' att refresh görs i två omgångar (valuta / kurs)\n" +
                 "6. Dark theme vid vissa klockslag\n" +
                 "7. Hem: Implementera köp/sälj-knappar\n" +
                 "8. Hem: Sortering (bäst/sämst/ABC)\n" +

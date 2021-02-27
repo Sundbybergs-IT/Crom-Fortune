@@ -111,6 +111,7 @@
                 android:clickable="true"
                 android:contentDescription="@string/action_stock_buy"
                 android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless"
                 android:text="@string/action_stock_buy_short"
                 android:textSize="12sp"
                 />
@@ -125,6 +126,7 @@
                 android:clickable="true"
                 android:contentDescription="@string/action_stock_sell"
                 android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless"
                 android:text="@string/action_stock_sell_short"
                 android:textSize="12sp"
                 />
@@ -133,7 +135,9 @@
                 android:id="@+id/imageButton_listrowStockItem_muteUnmute"
                 android:layout_width="32dp"
                 android:layout_height="24dp"
-                android:background="@android:color/transparent"
+                android:background="@drawable/background_white_selectable_item_background"
+                android:contentDescription="@null"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_fas_bell"
                 />
 

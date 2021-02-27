@@ -16,6 +16,7 @@ import com.sundbybergsit.cromfortune.ui.home.SellStockCommand
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsRepositoryImpl
+import com.sundbybergsit.cromfortune.ui.settings.StockMuteSettingsRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock
@@ -50,7 +51,10 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                 val stockPrice = StockPrice(stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
                         price = quote.price.toDouble().roundTo(3))
                 val previousOrders = StockOrderRepositoryImpl(context).list(stockSymbol)
-                if (previousOrders.isNotEmpty()) {
+                val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
+                if (isStockMuted) {
+                    Log.i(TAG, "Skipping recommendation for stock (${stockSymbol}) as it has been muted.")
+                } else if (previousOrders.isNotEmpty()) {
                     val recommendation = CromFortuneV1RecommendationAlgorithm(context)
                             .getRecommendation(stockPrice, currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
                                     COMMISSION_FEE, previousOrders)

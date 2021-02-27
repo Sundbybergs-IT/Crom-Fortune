@@ -15,6 +15,7 @@ import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
+import com.sundbybergsit.cromfortune.ui.settings.StockMuteSettingsRepository
 import kotlinx.android.synthetic.main.listrow_stock_header.view.*
 import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat
@@ -128,14 +129,26 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
             itemView.button_listrowStockItem_sell.setOnClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
+            val stockMuteSettings = StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
+                    ?.find { stockSettings -> stockSettings.stockSymbol == item.stockOrderAggregate.stockSymbol }
+            itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
+                    if (stockMuteSettings == null || !stockMuteSettings.muted) {
+                        ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
+                    } else {
+                        ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash)
+                    }
+            )
             itemView.imageButton_listrowStockItem_muteUnmute.setOnClickListener {
-                itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(if (item.muted) {
-                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash)
+                if (item.muted) {
+                    StockMuteSettingsRepository.mute(item.stockOrderAggregate.stockSymbol)
+                    itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
+                            ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash))
                 } else {
-                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
-                })
+                    StockMuteSettingsRepository.unmute(item.stockOrderAggregate.stockSymbol)
+                    itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
+                            ContextCompat.getDrawable(context, R.drawable.ic_fas_bell))
+                }
                 item.muted = !item.muted
-                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
             itemView.textView_listrowStockItem_acquisitionValue.text = format.format(acquisitionValue)
             val currentStockPrice = stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price

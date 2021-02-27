@@ -5,6 +5,7 @@ package com.sundbybergsit.cromfortune
 import android.app.Application
 import androidx.work.*
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
+import com.sundbybergsit.cromfortune.ui.settings.StockMuteSettingsRepository
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -16,6 +17,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         NotificationUtil.createChannel(applicationContext)
+        StockMuteSettingsRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
         retrieveDataInBackground(workManager)
     }
