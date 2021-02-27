@@ -13,8 +13,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
-@Config(sdk = [Build.VERSION_CODES.Q])
 @RunWith(AndroidJUnit4::class)
+@Config(sdk = [Build.VERSION_CODES.Q])
 class StockDataRetrievalCoroutineWorkerTest {
 
     private lateinit var context: Context

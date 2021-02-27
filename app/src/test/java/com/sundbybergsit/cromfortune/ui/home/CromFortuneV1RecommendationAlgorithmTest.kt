@@ -23,8 +23,8 @@ import java.util.*
 private const val DOMESTIC_STOCK_NAME = "Aktie med normal valutakurs"
 private const val FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME = "Aktie med annan valutakurs"
 
-@Config(sdk = [Build.VERSION_CODES.Q])
 @RunWith(AndroidJUnit4::class)
+@Config(sdk = [Build.VERSION_CODES.Q])
 class CromFortuneV1RecommendationAlgorithmTest {
 
     private lateinit var algorithm: CromFortuneV1RecommendationAlgorithm

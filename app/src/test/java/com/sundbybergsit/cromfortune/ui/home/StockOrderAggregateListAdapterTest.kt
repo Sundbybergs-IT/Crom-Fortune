@@ -19,8 +19,8 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.*
 
-@Config(sdk = [Build.VERSION_CODES.Q])
 @RunWith(AndroidJUnit4::class)
+@Config(sdk = [Build.VERSION_CODES.Q])
 class StockOrderAggregateListAdapterTest {
 
     private lateinit var adapterOrderAggregate: StockOrderAggregateListAdapter
