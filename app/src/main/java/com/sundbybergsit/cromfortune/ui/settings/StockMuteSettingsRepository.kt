@@ -27,7 +27,7 @@ object StockMuteSettingsRepository {
 
     @SuppressLint("ApplySharedPref")
     fun mute(stockSymbol: String) {
-        Log.v(TAG, "mute(${STOCK_MUTE_MUTE_SETTINGS})")
+        Log.v(TAG, "mute(${stockSymbol})")
         sharedPreferences.edit().putString(stockSymbol, true.toString()).commit()
         val result: Collection<StockMuteSettings> = sharedPreferences.all
                 .map { entry -> StockMuteSettings(entry.key, (entry.value as String).toBoolean()) }
@@ -36,7 +36,7 @@ object StockMuteSettingsRepository {
 
     @SuppressLint("ApplySharedPref")
     fun unmute(stockSymbol: String) {
-        Log.v(TAG, "unmute(${STOCK_MUTE_MUTE_SETTINGS})")
+        Log.v(TAG, "unmute(${stockSymbol})")
         sharedPreferences.edit().putString(stockSymbol, false.toString()).commit()
         val result: Collection<StockMuteSettings> = sharedPreferences.all
                 .map { entry -> StockMuteSettings(entry.key, (entry.value as String).toBoolean()) }
