@@ -129,24 +129,22 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
             itemView.button_listrowStockItem_sell.setOnClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
-            val stockMuteSettings = StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
-                    ?.find { stockSettings -> stockSettings.stockSymbol == item.stockOrderAggregate.stockSymbol }
             itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
-                    if (stockMuteSettings == null || !stockMuteSettings.muted) {
-                        ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
-                    } else {
+                    if (item.muted) {
                         ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash)
+                    } else {
+                        ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
                     }
             )
             itemView.imageButton_listrowStockItem_muteUnmute.setOnClickListener {
                 if (item.muted) {
-                    StockMuteSettingsRepository.mute(item.stockOrderAggregate.stockSymbol)
-                    itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
-                            ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash))
-                } else {
                     StockMuteSettingsRepository.unmute(item.stockOrderAggregate.stockSymbol)
                     itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
                             ContextCompat.getDrawable(context, R.drawable.ic_fas_bell))
+                } else {
+                    StockMuteSettingsRepository.mute(item.stockOrderAggregate.stockSymbol)
+                    itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
+                            ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash))
                 }
                 item.muted = !item.muted
             }
