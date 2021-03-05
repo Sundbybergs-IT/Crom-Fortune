@@ -3,6 +3,7 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_clear">Clear</string>
     <string name="action_close">Close</string>
+    <string name="action_configure_stock_retrieval_intervals">Stock retrieval time intervals</string>
     <string name="action_delete">Delete</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_stock_buy">Register purchase</string>>
@@ -25,11 +26,14 @@
     <string name="generic_error_invalid_currency_symbol">Enter a valid currency symbol.</string>
     <string name="generic_error_invalid_number">Enter a valid number.</string>
     <string name="generic_error_invalid_stock_symbol">Enter a valid stock symbol.</string>
+    <string name="generic_error_invalid_time_interval">Invalid time interval.</string>
     <string name="generic_error_not_supported">This feature is not yet supported.</string>
     <string name="generic_hint">Select</string>
     <string name="generic_price_per_stock">Price per stock</string>
     <string name="generic_profit">Profit</string>
     <string name="generic_saved">Saved successfully</string>
+    <string name="generic_time_start_label">From</string>
+    <string name="generic_time_end_label">Until</string>
     <string name="generic_title_latest">Latest</string>
     <string name="generic_title_name">Name</string>
     <string name="generic_title_quantity">#</string>
@@ -72,5 +76,6 @@
 
     <string name="settings_title">Settings</string>
     <string name="settings_default_values">Default values</string>
+    <string name="settings_dialog_time_intervals_title">Time interval during which Crom Fortune should fetch stock rates</string>
 
 </resources>

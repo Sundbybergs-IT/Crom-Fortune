@@ -10,7 +10,7 @@ object StockPriceRepository {
     private const val TAG = "StockPriceRepository"
 
     @Suppress("ObjectPropertyName")
-    private val _stockPrices = MutableLiveData<ViewState>()
+    private val _stockPrices = MutableLiveData<ViewState>(ViewState.NotInitialized)
 
     val stockPrices: LiveData<ViewState> = _stockPrices
 
@@ -20,6 +20,7 @@ object StockPriceRepository {
     }
 
     sealed class ViewState {
+        object NotInitialized : ViewState()
         data class VALUES(val instant: Instant, val stockPrices: Set<StockPrice>) : ViewState()
     }
 

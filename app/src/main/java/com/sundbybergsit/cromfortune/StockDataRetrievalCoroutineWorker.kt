@@ -17,11 +17,13 @@ import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.settings.StockMuteSettingsRepository
+import com.sundbybergsit.cromfortune.ui.settings.StockRetrievalSettings
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock
 import yahoofinance.YahooFinance
 import java.time.Instant
+import java.time.LocalTime
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -111,13 +113,30 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
         try {
             val asyncWork =
                     async {
-                        refreshFromYahoo(context)
+                        val timeInterval = StockRetrievalSettings(context).timeInterval.value
+                                as StockRetrievalSettings.ViewState.VALUES
+                        val now = LocalTime.now()
+                        val fromTimeMinutes = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
+                        val toTimeMinutes = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
+                        if (isRefreshRequired()) {
+                            Log.i(TAG, "Initial retrieval of data.")
+                            refreshFromYahoo(context)
+                        } else if (now.isAfter(fromTimeMinutes) && now.isBefore(toTimeMinutes)) {
+                            Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
+                            refreshFromYahoo(context)
+                        } else {
+                            Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
+                        }
                     }
             asyncWork.await()
             Result.success()
         } catch (error: Throwable) {
             Result.failure()
         }
+    }
+
+    private fun isRefreshRequired(): Boolean {
+        return StockPriceRepository.stockPrices.value is StockPriceRepository.ViewState.NotInitialized
     }
 
 }

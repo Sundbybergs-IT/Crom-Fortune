@@ -3,6 +3,7 @@
     <string name="action_cancel">Avbryt</string>
     <string name="action_clear">Rensa</string>
     <string name="action_close">Stäng</string>
+    <string name="action_configure_stock_retrieval_intervals">Tidsintervaller för aktieprishämtning</string>
     <string name="action_delete">Radera</string>
     <string name="action_refresh">Uppdatera</string>
     <string name="action_stock_buy">Registrera köp</string>>
@@ -24,11 +25,14 @@
     <string name="generic_error_invalid_date">Ange ett giltigt datum.</string>
     <string name="generic_error_invalid_number">Ange ett giltigt nummer.</string>
     <string name="generic_error_invalid_stock_symbol">Ange en giltig aktiesymbol.</string>
+    <string name="generic_error_invalid_time_interval">Ogiltigt tidsintervall.</string>
     <string name="generic_error_not_supported">Denna funktion stöds inte.</string>
     <string name="generic_hint">Välj</string>
     <string name="generic_price_per_stock">Pris per aktie</string>
     <string name="generic_profit">Vinst</string>
     <string name="generic_saved">Sparade framgångsrikt</string>
+    <string name="generic_time_start_label">Från</string>
+    <string name="generic_time_end_label">Till</string>
     <string name="generic_title_latest">Senast</string>
     <string name="generic_title_name">Namn</string>
     <string name="generic_title_quantity">#</string>
@@ -71,5 +75,6 @@
 
     <string name="settings_title">Inställningar</string>
     <string name="settings_default_values">Standardvärden</string>
+    <string name="settings_dialog_time_intervals_title">Tidsintervall då Crom Fortune hämtar aktiekurser</string>
 
 </resources>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/constraintLayout_dialogStockRetrievalTimeIntervals"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="16dp"
+        >
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogStockRetrievalTimeIntervals_fromTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/generic_time_start_label"
+            app:errorEnabled="true"
+            >
+
+        <EditText
+                android:id="@+id/editText_dialogStockRetrievalTimeIntervals_fromTime"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="date"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_dialogStockRetrievalTimeIntervals_toTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/generic_time_end_label"
+            app:errorEnabled="true"
+            >
+
+        <EditText
+                android:id="@+id/editText_dialogStockRetrievalTimeIntervals_toTime"
+                android:layout_width="128dp"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="date"
+                />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</GridLayout>

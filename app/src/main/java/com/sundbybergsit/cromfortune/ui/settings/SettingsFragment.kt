@@ -34,6 +34,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_stockRetrievalIntervals -> {
+                val dialog = TimeIntervalStockRetrievalDialogFragment()
+                dialog.show(parentFragmentManager, TAG)
+                true
+            }
             R.id.action_showSupportedStocks -> {
                 val dialog = SupportedStockDialogFragment()
                 dialog.show(parentFragmentManager, TAG)

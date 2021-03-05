@@ -4,6 +4,12 @@
         >
 
     <item
+            android:id="@+id/action_stockRetrievalIntervals"
+            android:title="@string/action_configure_stock_retrieval_intervals"
+            app:showAsAction="never"
+            />
+
+    <item
             android:id="@+id/action_showSupportedStocks"
             android:title="@string/action_stocks_supported"
             app:showAsAction="never"
