@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.os.ConfigurationCompat
 import androidx.recyclerview.widget.ListAdapter
@@ -57,6 +58,10 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
         fun bind(item: NotificationAdapterItem, evenRow: Boolean) {
             itemView.textView_listrowNotificationItem_date.text = formatter.format(Date(item.notificationMessage.dateInMillis))
             itemView.textView_listrowNotificationItem_name.text = item.notificationMessage.message
+            itemView.setOnLongClickListener {
+                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+                true
+            }
             itemView.background = ContextCompat.getDrawable(context, if (evenRow) {
                 R.drawable.background_accent_selectable_item_background
             } else {
