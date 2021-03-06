@@ -27,7 +27,6 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
         }
     }
 
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when (holder) {
@@ -58,9 +57,11 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
         fun bind(item: NotificationAdapterItem, evenRow: Boolean) {
             itemView.textView_listrowNotificationItem_date.text = formatter.format(Date(item.notificationMessage.dateInMillis))
             itemView.textView_listrowNotificationItem_name.text = item.notificationMessage.message
-            if (evenRow) {
-                itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent))
-            }
+            itemView.background = ContextCompat.getDrawable(context, if (evenRow) {
+                R.drawable.background_accent_selectable_item_background
+            } else {
+                R.drawable.background_white_selectable_item_background
+            })
         }
 
     }
