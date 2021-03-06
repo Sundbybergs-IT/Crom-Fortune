@@ -12,7 +12,6 @@ android {
         targetSdkVersion 30
         versionCode 57
         versionName "0.0.57"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
