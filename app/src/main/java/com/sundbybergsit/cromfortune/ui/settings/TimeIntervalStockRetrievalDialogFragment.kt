@@ -12,10 +12,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
+import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ui.transformIntoTimePicker
 import java.text.SimpleDateFormat
+import java.time.DayOfWeek
 import java.util.*
 
 private const val TIME_FORMAT = "HH:mm"
@@ -27,15 +29,19 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
         val stockRetrievalSettings = StockRetrievalSettings(requireContext())
         val dialogRootView: View = LayoutInflater.from(context)
                 .inflate(R.layout.dialog_stock_retrieval_time_intervals, view as ViewGroup?, false)
-        val inputFromTime: EditText = dialogRootView.findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_fromTime)
         val currentSettings = stockRetrievalSettings.timeInterval.value as StockRetrievalSettings.ViewState.VALUES
-        inputFromTime.setText("${formatHours(currentSettings.fromTimeHours)}:${formatMinutes(currentSettings.fromTimeMinutes)}")
-        val inputLayoutFromTime: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_fromTime)
-        inputFromTime.transformIntoTimePicker(requireContext(), TIME_FORMAT, inputLayoutFromTime)
-        val inputToTime: EditText = dialogRootView.findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_toTime)
-        inputToTime.setText("${formatHours(currentSettings.toTimeHours)}:${formatMinutes(currentSettings.toTimeMinutes)}")
-        val inputLayoutToTime: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_toTime)
-        inputToTime.transformIntoTimePicker(requireContext(), TIME_FORMAT, inputLayoutToTime)
+        val inputFromTime: EditText = dialogRootView
+                .findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_fromTime)
+        val inputLayoutFromTime: TextInputLayout = dialogRootView
+                .findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_fromTime)
+        initFromTimePicker(currentSettings, inputFromTime, inputLayoutFromTime)
+        val inputToTime: EditText = dialogRootView
+                .findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_toTime)
+        val inputLayoutToTime: TextInputLayout = dialogRootView
+                .findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_toTime)
+        initToTimePicker(currentSettings, inputToTime, inputLayoutToTime)
+        val dayPicker = dialogRootView.findViewById<MaterialDayPicker>(R.id.materialDayPicker_dialogStockRetrievalTimeIntervals)
+        initDayPicker(currentSettings, dayPicker)
         val context = requireContext()
         val confirmListener: DialogInterface.OnClickListener = DialogInterface.OnClickListener { _, _ ->
         }
@@ -55,14 +61,15 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
                     validateTime(inputToTime, inputLayoutToTime)
                     val fromTimeAsString = inputFromTime.text.toString()
                     val toTimeAsString = inputToTime.text.toString()
-                    val fromTime = SimpleDateFormat(TIME_FORMAT, Locale.getDefault()).parse(fromTimeAsString)
-                    val toTime = SimpleDateFormat(TIME_FORMAT, Locale.getDefault()).parse(toTimeAsString)
+                    val fromTime = SimpleDateFormat(TIME_FORMAT, Locale.getDefault()).parse(fromTimeAsString)!!
+                    val toTime = SimpleDateFormat(TIME_FORMAT, Locale.getDefault()).parse(toTimeAsString)!!
                     if (toTime.before(fromTime)) {
                         inputToTime.error = getString(R.string.generic_error_invalid_time_interval)
                         inputToTime.requestFocus()
                         throw ValidatorException()
                     }
-                    stockRetrievalSettings.set(fromTime.hours, fromTime.minutes, toTime.hours, toTime.minutes)
+                    stockRetrievalSettings.set(fromTime.hours, fromTime.minutes, toTime.hours, toTime.minutes,
+                            dayPicker.selectedDays.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
                     Toast.makeText(requireContext(), getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
                     alertDialog.dismiss()
                 } catch (e: ValidatorException) {
@@ -73,7 +80,32 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
         return alertDialog
     }
 
-    private fun formatMinutes(minutes: Int): String {
+    private fun initFromTimePicker(
+            settings: StockRetrievalSettings.ViewState.VALUES,
+            inputFromTime: EditText,
+            inputLayoutFromTime: TextInputLayout,
+    ) {
+        inputFromTime.setText(String.format("%s:%s", formatHoursAsString(settings.fromTimeHours),
+                formatMinutesAsString(settings.fromTimeMinutes)))
+        inputFromTime.transformIntoTimePicker(requireContext(), TIME_FORMAT, inputLayoutFromTime)
+    }
+
+    private fun initToTimePicker(
+            settings: StockRetrievalSettings.ViewState.VALUES,
+            inputToTime: EditText,
+            inputLayoutToTime: TextInputLayout,
+    ) {
+        inputToTime.setText(String.format("%s:%s", formatHoursAsString(settings.toTimeHours),
+                formatMinutesAsString(settings.toTimeMinutes)))
+        inputToTime.transformIntoTimePicker(requireContext(), TIME_FORMAT, inputLayoutToTime)
+    }
+
+    private fun initDayPicker(currentSettings: StockRetrievalSettings.ViewState.VALUES, dayPicker: MaterialDayPicker) {
+        dayPicker.setSelectedDays(currentSettings.weekDays.map { dayOfWeek -> MaterialDayPicker.Weekday.valueOf(dayOfWeek.name) })
+        dayPicker.firstDayOfWeek = MaterialDayPicker.Weekday.MONDAY
+    }
+
+    private fun formatMinutesAsString(minutes: Int): String {
         return if (minutes < 10) {
             "0${minutes}"
         } else {
@@ -81,7 +113,7 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
         }
     }
 
-    private fun formatHours(hours: Int): String {
+    private fun formatHoursAsString(hours: Int): String {
         return if (hours < 10) {
             "0${hours}"
         } else {

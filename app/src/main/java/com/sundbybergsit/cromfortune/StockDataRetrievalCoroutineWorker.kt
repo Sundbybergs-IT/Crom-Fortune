@@ -23,6 +23,7 @@ import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock
 import yahoofinance.YahooFinance
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
 import java.util.*
 import kotlin.math.roundToInt
@@ -115,13 +116,15 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                     async {
                         val timeInterval = StockRetrievalSettings(context).timeInterval.value
                                 as StockRetrievalSettings.ViewState.VALUES
-                        val now = LocalTime.now()
+                        val currentTime = LocalTime.now()
+                        val currentDayOfWeek = LocalDate.now().dayOfWeek
                         val fromTimeMinutes = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
                         val toTimeMinutes = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
                         if (isRefreshRequired()) {
                             Log.i(TAG, "Initial retrieval of data.")
                             refreshFromYahoo(context)
-                        } else if (now.isAfter(fromTimeMinutes) && now.isBefore(toTimeMinutes)) {
+                        } else if (timeInterval.weekDays.contains(currentDayOfWeek) &&
+                                currentTime.isAfter(fromTimeMinutes) && currentTime.isBefore(toTimeMinutes)) {
                             Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
                             refreshFromYahoo(context)
                         } else {

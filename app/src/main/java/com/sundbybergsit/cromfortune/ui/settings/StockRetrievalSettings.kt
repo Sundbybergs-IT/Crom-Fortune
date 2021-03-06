@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import java.time.DayOfWeek
 
 class StockRetrievalSettings(
         context: Context,
@@ -24,12 +25,13 @@ class StockRetrievalSettings(
 
     val timeInterval: LiveData<ViewState> = _timeInterval
 
-    fun set(fromTimeHours: Int, fromTimeMinutes: Int, toTimeHours: Int, toTimeMinutes: Int) {
+    fun set(fromTimeHours: Int, fromTimeMinutes: Int, toTimeHours: Int, toTimeMinutes: Int, weekDays: List<DayOfWeek>) {
         Log.v(TAG, "set(fromTimeHours=[${fromTimeHours}],fromTimeMinutes=[${fromTimeMinutes}], toTimeHours=[${toTimeHours}], toTimeMinutes=[${toTimeMinutes})")
 
         sharedPreferences.edit().putInt("fromTimeHours", fromTimeHours).putInt("fromTimeMinutes", fromTimeMinutes)
-                .putInt("toTimeHours", toTimeHours).putInt("toTimeMinutes", toTimeMinutes).apply()
-        _timeInterval.postValue(ViewState.VALUES(fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes))
+                .putInt("toTimeHours", toTimeHours).putInt("toTimeMinutes", toTimeMinutes)
+                .putStringSet("weekDays", weekDays.map { weekDay -> weekDay.name }.toSet()).apply()
+        _timeInterval.postValue(ViewState.VALUES(fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes, weekDays))
     }
 
     private fun getValuesFromDb(): ViewState {
@@ -37,11 +39,20 @@ class StockRetrievalSettings(
         val fromTimeMinutes = sharedPreferences.getInt("fromTimeMinutes", 0)
         val toTimeHours = sharedPreferences.getInt("toTimeHours", 23)
         val toTimeMinutes = sharedPreferences.getInt("toTimeMinutes", 59)
-        return ViewState.VALUES(fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes)
+        val weekDays = sharedPreferences.getStringSet("weekDays",
+                setOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))!!
+                .map { stringRepresentation ->
+                    DayOfWeek.valueOf(stringRepresentation)
+                }
+
+        return ViewState.VALUES(fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes, weekDays.toList())
     }
 
     sealed class ViewState {
-        data class VALUES(val fromTimeHours: Int, val fromTimeMinutes: Int, val toTimeHours: Int, val toTimeMinutes: Int) : ViewState()
+        data class VALUES(
+                val fromTimeHours: Int, val fromTimeMinutes: Int, val toTimeHours: Int, val toTimeMinutes: Int,
+                val weekDays: List<DayOfWeek>,
+        ) : ViewState()
     }
 
 }
