@@ -25,7 +25,8 @@ class ToDoDialogFragment : DialogFragment() {
                 "11. Hem: Lägg till stöd för nyemissioner\n" +
                 "12. Hem: Lägg till stöd för omvända splitar\n" +
                 "13. Inställningar: Implementera stöd för individuell courtageplan\n" +
-                "14. Instrumentbräda: Exkludera transaktioner från 0 -> x aktier från Crom conformance score\n"
+                "14. Instrumentbräda: Exkludera transaktioner från 0 -> x aktier från Crom conformance score\n" +
+                "15. Notifieringar: Lägg till stöd för att ta bort enskilda notifieringar\n"
         val context = requireContext()
         return AlertDialog.Builder(context)
                 .setMessage(message)
