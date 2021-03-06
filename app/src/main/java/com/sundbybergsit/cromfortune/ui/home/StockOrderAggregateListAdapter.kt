@@ -113,13 +113,20 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
             @SuppressLint("SetTextI18n")
             itemView.textView_listrowStockItem_name.text = item.stockOrderAggregate.displayName
             val acquisitionValue = item.stockOrderAggregate.getAcquisitionValue()
-            val format: NumberFormat = NumberFormat.getCurrencyInstance()
+            val stockCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
             if (acquisitionValue < 1) {
-                format.maximumFractionDigits = 3
+                stockCurrencyFormat.maximumFractionDigits = 3
             } else {
-                format.maximumFractionDigits = 2
+                stockCurrencyFormat.maximumFractionDigits = 2
             }
-            format.currency = item.stockOrderAggregate.currency
+            stockCurrencyFormat.currency = item.stockOrderAggregate.currency
+            val swedishCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
+            if (acquisitionValue < 1) {
+                stockCurrencyFormat.maximumFractionDigits = 3
+            } else {
+                stockCurrencyFormat.maximumFractionDigits = 2
+            }
+            swedishCurrencyFormat.currency = Currency.getInstance("SEK")
             itemView.setOnClickListener {
                 stockClickListener.onClick(item.stockOrderAggregate.stockSymbol)
             }
@@ -148,12 +155,21 @@ class StockOrderAggregateListAdapter(private val stockClickListener: StockClickL
                 }
                 item.muted = !item.muted
             }
-            itemView.textView_listrowStockItem_acquisitionValue.text = format.format(acquisitionValue)
+            itemView.textView_listrowStockItem_acquisitionValue.text = stockCurrencyFormat.format(acquisitionValue)
             val currentStockPrice = stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price
-            val profit = item.stockOrderAggregate.getProfit(currentStockPrice)
-            itemView.textView_listrowStockItem_latestValue.text = format.format(currentStockPrice)
-            itemView.textView_listrowStockItem_profit.text = format.format(profit)
-            itemView.textView_listrowStockItem_profit.setTextColor(ContextCompat.getColor(context, if (profit > 0) {
+            var profitInSek = 0.0
+            val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+                    .currencyRates.toList()
+                for (currencyRate in currencyRates) {
+                    if (currencyRate.iso4217CurrencySymbol == item.stockOrderAggregate.currency.currencyCode) {
+                        profitInSek = (item.stockOrderAggregate.getProfit(stockPriceListener.getStockPrice(
+                                item.stockOrderAggregate.stockSymbol).price)) * currencyRate.rateInSek
+                        break
+                    }
+                }
+            itemView.textView_listrowStockItem_latestValue.text = stockCurrencyFormat.format(currentStockPrice)
+            itemView.textView_listrowStockItem_profit.text = swedishCurrencyFormat.format(profitInSek)
+            itemView.textView_listrowStockItem_profit.setTextColor(ContextCompat.getColor(context, if (profitInSek > 0) {
                 R.color.colorProfit
             } else {
                 R.color.colorLoss
