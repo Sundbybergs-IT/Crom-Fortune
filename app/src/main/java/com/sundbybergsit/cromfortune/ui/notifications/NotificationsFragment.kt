@@ -6,23 +6,27 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.viewModels
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.google.android.material.tabs.TabLayoutMediator
 import com.sundbybergsit.cromfortune.R
 import kotlinx.android.synthetic.main.fragment_notifications.*
-import java.util.*
 
 class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
 
     private val viewModel: NotificationsViewModel by viewModels()
 
-    private val listAdapter = NotificationListAdapter()
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        recyclerView_fragmentNotifications.adapter = listAdapter
-        setUpLiveDataListeners()
-        viewModel.refresh(requireContext())
-        setHasOptionsMenu(true)
+        viewPager_fragmentNotifications.adapter = ScreenSlidePagerAdapter(requireActivity())
+        TabLayoutMediator(tabLayout_fragmentNotifications, viewPager_fragmentNotifications) { tab, position ->
+            tab.text = getString(if (position == 0) {
+                R.string.notifications_new_title
+            } else {
+                R.string.notifications_old_title
+            })
+        }.attach()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -40,20 +44,17 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
         }
     }
 
-    private fun setUpLiveDataListeners() {
-        viewModel.notifications.observe(viewLifecycleOwner, { viewState ->
-            when (viewState) {
-                is NotificationsViewModel.ViewState.HasNotifications -> {
-                    textView_fragmentNotifications.visibility = View.GONE
-                    listAdapter.submitList(viewState.adapterItems)
-                }
-                is NotificationsViewModel.ViewState.HasNoNotifications -> {
-                    listAdapter.submitList(Collections.emptyList())
-                    textView_fragmentNotifications.visibility = View.VISIBLE
-                    textView_fragmentNotifications.text = getString(R.string.notifications_empty)
-                }
+    private inner class ScreenSlidePagerAdapter(fa: FragmentActivity) : FragmentStateAdapter(fa) {
+
+        override fun getItemCount(): Int = 2
+
+        override fun createFragment(position: Int): Fragment {
+            if (position == 0) {
+                return NewNotificationsFragment()
+            } else {
+                return OldNotificationsFragment()
             }
-        })
+        }
     }
 
 }

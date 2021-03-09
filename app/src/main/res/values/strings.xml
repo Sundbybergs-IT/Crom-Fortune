@@ -66,10 +66,12 @@
     <string name="home_title">Home</string>
 
     <string name="notification_channel_name">Crom Fortune Events</string>
-    <string name="notifications_empty">There are no notifications</string>
     <string name="notification_recommendation_body_buy">You are recommended to buy %1$d of %2$s at %3$s %4$s (commission fee %5$d SEK)</string>
     <string name="notification_recommendation_body_sell">You are recommended to sell %1$d of %2$s at %3$s %4$s (commission fee %5$d SEK)</string>
     <string name="notification_recommendation_title">Recommendation</string>
+    <string name="notifications_old_title">Old Notifications</string>
+    <string name="notifications_new_title">Current Notifications</string>
+    <string name="notifications_empty">There are no notifications</string>
     <string name="notifications_title">Notifications</string>
 
     <string name="recommendations_none">No recommendations</string>
@@ -77,5 +79,6 @@
     <string name="settings_title">Settings</string>
     <string name="settings_default_values">Default values</string>
     <string name="settings_dialog_time_intervals_title">Time interval during which Crom Fortune should fetch stock rates</string>
+
 
 </resources>
