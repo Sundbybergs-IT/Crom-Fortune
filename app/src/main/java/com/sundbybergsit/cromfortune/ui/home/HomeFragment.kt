@@ -1,19 +1,24 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
+import kotlinx.android.synthetic.main.fragment_home.*
 import java.util.*
 
 class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
@@ -32,10 +37,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(this)
-        val infoText: TextView = view.findViewById(R.id.textView_fragmentHome)
-        val infoImage: ImageView = view.findViewById(R.id.imageView_fragmentHome)
-        val fab: FloatingActionButton = view.findViewById(R.id.floatingActionButton_fragmentHome)
-        fab.setOnClickListener {
+        floatingActionButton_fragmentHome.setOnClickListener {
             val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.show(parentFragmentManager, TAG)
         }
@@ -43,35 +45,32 @@ class HomeFragment : Fragment(R.layout.fragment_home), StockClickListener {
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockOrderAggregateListAdapter.setListener(viewModel)
         recyclerView.adapter = stockOrderAggregateListAdapter
-        setUpLiveDataListeners(infoText, infoImage, fab)
-        setHasOptionsMenu(true)
-        super.onViewCreated(view, savedInstanceState)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.home_actions, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_buyStock -> {
-                val dialog = RegisterBuyStockDialogFragment(viewModel)
-                dialog.show(parentFragmentManager, TAG)
-                true
+        setUpLiveDataListeners(textView_fragmentHome, imageView_fragmentHome, floatingActionButton_fragmentHome)
+        val navController = NavHostFragment.findNavController(this)
+        val appBarConfiguration = AppBarConfiguration(navController.graph)
+        toolBar_fragmentHome.setupWithNavController(navController, appBarConfiguration)
+        toolBar_fragmentHome.inflateMenu(R.menu.home_actions)
+        toolBar_fragmentHome.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_buyStock -> {
+                    val dialog = RegisterBuyStockDialogFragment(viewModel)
+                    dialog.show(parentFragmentManager, TAG)
+                    true
+                }
+                R.id.action_sellStock -> {
+                    val dialog = RegisterSellStockDialogFragment(viewModel)
+                    dialog.show(parentFragmentManager, TAG)
+                    true
+                }
+                R.id.action_refresh -> {
+                    viewModel.refreshData(requireContext())
+                    Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
+                    true
+                }
+                else -> super.onOptionsItemSelected(item)
             }
-            R.id.action_sellStock -> {
-                val dialog = RegisterSellStockDialogFragment(viewModel)
-                dialog.show(parentFragmentManager, TAG)
-                true
-            }
-            R.id.action_refresh -> {
-                viewModel.refreshData(requireContext())
-                Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
         }
+        super.onViewCreated(view, savedInstanceState)
     }
 
     private fun setUpLiveDataListeners(textView: TextView, infoImage: ImageView, fab: FloatingActionButton) {

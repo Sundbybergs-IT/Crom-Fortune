@@ -19,9 +19,10 @@
                 android:layout_margin="16dp"
                 android:text="@string/settings_default_values"
                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                android:layout_marginTop="?attr/actionBarSize"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/toolBar_fragmentSettings"
                 />
 
         <TextView
@@ -44,7 +45,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/textView_fragmentHome_subtitle"
-
                 >
 
             <AutoCompleteTextView
@@ -91,6 +91,15 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/textInputLayout_fragmentSettings_currency"
+                />
+
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolBar_fragmentSettings"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/colorPrimary"
+                app:layout_constraintTop_toTopOf="parent"
+                app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
                 />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

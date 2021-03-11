@@ -8,7 +8,7 @@
         >
 
     <TextView
-            android:id="@+id/textView_fragmentNotifications"
+            android:id="@+id/textView_fragmentNotificationsCurrent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -23,7 +23,7 @@
             />
 
     <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView_fragmentNotifications"
+            android:id="@+id/recyclerView_fragmentNotificationsCurrent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scrollbars="vertical"

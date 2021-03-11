@@ -1,19 +1,22 @@
 package com.sundbybergsit.cromfortune.ui.notifications
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import com.sundbybergsit.cromfortune.R
 import kotlinx.android.synthetic.main.fragment_notifications_archived.*
 import java.util.*
 
 class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archived) {
 
-    private val viewModel: OldNotificationsViewModel by viewModels()
+    companion object {
+
+        const val TAG = "OldNotificationsFragment"
+
+    }
+
+    private val viewModel: OldNotificationsViewModel by activityViewModels()
 
     private val listAdapter = NotificationListAdapter()
 
@@ -22,22 +25,6 @@ class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archiv
         recyclerView_fragmentNotificationsArchived.adapter = listAdapter
         setUpLiveDataListeners()
         viewModel.refresh(requireContext())
-        setHasOptionsMenu(true)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.notifications_actions, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_clearNotifications -> {
-                viewModel.clearNotifications(requireContext())
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 
     private fun setUpLiveDataListeners() {
