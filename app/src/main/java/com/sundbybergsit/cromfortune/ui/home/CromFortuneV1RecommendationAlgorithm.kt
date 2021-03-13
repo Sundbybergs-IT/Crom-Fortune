@@ -12,6 +12,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
 
     companion object {
 
+        const val DEFAULT_PURCHASE_ORDER_IN_SEK: Double = 3000.0
         const val NORMAL_DIFF_PERCENTAGE: Double = .20
         const val MAX_BUY_PERCENTAGE: Double = .10
         const val MAX_SOLD_PERCENTAGE: Double = .10
@@ -56,19 +57,28 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                     }
                 }
             }
+            val currentStockPriceInSek = currentStockPriceInStockCurrency * rateInSek
+            val currentTimeInMillis = System.currentTimeMillis()
+            if (grossQuantity - soldQuantity == 0 && isCurrentStockBelowLastSale(sortedOrders.last(), currentStockPriceInStockCurrency)) {
+                val buyQuantity: Int = ((DEFAULT_PURCHASE_ORDER_IN_SEK - commissionFeeInSek) / currentStockPriceInSek).toInt()
+                val netStockPriceInStockCurrency = ((commissionFeeInSek / rateInSek) + currentStockPriceInStockCurrency * buyQuantity) / buyQuantity
+                if (buyQuantity > 0 && isCurrentStockBelowLastSale(sortedOrders.last(), netStockPriceInStockCurrency)) {
+                    return Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
+                            currentStockPriceInStockCurrency, buyQuantity, commissionFeeInSek))
+                }
+            }
             val netQuantity = grossQuantity - soldQuantity
             val averageCostInSek = accumulatedCostInSek / grossQuantity
             val costToExcludeInSek = averageCostInSek * soldQuantity
 
             val totalPricePerStockInSek = (accumulatedCostInSek - costToExcludeInSek) / netQuantity
             val totalPricePerStockInStockCurrency = totalPricePerStockInSek / rateInSek
-            val currentTimeInMillis = System.currentTimeMillis()
             var tradeQuantity = netQuantity / 10
             var recommendation: Recommendation? = null
             var isOkToContinue = true
             while (isOkToContinue) {
                 val pricePerStockAfterBuyInStockCurrency = ((netQuantity * averageCostInSek +
-                        tradeQuantity * currentStockPriceInStockCurrency * rateInSek + commissionFeeInSek) /
+                        tradeQuantity * currentStockPriceInSek + commissionFeeInSek) /
                         (netQuantity + tradeQuantity)) / rateInSek
                 if (isCurrentStockPriceHighEnoughToSell(tradeQuantity, currentStockPriceInStockCurrency, totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek)) {
                     if (isNotOverSoldForMediumStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity)) {
@@ -108,6 +118,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             }
             return recommendation
         }
+
+        private fun isCurrentStockBelowLastSale(lastSaleOrder: StockOrder, currentStockPrice: Double) =
+                lastSaleOrder.pricePerStock >= currentStockPrice * (1 + NORMAL_DIFF_PERCENTAGE)
 
         private fun isCurrentStockPriceHighEnoughToSell(
                 tradeQuantity: Int, stockPrice: Double, totalPricePerStockInStockCurrency: Double, commissionFee: Double,
