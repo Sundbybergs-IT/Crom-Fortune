@@ -13,6 +13,7 @@ import com.sundbybergsit.cromfortune.ui.home.BuyStockCommand
 import com.sundbybergsit.cromfortune.ui.home.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.ui.home.Recommendation
 import com.sundbybergsit.cromfortune.ui.home.SellStockCommand
+import com.sundbybergsit.cromfortune.ui.isWithinConfiguredTimeInterval
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsRepositoryImpl
@@ -118,17 +119,21 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                                 as StockRetrievalSettings.ViewState.VALUES
                         val currentTime = LocalTime.now()
                         val currentDayOfWeek = LocalDate.now().dayOfWeek
-                        val fromTimeMinutes = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
-                        val toTimeMinutes = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
-                        if (isRefreshRequired()) {
-                            Log.i(TAG, "Initial retrieval of data.")
-                            refreshFromYahoo(context)
-                        } else if (timeInterval.weekDays.contains(currentDayOfWeek) &&
-                                currentTime.isAfter(fromTimeMinutes) && currentTime.isBefore(toTimeMinutes)) {
-                            Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
-                            refreshFromYahoo(context)
-                        } else {
-                            Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
+                        val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
+                        val toTime = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
+                        when {
+                            isRefreshRequired() -> {
+                                Log.i(TAG, "Initial retrieval of data.")
+                                refreshFromYahoo(context)
+                            }
+                            timeInterval.weekDays.isWithinConfiguredTimeInterval(currentDayOfWeek, currentTime,
+                                    fromTime, toTime) -> {
+                                Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
+                                refreshFromYahoo(context)
+                            }
+                            else -> {
+                                Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
+                            }
                         }
                     }
             asyncWork.await()
