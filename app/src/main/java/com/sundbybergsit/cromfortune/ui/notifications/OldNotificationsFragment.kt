@@ -28,13 +28,13 @@ class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archiv
     }
 
     private fun setUpLiveDataListeners() {
-        viewModel.notifications.observe(viewLifecycleOwner, { viewState ->
+        viewModel.oldNotifications.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is NotificationsViewState.HasNotifications -> {
                     textView_fragmentNotificationsArchived.visibility = View.GONE
                     listAdapter.submitList(viewState.adapterItems)
                 }
-                is NotificationsViewState.HasNoOldNotifications -> {
+                is NotificationsViewState.HasNoNotifications -> {
                     listAdapter.submitList(Collections.emptyList())
                     textView_fragmentNotificationsArchived.visibility = View.VISIBLE
                     textView_fragmentNotificationsArchived.text = getString(R.string.notifications_empty)

@@ -14,8 +14,11 @@ import java.time.ZoneId
 
 class NotificationsViewModel : ViewModel() {
 
-    private val _notifications = MutableLiveData<NotificationsViewState>()
-    val notifications: LiveData<NotificationsViewState> = _notifications
+    private val _newNotifications = MutableLiveData<NotificationsViewState>()
+    val newNotifications: LiveData<NotificationsViewState> = _newNotifications
+    private val _oldNotifications = MutableLiveData<NotificationsViewState>()
+    val oldNotifications: LiveData<NotificationsViewState> = _oldNotifications
+
 
     fun refreshNew(context: Context) {
         viewModelScope.launch {
@@ -24,9 +27,9 @@ class NotificationsViewModel : ViewModel() {
                     .sortedByDescending {
                 notificationMessage -> notificationMessage.dateInMillis }
             if (notifications.isEmpty()) {
-                _notifications.postValue(NotificationsViewState.HasNoNewNotifications(R.string.generic_error_empty))
+                _newNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
             } else {
-                _notifications.postValue(NotificationsViewState.HasNotifications(R.string.notifications_title,
+                _newNotifications.postValue(NotificationsViewState.HasNotifications(R.string.notifications_title,
                         NotificationAdapterItemUtil.convertToAdapterItems(notifications)))
             }
         }
@@ -40,9 +43,9 @@ class NotificationsViewModel : ViewModel() {
                                 .toLocalDate().isBefore(LocalDate.now(ZoneId.systemDefault()))
                     }.sortedByDescending { notificationMessage -> notificationMessage.dateInMillis }
             if (notifications.isEmpty()) {
-                _notifications.postValue(NotificationsViewState.HasNoOldNotifications(R.string.generic_error_empty))
+                _oldNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
             } else {
-                _notifications.postValue(NotificationsViewState.HasNotifications(R.string.notifications_title,
+                _oldNotifications.postValue(NotificationsViewState.HasNotifications(R.string.notifications_title,
                         NotificationAdapterItemUtil.convertToAdapterItems(notifications)))
             }
         }
@@ -50,8 +53,8 @@ class NotificationsViewModel : ViewModel() {
 
     fun clearNotifications(context: Context) {
         NotificationsRepositoryImpl(context).clear()
-        _notifications.postValue(NotificationsViewState.HasNoOldNotifications(R.string.generic_error_empty))
-        _notifications.postValue(NotificationsViewState.HasNoNewNotifications(R.string.generic_error_empty))
+        _oldNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
+        _newNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
     }
 
 }
