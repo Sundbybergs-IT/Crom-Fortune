@@ -16,7 +16,7 @@ class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archiv
 
     }
 
-    private val viewModel: OldNotificationsViewModel by activityViewModels()
+    private val viewModel: NotificationsViewModel by activityViewModels()
 
     private val listAdapter = NotificationListAdapter()
 
@@ -24,7 +24,7 @@ class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archiv
         super.onViewCreated(view, savedInstanceState)
         recyclerView_fragmentNotificationsArchived.adapter = listAdapter
         setUpLiveDataListeners()
-        viewModel.refresh(requireContext())
+        viewModel.refreshOld(requireContext())
     }
 
     private fun setUpLiveDataListeners() {
@@ -34,7 +34,7 @@ class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archiv
                     textView_fragmentNotificationsArchived.visibility = View.GONE
                     listAdapter.submitList(viewState.adapterItems)
                 }
-                is NotificationsViewState.HasNoNotifications -> {
+                is NotificationsViewState.HasNoOldNotifications -> {
                     listAdapter.submitList(Collections.emptyList())
                     textView_fragmentNotificationsArchived.visibility = View.VISIBLE
                     textView_fragmentNotificationsArchived.text = getString(R.string.notifications_empty)

@@ -24,7 +24,7 @@ class NewNotificationsFragment : Fragment(R.layout.fragment_notifications_curren
         super.onViewCreated(view, savedInstanceState)
         recyclerView_fragmentNotificationsCurrent.adapter = listAdapter
         setUpLiveDataListeners()
-        viewModel.refresh(requireContext())
+        viewModel.refreshNew(requireContext())
     }
 
     private fun setUpLiveDataListeners() {
@@ -34,7 +34,7 @@ class NewNotificationsFragment : Fragment(R.layout.fragment_notifications_curren
                     textView_fragmentNotificationsCurrent.visibility = View.GONE
                     listAdapter.submitList(viewState.adapterItems)
                 }
-                is NotificationsViewState.HasNoNotifications -> {
+                is NotificationsViewState.HasNoNewNotifications -> {
                     listAdapter.submitList(Collections.emptyList())
                     textView_fragmentNotificationsCurrent.visibility = View.VISIBLE
                     textView_fragmentNotificationsCurrent.text = getString(R.string.notifications_empty)
