@@ -16,6 +16,10 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.play.core.review.ReviewInfo
+import com.google.android.play.core.review.ReviewManager
+import com.google.android.play.core.review.ReviewManagerFactory
+import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,6 +29,9 @@ class MainActivity : AppCompatActivity() {
         private const val APP_UPDATE_REQUEST_CODE = 1711
 
     }
+
+    private lateinit var reviewManager: ReviewManager
+    var reviewInfo: ReviewInfo? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +50,26 @@ class MainActivity : AppCompatActivity() {
                         APP_UPDATE_REQUEST_CODE)
             }
         }
+        this.reviewManager = ReviewManagerFactory.create(this)
         appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this, appUpdateManager))
+        if (StockOrderRepositoryImpl(this).countAll() > 4) {
+            Log.i(TAG, "Time to nag about reviews! :-)")
+            val request = reviewManager.requestReviewFlow()
+            request.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    this.reviewInfo = task.result
+                    reviewInfo?.let {
+                        Log.i(TAG, "Launching review flow!")
+                        val flow = reviewManager.launchReviewFlow(this@MainActivity, it)
+                        flow.addOnCompleteListener {
+                            //Irrespective of the result, the app flow should continue
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Could not retrieve reviewInfo", task.exception)
+                }
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

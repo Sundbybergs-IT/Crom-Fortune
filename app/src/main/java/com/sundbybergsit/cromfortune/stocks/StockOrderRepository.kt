@@ -4,6 +4,8 @@ interface StockOrderRepository {
 
     fun count(stockName: String): Int
 
+    fun countAll(): Int
+
     fun listOfStockNames(): Iterable<String>
 
     fun isEmpty(): Boolean

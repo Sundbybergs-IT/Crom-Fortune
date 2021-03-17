@@ -33,6 +33,10 @@ class StockOrderRepositoryImpl(
         return count
     }
 
+    override fun countAll(): Int {
+        return sharedPreferences.all.keys.size
+    }
+
     override fun listOfStockNames(): Iterable<String> {
         return sharedPreferences.all.keys
     }
