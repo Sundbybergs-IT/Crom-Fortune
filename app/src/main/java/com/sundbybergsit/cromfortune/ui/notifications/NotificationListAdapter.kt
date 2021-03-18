@@ -10,9 +10,8 @@ import androidx.core.os.ConfigurationCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ui.home.AdapterItem
-import com.sundbybergsit.cromfortune.ui.home.AdapterItemDiffUtil
-import com.sundbybergsit.cromfortune.ui.home.NotificationAdapterItem
+import com.sundbybergsit.cromfortune.ui.AdapterItem
+import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.StockHeaderAdapterItem
 import kotlinx.android.synthetic.main.listrow_notification_item.view.*
 import java.text.SimpleDateFormat
@@ -22,8 +21,10 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.listrow_notification_header -> HeaderViewHolder(LayoutInflater.from(parent.context).inflate(viewType, parent, false))
-            R.layout.listrow_notification_item -> NotificationViewHolder(parent.context, LayoutInflater.from(parent.context).inflate(viewType, parent, false))
+            R.layout.listrow_notification_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
+                    .inflate(viewType, parent, false))
+            R.layout.listrow_notification_item -> NotificationViewHolder(parent.context, LayoutInflater
+                    .from(parent.context).inflate(viewType, parent, false))
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -53,10 +54,12 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
 
     internal class NotificationViewHolder(private val context: Context, itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
+        var formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", ConfigurationCompat
+                .getLocales(context.resources.configuration).get(0))
 
         fun bind(item: NotificationAdapterItem, evenRow: Boolean) {
-            itemView.textView_listrowNotificationItem_date.text = formatter.format(Date(item.notificationMessage.dateInMillis))
+            itemView.textView_listrowNotificationItem_date.text = formatter
+                    .format(Date(item.notificationMessage.dateInMillis))
             itemView.textView_listrowNotificationItem_name.text = item.notificationMessage.message
             itemView.setOnLongClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()

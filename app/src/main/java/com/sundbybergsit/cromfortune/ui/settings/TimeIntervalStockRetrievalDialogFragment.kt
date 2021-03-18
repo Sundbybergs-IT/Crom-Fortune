@@ -15,6 +15,7 @@ import androidx.fragment.app.DialogFragment
 import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.ui.transformIntoTimePicker
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek

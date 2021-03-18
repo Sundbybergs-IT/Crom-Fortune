@@ -1,6 +1,7 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import com.sundbybergsit.cromfortune.ui.settings.StockMuteSettingsRepository
+import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
+import com.sundbybergsit.cromfortune.ui.AdapterItem
 
 internal object StockAggregateAdapterItemUtil {
 

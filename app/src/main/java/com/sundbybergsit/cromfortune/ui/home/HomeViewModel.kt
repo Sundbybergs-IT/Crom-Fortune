@@ -16,6 +16,8 @@ import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockPrice
+import com.sundbybergsit.cromfortune.ui.AdapterItem
+import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

@@ -1,7 +1,7 @@
 package com.sundbybergsit.cromfortune.ui.notifications
 
 import androidx.annotation.StringRes
-import com.sundbybergsit.cromfortune.ui.home.AdapterItem
+import com.sundbybergsit.cromfortune.ui.AdapterItem
 
 sealed class NotificationsViewState {
 

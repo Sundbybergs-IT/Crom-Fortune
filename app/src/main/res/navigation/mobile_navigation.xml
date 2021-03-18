@@ -8,7 +8,7 @@
 
     <fragment
             android:id="@+id/navigation_home"
-            android:name="com.sundbybergsit.cromfortune.ui.home.HomeFragment"
+            android:name="com.sundbybergsit.cromfortune.ui.home.view.HomeFragment"
             android:label="@string/home_title"
             tools:layout="@layout/fragment_home"
             />
