@@ -63,6 +63,8 @@
     <string name="home_remove_stock_message">Add one sell of a stock at a time.</string>
     <string name="home_no_stocks">Add your first stock to get filthy rich!</string>
     <string name="home_stocks">You have added stocks. Not shown (not yet implemented).</string>
+    <string name="home_stocks_personal_title">Yours</string>
+    <string name="home_stocks_crom_title">Croms</string>
     <string name="home_title">Home</string>
 
     <string name="notification_channel_name">Crom Fortune Events</string>

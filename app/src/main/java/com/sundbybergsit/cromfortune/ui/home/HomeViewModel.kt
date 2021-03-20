@@ -31,11 +31,13 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     }
 
-    private val _viewState = MutableLiveData<ViewState>(ViewState.Loading)
+    private val _cromStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
+    private val _personalStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
     private val _dialogViewState = MutableLiveData<DialogViewState>()
     private val _stockTransactionState = MutableLiveData<StockTransactionState>()
 
-    val viewState: LiveData<ViewState> = _viewState
+    val cromStocksViewState: LiveData<ViewState> = _cromStocksViewState
+    val personalStocksViewState: LiveData<ViewState> = _personalStocksViewState
     val dialogViewState: LiveData<DialogViewState> = _dialogViewState
     val stockTransactionState: LiveData<StockTransactionState> = _stockTransactionState
 
@@ -47,11 +49,13 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     fun refresh(context: Context) {
         val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
         if (stockOrderRepository.isEmpty()) {
-            _viewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
+            _cromStocksViewState.postValue(ViewState.HasNoStocks(R.string.generic_error_not_supported))
+            _personalStocksViewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
         } else {
             viewModelScope.launch {
-                _viewState.postValue(ViewState.HasStocks(R.string.home_stocks,
-                        StockAggregateAdapterItemUtil.convertToAdapterItems(stocks(context))))
+                _cromStocksViewState.postValue(ViewState.HasNoStocks(R.string.generic_error_not_supported))
+                _personalStocksViewState.postValue(ViewState.HasStocks(R.string.home_stocks,
+                        StockAggregateAdapterItemUtil.convertToAdapterItems(personalStocks(context))))
             }
         }
     }
@@ -69,7 +73,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         refresh(context)
     }
 
-    private suspend fun stocks(context: Context):
+    private suspend fun personalStocks(context: Context):
             List<StockOrderAggregate> {
         return withContext(Dispatchers.IO) {
             val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)

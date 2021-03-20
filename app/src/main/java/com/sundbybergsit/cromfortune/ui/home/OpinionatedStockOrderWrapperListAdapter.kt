@@ -15,7 +15,7 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.view.DeleteStockOrderDialogFragment
-import com.sundbybergsit.cromfortune.ui.home.view.HomeFragment
+import com.sundbybergsit.cromfortune.ui.home.view.HomePersonalStocksFragment
 import com.sundbybergsit.cromfortune.ui.home.view.OpinionatedStockOrderWrapperAdapterItem
 import kotlinx.android.synthetic.main.listrow_stock_order_item.view.*
 import java.text.NumberFormat
@@ -73,7 +73,7 @@ class OpinionatedStockOrderWrapperListAdapter(
             itemView.textView_listrowStockOrderItem_quantity.text = item.opinionatedStockOrderWrapper.stockOrder.quantity.toString()
             itemView.setOnLongClickListener {
                 val dialog = DeleteStockOrderDialogFragment(context = context,adapter = adapter, stockOrder = item.opinionatedStockOrderWrapper.stockOrder)
-                dialog.show(fragmentManager, HomeFragment.TAG)
+                dialog.show(fragmentManager, HomePersonalStocksFragment.TAG)
                 true
             }
             val pricePerStock = item.opinionatedStockOrderWrapper.stockOrder.pricePerStock

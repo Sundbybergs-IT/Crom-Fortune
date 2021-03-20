@@ -62,6 +62,8 @@
     <string name="home_remove_stock_quantity_label">Kvantitet</string>
     <string name="home_remove_stock_message">Lägg till ett försäljning av aktier i taget.</string>
     <string name="home_stocks">Du har lagt till aktier. De visas inte (inte implementerat ännu).</string>
+    <string name="home_stocks_personal_title">Ditt</string>
+    <string name="home_stocks_crom_title">Croms</string>
     <string name="home_title">Hem</string>
 
     <string name="notification_channel_name">Crom Fortune-händelser</string>
