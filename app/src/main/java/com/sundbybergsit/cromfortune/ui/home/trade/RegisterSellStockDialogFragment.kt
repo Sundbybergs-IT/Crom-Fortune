@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
@@ -84,6 +85,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                             inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
                             inputStockQuantity.text.toString().toInt())
                     homeViewModel.save(requireContext(), stockOrder)
+                    Toast.makeText(requireContext(), getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
                     alertDialog.dismiss()
                 } catch (e: ValidatorException) {
                     // Shit happens ...

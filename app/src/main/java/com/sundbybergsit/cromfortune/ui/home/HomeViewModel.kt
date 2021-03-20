@@ -34,12 +34,10 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     private val _cromStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
     private val _personalStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
     private val _dialogViewState = MutableLiveData<DialogViewState>()
-    private val _stockTransactionState = MutableLiveData<StockTransactionState>()
 
     val cromStocksViewState: LiveData<ViewState> = _cromStocksViewState
     val personalStocksViewState: LiveData<ViewState> = _personalStocksViewState
     val dialogViewState: LiveData<DialogViewState> = _dialogViewState
-    val stockTransactionState: LiveData<StockTransactionState> = _stockTransactionState
 
     @SuppressLint("ApplySharedPref")
     override fun onClickRemove(context: Context, stockName: String) {
@@ -65,10 +63,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         if (stockOrderRepository.list(stockOrder.name).isNotEmpty()) {
             val existingOrders = stockOrderRepository.list(stockOrder.name)
             stockOrderRepository.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
-            _stockTransactionState.postValue(StockTransactionState.Saved)
         } else {
             stockOrderRepository.put(stockOrder.name, stockOrder)
-            _stockTransactionState.postValue(StockTransactionState.Saved)
         }
         refresh(context)
     }
@@ -134,14 +130,6 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<AdapterItem>) : ViewState()
 
         data class HasNoStocks(@StringRes val textResId: Int) : ViewState()
-
-    }
-
-    sealed class StockTransactionState {
-
-        object Saved : StockTransactionState()
-
-        data class Error(@StringRes val errorResId: Int) : StockTransactionState()
 
     }
 

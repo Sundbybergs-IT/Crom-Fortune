@@ -7,7 +7,6 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -57,20 +56,6 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
         setUpCurrencyRateListener()
         setUpStockPriceListener()
         setUpUiViewStateListener(textView, fab, infoImage)
-        setUpStockTransactionStateListener()
-    }
-
-    private fun setUpStockTransactionStateListener() {
-        viewModel.stockTransactionState.observe(viewLifecycleOwner, { viewState ->
-            when (viewState) {
-                is HomeViewModel.StockTransactionState.Error -> {
-                    Toast.makeText(requireContext(), getText(viewState.errorResId), Toast.LENGTH_SHORT).show()
-                }
-                is HomeViewModel.StockTransactionState.Saved -> {
-                    Toast.makeText(requireContext(), getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
     }
 
     private fun setUpUiViewStateListener(textView: TextView, fab: FloatingActionButton, infoImage: ImageView) {
