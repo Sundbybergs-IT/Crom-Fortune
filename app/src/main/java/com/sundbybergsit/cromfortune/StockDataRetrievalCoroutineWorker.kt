@@ -35,7 +35,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
     companion object {
 
         const val TAG = "StockRetrievalCoroutineWorker"
-        private const val COMMISSION_FEE = 39.0
+        const val COMMISSION_FEE = 39.0
 
         suspend fun refreshFromYahoo(context: Context) {
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()

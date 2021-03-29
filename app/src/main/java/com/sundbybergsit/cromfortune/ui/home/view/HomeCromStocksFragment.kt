@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -127,8 +128,7 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
     }
 
     override fun onClick(stockName: String) {
-        val dialog = StockOrdersDialogFragment(stockName)
-        dialog.show(parentFragmentManager, TAG)
+        Toast.makeText(requireContext(), getText(R.string.generic_error_not_supported), Toast.LENGTH_SHORT).show()
     }
 
 }
