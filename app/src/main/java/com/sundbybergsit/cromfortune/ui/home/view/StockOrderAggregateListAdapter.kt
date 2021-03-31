@@ -26,7 +26,10 @@ import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat
 import java.util.*
 
-internal class StockOrderAggregateListAdapter(private val stockClickListener: StockClickListener) :
+internal class StockOrderAggregateListAdapter(
+        private val stockClickListener: StockClickListener,
+        private val readOnly: Boolean,
+) :
         ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()), StockPriceListener {
 
     private lateinit var stockRemoveClickListener: StockRemoveClickListener
@@ -40,7 +43,8 @@ internal class StockOrderAggregateListAdapter(private val stockClickListener: St
                     stockRemoveClickListener = stockRemoveClickListener,
                     stockPriceListener = this,
                     itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                    context = parent.context)
+                    context = parent.context,
+                    readOnly = readOnly)
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -111,6 +115,7 @@ internal class StockOrderAggregateListAdapter(private val stockClickListener: St
             private val stockClickListener: StockClickListener,
             private val stockRemoveClickListener: StockRemoveClickListener,
             itemView: View,
+            private val readOnly: Boolean,
     ) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: StockAggregateAdapterItem) {
@@ -133,7 +138,13 @@ internal class StockOrderAggregateListAdapter(private val stockClickListener: St
             }
             swedishCurrencyFormat.currency = Currency.getInstance("SEK")
             itemView.setOnClickListener {
-                stockClickListener.onClick(item.stockOrderAggregate.stockSymbol)
+                stockClickListener.onClick(item.stockOrderAggregate.stockSymbol, readOnly)
+            }
+            if (readOnly) {
+                itemView.button_listrowStockItem_buy.visibility = View.INVISIBLE
+                itemView.button_listrowStockItem_sell.visibility = View.INVISIBLE
+                itemView.imageButton_listrowStockItem_muteUnmute.visibility = View.INVISIBLE
+                itemView.imageView_listrowStockItem_overflowMenu.visibility = View.INVISIBLE
             }
             itemView.button_listrowStockItem_buy.setOnClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
@@ -165,13 +176,13 @@ internal class StockOrderAggregateListAdapter(private val stockClickListener: St
             var profitInSek = 0.0
             val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
                     .currencyRates.toList()
-                for (currencyRate in currencyRates) {
-                    if (currencyRate.iso4217CurrencySymbol == item.stockOrderAggregate.currency.currencyCode) {
-                        profitInSek = (item.stockOrderAggregate.getProfit(stockPriceListener.getStockPrice(
-                                item.stockOrderAggregate.stockSymbol).price)) * currencyRate.rateInSek
-                        break
-                    }
+            for (currencyRate in currencyRates) {
+                if (currencyRate.iso4217CurrencySymbol == item.stockOrderAggregate.currency.currencyCode) {
+                    profitInSek = (item.stockOrderAggregate.getProfit(stockPriceListener.getStockPrice(
+                            item.stockOrderAggregate.stockSymbol).price)) * currencyRate.rateInSek
+                    break
                 }
+            }
             itemView.textView_listrowStockItem_latestValue.text = stockCurrencyFormat.format(currentStockPrice)
             itemView.textView_listrowStockItem_profit.text = swedishCurrencyFormat.format(profitInSek)
             itemView.textView_listrowStockItem_profit.setTextColor(ContextCompat.getColor(context, if (profitInSek > 0) {

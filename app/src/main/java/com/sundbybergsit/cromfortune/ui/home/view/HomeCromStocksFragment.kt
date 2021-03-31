@@ -7,7 +7,6 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -35,7 +34,7 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
     private var stockPricesLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(this)
+        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(stockClickListener = this, readOnly = true)
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView_fragmentHomeStocks)
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockOrderAggregateListAdapter.setListener(viewModel)
@@ -127,8 +126,10 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
         }
     }
 
-    override fun onClick(stockName: String) {
-        Toast.makeText(requireContext(), getText(R.string.generic_error_not_supported), Toast.LENGTH_SHORT).show()
+    override fun onClick(stockName: String, readOnly : Boolean) {
+        val dialog = StockOrdersDialogFragment(stockName, viewModel.cromStockOrders(context = requireContext(),
+                stockSymbol = stockName), readOnly)
+        dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
     }
 
 }

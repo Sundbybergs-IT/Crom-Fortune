@@ -5,7 +5,7 @@ import com.sundbybergsit.cromfortune.stocks.StockPrice
 
 abstract class RecommendationAlgorithm {
 
-    abstract suspend fun getRecommendation(
+    abstract fun getRecommendation(
             stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
     ): Recommendation?
 

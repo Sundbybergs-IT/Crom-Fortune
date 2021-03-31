@@ -104,7 +104,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     class SellRecommendationDummyAlgorithm : RecommendationAlgorithm() {
 
-        override suspend fun getRecommendation(
+        override fun getRecommendation(
                 stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
         ): Recommendation {
             return Recommendation(SellStockCommand(ApplicationProvider.getApplicationContext(), 0L, Currency.getInstance("SEK"),

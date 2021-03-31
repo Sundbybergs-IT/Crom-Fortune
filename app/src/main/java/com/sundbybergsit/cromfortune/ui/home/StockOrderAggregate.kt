@@ -13,9 +13,11 @@ data class StockOrderAggregate(
         private var buyQuantity: Int = 0,
         private var sellQuantity: Int = 0,
         private var acquisitionValue: Double = 0.0,
+        val orders : MutableList<StockOrder> = mutableListOf()
 ) {
 
     fun aggregate(stockOrder: StockOrder) {
+        orders.add(stockOrder)
         when (stockOrder.orderAction) {
             "Buy" -> {
                 acquisitionValue = ((buyQuantity - sellQuantity) * acquisitionValue +

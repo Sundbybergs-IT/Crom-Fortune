@@ -11,12 +11,15 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.ui.home.OpinionatedStockOrderWrapperListAdapter
 import kotlinx.coroutines.runBlocking
 
-class StockOrdersDialogFragment(private val stockSymbol: String) : DialogFragment() {
+class StockOrdersDialogFragment(
+        private val stockSymbol: String, private val stocks: List<StockOrder>,
+        private val readOnly: Boolean,
+) : DialogFragment() {
 
     private lateinit var listAdapter: OpinionatedStockOrderWrapperListAdapter
 
@@ -26,13 +29,12 @@ class StockOrdersDialogFragment(private val stockSymbol: String) : DialogFragmen
                 .inflate(R.layout.dialog_stock_orders, view as ViewGroup?, false)
         val recyclerView = dialogRootView.findViewById<RecyclerView>(R.id.recyclerView_dialogStockOrders)
         val context = requireContext()
-        listAdapter = OpinionatedStockOrderWrapperListAdapter(context = context, fragmentManager = parentFragmentManager)
+        listAdapter = OpinionatedStockOrderWrapperListAdapter(context = context, fragmentManager = parentFragmentManager,
+                readOnly = readOnly)
         recyclerView.adapter = listAdapter
-        val stockOrderRepository = StockOrderRepositoryImpl(context)
-        val listOfStockOrders = stockOrderRepository.list(stockSymbol)
         runBlocking {
-            listAdapter.submitList(OpinionatedStockOrderWrapperAdapterItemUtil.convertToAdapterItems(CromFortuneV1RecommendationAlgorithm(context),
-                    listOfStockOrders.sortedBy { stockOrder -> stockOrder.dateInMillis }))
+            listAdapter.submitList(OpinionatedStockOrderWrapperAdapterItemUtil.convertToAdapterItems(
+                    CromFortuneV1RecommendationAlgorithm(context), stocks))
         }
         val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
         return AlertDialog.Builder(context)

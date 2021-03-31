@@ -36,7 +36,7 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
     private var stockPricesLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(this)
+        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(stockClickListener = this, readOnly = false)
         floatingActionButton_fragmentHomeStocks.setOnClickListener {
             val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.show(parentFragmentManager, TAG)
@@ -107,6 +107,9 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
                         refreshEverything()
                     }
                 }
+                else -> {
+                    Log.i(TAG, "Ignoring view state.")
+                }
             }
         })
     }
@@ -138,8 +141,10 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
         }
     }
 
-    override fun onClick(stockName: String) {
-        val dialog = StockOrdersDialogFragment(stockName)
+    override fun onClick(stockName: String, readOnly: Boolean) {
+        val dialog = StockOrdersDialogFragment(stockSymbol = stockName, stocks = viewModel.personalStockOrders(
+                requireContext(), stockName),
+                readOnly = readOnly)
         dialog.show(parentFragmentManager, TAG)
     }
 

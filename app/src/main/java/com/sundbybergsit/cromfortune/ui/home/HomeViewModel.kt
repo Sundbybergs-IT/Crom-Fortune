@@ -23,7 +23,6 @@ import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
 class HomeViewModel : ViewModel(), StockRemoveClickListener {
@@ -42,7 +41,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     val personalStocksViewState: LiveData<ViewState> = _personalStocksViewState
     val dialogViewState: LiveData<DialogViewState> = _dialogViewState
 
-    private val personalStockAggregate: (MutableList<StockOrder>, Context) -> StockOrderAggregate = { sortedStockOrders, _ ->
+    val personalStockAggregate: (MutableList<StockOrder>, Context) -> StockOrderAggregate = { sortedStockOrders, _ ->
         var stockOrderAggregate: StockOrderAggregate? = null
         for (stockOrder in sortedStockOrders) {
             if (stockOrderAggregate == null) {
@@ -92,74 +91,82 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         refresh(context)
     }
 
-    private suspend fun stocks(context: Context, lambda: (MutableList<StockOrder>, Context) -> StockOrderAggregate):
-            List<StockOrderAggregate> {
-        return withContext(Dispatchers.IO) {
-            val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
-            val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
-            for (stockSymbol in stockOrderRepository.listOfStockNames()) {
-                val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
-                val sortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
-                sortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
-                stockOrderAggregates.add(lambda(sortedStockOrders, context))
-            }
-            stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
-        }
+    fun personalStockOrders(context: Context, stockSymbol: String): List<StockOrder> {
+        return stocks(context, personalStockAggregate)
+                .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.orders.toList()
     }
 
-    private suspend fun cromStocks(context: Context): List<StockOrderAggregate> {
-        return withContext(Dispatchers.IO) {
-            val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
-            val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
-            for (stockSymbol in stockOrderRepository.listOfStockNames()) {
-                val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
-                var stockOrderAggregate: StockOrderAggregate? = null
-                val personalSortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
-                personalSortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
-                val cromSortedStockOrders: MutableList<StockOrder> = mutableListOf()
-                for (stockOrder in personalSortedStockOrders) {
-                    if (stockOrderAggregate == null) {
-                        val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
-                        stockOrderAggregate = StockOrderAggregate(
-                                (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                                        .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
-                                "$stockName ($stockSymbol)", stockSymbol,
-                                Currency.getInstance(stockOrder.currency))
-                        cromSortedStockOrders.add(stockOrder)
-                        stockOrderAggregate.aggregate(stockOrder)
-                    } else {
-                        val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                                .getRecommendation(StockPrice(stockSymbol,
-                                        stockOrderAggregate.currency, stockOrder.pricePerStock),
-                                        stockOrderAggregate.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
-                                        cromSortedStockOrders.toSet())
-                        when (recommendation?.command) {
-                            is BuyStockCommand -> {
-                                val buyOrder = StockOrder("Buy", stockOrderAggregate.currency.symbol,
-                                        stockOrder.dateInMillis, stockSymbol, stockOrder.pricePerStock,
-                                        StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity())
-                                cromSortedStockOrders.add(buyOrder)
-                                stockOrderAggregate.aggregate(buyOrder)
-                            }
-                            is SellStockCommand -> {
-                                val sellOrder = StockOrder("Sell", stockOrderAggregate.currency.symbol,
-                                        stockOrder.dateInMillis, stockSymbol, stockOrder.pricePerStock,
-                                        StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity())
-                                cromSortedStockOrders.add(sellOrder)
-                                stockOrderAggregate.aggregate(sellOrder)
-                            }
-                            else -> {
-                                // Do nothing
-                            }
+    fun stocks(context: Context, lambda: (MutableList<StockOrder>, Context) -> StockOrderAggregate):
+            List<StockOrderAggregate> {
+        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
+        val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
+        for (stockSymbol in stockOrderRepository.listOfStockNames()) {
+            val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
+            val sortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
+            sortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
+            stockOrderAggregates.add(lambda(sortedStockOrders, context))
+        }
+        stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
+        return stockOrderAggregates
+    }
+
+    fun cromStockOrders(context: Context, stockSymbol: String): List<StockOrder> {
+        return cromStocks(context)
+                .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.orders.toList()
+    }
+
+    fun cromStocks(context: Context): List<StockOrderAggregate> {
+        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
+        val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
+        for (stockSymbol in stockOrderRepository.listOfStockNames()) {
+            val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
+            var stockOrderAggregate: StockOrderAggregate? = null
+            val personalSortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
+            personalSortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
+            val cromSortedStockOrders: MutableList<StockOrder> = mutableListOf()
+            for (stockOrder in personalSortedStockOrders) {
+                if (stockOrderAggregate == null) {
+                    val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
+                    stockOrderAggregate = StockOrderAggregate(
+                            (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+                                    .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                            "$stockName ($stockSymbol)", stockSymbol,
+                            Currency.getInstance(stockOrder.currency))
+                    cromSortedStockOrders.add(stockOrder)
+                    stockOrderAggregate.aggregate(stockOrder)
+                } else {
+                    val recommendation = CromFortuneV1RecommendationAlgorithm(context)
+                            .getRecommendation(StockPrice(stockSymbol,
+                                    stockOrderAggregate.currency, stockOrder.pricePerStock),
+                                    stockOrderAggregate.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
+                                    cromSortedStockOrders.toSet())
+                    when (recommendation?.command) {
+                        is BuyStockCommand -> {
+                            val buyOrder = StockOrder("Buy", stockOrderAggregate.currency.toString(),
+                                    stockOrder.dateInMillis, stockSymbol, stockOrder.pricePerStock,
+                                    StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity())
+                            cromSortedStockOrders.add(buyOrder)
+                            stockOrderAggregate.aggregate(buyOrder)
+                        }
+                        is SellStockCommand -> {
+                            val sellOrder = StockOrder("Sell", stockOrderAggregate.currency.toString(),
+                                    stockOrder.dateInMillis, stockSymbol, stockOrder.pricePerStock,
+                                    StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity())
+                            cromSortedStockOrders.add(sellOrder)
+                            stockOrderAggregate.aggregate(sellOrder)
+                        }
+                        else -> {
+                            // Do nothing
                         }
                     }
                 }
-                if (stockOrderAggregate != null) {
-                    stockOrderAggregates.add(stockOrderAggregate)
-                }
             }
-            stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
+            if (stockOrderAggregate != null) {
+                stockOrderAggregates.add(stockOrderAggregate)
+            }
         }
+        stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
+        return stockOrderAggregates
     }
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {

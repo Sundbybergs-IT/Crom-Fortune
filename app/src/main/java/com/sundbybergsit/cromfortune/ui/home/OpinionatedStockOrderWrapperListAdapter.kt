@@ -23,7 +23,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class OpinionatedStockOrderWrapperListAdapter(
-        private val context: Context, private val fragmentManager: FragmentManager,
+        private val context: Context, private val fragmentManager: FragmentManager, private val readOnly: Boolean,
 ) :
         ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()) {
 
@@ -52,7 +52,9 @@ class OpinionatedStockOrderWrapperListAdapter(
         return when (viewType) {
             R.layout.listrow_stock_order_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
                     .inflate(viewType, parent, false))
-            R.layout.listrow_stock_order_item -> StockViewHolder(context = context, adapter = this, fragmentManager = fragmentManager, itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false))
+            R.layout.listrow_stock_order_item -> StockViewHolder(context = context, adapter = this,
+                    fragmentManager = fragmentManager, itemView = LayoutInflater.from(parent.context)
+                    .inflate(viewType, parent, false), readOnly = readOnly)
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -64,6 +66,7 @@ class OpinionatedStockOrderWrapperListAdapter(
             private val fragmentManager: FragmentManager,
             itemView: View,
             private val adapter: OpinionatedStockOrderWrapperListAdapter,
+            private val readOnly : Boolean
     ) : RecyclerView.ViewHolder(itemView) {
 
         var formatter = SimpleDateFormat("yyyy-MM-dd", ConfigurationCompat.getLocales(context.resources.configuration).get(0))
@@ -71,10 +74,12 @@ class OpinionatedStockOrderWrapperListAdapter(
         fun bind(item: OpinionatedStockOrderWrapperAdapterItem) {
             itemView.textView_listrowStockOrderItem_date.text = formatter.format(Date(item.opinionatedStockOrderWrapper.stockOrder.dateInMillis))
             itemView.textView_listrowStockOrderItem_quantity.text = item.opinionatedStockOrderWrapper.stockOrder.quantity.toString()
-            itemView.setOnLongClickListener {
-                val dialog = DeleteStockOrderDialogFragment(context = context,adapter = adapter, stockOrder = item.opinionatedStockOrderWrapper.stockOrder)
-                dialog.show(fragmentManager, HomePersonalStocksFragment.TAG)
-                true
+            if (!readOnly) {
+                itemView.setOnLongClickListener {
+                    val dialog = DeleteStockOrderDialogFragment(context = context, adapter = adapter, stockOrder = item.opinionatedStockOrderWrapper.stockOrder)
+                    dialog.show(fragmentManager, HomePersonalStocksFragment.TAG)
+                    true
+                }
             }
             val pricePerStock = item.opinionatedStockOrderWrapper.stockOrder.pricePerStock
             val format: NumberFormat = NumberFormat.getCurrencyInstance()

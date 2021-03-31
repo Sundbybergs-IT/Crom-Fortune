@@ -11,7 +11,7 @@ import kotlin.collections.ArrayList
 
 internal object OpinionatedStockOrderWrapperAdapterItemUtil {
 
-    suspend fun convertToAdapterItems(
+    fun convertToAdapterItems(
             recommendationAlgorithm: CromFortuneV1RecommendationAlgorithm,
             list: Iterable<StockOrder>,
     ): List<AdapterItem> {
