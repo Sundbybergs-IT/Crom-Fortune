@@ -41,7 +41,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     val personalStocksViewState: LiveData<ViewState> = _personalStocksViewState
     val dialogViewState: LiveData<DialogViewState> = _dialogViewState
 
-    val personalStockAggregate: (MutableList<StockOrder>, Context) -> StockOrderAggregate = { sortedStockOrders, _ ->
+    private val personalStockAggregate: (MutableList<StockOrder>, Context) -> StockOrderAggregate = { sortedStockOrders, _ ->
         var stockOrderAggregate: StockOrderAggregate? = null
         for (stockOrder in sortedStockOrders) {
             if (stockOrderAggregate == null) {
@@ -106,8 +106,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
             sortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
             stockOrderAggregates.add(lambda(sortedStockOrders, context))
         }
-        stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
-        return stockOrderAggregates
+        return stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
     }
 
     fun cromStockOrders(context: Context, stockSymbol: String): List<StockOrder> {
@@ -165,8 +164,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                 stockOrderAggregates.add(stockOrderAggregate)
             }
         }
-        stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
-        return stockOrderAggregates
+        return stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
     }
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
