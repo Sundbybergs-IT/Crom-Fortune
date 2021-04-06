@@ -46,10 +46,10 @@ class StockOrderAggregateListAdapterTest {
         ))
         ShadowLooper.runUiThreadTasks()
         listAdapter = StockOrderAggregateListAdapter(object : StockClickListener {
-            override fun onClick(stockName: String) {
+            override fun onClick(stockName: String, readOnly: Boolean) {
                 // Do nothing
             }
-        })
+        }, false)
         val list: List<AdapterItem> = listOf(
                 StockHeaderAdapterItem(),
                 StockAggregateAdapterItem(getSimpleStockAggregate(StockPrice.SYMBOLS[0].first,
