@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -14,11 +15,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.databinding.FragmentHomeStocksBinding
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.home.DeleteStockOrdersDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
-import kotlinx.android.synthetic.main.fragment_home_stocks.*
 import java.util.*
 
 class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), StockClickListener {
@@ -29,15 +30,23 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
 
     }
 
+    private var _binding: FragmentHomeStocksBinding? = null
+    private val binding get() = _binding!!
+
     private val viewModel: HomeViewModel by activityViewModels()
 
     private lateinit var stockOrderAggregateListAdapter: StockOrderAggregateListAdapter
     private var currencyRatesLoaded = false
     private var stockPricesLoaded = false
 
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentHomeStocksBinding.inflate(layoutInflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(stockClickListener = this, readOnly = false)
-        floatingActionButton_fragmentHomeStocks.setOnClickListener {
+        binding.floatingActionButtonFragmentHomeStocks.setOnClickListener {
             val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.show(parentFragmentManager, TAG)
         }
@@ -45,8 +54,8 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockOrderAggregateListAdapter.setListener(viewModel)
         recyclerView.adapter = stockOrderAggregateListAdapter
-        setUpLiveDataListeners(textView_fragmentHomeStocks, imageView_fragmentHomeStocks,
-                floatingActionButton_fragmentHomeStocks)
+        setUpLiveDataListeners(binding.textViewFragmentHomeStocks, binding.imageViewFragmentHomeStocks,
+                binding.floatingActionButtonFragmentHomeStocks)
         super.onViewCreated(view, savedInstanceState)
     }
 

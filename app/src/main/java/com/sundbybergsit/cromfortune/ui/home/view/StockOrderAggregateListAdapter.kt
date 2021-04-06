@@ -6,8 +6,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupMenu
-import android.widget.Toast
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -21,8 +20,6 @@ import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateHeaderAdapterItem
-import kotlinx.android.synthetic.main.listrow_stock_header.view.*
-import kotlinx.android.synthetic.main.listrow_stock_item.view.*
 import java.text.NumberFormat
 import java.util.*
 
@@ -99,12 +96,13 @@ internal class StockOrderAggregateListAdapter(
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
             format.currency = Currency.getInstance("SEK")
             format.maximumFractionDigits = 2
-            itemView.textView_listrowStockHeader_totalProfit.text = format.format(count)
-            itemView.textView_listrowStockHeader_totalProfit.setTextColor(ContextCompat.getColor(context, if (count >= 0.0) {
-                R.color.colorProfit
-            } else {
-                R.color.colorLoss
-            }))
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockHeader_totalProfit).text = format.format(count)
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockHeader_totalProfit).setTextColor(
+                    ContextCompat.getColor(context, if (count >= 0.0) {
+                        R.color.colorProfit
+                    } else {
+                        R.color.colorLoss
+                    }))
         }
 
     }
@@ -119,9 +117,11 @@ internal class StockOrderAggregateListAdapter(
     ) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: StockAggregateAdapterItem) {
-            itemView.textView_listrowStockItem_quantity.text = item.stockOrderAggregate.getQuantity().toString()
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_quantity).text =
+                    item.stockOrderAggregate.getQuantity().toString()
             @SuppressLint("SetTextI18n")
-            itemView.textView_listrowStockItem_name.text = item.stockOrderAggregate.displayName
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_name).text =
+                    item.stockOrderAggregate.displayName
             val acquisitionValue = item.stockOrderAggregate.getAcquisitionValue()
             val stockCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
             if (acquisitionValue < 1) {
@@ -140,38 +140,40 @@ internal class StockOrderAggregateListAdapter(
             itemView.setOnClickListener {
                 stockClickListener.onClick(item.stockOrderAggregate.stockSymbol, readOnly)
             }
+            val overflowMenuImageView = itemView.requireViewById<View>(R.id.imageView_listrowStockItem_overflowMenu)
             if (readOnly) {
-                itemView.button_listrowStockItem_buy.visibility = View.INVISIBLE
-                itemView.button_listrowStockItem_sell.visibility = View.INVISIBLE
-                itemView.imageButton_listrowStockItem_muteUnmute.visibility = View.INVISIBLE
-                itemView.imageView_listrowStockItem_overflowMenu.visibility = View.INVISIBLE
+                itemView.requireViewById<View>(R.id.button_listrowStockItem_buy).visibility = View.INVISIBLE
+                itemView.requireViewById<View>(R.id.button_listrowStockItem_sell).visibility = View.INVISIBLE
+                itemView.requireViewById<View>(R.id.imageButton_listrowStockItem_muteUnmute).visibility = View.INVISIBLE
+                overflowMenuImageView.visibility = View.INVISIBLE
             }
-            itemView.button_listrowStockItem_buy.setOnClickListener {
+            itemView.requireViewById<Button>(R.id.button_listrowStockItem_buy).setOnClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
-            itemView.button_listrowStockItem_sell.setOnClickListener {
+            itemView.requireViewById<Button>(R.id.button_listrowStockItem_sell).setOnClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
             }
-            itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
+            itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute).setImageDrawable(
                     if (item.muted) {
                         ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash)
                     } else {
                         ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
                     }
             )
-            itemView.imageButton_listrowStockItem_muteUnmute.setOnClickListener {
+            itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute).setOnClickListener {
                 if (item.muted) {
                     StockMuteSettingsRepository.unmute(item.stockOrderAggregate.stockSymbol)
-                    itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
-                            ContextCompat.getDrawable(context, R.drawable.ic_fas_bell))
+                    itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute)
+                            .setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_fas_bell))
                 } else {
                     StockMuteSettingsRepository.mute(item.stockOrderAggregate.stockSymbol)
-                    itemView.imageButton_listrowStockItem_muteUnmute.setImageDrawable(
-                            ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash))
+                    itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute)
+                            .setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash))
                 }
                 item.muted = !item.muted
             }
-            itemView.textView_listrowStockItem_acquisitionValue.text = stockCurrencyFormat.format(acquisitionValue)
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue).text =
+                    stockCurrencyFormat.format(acquisitionValue)
             val currentStockPrice = stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price
             var profitInSek = 0.0
             val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
@@ -183,15 +185,19 @@ internal class StockOrderAggregateListAdapter(
                     break
                 }
             }
-            itemView.textView_listrowStockItem_latestValue.text = stockCurrencyFormat.format(currentStockPrice)
-            itemView.textView_listrowStockItem_profit.text = swedishCurrencyFormat.format(profitInSek)
-            itemView.textView_listrowStockItem_profit.setTextColor(ContextCompat.getColor(context, if (profitInSek > 0) {
-                R.color.colorProfit
-            } else {
-                R.color.colorLoss
-            }))
-            val overflowMenu = PopupMenu(context, itemView.imageView_listrowStockItem_overflowMenu)
-            itemView.imageView_listrowStockItem_overflowMenu.setOnClickListener { overflowMenu.show() }
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_latestValue).text =
+                    stockCurrencyFormat.format(currentStockPrice)
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_profit).text =
+                    swedishCurrencyFormat.format(profitInSek)
+            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_profit).setTextColor(
+                    ContextCompat.getColor(context, if (profitInSek > 0) {
+                        R.color.colorProfit
+                    } else {
+                        R.color.colorLoss
+                    }))
+            val overflowMenu = PopupMenu(context, overflowMenuImageView)
+            itemView.requireViewById<ImageView>(R.id.imageView_listrowStockItem_overflowMenu)
+                    .setOnClickListener { overflowMenu.show() }
             overflowMenu.inflate(R.menu.home_listrow_actions)
             overflowMenu.setOnMenuItemClickListener(PopupMenuListener(context, stockRemoveClickListener,
                     item.stockOrderAggregate.stockSymbol))

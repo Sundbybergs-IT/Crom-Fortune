@@ -1,7 +1,9 @@
 package com.sundbybergsit.cromfortune.ui.notifications
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
@@ -11,7 +13,7 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import com.sundbybergsit.cromfortune.R
-import kotlinx.android.synthetic.main.fragment_notifications.*
+import com.sundbybergsit.cromfortune.databinding.FragmentNotificationsBinding
 
 class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
 
@@ -21,12 +23,20 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
 
     }
 
+    private var _binding: FragmentNotificationsBinding? = null
+    private val binding get() = _binding!!
+
     private val viewModel: NotificationsViewModel by activityViewModels()
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentNotificationsBinding.inflate(layoutInflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewPager_fragmentNotifications.adapter = ScreenSlidePagerAdapter(requireActivity())
-        TabLayoutMediator(tabLayout_fragmentNotifications, viewPager_fragmentNotifications) { tab, position ->
+        binding.viewPagerFragmentNotifications.adapter = ScreenSlidePagerAdapter(requireActivity())
+        TabLayoutMediator(binding.tabLayoutFragmentNotifications, binding.viewPagerFragmentNotifications) { tab, position ->
             tab.text = getString(if (position == 0) {
                 R.string.notifications_new_title
             } else {
@@ -35,9 +45,9 @@ class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
         }.attach()
         val navController = NavHostFragment.findNavController(this)
         val appBarConfiguration = AppBarConfiguration(navController.graph)
-        toolBar_fragmentNotifications.setupWithNavController(navController, appBarConfiguration)
-        toolBar_fragmentNotifications.inflateMenu(R.menu.notifications_actions)
-        toolBar_fragmentNotifications.setOnMenuItemClickListener { item ->
+        binding.toolBarFragmentNotifications.setupWithNavController(navController, appBarConfiguration)
+        binding.toolBarFragmentNotifications.inflateMenu(R.menu.notifications_actions)
+        binding.toolBarFragmentNotifications.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_clearNotifications -> {
                     viewModel.clearNotifications(requireContext())

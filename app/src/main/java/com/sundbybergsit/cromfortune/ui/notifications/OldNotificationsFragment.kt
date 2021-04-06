@@ -1,11 +1,13 @@
 package com.sundbybergsit.cromfortune.ui.notifications
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.sundbybergsit.cromfortune.R
-import kotlinx.android.synthetic.main.fragment_notifications_archived.*
+import com.sundbybergsit.cromfortune.databinding.FragmentNotificationsArchivedBinding
 import java.util.*
 
 class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archived) {
@@ -16,13 +18,21 @@ class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archiv
 
     }
 
+    private var _binding: FragmentNotificationsArchivedBinding? = null
+    private val binding get() = _binding!!
+
     private val viewModel: NotificationsViewModel by activityViewModels()
 
     private val listAdapter = NotificationListAdapter()
 
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentNotificationsArchivedBinding.inflate(layoutInflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        recyclerView_fragmentNotificationsArchived.adapter = listAdapter
+        binding.recyclerViewFragmentNotificationsArchived.adapter = listAdapter
         setUpLiveDataListeners()
         viewModel.refreshOld(requireContext())
     }
@@ -31,13 +41,13 @@ class OldNotificationsFragment : Fragment(R.layout.fragment_notifications_archiv
         viewModel.oldNotifications.observe(viewLifecycleOwner, { viewState ->
             when (viewState) {
                 is NotificationsViewState.HasNotifications -> {
-                    textView_fragmentNotificationsArchived.visibility = View.GONE
+                    binding.textViewFragmentNotificationsArchived.visibility = View.GONE
                     listAdapter.submitList(viewState.adapterItems)
                 }
                 is NotificationsViewState.HasNoNotifications -> {
                     listAdapter.submitList(Collections.emptyList())
-                    textView_fragmentNotificationsArchived.visibility = View.VISIBLE
-                    textView_fragmentNotificationsArchived.text = getString(R.string.notifications_empty)
+                    binding.textViewFragmentNotificationsArchived.visibility = View.VISIBLE
+                    binding.textViewFragmentNotificationsArchived.text = getString(R.string.notifications_empty)
                 }
             }
         })

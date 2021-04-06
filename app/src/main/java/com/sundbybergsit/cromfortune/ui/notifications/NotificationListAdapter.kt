@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.os.ConfigurationCompat
@@ -13,7 +14,6 @@ import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.StockHeaderAdapterItem
-import kotlinx.android.synthetic.main.listrow_notification_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -58,9 +58,9 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
                 .getLocales(context.resources.configuration).get(0))
 
         fun bind(item: NotificationAdapterItem, evenRow: Boolean) {
-            itemView.textView_listrowNotificationItem_date.text = formatter
+            itemView.requireViewById<TextView>(R.id.textView_listrowNotificationItem_date).text = formatter
                     .format(Date(item.notificationMessage.dateInMillis))
-            itemView.textView_listrowNotificationItem_name.text = item.notificationMessage.message
+            itemView.requireViewById<TextView>(R.id.textView_listrowNotificationItem_name).text = item.notificationMessage.message
             itemView.setOnLongClickListener {
                 Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
                 true
