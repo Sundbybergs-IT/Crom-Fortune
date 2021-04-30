@@ -59,8 +59,10 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                     Log.i(TAG, "Skipping recommendation for stock (${stockSymbol}) as it has been muted.")
                 } else if (previousOrders.isNotEmpty()) {
                     val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                            .getRecommendation(stockPrice, currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
-                                    COMMISSION_FEE, previousOrders)
+                            .getRecommendation(stockPrice = stockPrice, currencyRateInSek = currencyRates.find {
+                                currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
+                                    commissionFee = COMMISSION_FEE, previousOrders = previousOrders,
+                                    timeInMillis = System.currentTimeMillis())
                     if (recommendation != null) {
                         notifyRecommendation(context, recommendation)
                     }

@@ -59,7 +59,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                         .getRecommendation(StockPrice(stockOrder.name,
                                 stockOrderAggregate.currency, stockOrder.pricePerStock),
                                 stockOrderAggregate.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
-                                cromSortedStockOrders.toSet())
+                                cromSortedStockOrders.toSet(), stockOrder.dateInMillis)
                 when (recommendation?.command) {
                     is BuyStockCommand -> {
                         val buyOrder = StockOrder("Buy", stockOrderAggregate.currency.toString(),

@@ -7,6 +7,7 @@ abstract class RecommendationAlgorithm {
 
     abstract fun getRecommendation(
             stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
+            timeInMillis: Long,
     ): Recommendation?
 
 }

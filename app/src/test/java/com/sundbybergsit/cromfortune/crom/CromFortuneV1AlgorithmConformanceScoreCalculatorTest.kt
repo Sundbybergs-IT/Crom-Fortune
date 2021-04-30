@@ -106,8 +106,10 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
         override fun getRecommendation(
                 stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
+                currentTimeInMillis: Long,
         ): Recommendation {
-            return Recommendation(SellStockCommand(ApplicationProvider.getApplicationContext(), 0L, Currency.getInstance("SEK"),
+            return Recommendation(SellStockCommand(ApplicationProvider.getApplicationContext(), currentTimeInMillis,
+                    Currency.getInstance("SEK"),
                     StockPrice.SYMBOLS[0].first, 0.0, 1, 0.0))
         }
 

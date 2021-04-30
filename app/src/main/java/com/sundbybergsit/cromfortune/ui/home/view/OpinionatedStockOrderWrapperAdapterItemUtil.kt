@@ -27,7 +27,7 @@ internal object OpinionatedStockOrderWrapperAdapterItemUtil {
                             Currency.getInstance(stockOrder.currency), stockOrder.pricePerStock,
                     ),
                             currencyRateInSek, stockOrder.commissionFee,
-                            toList.subList(0, toList.indexOf(stockOrder)).toSet())))
+                            toList.subList(0, toList.indexOf(stockOrder)).toSet(), stockOrder.dateInMillis)))
             result.add(pdAdapterItem)
         }
         return result

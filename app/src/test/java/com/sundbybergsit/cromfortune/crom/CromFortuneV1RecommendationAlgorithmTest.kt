@@ -22,6 +22,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 private const val DOMESTIC_STOCK_NAME = "Aktie med normal valutakurs"
 private const val FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME = "Aktie med annan valutakurs"
@@ -46,6 +47,42 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
+    fun `getRecommendation - when stock price increased significantly - returns sell recommendation of max 1000 SEK`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                1.0, 39.0, 100000)
+        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+        val currentPrice = 100.0
+
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                currentPrice), 1.0, 39.0, setOf(oldOrder1),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
+
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is SellStockCommand)
+        val sellStockCommand = recommendation.command as SellStockCommand
+        assertTrue(sellStockCommand.quantity * sellStockCommand.pricePerStock <= CromFortuneV1RecommendationAlgorithm.MAX_PURCHASE_ORDER_IN_SEK)
+    }
+
+    @Test
+    fun `getRecommendation - when stock price dropped significantly - returns buy recommendation of max 1000 SEK`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100000.0, 39.0, 100000)
+        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+        val currentPrice = 1.0
+
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                currentPrice), 1.0, 39.0, setOf(oldOrder1),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
+
+        assertNotNull(recommendation)
+        assertTrue(recommendation!!.command is BuyStockCommand)
+        val buyStockCommand = recommendation.command as BuyStockCommand
+        assertTrue(buyStockCommand.quantity * buyStockCommand.pricePerStock <= CromFortuneV1RecommendationAlgorithm.MAX_PURCHASE_ORDER_IN_SEK)
+    }
+
+    @Test
     fun `getRecommendation - when stock price decreased below normal limit since last sale price when 0 stocks and commission fee not ok - returns no recommendation`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
@@ -57,7 +94,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 .times(oldOrder2.pricePerStock)
 
         val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
-                currentPrice), 1.0, 500.0, setOf(oldOrder1, oldOrder2))
+                currentPrice), 1.0, 500.0, setOf(oldOrder1, oldOrder2),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -74,7 +112,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 .times(oldOrder2.pricePerStock)
 
         val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
-                currentPrice), 1.0, 1.0, setOf(oldOrder1, oldOrder2))
+                currentPrice), 1.0, 1.0, setOf(oldOrder1, oldOrder2),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is BuyStockCommand)
@@ -97,7 +136,23 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                 oldOrder3.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
-                        .times(oldOrder3.pricePerStock)), 1.0, 1.0, setOf(oldOrder1, oldOrder2, oldOrder3))
+                        .times(oldOrder3.pricePerStock)), 1.0, 1.0, setOf(oldOrder1, oldOrder2, oldOrder3),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
+
+        assertNull(recommendation)
+    }
+
+    @Test
+    fun `getRecommendation - when stock price decreased to below normal limit and commission fee ok but not enough days elapsed since last buy - returns no recommendation`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 39.0, 10)
+        repository.put(DOMESTIC_STOCK_NAME, oldOrder)
+
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
+                        .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS - 1, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -111,7 +166,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                 oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
-                        .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
+                        .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is BuyStockCommand)
@@ -135,15 +191,10 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                 oldOrder3.pricePerStock - (CromFortuneV1RecommendationAlgorithm.MAX_EXTREME_BUY_PERCENTAGE + 0.1)
-                        .times(oldOrder3.pricePerStock)), 1.0, 1.0, setOf(oldOrder1, oldOrder2, oldOrder3))
+                        .times(oldOrder3.pricePerStock)), 1.0, 1.0, setOf(oldOrder1, oldOrder2, oldOrder3),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
-        assertNotNull(recommendation)
-        assertTrue(recommendation!!.command is BuyStockCommand)
-        val buyStockCommand = recommendation.command as BuyStockCommand
-        assertTrue(buyStockCommand.commissionFee == 1.0)
-        assertQuantity(32, buyStockCommand.quantity)
-        assertStockPrice(70.0, buyStockCommand.pricePerStock)
-        assertTrue(buyStockCommand.currency == currency)
+        assertNull(recommendation)
     }
 
     @Test
@@ -157,7 +208,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                 oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
-                        .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder))
+                        .times(oldOrder.pricePerStock)), 1.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is BuyStockCommand)
@@ -178,7 +230,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                 oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE
                         .times(oldOrder.pricePerStock)),
-                1.0, 1.0, setOf(oldOrder))
+                1.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -193,7 +246,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                 oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE
                         .times(oldOrder.pricePerStock)),
-                1.0, 39.0, setOf(oldOrder))
+                1.0, 39.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -210,7 +264,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
                 oldOrder.pricePerStock + 100
                         .times(oldOrder.pricePerStock)),
-                1.0, 39.0, setOf(oldOrder, oldOrder2))
+                1.0, 39.0, setOf(oldOrder, oldOrder2),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -225,7 +280,26 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 .times(oldOrder.pricePerStock)
 
         val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
-                1.0, 1.0, setOf(oldOrder))
+                1.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
+
+        assertNull(recommendation)
+    }
+
+    @Test
+    fun `getRecommendation - when stock price increased to above limit and commission fee ok and enough stocks but not enough days elapsed since last sale - returns no recommendation`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                100.0, 10.0, 14)
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
+                100.0, 10.0, 1)
+        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
+        val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
+                .times(oldOrder.pricePerStock)
+
+        val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
+                1.0, 0.0, setOf(oldOrder, oldOrder2),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS-1, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -240,13 +314,14 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 .times(oldOrder.pricePerStock)
 
         val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
-                1.0, 0.0, setOf(oldOrder))
+                1.0, 0.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is SellStockCommand)
         val sellStockCommand = recommendation.command as SellStockCommand
         assertTrue(sellStockCommand.commissionFee == 0.0)
-        assertQuantity(9, sellStockCommand.quantity)
+        assertQuantity(7, sellStockCommand.quantity)
         assertStockPrice(130.0, sellStockCommand.pricePerStock)
         assertTrue(sellStockCommand.currency == currency)
     }
@@ -261,7 +336,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(
                 FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
                 oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
-                        .times(oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
+                        .times(oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS , TimeUnit.DAYS))
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is BuyStockCommand)
@@ -284,7 +360,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
         val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
                         oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.09)
-                                .times(oldOrder.pricePerStock)), 10.0, 39.0, setOf(oldOrder, oldOrder2))
+                                .times(oldOrder.pricePerStock)), 10.0, 39.0, setOf(oldOrder, oldOrder2),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -296,7 +373,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
         repository.put(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
         val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
                 oldOrder.pricePerStock + CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE.times(
-                        oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder))
+                        oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -311,7 +389,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 .times(oldOrder.pricePerStock)
 
         val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                newPrice), 10.0, 1.0, setOf(oldOrder))
+                newPrice), 10.0, 1.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -326,7 +405,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 .times(oldOrder.pricePerStock)
 
         val recommendation = algorithm.getRecommendation(StockPrice(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
-                newPrice), 10.0, 0.0, setOf(oldOrder))
+                newPrice), 10.0, 0.0, setOf(oldOrder),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is SellStockCommand)

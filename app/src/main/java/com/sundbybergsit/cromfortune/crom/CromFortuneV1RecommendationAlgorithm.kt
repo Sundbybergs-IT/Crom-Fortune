@@ -7,36 +7,41 @@ import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.stocks.StockOrder
 import com.sundbybergsit.cromfortune.stocks.StockPrice
-import java.time.Instant
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class CromFortuneV1RecommendationAlgorithm(private val context: Context) : RecommendationAlgorithm() {
 
     companion object {
 
-        const val DEFAULT_PURCHASE_ORDER_IN_SEK: Double = 3000.0
+        const val DEFAULT_FIRST_PURCHASE_ORDER_IN_SEK: Double = 3000.0
+        const val MAX_PURCHASE_ORDER_IN_SEK: Double = 1000.0
         const val NORMAL_DIFF_PERCENTAGE: Double = .20
         const val MAX_BUY_PERCENTAGE: Double = .10
         const val MAX_SOLD_PERCENTAGE: Double = .10
         const val MAX_EXTREME_BUY_PERCENTAGE: Double = .20
         const val MAX_EXTREME_SOLD_PERCENTAGE: Double = .75
+        const val MIN_FREEZE_PERIOD_IN_DAYS: Long = 7
 
     }
 
     override fun getRecommendation(
             stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
+            timeInMillis: Long,
     ): Recommendation? {
         return getRecommendation(stockPrice.stockSymbol, stockPrice.currency,
-                currencyRateInSek, previousOrders, stockPrice.price, commissionFee)
+                currencyRateInSek, previousOrders, stockPrice.price, commissionFee, timeInMillis
+        )
     }
 
     private fun getRecommendation(
             stockName: String, currency: Currency, rateInSek: Double,
             orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
+            timeInMillis: Long,
     ): Recommendation? {
         if (orders.isEmpty()) {
             // Dummy recommendation to mimic first buy
-            return Recommendation(BuyStockCommand(context, Instant.now().toEpochMilli(), currency, stockName,
+            return Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
                     currentStockPriceInStockCurrency, 1, commissionFeeInSek))
         }
         val sortedOrders = orders.toSortedSet { s1, s2 -> s1.dateInMillis.compareTo(s2.dateInMillis) }
@@ -55,12 +60,12 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             }
         }
         val currentStockPriceInSek = currentStockPriceInStockCurrency * rateInSek
-        val currentTimeInMillis = System.currentTimeMillis()
+
         if (grossQuantity - soldQuantity == 0 && isCurrentStockBelowLastSale(sortedOrders.last(), currentStockPriceInStockCurrency)) {
-            val buyQuantity: Int = ((DEFAULT_PURCHASE_ORDER_IN_SEK - commissionFeeInSek) / currentStockPriceInSek).toInt()
+            val buyQuantity: Int = ((DEFAULT_FIRST_PURCHASE_ORDER_IN_SEK - commissionFeeInSek) / currentStockPriceInSek).toInt()
             val netStockPriceInStockCurrency = ((commissionFeeInSek / rateInSek) + currentStockPriceInStockCurrency * buyQuantity) / buyQuantity
             if (buyQuantity > 0 && isCurrentStockBelowLastSale(sortedOrders.last(), netStockPriceInStockCurrency)) {
-                return Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
+                return Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
                         currentStockPriceInStockCurrency, buyQuantity, commissionFeeInSek))
             }
         }
@@ -70,39 +75,54 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
 
         val totalPricePerStockInSek = (accumulatedCostInSek - costToExcludeInSek) / netQuantity
         val totalPricePerStockInStockCurrency = totalPricePerStockInSek / rateInSek
-        var tradeQuantity = netQuantity / 10
+        var tradeQuantity = (netQuantity / 10).coerceAtMost((MAX_PURCHASE_ORDER_IN_SEK / currentStockPriceInSek).toInt())
         var recommendation: Recommendation? = null
         var isOkToContinue = true
+        var daysSinceLastBuy = Long.MAX_VALUE
+        var daysSinceLastSale = Long.MAX_VALUE
+        if (orders.last().orderAction == "Buy") {
+            daysSinceLastBuy = TimeUnit.MILLISECONDS.toDays(timeInMillis - orders.last().dateInMillis)
+        } else {
+            daysSinceLastSale = TimeUnit.MILLISECONDS.toDays(timeInMillis - orders.last().dateInMillis)
+        }
         while (isOkToContinue) {
             val pricePerStockAfterBuyInStockCurrency = ((netQuantity * averageCostInSek +
                     tradeQuantity * currentStockPriceInSek + commissionFeeInSek) /
                     (netQuantity + tradeQuantity)) / rateInSek
-            if (isCurrentStockPriceHighEnoughToSell(tradeQuantity, currentStockPriceInStockCurrency, totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek)) {
-                if (isNotOverSoldForMediumStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity)) {
+            if (isCurrentStockPriceHighEnoughToSell(tradeQuantity, currentStockPriceInStockCurrency,
+                            totalPricePerStockInStockCurrency, commissionFeeInSek / rateInSek) &&
+                    hasEnoughDaysElapsed(daysSinceLastSale)) {
+                if (isNotOverSoldForMediumStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity) &&
+                        tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek)) {
                     isOkToContinue = true
-                    recommendation = Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
+                    recommendation = Recommendation(SellStockCommand(context, timeInMillis, currency, stockName,
                             currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
                     tradeQuantity += 1
                 } else {
-                    if (isNotOverSoldForHighStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity)) {
+                    if (isNotOverSoldForHighStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity) &&
+                            tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek) &&
+                            hasEnoughDaysElapsed(daysSinceLastSale)) {
                         isOkToContinue = true
-                        recommendation = Recommendation(SellStockCommand(context, currentTimeInMillis, currency, stockName,
+                        recommendation = Recommendation(SellStockCommand(context, timeInMillis, currency, stockName,
                                 currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
                         tradeQuantity += 1
                     } else {
                         return recommendation
                     }
                 }
-            } else if (currentStockPriceLowEnoughForBuy(currentStockPriceInStockCurrency, pricePerStockAfterBuyInStockCurrency)) {
-                if (isNotOverBoughtForMediumStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity)) {
+            } else if (currentStockPriceLowEnoughForBuy(currentStockPriceInStockCurrency, pricePerStockAfterBuyInStockCurrency) &&
+                    hasEnoughDaysElapsed(daysSinceLastBuy)) {
+                if (isNotOverBoughtForMediumStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity) &&
+                        tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek)) {
                     isOkToContinue = true
-                    recommendation = Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
+                    recommendation = Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
                             currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
                     tradeQuantity += 1
                 } else {
-                    if (isNotOverBoughtForHighStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity)) {
+                    if (isNotOverBoughtForHighStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity) &&
+                            tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek)) {
                         isOkToContinue = true
-                        recommendation = Recommendation(BuyStockCommand(context, currentTimeInMillis, currency, stockName,
+                        recommendation = Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
                                 currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
                         tradeQuantity += 1
                     } else {
@@ -114,6 +134,13 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             }
         }
         return recommendation
+    }
+
+    private fun tradeWithinMaxPriceLimit(tradeQuantity: Int, rateInSek: Double) =
+            (tradeQuantity * rateInSek) <= MAX_PURCHASE_ORDER_IN_SEK
+
+    private fun hasEnoughDaysElapsed(toDays: Long): Boolean {
+        return toDays >= MIN_FREEZE_PERIOD_IN_DAYS
     }
 
     private fun isCurrentStockBelowLastSale(lastSaleOrder: StockOrder, currentStockPrice: Double) =
