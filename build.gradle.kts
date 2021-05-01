@@ -13,13 +13,33 @@ plugins {
     id("org.sonarqube") version "3.2.0"
 }
 
+val baseVersionName = "0.2.7"
+
 allprojects {
+
+    val snapshotVersion = isSnapshotVersion()
+
+    extra.apply {
+        set("baseVersionName", baseVersionName)
+        set("snapshotVersion", snapshotVersion)
+    }
+
+    group = "com.sundbybergsit.cromfortune"
+    version = "$baseVersionName${if (snapshotVersion) "-SNAPSHOT" else ""}"
+    description = "Make a fortune - With Crom Fortune!"
+
     repositories {
         google()
         // TODO: Needed for materialdaypicker. Remove ASAP.
         jcenter()
         mavenCentral()
     }
+
+}
+
+fun isSnapshotVersion(): Boolean {
+    val envSnapshotVersion = System.getenv("snapshotVersion")
+    return envSnapshotVersion?.toBoolean() ?: true
 }
 
 subprojects {

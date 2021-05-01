@@ -5,6 +5,7 @@ plugins {
     id("kotlin-android")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
+val baseVersionName = ext.get("baseVersionName") as String
 
 android {
     compileSdkVersion(30)
@@ -14,7 +15,7 @@ android {
         minSdkVersion(29)
         targetSdkVersion(30)
         versionCode = 73
-        versionName = "0.2.7"
+        versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
