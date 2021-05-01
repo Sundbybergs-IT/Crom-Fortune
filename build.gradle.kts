@@ -9,7 +9,7 @@ buildscript {
     }
 }
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.4.32"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.5.0"
     id("org.sonarqube") version "3.2.0"
 }
 
