@@ -11,8 +11,8 @@ android {
         applicationId = "com.sundbybergsit.cromfortune"
         minSdkVersion(29)
         targetSdkVersion(30)
-        versionCode = 71
-        versionName = "0.2.5"
+        versionCode = 72
+        versionName = "0.2.6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
