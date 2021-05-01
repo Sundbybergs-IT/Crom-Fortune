@@ -53,7 +53,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 }
                 R.id.action_todo -> {
                     val browserIntent = Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://github.com/alwa/Crom-Fortune/issues"))
+                            Uri.parse("https://github.com/Sundbybergs-IT/Crom-Fortune/issues"))
                     startActivity(browserIntent)
                     true
                 }
