@@ -85,6 +85,7 @@ subprojects {
             property("sonar.exclusions", "**/BuildConfig.class,**/R.java,**/R\$*.java,src/main/gen/**/*")
             property("sonar.sources", "src/main,build.gradle.kts")
             property("sonar.tests", "src/test")
+            property("sonar.coverage.exclusions", "build.gradle.kts")
             property("sonar.coverage.jacoco.xmlReportPaths", "$buildDir/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
             property("sonar.junit.reportsPath", "$buildDir/test-results/")
             property("sonar.androidLint.reportPaths", "$buildDir/reports/lint-results-debug.xml")
@@ -102,7 +103,6 @@ sonarqube {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.projectName", "Crom Fortune :: Android")
         property("sonar.sourceEncoding", "UTF-8")
-        property("sonar.coverage.exclusions", "build.gradle.kts")
     }
 
 }
