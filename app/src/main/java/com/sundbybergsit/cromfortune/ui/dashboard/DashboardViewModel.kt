@@ -42,7 +42,8 @@ class DashboardViewModel : ViewModel() {
                 CromFortuneV1RecommendationAlgorithm(context), orders = stocks(repository).toSet(),
                         currencyRateRepository = CurrencyRateRepository
                 )
-                _score.postValue(context.getString(R.string.dashboard_croms_will_message, latestScore.score.toString()))
+                _score.postValue(context.resources.getQuantityString(R.plurals.dashboard_croms_will_message,
+                        latestScore.score, latestScore.score))
             }
         } else {
             Log.w(TAG, "Ignoring old data...")

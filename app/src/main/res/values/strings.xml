@@ -15,8 +15,11 @@
     <string name="app_name">Crom Fortune</string>
 
     <string name="dashboard_title">Dashboard</string>
-    <string name="dashboard_croms_will_message">You follow the will of Crom to the extent of %1$s\%%</string>
-
+    <plurals name="dashboard_croms_will_message">
+        <item quantity="zero">You don\'t follow the will of Crom at all!</item>
+        <item quantity="one">You follow the will of Crom to the extent of a single percent</item>
+        <item quantity="other">You follow the will of Crom to the extent of %1$s\%%</item>
+    </plurals>
     <string name="generic_acquisition_value">Acquisition value</string>
     <string name="generic_commission_fee">Commission fee</string>
     <string name="generic_date">Date</string>
