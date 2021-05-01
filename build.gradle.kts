@@ -78,6 +78,8 @@ sonarqube {
 
     properties {
         property("sonar.projectKey", "com.sundbybergsit.cromfortune")
+        property("sonar.organization", "sundbybergsit")
+        property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.projectName", "Crom Fortune :: Android")
         property("sonar.sourceEncoding", "UTF-8")
         property("sonar.coverage.exclusions", "build.gradle.kts")
