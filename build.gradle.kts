@@ -5,11 +5,11 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:4.1.3")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.30")
     }
 }
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.5.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.4.30"
     id("org.sonarqube") version "3.2.0"
 }
 
