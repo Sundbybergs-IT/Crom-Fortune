@@ -1,5 +1,7 @@
 package com.sundbybergsit.cromfortune.ui.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -50,8 +52,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                     true
                 }
                 R.id.action_todo -> {
-                    val dialog = ToDoDialogFragment()
-                    dialog.show(parentFragmentManager, TAG)
+                    val browserIntent = Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://github.com/alwa/Crom-Fortune/issues"))
+                    startActivity(browserIntent)
                     true
                 }
                 else -> super.onOptionsItemSelected(item)
