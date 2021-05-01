@@ -33,10 +33,12 @@ jobs:
         run: chmod +x gradlew
       - name: Lint
         run: ./gradlew lintDebug
+      - name: Run tests
+        run: ./gradlew testDebug
       - name: Generate Jacoco test report
         run: ./gradlew jacocoTestReport
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonarqube --info
+        run: ./gradlew sonarqube --info
