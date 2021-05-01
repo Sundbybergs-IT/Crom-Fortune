@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -71,6 +74,29 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 else -> super.onOptionsItemSelected(item)
             }
         }
+        val spinnerAdapter = ArrayAdapter.createFromResource(requireContext(), R.array.filter_array, R.layout.spinner_dropdown_item)
+        val navigationSpinner = Spinner(binding.toolBarFragmentHome.context)
+        navigationSpinner.adapter = spinnerAdapter
+        binding.toolBarFragmentHome.addView(navigationSpinner, 0)
+
+        navigationSpinner.onItemSelectedListener = AdapterViewOnItemSelectedListener(viewModel)
+    }
+
+    private inner class AdapterViewOnItemSelectedListener(private val viewModel: HomeViewModel) :
+            AdapterView.OnItemSelectedListener {
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            if (position == 0) {
+                viewModel.showAll(requireContext())
+            } else {
+                viewModel.showCurrent(requireContext())
+            }
+        }
+
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            // Do nothing
+        }
+
     }
 
     private inner class ScreenSlidePagerAdapter(fa: FragmentActivity) : FragmentStateAdapter(fa) {

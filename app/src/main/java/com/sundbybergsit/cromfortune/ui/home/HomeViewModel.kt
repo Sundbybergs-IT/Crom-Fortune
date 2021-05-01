@@ -40,6 +40,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     val cromStocksViewState: LiveData<ViewState> = _cromStocksViewState
     val personalStocksViewState: LiveData<ViewState> = _personalStocksViewState
     val dialogViewState: LiveData<DialogViewState> = _dialogViewState
+    private var showAll = false
 
     private val cromStockAggregate: (MutableList<StockOrder>, Context) -> StockOrderAggregate = { sortedStockOrders, context ->
         var stockOrderAggregate: StockOrderAggregate? = null
@@ -148,7 +149,12 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
             val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
             val sortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
             sortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
-            stockOrderAggregates.add(lambda(sortedStockOrders, context))
+            val stockAggregate = lambda(sortedStockOrders, context)
+            if (!showAll && stockAggregate.getQuantity() == 0) {
+                Log.i(TAG, "Hiding this stock because of the filter option.")
+            } else {
+                stockOrderAggregates.add(stockAggregate)
+            }
         }
         return stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
     }
@@ -172,6 +178,20 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         viewModelScope.launch(Dispatchers.IO) {
             StockDataRetrievalCoroutineWorker.refreshFromYahoo(context)
             Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
+        }
+    }
+
+    fun showAll(context: Context) {
+        showAll = true
+        if (_personalStocksViewState.value is ViewState.HasStocks) {
+            refresh(context)
+        }
+    }
+
+    fun showCurrent(context: Context) {
+        showAll = false
+        if (_personalStocksViewState.value is ViewState.HasStocks) {
+            refresh(context)
         }
     }
 
