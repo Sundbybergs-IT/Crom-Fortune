@@ -29,7 +29,7 @@ class SellStockCommand(private val context: Context, private val currentTimeInMi
                     quantity = quantity))
             stockOrderRepository.putAll(name, stockOrders)
         } else {
-            stockOrderRepository.put(name, StockOrder(orderAction = "Sell", currency = currency.toString(),
+            stockOrderRepository.putReplacingAll(name, StockOrder(orderAction = "Sell", currency = currency.toString(),
                                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
                                     commissionFee = commissionFee, quantity = quantity))
         }

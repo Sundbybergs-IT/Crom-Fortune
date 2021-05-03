@@ -131,7 +131,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
             val existingOrders = stockOrderRepository.list(stockOrder.name)
             stockOrderRepository.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
         } else {
-            stockOrderRepository.put(stockOrder.name, stockOrder)
+            stockOrderRepository.putReplacingAll(stockOrder.name, stockOrder)
         }
         refresh(context)
     }

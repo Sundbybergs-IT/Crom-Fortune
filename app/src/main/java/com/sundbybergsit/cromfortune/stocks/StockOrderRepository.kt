@@ -14,7 +14,7 @@ interface StockOrderRepository {
 
     fun putAll(stockName: String, stockOrders: Set<StockOrder>)
 
-    fun put(stockName: String, stockOrder: StockOrder)
+    fun putReplacingAll(stockName: String, stockOrder: StockOrder)
 
     fun remove(stockName: String)
 

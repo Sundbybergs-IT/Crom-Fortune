@@ -62,7 +62,7 @@ class StockOrderRepositoryImpl(
         sharedPreferences.edit().putStringSet(stockName, serializedStockOrders).apply()
     }
 
-    override fun put(stockName: String, stockOrder: StockOrder) {
+    override fun putReplacingAll(stockName: String, stockOrder: StockOrder) {
         putAll(stockName, setOf(stockOrder))
     }
 
