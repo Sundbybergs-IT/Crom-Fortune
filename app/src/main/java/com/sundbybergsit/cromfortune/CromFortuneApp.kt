@@ -35,7 +35,12 @@ class CromFortuneApp : Application(), Configuration.Provider {
                     stockOrder.dateInMillis, "GBK.ST", stockOrder.pricePerStock, stockOrder.commissionFee,
                     stockOrder.quantity))
         }
-        stockOrderRepositoryImpl.putAll("GBK.ST", newStockOrders)
+        if (stockOrderRepositoryImpl.list("GBK.ST").isEmpty()) {
+            stockOrderRepositoryImpl.remove("GBK.ST")
+        }
+        if (newStockOrders.isNotEmpty()) {
+            stockOrderRepositoryImpl.putAll("GBK.ST", newStockOrders)
+        }
         stockOrderRepositoryImpl.remove("BUBL.ST")
     }
 
