@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="filter_array">
-        <item>Alla</item>
         <item>Nuvarande</item>
+        <item>Alla</item>
     </string-array>
 </resources>

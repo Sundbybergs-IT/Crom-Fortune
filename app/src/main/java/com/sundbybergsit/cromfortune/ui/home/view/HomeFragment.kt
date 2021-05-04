@@ -74,7 +74,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 else -> super.onOptionsItemSelected(item)
             }
         }
-        val spinnerAdapter = ArrayAdapter.createFromResource(requireContext(), R.array.filter_array, R.layout.spinner_dropdown_item)
+        val spinnerAdapter = ArrayAdapter.createFromResource(requireContext(), R.array.filter_array,
+                R.layout.spinner_dropdown_item)
         val navigationSpinner = Spinner(binding.toolBarFragmentHome.context)
         navigationSpinner.adapter = spinnerAdapter
         binding.toolBarFragmentHome.addView(navigationSpinner, 0)
@@ -87,9 +88,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
             if (position == 0) {
-                viewModel.showAll(requireContext())
-            } else {
                 viewModel.showCurrent(requireContext())
+            } else {
+                viewModel.showAll(requireContext())
             }
         }
 
