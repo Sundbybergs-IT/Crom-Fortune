@@ -47,6 +47,25 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
+    fun `getRecommendation - when stock price increased significantly since last buy-sell but still above current buy - returns null`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                1.0, 39.0, 100000)
+        val oldOrder2 = StockOrder("Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
+                1.0, 39.0, 100000)
+        val oldOrder3 = StockOrder("Buy", currency.toString(), 2L, DOMESTIC_STOCK_NAME,
+                5.0, 39.0, 100000)
+        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
+        val currentPrice = 4.5
+
+        val recommendation: Recommendation? = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency,
+                currentPrice), 1.0, 39.0, setOf(oldOrder1, oldOrder2, oldOrder3),
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
+
+        assertNull(recommendation)
+    }
+
+    @Test
     fun `getRecommendation - when stock price increased significantly - returns sell recommendation of max 1000 SEK`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
@@ -299,7 +318,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
         val recommendation = algorithm.getRecommendation(StockPrice(DOMESTIC_STOCK_NAME, currency, newPrice),
                 1.0, 0.0, setOf(oldOrder, oldOrder2),
-                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS-1, TimeUnit.DAYS))
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS - 1, TimeUnit.DAYS))
 
         assertNull(recommendation)
     }
@@ -337,7 +356,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
                 oldOrder.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                         .times(oldOrder.pricePerStock)), 10.0, 1.0, setOf(oldOrder),
-                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS , TimeUnit.DAYS))
+                TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS))
 
         assertNotNull(recommendation)
         assertTrue(recommendation!!.command is BuyStockCommand)

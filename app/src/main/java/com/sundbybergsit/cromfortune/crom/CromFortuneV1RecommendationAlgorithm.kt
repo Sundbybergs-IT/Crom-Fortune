@@ -57,6 +57,11 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 } else {
                     soldQuantity += stockOrder.quantity
                 }
+                if (grossQuantity - soldQuantity == 0) {
+                    accumulatedCostInSek = 0.0
+                    grossQuantity = 0
+                    soldQuantity = 0
+                }
             }
         }
         val currentStockPriceInSek = currentStockPriceInStockCurrency * rateInSek
