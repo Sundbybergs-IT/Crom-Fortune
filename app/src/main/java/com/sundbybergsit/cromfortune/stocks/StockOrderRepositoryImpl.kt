@@ -73,9 +73,13 @@ class StockOrderRepositoryImpl(
     override fun remove(stockOrder: StockOrder) {
         val stockOrders =  list(stockOrder.name).toMutableSet()
         stockOrders.remove(stockOrder)
-        val serializedStockOrders = mutableSetOf<String>()
-        serializedStockOrders.add(Json.encodeToString(stockOrders))
-        sharedPreferences.edit().putStringSet(stockOrder.name, serializedStockOrders).apply()
+        if (stockOrders.isEmpty()) {
+            remove(stockOrder.name)
+        } else {
+            val serializedStockOrders = mutableSetOf<String>()
+            serializedStockOrders.add(Json.encodeToString(stockOrders))
+            sharedPreferences.edit().putStringSet(stockOrder.name, serializedStockOrders).apply()
+        }
     }
 
 }

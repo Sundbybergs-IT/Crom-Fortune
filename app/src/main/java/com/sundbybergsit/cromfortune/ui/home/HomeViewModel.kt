@@ -147,13 +147,18 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
         for (stockSymbol in stockOrderRepository.listOfStockNames()) {
             val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
-            val sortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
-            sortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
-            val stockAggregate = lambda(sortedStockOrders, context)
-            if (!showAll && stockAggregate.getQuantity() == 0) {
-                Log.i(TAG, "Hiding this stock because of the filter option.")
+            if (stockOrders.isEmpty()) {
+                // Preventive cleanup, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/20
+                stockOrderRepository.remove(stockSymbol)
             } else {
-                stockOrderAggregates.add(stockAggregate)
+                val sortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
+                sortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
+                val stockAggregate = lambda(sortedStockOrders, context)
+                if (!showAll && stockAggregate.getQuantity() == 0) {
+                    Log.i(TAG, "Hiding this stock because of the filter option.")
+                } else {
+                    stockOrderAggregates.add(stockAggregate)
+                }
             }
         }
         return stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
