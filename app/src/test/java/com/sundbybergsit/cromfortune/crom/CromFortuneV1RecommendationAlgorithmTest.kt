@@ -83,7 +83,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price decreased below normal limit since last sale price when 0 stocks and commission fee not ok - returns no recommendation`() = runBlocking {
+    fun `getRecommendation - when stock price decreased below normal limit since last sale price when 0 stocks and commission fee not ok - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 1)
@@ -124,7 +124,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price decreased to below normal limit and commission fee ok and overbought - returns no recommendation`() = runBlocking {
+    fun `getRecommendation - when stock price decreased to below normal limit and commission fee ok and overbought - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 2)
@@ -143,7 +143,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price decreased to below normal limit and commission fee ok but not enough days elapsed since last buy - returns no recommendation`() = runBlocking {
+    fun `getRecommendation - when stock price decreased to below normal limit and commission fee ok but not enough days elapsed since last buy - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 10)
@@ -179,7 +179,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price decreased to below high limit and commission fee ok and not overbought - returns no recommendation`() = runBlocking {
+    fun `getRecommendation - when stock price decreased to below high limit and commission fee ok and not overbought - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder1 = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 300)
@@ -287,7 +287,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
     }
 
     @Test
-    fun `getRecommendation - when stock price increased to above limit and commission fee ok and enough stocks but not enough days elapsed since last sale - returns no recommendation`() = runBlocking {
+    fun `getRecommendation - when stock price increased to above limit and commission fee ok and enough stocks but not enough days elapsed since last sale - returns null`() = runBlocking {
         val currency = Currency.getInstance("SEK")
         val oldOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 10.0, 14)
