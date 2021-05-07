@@ -8,6 +8,7 @@ androidx-lifecycle-extensions = "2.2.0"
 androidx-lifecycle-livedata = "2.3.1"
 androidx-lifecycle-runtime = "2.3.1"
 androidx-lifecycle-viewmodel = "2.3.1"
+androidx-lifecycle-viewmodelcompose = "1.0.0-alpha04"
 androidx-localbroadcastmanager = "1.1.0"
 androidx-navigation = "2.3.5"
 androidx-test-junit = "1.1.2"
@@ -56,7 +57,25 @@ androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref =
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 googleMaterial = { module = "com.google.android.material:material", version.ref = "google-material" }
-googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore-ktx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compos", version.ref = "androidx-activity-compose" }
+androidx-compose-compiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose" }
+androidx-compose-ui-ui = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
+androidx-compose-ui-uitooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-compose" }
+androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core", version.ref = "androidx-compose" }
+androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "androidx-compose" }
+androidx-compose-material-material = { module = "androidx.compose.material:material", version.ref = "androidx-compose" }
+androidx-compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "androidx-compose" }
+androidx-compose-runtime-rxjava2 = { module = "androidx.compose.runtime:runtime-rxjava2", version.ref = "androidx-compose" }
+androidx-lifecycle-viewmodelcompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle-viewmodelcompose" }
+androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
+androidx-test-monitor = { module = "androidx.test:monitor", version.ref = "androidx-test-monitor" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
+androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
+google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
+google-playCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore-ktx" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutinesTest" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
