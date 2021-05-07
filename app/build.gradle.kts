@@ -32,6 +32,7 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
     buildFeatures {
+        compose = true
         viewBinding = true
     }
     testOptions {
