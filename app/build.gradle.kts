@@ -5,6 +5,8 @@ plugins {
     id("kotlin-android")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
+apply(from = "../buildSrc/src/build.gradle")
+
 val baseVersionName = ext.get("baseVersionName") as String
 
 android {
