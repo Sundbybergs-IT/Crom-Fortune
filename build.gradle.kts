@@ -4,13 +4,14 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:4.2.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.30")
+        classpath("com.android.tools.build:gradle:4.2.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.0")
     }
 }
+
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.4.30"
-    id("org.sonarqube") version "3.2.0"
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("org.sonarqube")
 }
 
 val baseVersionName = "0.2.13"
