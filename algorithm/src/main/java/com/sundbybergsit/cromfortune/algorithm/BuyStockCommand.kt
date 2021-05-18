@@ -1,8 +1,8 @@
 package com.sundbybergsit.cromfortune.algorithm
 
 import android.content.Context
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import java.util.*
 
 class BuyStockCommand(private val context: Context, private val currentTimeInMillis: Long,
@@ -20,15 +20,14 @@ class BuyStockCommand(private val context: Context, private val currentTimeInMil
 
     override fun price(): Double = pricePerStock
 
-    override fun execute() {
-        val stockOrderRepository = StockOrderRepositoryImpl(context)
-        if (stockOrderRepository.count(name) > 0) {
-            val stockOrders: MutableSet<StockOrder> = stockOrderRepository.list(name).toMutableSet()
+    override fun execute(repository : StockOrderRepository) {
+        if (repository.count(name) > 0) {
+            val stockOrders: MutableSet<StockOrder> = repository.list(name).toMutableSet()
             stockOrders.add(StockOrder("Buy", currency.toString(), currentTimeInMillis,
                     name, pricePerStock, commissionFee, quantity))
-            stockOrderRepository.putAll(name, stockOrders)
+            repository.putAll(name, stockOrders)
         } else {
-            stockOrderRepository.putReplacingAll(name, StockOrder(orderAction = "Buy", currency = currency.toString(),
+            repository.putReplacingAll(name, StockOrder(orderAction = "Buy", currency = currency.toString(),
                                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
                                     commissionFee = commissionFee, quantity = quantity))
         }

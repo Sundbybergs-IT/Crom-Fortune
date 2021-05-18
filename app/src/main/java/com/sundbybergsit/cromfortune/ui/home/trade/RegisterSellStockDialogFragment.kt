@@ -15,8 +15,6 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.ui.AutoCompleteAdapter
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.transformIntoDatePicker
@@ -45,7 +43,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
         inputStockName.setAdapter(getStockNameAutoCompleteAdapter())
         inputStockName.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
-                val find = StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == inputStockName.text.toString() }
+                val find = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == inputStockName.text.toString() }
                 if (find != null) {
                     inputCurrency.setText(find.third)
                 }
@@ -81,9 +79,11 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                     val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)!!
                     val currency = Currency.getInstance(inputCurrency.text.toString())
                     // TODO: Convert commission fee (in SEK) to selected currency
-                    val stockOrder = StockOrder("Sell", currency.toString(), date.time, stockSymbol,
-                            inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
-                            inputStockQuantity.text.toString().toInt())
+                    val stockOrder = com.sundbybergsit.cromfortune.domain.StockOrder(
+                        "Sell", currency.toString(), date.time, stockSymbol,
+                        inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
+                        inputStockQuantity.text.toString().toInt()
+                    )
                     homeViewModel.save(requireContext(), stockOrder)
                     Toast.makeText(requireContext(), getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
                     alertDialog.dismiss()
@@ -104,13 +104,13 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
     }
 
     private fun getCurrencyAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(StockPrice.CURRENCIES.toList())
+        val searchArrayList = ArrayList(com.sundbybergsit.cromfortune.domain.StockPrice.CURRENCIES.toList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
     }
 
     private fun getStockNameAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+        val searchArrayList = ArrayList(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
                 .toMutableList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
@@ -123,7 +123,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !StockPrice.CURRENCIES.contains(input.text.toString()) -> {
+            !com.sundbybergsit.cromfortune.domain.StockPrice.CURRENCIES.contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()
                 throw ValidatorException()
@@ -141,7 +141,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+            !com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
                     .toMutableList().contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()

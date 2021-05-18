@@ -1,13 +1,7 @@
 package com.sundbybergsit.cromfortune.crom
 
 import android.util.Log
-import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
-import com.sundbybergsit.cromfortune.algorithm.ConformanceScore
-import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import java.util.*
 
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {
@@ -19,17 +13,17 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
     }
 
     override suspend fun getScore(
-            recommendationAlgorithm: RecommendationAlgorithm,
-            orders: Set<StockOrder>,
-            currencyRateRepository: CurrencyRateRepository,
-    ): ConformanceScore {
+        recommendationAlgorithm: com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm,
+        orders: Set<com.sundbybergsit.cromfortune.domain.StockOrder>,
+        currencyRateRepository: CurrencyRateRepository,
+    ): com.sundbybergsit.cromfortune.algorithm.ConformanceScore {
         var correctDecision = 0
-        val sortedOrders: MutableList<StockOrder> = orders.toMutableList()
+        val sortedOrders: MutableList<com.sundbybergsit.cromfortune.domain.StockOrder> = orders.toMutableList()
         val stockNames = sortedOrders.map { order -> order.name }.toSet()
 
         // FIXME: recommend in groups of stocks
 
-        val listOfListOfStockOrders: MutableList<List<StockOrder>> = mutableListOf()
+        val listOfListOfStockOrders: MutableList<List<com.sundbybergsit.cromfortune.domain.StockOrder>> = mutableListOf()
         for (stockName in stockNames) {
             listOfListOfStockOrders.add(sortedOrders.filter { stockOrder -> stockOrder.name == stockName }.sortedBy { order -> order.dateInMillis })
         }
@@ -44,18 +38,21 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 } else {
                     val currencyRateInSek = (currencyRateRepository.currencyRates.value as
                             CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == order.currency }!!.rateInSek
-                    val recommendation = recommendationAlgorithm.getRecommendation(StockPrice(order.name,
+                    val recommendation = recommendationAlgorithm.getRecommendation(
+                        com.sundbybergsit.cromfortune.domain.StockPrice(
+                            order.name,
                             Currency.getInstance(order.currency),
-                            order.pricePerStock), currencyRateInSek, order.commissionFee, listOfStockOrders.subList(0, index).toSet(),
+                            order.pricePerStock
+                        ), currencyRateInSek, order.commissionFee, listOfStockOrders.subList(0, index).toSet(),
                             order.dateInMillis)
                     if (order.orderAction == "Buy") {
-                        if (recommendation != null && recommendation.command is BuyStockCommand) {
+                        if (recommendation != null && recommendation.command is com.sundbybergsit.cromfortune.algorithm.BuyStockCommand) {
                             correctDecision += 1
                         } else {
                             Log.v(TAG, "Bad decision.")
                         }
                     } else {
-                        if (recommendation != null && recommendation.command is SellStockCommand) {
+                        if (recommendation != null && recommendation.command is com.sundbybergsit.cromfortune.algorithm.SellStockCommand) {
                             correctDecision += 1
                         } else {
                             Log.v(TAG, "Bad decision.")
@@ -66,13 +63,13 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
         }
         return when {
             orders.size <= 1 -> {
-                ConformanceScore(100)
+                com.sundbybergsit.cromfortune.algorithm.ConformanceScore(100)
             }
             correctDecision == 0 -> {
-                ConformanceScore(0)
+                com.sundbybergsit.cromfortune.algorithm.ConformanceScore(0)
             }
             else -> {
-                ConformanceScore(100 * correctDecision / orders.size)
+                com.sundbybergsit.cromfortune.algorithm.ConformanceScore(100 * correctDecision / orders.size)
             }
         }
     }

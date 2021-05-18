@@ -2,6 +2,8 @@ package com.sundbybergsit.cromfortune.notifications
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationsRepository
 
 const val PREFERENCES_NAME = "Notifications"
 

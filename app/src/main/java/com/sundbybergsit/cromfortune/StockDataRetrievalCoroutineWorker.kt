@@ -8,15 +8,14 @@ import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.notifications.NotificationMessage
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.notifications.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -30,39 +29,45 @@ import kotlin.math.roundToInt
 
 @Suppress("BlockingMethodInNonBlockingContext")
 open class StockDataRetrievalCoroutineWorker(val context: Context, workerParameters: WorkerParameters) :
-        CoroutineWorker(context, workerParameters) {
+    CoroutineWorker(context, workerParameters) {
 
     companion object {
 
         const val TAG = "StockRetrievalCoroutineWorker"
         const val COMMISSION_FEE = 39.0
 
-        suspend fun refreshFromYahoo(context: Context) {
+        fun refreshFromYahoo(context: Context) {
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
                 currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
             }
             CurrencyRateRepository.add(currencyRates)
-            val stocks: Map<String, Stock> = YahooFinance.get(StockPrice.SYMBOLS.map { pair -> pair.first }
+            val stocks: Map<String, Stock> =
+                YahooFinance.get(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> pair.first }
                     .toTypedArray())
-            val stockPrices = mutableSetOf<StockPrice>()
-            for (triple in StockPrice.SYMBOLS.iterator()) {
+            val stockPrices = mutableSetOf<com.sundbybergsit.cromfortune.domain.StockPrice>()
+            for (triple in com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.iterator()) {
                 val stockSymbol = triple.first
                 val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
                 val currency = triple.third
-                val stockPrice = StockPrice(stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
-                        price = quote.price.toDouble().roundTo(3))
+                val stockPrice = com.sundbybergsit.cromfortune.domain.StockPrice(
+                    stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
+                    price = quote.price.toDouble().roundTo(3)
+                )
                 val previousOrders = StockOrderRepositoryImpl(context).list(stockSymbol)
                 val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
                 if (isStockMuted) {
                     Log.i(TAG, "Skipping recommendation for stock (${stockSymbol}) as it has been muted.")
                 } else if (previousOrders.isNotEmpty()) {
                     val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                            .getRecommendation(stockPrice = stockPrice, currencyRateInSek = currencyRates.find {
-                                currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
-                                    commissionFee = COMMISSION_FEE, previousOrders = previousOrders,
-                                    timeInMillis = System.currentTimeMillis())
+                        .getRecommendation(
+                            stockPrice = stockPrice,
+                            currencyRateInSek = currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
+                            commissionFee = COMMISSION_FEE,
+                            previousOrders = previousOrders,
+                            timeInMillis = System.currentTimeMillis()
+                        )
                     if (recommendation != null) {
                         notifyRecommendation(context, recommendation)
                     }
@@ -76,14 +81,24 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
         private fun notifyRecommendation(context: Context, recommendation: Recommendation) {
             val message = when (recommendation.command) {
                 is BuyStockCommand -> {
-                    context.getString(R.string.notification_recommendation_body_buy, recommendation.command.quantity,
-                            recommendation.command.name, recommendation.command.pricePerStock.roundTo(3).toString(),
-                            recommendation.command.currency.currencyCode, recommendation.command.commissionFee.roundToInt())
+                    context.getString(
+                        R.string.notification_recommendation_body_buy,
+                        (recommendation.command as BuyStockCommand).quantity,
+                        (recommendation.command as BuyStockCommand).name,
+                        (recommendation.command as BuyStockCommand).pricePerStock.roundTo(3).toString(),
+                        (recommendation.command as BuyStockCommand).currency.currencyCode,
+                        (recommendation.command as BuyStockCommand).commissionFee.roundToInt()
+                    )
                 }
                 is SellStockCommand -> {
-                    context.getString(R.string.notification_recommendation_body_sell, recommendation.command.quantity,
-                            recommendation.command.name, recommendation.command.pricePerStock.roundTo(3).toString(),
-                            recommendation.command.currency.currencyCode, recommendation.command.commissionFee.roundToInt())
+                    context.getString(
+                        R.string.notification_recommendation_body_sell,
+                        (recommendation.command as SellStockCommand).quantity,
+                        (recommendation.command as SellStockCommand).name,
+                        (recommendation.command as SellStockCommand).pricePerStock.roundTo(3).toString(),
+                        (recommendation.command as SellStockCommand).currency.currencyCode,
+                        (recommendation.command as SellStockCommand).commissionFee.roundToInt()
+                    )
                 }
                 else -> {
                     ""
@@ -96,15 +111,17 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             val notificationsRepository = NotificationsRepositoryImpl(context)
             notificationsRepository.add(notification)
             val shortText: String =
-                    when (recommendation.command) {
-                        is BuyStockCommand -> context.getString(R.string.generic_urge_buy)
-                        is SellStockCommand -> context.getString(R.string.generic_urge_sell)
-                        else -> ""
-                    }
-            NotificationUtil.doPostRegularNotification(context,
-                    context.getString(R.string.notification_recommendation_title),
-                    shortText,
-                    notification.message)
+                when (recommendation.command) {
+                    is BuyStockCommand -> context.getString(R.string.generic_urge_buy)
+                    is SellStockCommand -> context.getString(R.string.generic_urge_sell)
+                    else -> ""
+                }
+            NotificationUtil.doPostRegularNotification(
+                context,
+                context.getString(R.string.notification_recommendation_title),
+                shortText,
+                notification.message
+            )
         }
 
         private fun getRateInSek(currency: String) = YahooFinance.getFx("${currency}SEK=X").price.toDouble()
@@ -115,28 +132,30 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
         Log.i(TAG, "doWork()")
         try {
             val asyncWork =
-                    async {
-                        val timeInterval = StockRetrievalSettings(context).timeInterval.value
-                                as StockRetrievalSettings.ViewState.VALUES
-                        val currentTime = LocalTime.now()
-                        val currentDayOfWeek = LocalDate.now().dayOfWeek
-                        val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
-                        val toTime = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
-                        when {
-                            isRefreshRequired() -> {
-                                Log.i(TAG, "Initial retrieval of data.")
-                                refreshFromYahoo(context)
-                            }
-                            timeInterval.weekDays.isWithinConfiguredTimeInterval(currentDayOfWeek, currentTime,
-                                    fromTime, toTime) -> {
-                                Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
-                                refreshFromYahoo(context)
-                            }
-                            else -> {
-                                Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
-                            }
+                async {
+                    val timeInterval = StockRetrievalSettings(context).timeInterval.value
+                            as StockRetrievalSettings.ViewState.VALUES
+                    val currentTime = LocalTime.now()
+                    val currentDayOfWeek = LocalDate.now().dayOfWeek
+                    val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
+                    val toTime = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
+                    when {
+                        isRefreshRequired() -> {
+                            Log.i(TAG, "Initial retrieval of data.")
+                            refreshFromYahoo(context)
+                        }
+                        timeInterval.weekDays.isWithinConfiguredTimeInterval(
+                            currentDayOfWeek, currentTime,
+                            fromTime, toTime
+                        ) -> {
+                            Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
+                            refreshFromYahoo(context)
+                        }
+                        else -> {
+                            Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
                         }
                     }
+                }
             asyncWork.await()
             Result.success()
         } catch (error: Throwable) {

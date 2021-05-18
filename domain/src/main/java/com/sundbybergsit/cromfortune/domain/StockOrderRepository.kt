@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.stocks
+package com.sundbybergsit.cromfortune.domain
 
 interface StockOrderRepository {
 

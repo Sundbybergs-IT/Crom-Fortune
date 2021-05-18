@@ -11,14 +11,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.ui.home.OpinionatedStockOrderWrapperListAdapter
 import kotlinx.coroutines.runBlocking
 
 class StockOrdersDialogFragment(
-        private val stockSymbol: String, private val stocks: List<StockOrder>,
-        private val readOnly: Boolean,
+    private val stockSymbol: String, private val stocks: List<com.sundbybergsit.cromfortune.domain.StockOrder>,
+    private val readOnly: Boolean,
 ) : DialogFragment() {
 
     private lateinit var listAdapter: OpinionatedStockOrderWrapperListAdapter
@@ -36,7 +34,7 @@ class StockOrdersDialogFragment(
             listAdapter.submitList(OpinionatedStockOrderWrapperAdapterItemUtil.convertToAdapterItems(
                     CromFortuneV1RecommendationAlgorithm(context), stocks))
         }
-        val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
+        val stockName = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { pair -> pair.first == stockSymbol }!!.second
         return AlertDialog.Builder(context)
                 .setView(dialogRootView)
                 .setTitle(R.string.generic_title_stock_orders)

@@ -12,13 +12,11 @@ import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
-import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +45,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         val cromSortedStockOrders: MutableList<StockOrder> = mutableListOf()
         for (stockOrder in sortedStockOrders) {
             if (stockOrderAggregate == null) {
-                val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                val stockName = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                 stockOrderAggregate = StockOrderAggregate(
                         (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
                                 .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
@@ -57,22 +55,29 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                 stockOrderAggregate.aggregate(stockOrder)
             } else {
                 val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                        .getRecommendation(StockPrice(stockOrder.name,
-                                stockOrderAggregate.currency, stockOrder.pricePerStock),
+                        .getRecommendation(
+                            com.sundbybergsit.cromfortune.domain.StockPrice(
+                                stockOrder.name,
+                                stockOrderAggregate.currency, stockOrder.pricePerStock
+                            ),
                                 stockOrderAggregate.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
                                 cromSortedStockOrders.toSet(), stockOrder.dateInMillis)
                 when (recommendation?.command) {
                     is BuyStockCommand -> {
-                        val buyOrder = StockOrder("Buy", stockOrderAggregate.currency.toString(),
-                                stockOrder.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity())
+                        val buyOrder = StockOrder(
+                            "Buy", stockOrderAggregate.currency.toString(),
+                            stockOrder.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
+                            StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                        )
                         cromSortedStockOrders.add(buyOrder)
                         stockOrderAggregate.aggregate(buyOrder)
                     }
-                    is SellStockCommand -> {
-                        val sellOrder = StockOrder("Sell", stockOrderAggregate.currency.toString(),
-                                stockOrder.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity())
+                    is com.sundbybergsit.cromfortune.algorithm.SellStockCommand -> {
+                        val sellOrder = StockOrder(
+                            "Sell", stockOrderAggregate.currency.toString(),
+                            stockOrder.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
+                            StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                        )
                         cromSortedStockOrders.add(sellOrder)
                         stockOrderAggregate.aggregate(sellOrder)
                     }
@@ -89,7 +94,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         var stockOrderAggregate: StockOrderAggregate? = null
         for (stockOrder in sortedStockOrders) {
             if (stockOrderAggregate == null) {
-                val stockName = StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                val stockName = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                 stockOrderAggregate = StockOrderAggregate(
                         (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
                                 .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,

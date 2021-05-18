@@ -1,9 +1,9 @@
 package com.sundbybergsit.cromfortune.algorithm
 
 import android.content.Context
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import com.sundbybergsit.cromfortune.roundTo
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import java.util.*
 
 class SellStockCommand(private val context: Context, private val currentTimeInMillis: Long,
@@ -20,16 +20,15 @@ class SellStockCommand(private val context: Context, private val currentTimeInMi
 
     override fun price(): Double = pricePerStock
 
-    override fun execute() {
-        val stockOrderRepository = StockOrderRepositoryImpl(context)
-        if (stockOrderRepository.count(name) > 0) {
-            val stockOrders: MutableSet<StockOrder> = stockOrderRepository.list(name).toMutableSet()
+    override fun execute(repository: StockOrderRepository) {
+        if (repository.count(name) > 0) {
+            val stockOrders: MutableSet<StockOrder> = repository.list(name).toMutableSet()
             stockOrders.add(StockOrder(orderAction = "Sell", currency = currency.toString(),
                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
                     quantity = quantity))
-            stockOrderRepository.putAll(name, stockOrders)
+            repository.putAll(name, stockOrders)
         } else {
-            stockOrderRepository.putReplacingAll(name, StockOrder(orderAction = "Sell", currency = currency.toString(),
+            repository.putReplacingAll(name, StockOrder(orderAction = "Sell", currency = currency.toString(),
                                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
                                     commissionFee = commissionFee, quantity = quantity))
         }

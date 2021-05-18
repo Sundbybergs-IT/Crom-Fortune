@@ -55,6 +55,8 @@ tasks.withType(KotlinCompile::class).all {
 }
 
 dependencies {
+    api(projects.domain)
+    implementation(projects.algorithm)
     // https://youtrack.jetbrains.com/issue/KT-44452
     //noinspection(DifferentStdlibGradleVersion
     implementation("org.jetbrains.kotlin:kotlin-stdlib")

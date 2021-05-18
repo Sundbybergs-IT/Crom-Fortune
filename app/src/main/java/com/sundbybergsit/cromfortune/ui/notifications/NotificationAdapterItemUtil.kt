@@ -1,6 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.notifications
 
-import com.sundbybergsit.cromfortune.notifications.NotificationMessage
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 
 internal object NotificationAdapterItemUtil {

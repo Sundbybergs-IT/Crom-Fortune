@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.AdapterItem
@@ -222,7 +221,7 @@ internal class StockOrderAggregateListAdapter(
 
     }
 
-    override fun getStockPrice(stockSymbol: String): StockPrice {
+    override fun getStockPrice(stockSymbol: String): com.sundbybergsit.cromfortune.domain.StockPrice {
         return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES)
                 .stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
     }

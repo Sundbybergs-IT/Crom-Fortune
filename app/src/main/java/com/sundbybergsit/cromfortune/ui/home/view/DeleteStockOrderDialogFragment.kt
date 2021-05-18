@@ -8,18 +8,18 @@ import android.os.Bundle
 import androidx.core.os.ConfigurationCompat
 import androidx.fragment.app.DialogFragment
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.OpinionatedStockOrderWrapperListAdapter
 import java.text.SimpleDateFormat
 import java.util.*
 
 class DeleteStockOrderDialogFragment(
-        context: Context,
-        private val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context),
-        val stockOrder: StockOrder,
-        val adapter: OpinionatedStockOrderWrapperListAdapter,
+    context: Context,
+    private val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context),
+    val stockOrder: StockOrder,
+    val adapter: OpinionatedStockOrderWrapperListAdapter,
 ) : DialogFragment() {
 
     @SuppressLint("SetTextI18n")

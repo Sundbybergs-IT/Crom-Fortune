@@ -3,14 +3,8 @@ package com.sundbybergsit.cromfortune.crom
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.sundbybergsit.cromfortune.algorithm.ConformanceScore
-import com.sundbybergsit.cromfortune.algorithm.Recommendation
-import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
-import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockPrice
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
@@ -31,7 +25,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     fun setUp() {
         CurrencyRateRepository.add(setOf(CurrencyRate("SEK", 1.0)))
         StockPriceRepository.put(setOf(
-                StockPrice(StockPrice.SYMBOLS[0].first, Currency.getInstance("SEK"), 1.0)
+            com.sundbybergsit.cromfortune.domain.StockPrice(
+                com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                Currency.getInstance("SEK"),
+                1.0
+            )
         ))
         ShadowLooper.runUiThreadTasks()
         calculator = CromFortuneV1AlgorithmConformanceScoreCalculator()
@@ -90,27 +88,47 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         assertScore(50, score)
     }
 
-    private fun assertScore(expectedValue: Int, score: ConformanceScore) {
+    private fun assertScore(expectedValue: Int, score: com.sundbybergsit.cromfortune.algorithm.ConformanceScore) {
         assertTrue("Expected score $expectedValue but was ${score.score}", score.score == expectedValue)
     }
 
-    private fun newSellStockOrder(dateInMillis: Long): StockOrder {
-        return StockOrder("Sell", "SEK", dateInMillis, StockPrice.SYMBOLS[0].first, 1.0, 0.0, 1)
+    private fun newSellStockOrder(dateInMillis: Long): com.sundbybergsit.cromfortune.domain.StockOrder {
+        return com.sundbybergsit.cromfortune.domain.StockOrder(
+            "Sell",
+            "SEK",
+            dateInMillis,
+            com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+            1.0,
+            0.0,
+            1
+        )
     }
 
-    private fun newBuyStockOrder(dateInMillis: Long): StockOrder {
-        return StockOrder("Buy", "SEK", dateInMillis, StockPrice.SYMBOLS[0].first, 1.0, 0.0, 1)
+    private fun newBuyStockOrder(dateInMillis: Long): com.sundbybergsit.cromfortune.domain.StockOrder {
+        return com.sundbybergsit.cromfortune.domain.StockOrder(
+            "Buy",
+            "SEK",
+            dateInMillis,
+            com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+            1.0,
+            0.0,
+            1
+        )
     }
 
-    class SellRecommendationDummyAlgorithm : RecommendationAlgorithm() {
+    class SellRecommendationDummyAlgorithm : com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm() {
 
         override fun getRecommendation(
-                stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
-                currentTimeInMillis: Long,
-        ): Recommendation {
-            return Recommendation(SellStockCommand(ApplicationProvider.getApplicationContext(), currentTimeInMillis,
+            stockPrice: com.sundbybergsit.cromfortune.domain.StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<com.sundbybergsit.cromfortune.domain.StockOrder>,
+            currentTimeInMillis: Long,
+        ): com.sundbybergsit.cromfortune.algorithm.Recommendation {
+            return com.sundbybergsit.cromfortune.algorithm.Recommendation(
+                com.sundbybergsit.cromfortune.algorithm.SellStockCommand(
+                    ApplicationProvider.getApplicationContext(), currentTimeInMillis,
                     Currency.getInstance("SEK"),
-                    StockPrice.SYMBOLS[0].first, 0.0, 1, 0.0))
+                    com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, 0.0, 1, 0.0
+                )
+            )
         }
 
     }

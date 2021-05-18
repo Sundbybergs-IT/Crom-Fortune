@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.notifications
+package com.sundbybergsit.cromfortune.domain.notifications
 
 interface NotificationsRepository {
 

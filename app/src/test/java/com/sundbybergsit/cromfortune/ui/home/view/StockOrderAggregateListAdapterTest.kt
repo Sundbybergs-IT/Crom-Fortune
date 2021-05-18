@@ -8,10 +8,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.assumeEquals
-import com.sundbybergsit.cromfortune.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockPrice
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
@@ -41,9 +39,21 @@ class StockOrderAggregateListAdapterTest {
     fun setUp() {
         CurrencyRateRepository.add(setOf(CurrencyRate("SEK", 1.0)))
         StockPriceRepository.put(setOf(
-                StockPrice(StockPrice.SYMBOLS[0].first, Currency.getInstance(StockPrice.SYMBOLS[0].third), 100.0),
-                StockPrice(StockPrice.SYMBOLS[1].first, Currency.getInstance(StockPrice.SYMBOLS[1].third), 0.02),
-                StockPrice(StockPrice.SYMBOLS[2].first, Currency.getInstance(StockPrice.SYMBOLS[2].third), 0.01),
+            com.sundbybergsit.cromfortune.domain.StockPrice(
+                com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                Currency.getInstance(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].third),
+                100.0
+            ),
+            com.sundbybergsit.cromfortune.domain.StockPrice(
+                com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[1].first,
+                Currency.getInstance(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[1].third),
+                0.02
+            ),
+            com.sundbybergsit.cromfortune.domain.StockPrice(
+                com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[2].first,
+                Currency.getInstance(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[2].third),
+                0.01
+            ),
         ))
         ShadowLooper.runUiThreadTasks()
         listAdapter = StockOrderAggregateListAdapter(object : StockClickListener {
@@ -53,12 +63,15 @@ class StockOrderAggregateListAdapterTest {
         }, false)
         val list: List<AdapterItem> = listOf(
                 StockHeaderAdapterItem(),
-                StockAggregateAdapterItem(getSimpleStockAggregate(StockPrice.SYMBOLS[0].first,
-                        StockPrice.SYMBOLS[0].third, 100.099)),
-                StockAggregateAdapterItem(getSimpleStockAggregate(StockPrice.SYMBOLS[1].first,
-                        StockPrice.SYMBOLS[1].third, 0.0199)),
-                StockAggregateAdapterItem(getSimpleStockAggregate(StockPrice.SYMBOLS[2].first,
-                        StockPrice.SYMBOLS[2].third, 0.0109)),
+                StockAggregateAdapterItem(getSimpleStockAggregate(
+                    com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                        com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].third, 100.099)),
+                StockAggregateAdapterItem(getSimpleStockAggregate(
+                    com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[1].first,
+                        com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[1].third, 0.0199)),
+                StockAggregateAdapterItem(getSimpleStockAggregate(
+                    com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[2].first,
+                        com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[2].third, 0.0109)),
         )
         listAdapter.setListener(HomeViewModel())
         listAdapter.submitList(list)
@@ -82,7 +95,7 @@ class StockOrderAggregateListAdapterTest {
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         val numberFormat: NumberFormat = NumberFormat.getCurrencyInstance()
-        numberFormat.currency = Currency.getInstance(StockPrice.SYMBOLS[0].third)
+        numberFormat.currency = Currency.getInstance(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].third)
         numberFormat.minimumFractionDigits = 2
         numberFormat.maximumFractionDigits = 2
         assertEquals(numberFormat.format(100.10), acquisitionValue.text.toString())
@@ -99,7 +112,7 @@ class StockOrderAggregateListAdapterTest {
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         val numberFormat: NumberFormat = NumberFormat.getCurrencyInstance()
-        numberFormat.currency = Currency.getInstance(StockPrice.SYMBOLS[1].third)
+        numberFormat.currency = Currency.getInstance(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[1].third)
         numberFormat.minimumFractionDigits = 2
         numberFormat.maximumFractionDigits = 2
         assertEquals(numberFormat.format(0.02), acquisitionValue.text.toString())
@@ -116,7 +129,7 @@ class StockOrderAggregateListAdapterTest {
 
         val acquisitionValue = viewHolder.itemView.findViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue)
         val numberFormat: NumberFormat = NumberFormat.getCurrencyInstance()
-        numberFormat.currency = Currency.getInstance(StockPrice.SYMBOLS[2].third)
+        numberFormat.currency = Currency.getInstance(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[2].third)
         numberFormat.minimumFractionDigits = 3
         numberFormat.maximumFractionDigits = 3
         assertEquals(numberFormat.format(0.011), acquisitionValue.text.toString())
@@ -146,8 +159,12 @@ class StockOrderAggregateListAdapterTest {
     ): StockOrderAggregate {
         val stockOrderAggregate = StockOrderAggregate(1.0, "Not important",
                 stockSymbol, Currency.getInstance(currencySymbol))
-        stockOrderAggregate.aggregate(StockOrder("Buy", currencySymbol, 0,
-                stockSymbol, totalPrice, 0.0, 1))
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Buy", currencySymbol, 0,
+                stockSymbol, totalPrice, 0.0, 1
+            )
+        )
         return stockOrderAggregate
     }
 

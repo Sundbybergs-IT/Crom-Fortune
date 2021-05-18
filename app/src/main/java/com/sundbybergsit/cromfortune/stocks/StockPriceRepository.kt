@@ -14,14 +14,14 @@ object StockPriceRepository {
 
     val stockPrices: LiveData<ViewState> = _stockPrices
 
-    fun put(stockPrice: Set<StockPrice>) {
+    fun put(stockPrice: Set<com.sundbybergsit.cromfortune.domain.StockPrice>) {
         Log.v(TAG, "put(${stockPrice})")
         _stockPrices.postValue(ViewState.VALUES(Instant.now(), stockPrice))
     }
 
     sealed class ViewState {
         object NotInitialized : ViewState()
-        data class VALUES(val instant: Instant, val stockPrices: Set<StockPrice>) : ViewState()
+        data class VALUES(val instant: Instant, val stockPrices: Set<com.sundbybergsit.cromfortune.domain.StockPrice>) : ViewState()
     }
 
 }

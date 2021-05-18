@@ -2,8 +2,6 @@ package com.sundbybergsit.cromfortune.ui.home.view
 
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import com.sundbybergsit.cromfortune.ui.home.StockOrderAggregate
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -19,10 +17,14 @@ class StockOrderAggregateTest {
 
     @Test
     fun `getAcquisitionValue - when buy a stock without commission fee - returns correct value`() {
-        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+        val stockOrderAggregate = StockOrderAggregate(1.0, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
                 currency)
-        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 0.0, 1))
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Buy", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 0.0, 1
+            )
+        )
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
@@ -31,10 +33,14 @@ class StockOrderAggregateTest {
 
     @Test
     fun `getAcquisitionValue - when buy a stock with commission fee - returns correct value`() {
-        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+        val stockOrderAggregate = StockOrderAggregate(1.0, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
                 currency)
-        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 1))
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Buy", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1
+            )
+        )
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
@@ -43,12 +49,20 @@ class StockOrderAggregateTest {
 
     @Test
     fun `getAcquisitionValue - when buy a stock and sell it - returns correct value`() {
-        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+        val stockOrderAggregate = StockOrderAggregate(1.0, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
                 currency)
-        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 1))
-        stockOrderAggregate.aggregate(StockOrder("Sell", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 1))
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Buy", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1
+            )
+        )
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Sell", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1
+            )
+        )
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
@@ -57,7 +71,7 @@ class StockOrderAggregateTest {
 
     @Test
     fun `getProfit - when nothing aggregated - returns correct value`() {
-        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+        val stockOrderAggregate = StockOrderAggregate(1.0, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
                 currency)
 
         val profit = stockOrderAggregate.getProfit(1.0)
@@ -67,10 +81,14 @@ class StockOrderAggregateTest {
 
     @Test
     fun `getProfit - after purchase - returns correct value`() {
-        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+        val stockOrderAggregate = StockOrderAggregate(1.0, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
                 currency)
-        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 1))
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Buy", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1
+            )
+        )
 
         val profit = stockOrderAggregate.getProfit(0.099)
 
@@ -79,12 +97,20 @@ class StockOrderAggregateTest {
 
     @Test
     fun `getProfit - after purchase and sale when nothing left - returns correct value`() {
-        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+        val stockOrderAggregate = StockOrderAggregate(1.0, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
                 currency)
-        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 1))
-        stockOrderAggregate.aggregate(StockOrder("Sell", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 1))
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Buy", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1
+            )
+        )
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Sell", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1
+            )
+        )
 
         val profit = stockOrderAggregate.getProfit(10000000.0)
 
@@ -93,12 +119,20 @@ class StockOrderAggregateTest {
 
     @Test
     fun `getProfit - after purchase and sale when stocks left - returns correct value`() {
-        val stockOrderAggregate = StockOrderAggregate(1.0, StockPrice.SYMBOLS[0].first, StockPrice.SYMBOLS[0].first,
+        val stockOrderAggregate = StockOrderAggregate(1.0, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
                 currency)
-        stockOrderAggregate.aggregate(StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 2))
-        stockOrderAggregate.aggregate(StockOrder("Sell", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
-                100.099, 10.0, 1))
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Buy", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 2
+            )
+        )
+        stockOrderAggregate.aggregate(
+            com.sundbybergsit.cromfortune.domain.StockOrder(
+                "Sell", currency.toString(), 0L, com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS[0].first,
+                100.099, 10.0, 1
+            )
+        )
 
         val profit = stockOrderAggregate.getProfit(10000000.0)
 

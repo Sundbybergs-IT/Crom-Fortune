@@ -10,9 +10,9 @@ import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1AlgorithmConformanceScoreCalculator
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.stocks.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
-import com.sundbybergsit.cromfortune.stocks.StockPrice
 import kotlinx.coroutines.launch
 import java.time.Instant
 

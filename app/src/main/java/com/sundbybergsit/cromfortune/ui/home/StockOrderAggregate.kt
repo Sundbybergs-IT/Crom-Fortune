@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import com.sundbybergsit.cromfortune.stocks.StockOrder
 import java.util.*
 
 data class StockOrderAggregate(
@@ -13,10 +12,10 @@ data class StockOrderAggregate(
         private var buyQuantity: Int = 0,
         private var sellQuantity: Int = 0,
         private var acquisitionValue: Double = 0.0,
-        val orders : MutableList<StockOrder> = mutableListOf()
+        val orders : MutableList<com.sundbybergsit.cromfortune.domain.StockOrder> = mutableListOf()
 ) {
 
-    fun aggregate(stockOrder: StockOrder) {
+    fun aggregate(stockOrder: com.sundbybergsit.cromfortune.domain.StockOrder) {
         orders.add(stockOrder)
         when (stockOrder.orderAction) {
             "Buy" -> {

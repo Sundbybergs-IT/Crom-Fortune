@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.currencies
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import java.time.Instant
 
 object CurrencyRateRepository {

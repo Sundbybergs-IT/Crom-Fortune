@@ -1,12 +1,10 @@
 package com.sundbybergsit.cromfortune.crom
 
 import android.content.Context
-import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
-import com.sundbybergsit.cromfortune.stocks.StockOrder
-import com.sundbybergsit.cromfortune.stocks.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockPrice
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -26,8 +24,8 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
     }
 
     override fun getRecommendation(
-            stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
-            timeInMillis: Long,
+        stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, previousOrders: Set<StockOrder>,
+        timeInMillis: Long,
     ): Recommendation? {
         return getRecommendation(stockPrice.stockSymbol, stockPrice.currency,
                 currencyRateInSek, previousOrders, stockPrice.price, commissionFee, timeInMillis
@@ -35,14 +33,18 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
     }
 
     private fun getRecommendation(
-            stockName: String, currency: Currency, rateInSek: Double,
-            orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
-            timeInMillis: Long,
+        stockName: String, currency: Currency, rateInSek: Double,
+        orders: Set<StockOrder>, currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
+        timeInMillis: Long,
     ): Recommendation? {
         if (orders.isEmpty()) {
             // Dummy recommendation to mimic first buy
-            return Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
-                    currentStockPriceInStockCurrency, 1, commissionFeeInSek))
+            return Recommendation(
+                com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
+                    context, timeInMillis, currency, stockName,
+                    currentStockPriceInStockCurrency, 1, commissionFeeInSek
+                )
+            )
         }
         val sortedOrders = orders.toSortedSet { s1, s2 -> s1.dateInMillis.compareTo(s2.dateInMillis) }
         var grossQuantity = 0
@@ -70,8 +72,12 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             val buyQuantity: Int = ((DEFAULT_FIRST_PURCHASE_ORDER_IN_SEK - commissionFeeInSek) / currentStockPriceInSek).toInt()
             val netStockPriceInStockCurrency = ((commissionFeeInSek / rateInSek) + currentStockPriceInStockCurrency * buyQuantity) / buyQuantity
             if (buyQuantity > 0 && isCurrentStockBelowLastSale(sortedOrders.last(), netStockPriceInStockCurrency)) {
-                return Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
-                        currentStockPriceInStockCurrency, buyQuantity, commissionFeeInSek))
+                return Recommendation(
+                    com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
+                        context, timeInMillis, currency, stockName,
+                        currentStockPriceInStockCurrency, buyQuantity, commissionFeeInSek
+                    )
+                )
             }
         }
         val netQuantity = grossQuantity - soldQuantity
@@ -100,16 +106,24 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 if (isNotOverSoldForMediumStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity) &&
                         tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek)) {
                     isOkToContinue = true
-                    recommendation = Recommendation(SellStockCommand(context, timeInMillis, currency, stockName,
-                            currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                    recommendation = Recommendation(
+                        com.sundbybergsit.cromfortune.algorithm.SellStockCommand(
+                            context, timeInMillis, currency, stockName,
+                            currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                        )
+                    )
                     tradeQuantity += 1
                 } else {
                     if (isNotOverSoldForHighStockPriceIncrease(tradeQuantity, soldQuantity, grossQuantity) &&
                             tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek) &&
                             hasEnoughDaysElapsed(daysSinceLastSale)) {
                         isOkToContinue = true
-                        recommendation = Recommendation(SellStockCommand(context, timeInMillis, currency, stockName,
-                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                        recommendation = Recommendation(
+                            com.sundbybergsit.cromfortune.algorithm.SellStockCommand(
+                                context, timeInMillis, currency, stockName,
+                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                            )
+                        )
                         tradeQuantity += 1
                     } else {
                         return recommendation
@@ -120,15 +134,23 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 if (isNotOverBoughtForMediumStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity) &&
                         tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek)) {
                     isOkToContinue = true
-                    recommendation = Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
-                            currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                    recommendation = Recommendation(
+                        com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
+                            context, timeInMillis, currency, stockName,
+                            currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                        )
+                    )
                     tradeQuantity += 1
                 } else {
                     if (isNotOverBoughtForHighStockPriceDecrease(tradeQuantity, soldQuantity, grossQuantity) &&
                             tradeWithinMaxPriceLimit(tradeQuantity, currentStockPriceInSek)) {
                         isOkToContinue = true
-                        recommendation = Recommendation(BuyStockCommand(context, timeInMillis, currency, stockName,
-                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek))
+                        recommendation = Recommendation(
+                            com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
+                                context, timeInMillis, currency, stockName,
+                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                            )
+                        )
                         tradeQuantity += 1
                     } else {
                         isOkToContinue = false
