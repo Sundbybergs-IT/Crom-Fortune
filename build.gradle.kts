@@ -14,7 +14,7 @@ plugins {
     id("org.sonarqube")
 }
 
-val baseVersionName = "0.2.13"
+val baseVersionName = "0.2.14"
 
 allprojects {
 
