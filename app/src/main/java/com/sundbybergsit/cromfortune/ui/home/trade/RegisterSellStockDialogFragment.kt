@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.ui.AutoCompleteAdapter
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.transformIntoDatePicker
@@ -25,43 +26,69 @@ private const val DATE_FORMAT = "MM/dd/yyyy"
 
 class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogFragment() {
 
+    companion object {
+
+        const val EXTRA_STOCK_SYMBOL = "EXTRA_STOCK_SYMBOL"
+
+    }
+
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialogRootView: View = LayoutInflater.from(context).inflate(R.layout.dialog_remove_stock, view as ViewGroup?, false)
-        val inputCurrency: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_currencyInput)
+        val dialogRootView: View =
+            LayoutInflater.from(context).inflate(R.layout.dialog_remove_stock, view as ViewGroup?, false)
+        val inputCurrency: AutoCompleteTextView =
+            dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_currencyInput)
         inputCurrency.setAdapter(getCurrencyAutoCompleteAdapter())
-        val inputLayoutCurrency: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_currencyInput)
+        val inputLayoutCurrency: TextInputLayout =
+            dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_currencyInput)
         inputLayoutCurrency.isEnabled = false
         val inputDate: EditText = dialogRootView.findViewById(R.id.editText_dialogRemoveStock_dateInput)
-        val inputLayoutDate: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_dateInput)
+        val inputLayoutDate: TextInputLayout =
+            dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_dateInput)
         inputDate.transformIntoDatePicker(requireContext(), DATE_FORMAT, Date(), inputLayoutDate)
-        val inputStockQuantity: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_quantityInput)
-        val inputLayoutStockQuantity: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_quantityInput)
-        val inputStockPrice: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_priceInput)
-        val inputLayoutStockPrice: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_priceInput)
-        val inputStockName: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_nameInput)
+        val inputStockQuantity: AutoCompleteTextView =
+            dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_quantityInput)
+        val inputLayoutStockQuantity: TextInputLayout =
+            dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_quantityInput)
+        val inputStockPrice: AutoCompleteTextView =
+            dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_priceInput)
+        val inputLayoutStockPrice: TextInputLayout =
+            dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_priceInput)
+        val inputStockName: AutoCompleteTextView =
+            dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_nameInput)
         inputStockName.setAdapter(getStockNameAutoCompleteAdapter())
         inputStockName.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
-                val find = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == inputStockName.text.toString() }
+                val find =
+                    StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == inputStockName.text.toString() }
                 if (find != null) {
                     inputCurrency.setText(find.third)
                 }
             }
         }
-        val inputLayoutStockName: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_nameInput)
-        val inputCommissionFee: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_commissionFeeInput)
-        val inputLayoutCommissionFee: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_commissionFeeInput)
+        if (arguments?.containsKey(EXTRA_STOCK_SYMBOL) == true) {
+            val stockTriple = StockPrice.SYMBOLS.find { triple ->
+                triple.first == requireArguments().getString(EXTRA_STOCK_SYMBOL)
+            }!!
+            inputStockName.setText("${stockTriple.second} (${stockTriple.first})")
+            inputCurrency.setText(stockTriple.third)
+        }
+        val inputLayoutStockName: TextInputLayout =
+            dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_nameInput)
+        val inputCommissionFee: AutoCompleteTextView =
+            dialogRootView.findViewById(R.id.autoCompleteTextView_dialogRemoveStock_commissionFeeInput)
+        val inputLayoutCommissionFee: TextInputLayout =
+            dialogRootView.findViewById(R.id.textInputLayout_dialogRemoveStock_commissionFeeInput)
         val confirmListener: DialogInterface.OnClickListener = DialogInterface.OnClickListener { _, _ ->
         }
         val alertDialog = AlertDialog.Builder(requireContext())
-                .setView(dialogRootView)
-                .setMessage(R.string.home_remove_stock_message)
-                .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
-                    dismiss()
-                }
-                .setPositiveButton(getText(R.string.action_ok), confirmListener)
-                .create()
+            .setView(dialogRootView)
+            .setMessage(R.string.home_remove_stock_message)
+            .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
+                dismiss()
+            }
+            .setPositiveButton(getText(R.string.action_ok), confirmListener)
+            .create()
         alertDialog.setOnShowListener {
             val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
             button.setOnClickListener {
@@ -71,7 +98,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                     validateDouble(inputStockQuantity, inputLayoutStockQuantity)
                     validateStockName(inputStockName, inputLayoutStockName)
                     val stockSymbol = inputStockName.text.toString().substringAfterLast('(')
-                            .substringBeforeLast(')')
+                        .substringBeforeLast(')')
                     validateHasStockQuantity(stockSymbol, inputStockQuantity, inputLayoutStockQuantity)
                     validateDouble(inputStockPrice, inputLayoutStockPrice)
                     validateDouble(inputCommissionFee, inputLayoutCommissionFee)
@@ -104,16 +131,21 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
     }
 
     private fun getCurrencyAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(com.sundbybergsit.cromfortune.domain.StockPrice.CURRENCIES.toList())
-        return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
-                android.R.id.text1, searchArrayList)
+        val searchArrayList = ArrayList(StockPrice.CURRENCIES.toList())
+        return AutoCompleteAdapter(
+            requireContext(), android.R.layout.simple_dropdown_item_1line,
+            android.R.id.text1, searchArrayList
+        )
     }
 
     private fun getStockNameAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+        val searchArrayList =
+            ArrayList(StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
                 .toMutableList())
-        return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
-                android.R.id.text1, searchArrayList)
+        return AutoCompleteAdapter(
+            requireContext(), android.R.layout.simple_dropdown_item_1line,
+            android.R.id.text1, searchArrayList
+        )
     }
 
     private fun validateCurrency(input: AutoCompleteTextView, inputLayout: TextInputLayout) {
@@ -123,7 +155,7 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !com.sundbybergsit.cromfortune.domain.StockPrice.CURRENCIES.contains(input.text.toString()) -> {
+            !StockPrice.CURRENCIES.contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()
                 throw ValidatorException()
@@ -141,8 +173,8 @@ class RegisterSellStockDialogFragment(private val homeViewModel: HomeViewModel) 
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
-                    .toMutableList().contains(input.text.toString()) -> {
+            !StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+                .toMutableList().contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()
                 throw ValidatorException()

@@ -43,7 +43,9 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(stockClickListener = this, readOnly = true)
+        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(viewModel = viewModel,
+            parentFragmentManager = parentFragmentManager,
+            stockClickListener = this, readOnly = true)
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView_fragmentHomeStocks)
         recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         stockOrderAggregateListAdapter.setListener(viewModel)
@@ -127,10 +129,12 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
         viewModel.refresh(requireContext())
         if (stockOrderAggregateListAdapter.itemCount > 0) {
             stockOrderAggregateListAdapter.onBindViewHolder(
-                    StockOrderAggregateListAdapter.StockOrderAggregateHeaderViewHolder(stockPriceListener = stockOrderAggregateListAdapter,
-                            itemView = LayoutInflater.from(context).inflate(R.layout.listrow_stock_header, requireView()
-                                    .findViewById(R.id.recyclerView_fragmentHomeStocks), false),
-                            context = requireContext()), 0)
+                    StockOrderAggregateListAdapter.StockOrderAggregateHeaderViewHolder(
+                        context = requireContext(),
+                        stockPriceListener = stockOrderAggregateListAdapter,
+                        itemView = LayoutInflater.from(context).inflate(R.layout.listrow_stock_header, requireView()
+                                .findViewById(R.id.recyclerView_fragmentHomeStocks), false)
+                    ), 0)
             stockOrderAggregateListAdapter.notifyDataSetChanged()
         }
     }

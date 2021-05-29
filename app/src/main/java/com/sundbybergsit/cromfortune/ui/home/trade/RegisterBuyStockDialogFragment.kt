@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.ui.AutoCompleteAdapter
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.transformIntoDatePicker
@@ -24,6 +25,12 @@ import java.util.*
 private const val DATE_FORMAT = "MM/dd/yyyy"
 
 class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) : DialogFragment() {
+
+    companion object {
+
+        const val EXTRA_STOCK_SYMBOL = "EXTRA_STOCK_SYMBOL"
+
+    }
 
     @SuppressLint("SetTextI18n")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -40,14 +47,24 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
         val inputStockPrice: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_priceInput)
         val inputLayoutStockPrice: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_priceInput)
         val inputStockName: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_nameInput)
-        inputStockName.setAdapter(getStockNameAutoCompleteAdapter())
+        val stockNameAutoCompleteAdapter = getStockNameAutoCompleteAdapter()
+        inputStockName.setAdapter(stockNameAutoCompleteAdapter)
         inputStockName.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
-                val find = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == inputStockName.text.toString() }
+                val find = StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == inputStockName.text.toString() }
                 if (find != null) {
                     inputCurrency.setText(find.third)
                 }
             }
+        }
+        if (arguments?.containsKey(EXTRA_STOCK_SYMBOL) == true) {
+            val stockTriple = StockPrice.SYMBOLS.find { triple ->
+                triple.first == requireArguments().getString(
+                    EXTRA_STOCK_SYMBOL
+                )
+            }!!
+            inputStockName.setText("${stockTriple.second} (${stockTriple.first})")
+            inputCurrency.setText(stockTriple.third)
         }
         val inputLayoutStockName: TextInputLayout = dialogRootView.findViewById(R.id.textInputLayout_dialogAddStock_nameInput)
         val inputCommissionFee: AutoCompleteTextView = dialogRootView.findViewById(R.id.autoCompleteTextView_dialogAddStock_commissionFeeInput)
@@ -95,13 +112,13 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
     }
 
     private fun getCurrencyAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(com.sundbybergsit.cromfortune.domain.StockPrice.CURRENCIES.toList())
+        val searchArrayList = ArrayList(StockPrice.CURRENCIES.toList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
     }
 
     private fun getStockNameAutoCompleteAdapter(): AutoCompleteAdapter {
-        val searchArrayList = ArrayList(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+        val searchArrayList = ArrayList(StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
                 .toMutableList())
         return AutoCompleteAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line,
                 android.R.id.text1, searchArrayList)
@@ -114,7 +131,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !com.sundbybergsit.cromfortune.domain.StockPrice.CURRENCIES.contains(input.text.toString()) -> {
+            !StockPrice.CURRENCIES.contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()
                 throw ValidatorException()
@@ -132,7 +149,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
                 input.requestFocus()
                 throw ValidatorException()
             }
-            !com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+            !StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
                     .toMutableList().contains(input.text.toString()) -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
                 input.requestFocus()
