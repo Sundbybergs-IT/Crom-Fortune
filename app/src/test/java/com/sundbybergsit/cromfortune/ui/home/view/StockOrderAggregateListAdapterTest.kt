@@ -56,7 +56,7 @@ class StockOrderAggregateListAdapterTest {
             ),
         ))
         ShadowLooper.runUiThreadTasks()
-        listAdapter = StockOrderAggregateListAdapter(object : StockClickListener {
+        listAdapter = StockOrderAggregateListAdapter(viewModel, parentFragmentManager, object : StockClickListener {
             override fun onClick(stockName: String, readOnly: Boolean) {
                 // Do nothing
             }

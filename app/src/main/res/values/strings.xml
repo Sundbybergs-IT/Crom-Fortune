@@ -53,7 +53,7 @@
     <string name="home_add_stock_date_label">Date</string>
     <string name="home_add_stock_name_label">Name</string>
     <string name="home_add_stock_quantity_label">Quantity</string>
-    <string name="home_add_stock_message">Add one purchase of a stock at a time.</string>
+    <string name="home_add_stock_message">Add one purchase order at a time.</string>
     <string name="home_delete_stock_order">This will delete the transaction for the following date %1$s.</string>
     <string name="home_delete_all_stock_orders">This will delete all transactions for the following stock: %1$s.</string>
     <string name="home_information_data_refreshed">The app is now refreshed with the latest rates. Note: Refreshes automatically every hour.</string>
@@ -63,7 +63,7 @@
     <string name="home_remove_stock_name_label">Name</string>
     <string name="home_remove_stock_quantity_error_insufficient">You don\'t have this much.</string>
     <string name="home_remove_stock_quantity_label">Quantity</string>
-    <string name="home_remove_stock_message">Add one sell of a stock at a time.</string>
+    <string name="home_remove_stock_message">Add one sale order at a time.</string>
     <string name="home_no_stocks">Add your first stock to get filthy rich!</string>
     <string name="home_stocks">You have added stocks. Not shown (not yet implemented).</string>
     <string name="home_stocks_personal_title">Yours</string>

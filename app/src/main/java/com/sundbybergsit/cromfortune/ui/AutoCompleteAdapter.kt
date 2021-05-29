@@ -49,13 +49,13 @@ class AutoCompleteAdapter(context: Context, resource: Int, textViewResourceId: I
                     results.count = list.size
                 }
             } else {
-                val prefixString = prefix.toString().toLowerCase(Locale.ROOT)
+                val prefixString = prefix.toString().lowercase(Locale.ROOT)
                 val values = mOriginalValues
                 val count: Int = values!!.size
                 val newValues = ArrayList<String>(count)
                 for (i in 0 until count) {
                     val item = values[i]
-                    if (item.toLowerCase(Locale.ROOT).contains(prefixString)) {
+                    if (item.lowercase(Locale.ROOT).contains(prefixString)) {
                         newValues.add(item)
                     }
                 }
