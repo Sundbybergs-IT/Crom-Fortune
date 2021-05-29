@@ -7,11 +7,13 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.annotation.IdRes
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
@@ -19,6 +21,7 @@ import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateHeaderAdapterItem
+import com.sundbybergsit.cromfortune.ui.home.StockOrderAggregate
 import java.text.NumberFormat
 import java.util.*
 
@@ -149,82 +152,108 @@ internal class StockOrderAggregateListAdapter(
     ) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: StockAggregateAdapterItem) {
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_quantity).text =
-                item.stockOrderAggregate.getQuantity().toString()
+            val stockOrderAggregate = item.stockOrderAggregate
+            requireViewById<TextView>(R.id.textView_listrowStockItem_quantity).text =
+                stockOrderAggregate.getQuantity().toString()
             @SuppressLint("SetTextI18n")
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_name).text =
-                item.stockOrderAggregate.displayName
-            val acquisitionValue = item.stockOrderAggregate.getAcquisitionValue()
-            val stockCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
-            if (acquisitionValue < 1) {
-                stockCurrencyFormat.maximumFractionDigits = 3
-            } else {
-                stockCurrencyFormat.maximumFractionDigits = 2
-            }
-            stockCurrencyFormat.currency = item.stockOrderAggregate.currency
-            val swedishCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
-            if (acquisitionValue < 1) {
-                stockCurrencyFormat.maximumFractionDigits = 3
-            } else {
-                stockCurrencyFormat.maximumFractionDigits = 2
-            }
-            swedishCurrencyFormat.currency = Currency.getInstance("SEK")
-            itemView.setOnClickListener {
-                stockClickListener.onClick(item.stockOrderAggregate.stockSymbol, readOnly)
-            }
-            val overflowMenuImageView = itemView.requireViewById<View>(R.id.imageView_listrowStockItem_overflowMenu)
-            if (readOnly) {
-                itemView.requireViewById<View>(R.id.button_listrowStockItem_buy).visibility = View.INVISIBLE
-                itemView.requireViewById<View>(R.id.button_listrowStockItem_sell).visibility = View.INVISIBLE
-                itemView.requireViewById<View>(R.id.imageButton_listrowStockItem_muteUnmute).visibility = View.INVISIBLE
-                overflowMenuImageView.visibility = View.INVISIBLE
-            }
-            itemView.requireViewById<Button>(R.id.button_listrowStockItem_buy).setOnClickListener {
-                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
-            }
-            itemView.requireViewById<Button>(R.id.button_listrowStockItem_sell).setOnClickListener {
-                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
-            }
-            itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute).setImageDrawable(
-                if (item.muted) {
-                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash)
-                } else {
-                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
-                }
-            )
-            itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute).setOnClickListener {
-                if (item.muted) {
-                    StockMuteSettingsRepository.unmute(item.stockOrderAggregate.stockSymbol)
-                    itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute)
-                        .setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_fas_bell))
-                } else {
-                    StockMuteSettingsRepository.mute(item.stockOrderAggregate.stockSymbol)
-                    itemView.requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute)
-                        .setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash))
-                }
-                item.muted = !item.muted
-            }
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue).text =
-                stockCurrencyFormat.format(acquisitionValue)
-            val currentStockPrice = stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price
-            var profitInSek = 0.0
+            requireViewById<TextView>(R.id.textView_listrowStockItem_name).text =
+                stockOrderAggregate.displayName
+            val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
+            val stockCurrencyFormat: NumberFormat = getStockCurrencyFormat(item, acquisitionValue)
+            initializeCurrentStockPrice(item, stockCurrencyFormat, acquisitionValue)
+            setUpBuyMenu()
+            setUpSellMenu()
+            setUpMuteAndUnmuteMenu(item)
             val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
                 .currencyRates.toList()
+            val profitInSek = getProfitInSek(currencyRates, stockOrderAggregate)
+            setUpProfit(profitInSek)
+            val stockSymbol = stockOrderAggregate.stockSymbol
+            itemView.setOnClickListener {
+                stockClickListener.onClick(stockSymbol, readOnly)
+            }
+            setUpOverflowMenu(stockSymbol)
+        }
+
+        private fun setUpBuyMenu() {
+            if (readOnly) {
+                requireViewById<View>(R.id.button_listrowStockItem_buy).visibility = View.INVISIBLE
+            }
+            requireViewById<Button>(R.id.button_listrowStockItem_buy).setOnClickListener {
+                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        private fun setUpSellMenu() {
+            if (readOnly) {
+                requireViewById<View>(R.id.button_listrowStockItem_sell).visibility = View.INVISIBLE
+            }
+            requireViewById<Button>(R.id.button_listrowStockItem_sell).setOnClickListener {
+                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        private fun getProfitInSek(
+            currencyRates: List<CurrencyRate>,
+            stockOrderAggregate: StockOrderAggregate
+        ): Double {
+            var profitInSek = 0.0
             for (currencyRate in currencyRates) {
-                if (currencyRate.iso4217CurrencySymbol == item.stockOrderAggregate.currency.currencyCode) {
-                    profitInSek = (item.stockOrderAggregate.getProfit(
+                if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
+                    profitInSek = (stockOrderAggregate.getProfit(
                         stockPriceListener.getStockPrice(
-                            item.stockOrderAggregate.stockSymbol
+                            stockOrderAggregate.stockSymbol
                         ).price
                     )) * currencyRate.rateInSek
                     break
                 }
             }
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_latestValue).text =
+            return profitInSek
+        }
+
+        private fun initializeCurrentStockPrice(
+            item: StockAggregateAdapterItem,
+            stockCurrencyFormat: NumberFormat,
+            acquisitionValue: Double
+        ) {
+            requireViewById<TextView>(R.id.textView_listrowStockItem_acquisitionValue).text =
+                stockCurrencyFormat.format(acquisitionValue)
+            val currentStockPrice = stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price
+            requireViewById<TextView>(R.id.textView_listrowStockItem_latestValue).text =
                 stockCurrencyFormat.format(currentStockPrice)
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_profit).text =
+        }
+
+        private fun setUpMuteAndUnmuteMenu(adapterItem: StockAggregateAdapterItem) {
+            requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute).setImageDrawable(
+                if (adapterItem.muted) {
+                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash)
+                } else {
+                    ContextCompat.getDrawable(context, R.drawable.ic_fas_bell)
+                }
+            )
+            requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute).setOnClickListener {
+                if (adapterItem.muted) {
+                    StockMuteSettingsRepository.unmute(adapterItem.stockOrderAggregate.stockSymbol)
+                    requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute)
+                        .setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_fas_bell))
+                } else {
+                    StockMuteSettingsRepository.mute(adapterItem.stockOrderAggregate.stockSymbol)
+                    requireViewById<ImageButton>(R.id.imageButton_listrowStockItem_muteUnmute)
+                        .setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_fas_bell_slash))
+                }
+                adapterItem.muted = !adapterItem.muted
+            }
+            if (readOnly) {
+                requireViewById<View>(R.id.imageButton_listrowStockItem_muteUnmute).visibility = View.INVISIBLE
+            }
+        }
+
+        private fun setUpProfit(profitInSek: Double) {
+            val swedishCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
+            swedishCurrencyFormat.currency = Currency.getInstance("SEK")
+            requireViewById<TextView>(R.id.textView_listrowStockItem_profit).text =
                 swedishCurrencyFormat.format(profitInSek)
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockItem_profit).setTextColor(
+            requireViewById<TextView>(R.id.textView_listrowStockItem_profit).setTextColor(
                 ContextCompat.getColor(
                     context, if (profitInSek > 0) {
                         R.color.colorProfit
@@ -233,15 +262,44 @@ internal class StockOrderAggregateListAdapter(
                     }
                 )
             )
+        }
+
+        private fun setUpOverflowMenu(
+            stockSymbol: String
+        ) {
+            val overflowMenuImageView = requireViewById<View>(R.id.imageView_listrowStockItem_overflowMenu)
             val overflowMenu = PopupMenu(context, overflowMenuImageView)
             overflowMenuImageView.setOnClickListener { overflowMenu.show() }
             overflowMenu.inflate(R.menu.home_listrow_actions)
             overflowMenu.setOnMenuItemClickListener(
-                PopupMenuListener(
-                    context, stockRemoveClickListener,
-                    item.stockOrderAggregate.stockSymbol
-                )
+                PopupMenuListener(context, stockRemoveClickListener, stockSymbol)
             )
+            if (readOnly) {
+                overflowMenuImageView.visibility = View.INVISIBLE
+            }
+        }
+
+        private fun getStockCurrencyFormat(
+            item: StockAggregateAdapterItem,
+            acquisitionValue: Double
+        ): NumberFormat {
+            val stockCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
+            stockCurrencyFormat.currency = item.stockOrderAggregate.currency
+            if (acquisitionValue < 1) {
+                stockCurrencyFormat.maximumFractionDigits = 3
+            } else {
+                stockCurrencyFormat.maximumFractionDigits = 2
+            }
+            if (acquisitionValue < 1) {
+                stockCurrencyFormat.maximumFractionDigits = 3
+            } else {
+                stockCurrencyFormat.maximumFractionDigits = 2
+            }
+            return stockCurrencyFormat
+        }
+
+        private fun <T : View> requireViewById(@IdRes id: Int): T {
+            return itemView.requireViewById(id)
         }
 
         class PopupMenuListener(
