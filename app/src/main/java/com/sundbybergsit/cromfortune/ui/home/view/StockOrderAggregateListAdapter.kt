@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.IdRes
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
@@ -19,13 +21,18 @@ import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
+import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateHeaderAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.StockOrderAggregate
+import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
+import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
 import java.text.NumberFormat
 import java.util.*
 
 internal class StockOrderAggregateListAdapter(
+    private val viewModel: HomeViewModel,
+    private val parentFragmentManager: FragmentManager,
     private val stockClickListener: StockClickListener,
     private val readOnly: Boolean,
 ) :
@@ -36,16 +43,18 @@ internal class StockOrderAggregateListAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             R.layout.listrow_stock_header -> StockOrderAggregateHeaderViewHolder(
+                context = parent.context,
                 stockPriceListener = this,
-                itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                context = parent.context
+                itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
             )
             R.layout.listrow_stock_item -> StockOrderAggregateViewHolder(
+                context = parent.context,
+                viewModel = viewModel,
+                parentFragmentManager = parentFragmentManager,
                 stockClickListener = stockClickListener,
                 stockRemoveClickListener = stockRemoveClickListener,
                 stockPriceListener = this,
                 itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                context = parent.context,
                 readOnly = readOnly
             )
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
@@ -81,9 +90,9 @@ internal class StockOrderAggregateListAdapter(
     }
 
     internal class StockOrderAggregateHeaderViewHolder(
+        private val context: Context,
         private val stockPriceListener: StockPriceListener,
         itemView: View,
-        private val context: Context,
     ) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: StockAggregateHeaderAdapterItem) {
@@ -144,6 +153,8 @@ internal class StockOrderAggregateListAdapter(
 
     internal class StockOrderAggregateViewHolder(
         private val context: Context,
+        private val viewModel: HomeViewModel,
+        private val parentFragmentManager: FragmentManager,
         private val stockPriceListener: StockPriceListener,
         private val stockClickListener: StockClickListener,
         private val stockRemoveClickListener: StockRemoveClickListener,
@@ -161,35 +172,39 @@ internal class StockOrderAggregateListAdapter(
             val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
             val stockCurrencyFormat: NumberFormat = getStockCurrencyFormat(item, acquisitionValue)
             initializeCurrentStockPrice(item, stockCurrencyFormat, acquisitionValue)
-            setUpBuyMenu()
-            setUpSellMenu()
             setUpMuteAndUnmuteMenu(item)
             val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
                 .currencyRates.toList()
             val profitInSek = getProfitInSek(currencyRates, stockOrderAggregate)
             setUpProfit(profitInSek)
             val stockSymbol = stockOrderAggregate.stockSymbol
+            setUpBuyMenu(stockSymbol)
+            setUpSellMenu(stockSymbol)
             itemView.setOnClickListener {
                 stockClickListener.onClick(stockSymbol, readOnly)
             }
             setUpOverflowMenu(stockSymbol)
         }
 
-        private fun setUpBuyMenu() {
+        private fun setUpBuyMenu(stockSymbol: String) {
             if (readOnly) {
                 requireViewById<View>(R.id.button_listrowStockItem_buy).visibility = View.INVISIBLE
             }
             requireViewById<Button>(R.id.button_listrowStockItem_buy).setOnClickListener {
-                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+                val dialog = RegisterBuyStockDialogFragment(viewModel)
+                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
+                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }
 
-        private fun setUpSellMenu() {
+        private fun setUpSellMenu(stockSymbol: String) {
             if (readOnly) {
                 requireViewById<View>(R.id.button_listrowStockItem_sell).visibility = View.INVISIBLE
             }
             requireViewById<Button>(R.id.button_listrowStockItem_sell).setOnClickListener {
-                Toast.makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG).show()
+                val dialog = RegisterSellStockDialogFragment(viewModel)
+                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
+                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }
 

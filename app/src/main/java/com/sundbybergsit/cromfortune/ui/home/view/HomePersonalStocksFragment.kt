@@ -45,7 +45,12 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(stockClickListener = this, readOnly = false)
+        stockOrderAggregateListAdapter = StockOrderAggregateListAdapter(
+            viewModel = viewModel,
+            parentFragmentManager = parentFragmentManager,
+            stockClickListener = this,
+            readOnly = false
+        )
         binding.floatingActionButtonFragmentHomeStocks.setOnClickListener {
             val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.show(parentFragmentManager, TAG)
@@ -142,10 +147,12 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
         viewModel.refresh(requireContext())
         if (stockOrderAggregateListAdapter.itemCount > 0) {
             stockOrderAggregateListAdapter.onBindViewHolder(
-                    StockOrderAggregateListAdapter.StockOrderAggregateHeaderViewHolder(stockPriceListener = stockOrderAggregateListAdapter,
-                            itemView = LayoutInflater.from(context).inflate(R.layout.listrow_stock_header, requireView()
-                                    .findViewById(R.id.recyclerView_fragmentHomeStocks), false),
-                            context = requireContext()), 0)
+                    StockOrderAggregateListAdapter.StockOrderAggregateHeaderViewHolder(
+                        context = requireContext(),
+                        stockPriceListener = stockOrderAggregateListAdapter,
+                        itemView = LayoutInflater.from(context).inflate(R.layout.listrow_stock_header, requireView()
+                                .findViewById(R.id.recyclerView_fragmentHomeStocks), false)
+                    ), 0)
             stockOrderAggregateListAdapter.notifyDataSetChanged()
         }
     }

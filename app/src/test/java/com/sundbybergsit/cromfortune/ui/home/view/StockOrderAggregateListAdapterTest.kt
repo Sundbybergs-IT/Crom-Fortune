@@ -4,6 +4,7 @@ import android.os.Build
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.fragment.app.FragmentManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.R
@@ -56,7 +57,7 @@ class StockOrderAggregateListAdapterTest {
             ),
         ))
         ShadowLooper.runUiThreadTasks()
-        listAdapter = StockOrderAggregateListAdapter(object : StockClickListener {
+        listAdapter = StockOrderAggregateListAdapter(HomeViewModel(), object : FragmentManager() {}, object : StockClickListener {
             override fun onClick(stockName: String, readOnly: Boolean) {
                 // Do nothing
             }
