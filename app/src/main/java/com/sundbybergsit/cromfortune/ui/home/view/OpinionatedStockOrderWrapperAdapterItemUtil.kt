@@ -5,7 +5,7 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.ui.AdapterItem
-import com.sundbybergsit.cromfortune.ui.home.StockHeaderAdapterItem
+import com.sundbybergsit.cromfortune.ui.home.HeaderAdapterItem
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -16,7 +16,7 @@ internal object OpinionatedStockOrderWrapperAdapterItemUtil {
         list: Iterable<StockOrder>,
     ): List<AdapterItem> {
         val result: MutableList<AdapterItem> = ArrayList()
-        result.add(StockHeaderAdapterItem())
+        result.add(HeaderAdapterItem())
         val currencyRateInSek = (CurrencyRateRepository.currencyRates.value as
                 CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == list.first().currency }!!.rateInSek
         val toList = list.toList()

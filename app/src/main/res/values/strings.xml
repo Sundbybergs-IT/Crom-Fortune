@@ -65,7 +65,10 @@
     <string name="home_remove_stock_quantity_label">Quantity</string>
     <string name="home_remove_stock_message">Add one sale order at a time.</string>
     <string name="home_no_stocks">Add your first stock to get filthy rich!</string>
-    <string name="home_sort_alphabetical">A-Z</string>
+    <string name="home_sort_alphabetical_down">A-Z</string>
+    <string name="home_sort_alphabetical_up">Z-A</string>
+    <string name="home_sort_profit_up">Best profit</string>
+    <string name="home_sort_profit_down">Worst profit</string>
     <string name="home_stocks">You have added stocks. Not shown (not yet implemented).</string>
     <string name="home_stocks_personal_title">Yours</string>
     <string name="home_stocks_crom_title">Croms</string>

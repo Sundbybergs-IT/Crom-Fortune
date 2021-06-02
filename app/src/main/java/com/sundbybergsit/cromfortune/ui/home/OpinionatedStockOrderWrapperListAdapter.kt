@@ -37,7 +37,7 @@ class OpinionatedStockOrderWrapperListAdapter(
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)!!) {
-        is StockHeaderAdapterItem -> {
+        is HeaderAdapterItem -> {
             R.layout.listrow_stock_order_header
         }
         is OpinionatedStockOrderWrapperAdapterItem -> {

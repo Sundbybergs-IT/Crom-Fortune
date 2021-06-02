@@ -19,7 +19,6 @@ import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateAdapterItem
@@ -36,7 +35,8 @@ internal class StockOrderAggregateListAdapter(
     private val stockClickListener: StockClickListener,
     private val readOnly: Boolean,
 ) :
-    ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<AdapterItem>()), StockPriceListener {
+    ListAdapter<NameAndValueAdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffUtil<NameAndValueAdapterItem>()),
+    StockPriceListener {
 
     private lateinit var stockRemoveClickListener: StockRemoveClickListener
 
@@ -45,7 +45,8 @@ internal class StockOrderAggregateListAdapter(
             R.layout.listrow_stock_header -> StockOrderAggregateHeaderViewHolder(
                 context = parent.context,
                 stockPriceListener = this,
-                itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+                itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
+                adapter = this
             )
             R.layout.listrow_stock_item -> StockOrderAggregateViewHolder(
                 context = parent.context,
@@ -92,6 +93,7 @@ internal class StockOrderAggregateListAdapter(
     internal class StockOrderAggregateHeaderViewHolder(
         private val context: Context,
         private val stockPriceListener: StockPriceListener,
+        private val adapter: StockOrderAggregateListAdapter,
         itemView: View,
     ) : RecyclerView.ViewHolder(itemView) {
 
@@ -129,21 +131,42 @@ internal class StockOrderAggregateListAdapter(
             val overflowMenu = PopupMenu(context, overflowMenuImageView)
             overflowMenuImageView.setOnClickListener { overflowMenu.show() }
             overflowMenu.inflate(R.menu.home_listrowheader_actions)
-            overflowMenu.setOnMenuItemClickListener(
-                PopupMenuListener(context)
-            )
+            overflowMenu.setOnMenuItemClickListener(PopupMenuListener(adapter))
         }
 
         class PopupMenuListener(
-            private val context: Context,
+            private val adapter: StockOrderAggregateListAdapter,
         ) : PopupMenu.OnMenuItemClickListener {
 
             override fun onMenuItemClick(item: MenuItem?): Boolean {
-                return if (item?.itemId == R.id.action_sort_alphabetical) {
-                    Toast.makeText(context, R.string.generic_to_do, Toast.LENGTH_LONG).show()
-                    true
-                } else {
-                    false
+                return when (item?.itemId) {
+                    R.id.action_sort_alphabetical_up -> {
+                        adapter.submitList(adapter.currentList.subList(0, 1) +
+                                adapter.currentList.subList(1, adapter.currentList.size)
+                                    .sortedByDescending { adapterItem -> adapterItem.name })
+                        true
+                    }
+                    R.id.action_sort_alphabetical_down -> {
+                        adapter.submitList(adapter.currentList.subList(0, 1) +
+                                adapter.currentList.subList(1, adapter.currentList.size)
+                                    .sortedBy { adapterItem -> adapterItem.name })
+                        true
+                    }
+                    R.id.action_sort_profit_up -> {
+                        adapter.submitList(adapter.currentList.subList(0, 1) +
+                                adapter.currentList.subList(1, adapter.currentList.size)
+                                    .sortedByDescending { adapterItem -> adapterItem.value })
+                        true
+                    }
+                    R.id.action_sort_profit_down -> {
+                        adapter.submitList(adapter.currentList.subList(0, 1) +
+                                adapter.currentList.subList(1, adapter.currentList.size)
+                                    .sortedBy { adapterItem -> adapterItem.value })
+                        true
+                    }
+                    else -> {
+                        false
+                    }
                 }
             }
 

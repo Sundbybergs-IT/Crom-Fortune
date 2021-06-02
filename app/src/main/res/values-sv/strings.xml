@@ -64,7 +64,10 @@
     <string name="home_remove_stock_quantity_error_insufficient">Du har inte så många.</string>
     <string name="home_remove_stock_quantity_label">Kvantitet</string>
     <string name="home_remove_stock_message">Lägg till en försäljning av aktier i taget.</string>
-    <string name="home_sort_alphabetical">A-Ö</string>
+    <string name="home_sort_alphabetical_down">A-Ö</string>
+    <string name="home_sort_alphabetical_up">Ö-A</string>
+    <string name="home_sort_profit_up">Bäst vinst</string>
+    <string name="home_sort_profit_down">Sämst vinst</string>
     <string name="home_stocks">Du har lagt till aktier. De visas inte (inte implementerat ännu).</string>
     <string name="home_stocks_personal_title">Ditt</string>
     <string name="home_stocks_crom_title">Croms</string>
