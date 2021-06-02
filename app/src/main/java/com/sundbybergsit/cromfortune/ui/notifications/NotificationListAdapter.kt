@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
-import com.sundbybergsit.cromfortune.ui.home.StockHeaderAdapterItem
+import com.sundbybergsit.cromfortune.ui.home.HeaderAdapterItem
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,7 +39,7 @@ class NotificationListAdapter : ListAdapter<AdapterItem, RecyclerView.ViewHolder
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)!!) {
-        is StockHeaderAdapterItem -> {
+        is HeaderAdapterItem -> {
             R.layout.listrow_notification_header
         }
         is NotificationAdapterItem -> {

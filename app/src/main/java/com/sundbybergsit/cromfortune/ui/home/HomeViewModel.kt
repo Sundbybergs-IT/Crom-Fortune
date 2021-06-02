@@ -17,7 +17,7 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
-import com.sundbybergsit.cromfortune.ui.AdapterItem
+import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -121,8 +121,10 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         } else {
             viewModelScope.launch {
                 _cromStocksViewState.postValue(ViewState.HasStocks(R.string.home_stocks,
-                        StockAggregateAdapterItemUtil.convertToAdapterItems(list = stocks(context = context,
-                                lambda = cromStockAggregate))))
+                        StockAggregateAdapterItemUtil.convertToAdapterItems(
+                            list = stocks(context = context,
+                                    lambda = cromStockAggregate)
+                        )))
                 _personalStocksViewState.postValue(ViewState.HasStocks(R.string.home_stocks,
                         StockAggregateAdapterItemUtil.convertToAdapterItems(list = stocks(context = context,
                                 lambda = personalStockAggregate))))
@@ -215,7 +217,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
         object Loading : ViewState()
 
-        data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<AdapterItem>) : ViewState()
+        data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<NameAndValueAdapterItem>) : ViewState()
 
         data class HasNoStocks(@StringRes val textResId: Int) : ViewState()
 

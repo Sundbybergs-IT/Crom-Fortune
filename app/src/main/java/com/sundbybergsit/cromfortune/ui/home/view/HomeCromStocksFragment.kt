@@ -133,7 +133,8 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
                         context = requireContext(),
                         stockPriceListener = stockOrderAggregateListAdapter,
                         itemView = LayoutInflater.from(context).inflate(R.layout.listrow_stock_header, requireView()
-                                .findViewById(R.id.recyclerView_fragmentHomeStocks), false)
+                                .findViewById(R.id.recyclerView_fragmentHomeStocks), false),
+                        adapter = stockOrderAggregateListAdapter
                     ), 0)
             stockOrderAggregateListAdapter.notifyDataSetChanged()
         }
