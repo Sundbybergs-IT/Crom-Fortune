@@ -24,7 +24,7 @@ data class StockPrice(val stockSymbol: String, val currency: Currency, val price
                 Triple("SALT-B.ST", "SaltX Technology Holding AB", "SEK"),
                 Triple("SAND.ST", "Sandvik AB", "SEK"), Triple("SAS.ST", "SAS AB (publ)", "SEK"),
                 Triple("SHOT.ST", "Scandic Hotels Group AB (publ)", "SEK"), Triple("SOLT.ST", "SolTech Energy Sweden AB (publ)", "SEK"),
-                Triple("SOS", "SOS Limited (SOS)", "USD"),
+                Triple("SOS", "SOS Limited", "USD"),
                 Triple("SWED-A.ST", "Swedbank AB (publ)", "SEK"), Triple("TANGI.ST", "Tangiamo Touch Technology AB (publ)", "SEK"),
                 Triple("TSLA", "Tesla, Inc.", "USD"), Triple("VUZI", "Vuzix Corporation", "USD")
         )
