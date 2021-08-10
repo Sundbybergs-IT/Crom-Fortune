@@ -10,13 +10,13 @@ apply(from = "../buildSrc/src/build.gradle")
 val baseVersionName = ext.get("baseVersionName") as String
 
 android {
-    compileSdkVersion(30)
+    compileSdk = 30
 
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        minSdkVersion(29)
-        targetSdkVersion(30)
-        versionCode = 81
+        minSdk = 29
+        targetSdk = 30
+        versionCode = 83
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
