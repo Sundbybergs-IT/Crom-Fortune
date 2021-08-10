@@ -13,7 +13,6 @@ androidx-test-junit = "1.1.2"
 androidx-test-monitor = "1.4.0"
 androidx-test-runner = "1.4.0"
 androidx-work = "2.5.0"
-assaabloy-android-testutil = "0.8.0"
 desugar-jdk-libs = "1.1.1"
 google-material = "1.3.0"
 google-playCore = "1.8.1"
@@ -42,7 +41,6 @@ androidxTestMonitor = { module = "androidx.test:monitor", version.ref = "android
 androidxTestRunner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
-assaabloyAndroidTestutil = { module = "com.assaabloy.stg.android:testutil", version.ref = "assaabloy-android-testutil" }
 desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 googleMaterial = { module = "com.google.android.material:material", version.ref = "google-material" }
 googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore" }
