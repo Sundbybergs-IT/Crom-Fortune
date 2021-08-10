@@ -11,6 +11,7 @@ data class StockPrice(val stockSymbol: String, val currency: Currency, val price
                 Triple("ANOT.ST", "Anoto Group AB (publ)", "SEK"), Triple("ASSA-B.ST", "ASSA ABLOY AB (publ)", "SEK"),
                 Triple("AZELIO.ST", "Azelio AB (publ)", "SEK"),
                 Triple("CLOUD.OL", "Cloudberry Clean Energy AS", "NOK"), Triple("COIN", "Coinbase Global, Inc.", "USD"),
+                Triple("EMBRAC-B.ST","Embracer Group AB (publ)","SEK"),
                 Triple("EOLU-B.ST", "Eolus Vind AB (publ)", "SEK"),
                 Triple("FERRO.ST", "Ferroamp Elektronik AB (publ)", "SEK"), Triple("FIA1S.HE", "Finnair Oyj", "EUR"),
                 Triple("GBK.ST", "Goodbye Kansas Group AB (publ)", "SEK"),
