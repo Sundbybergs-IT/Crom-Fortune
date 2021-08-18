@@ -44,8 +44,8 @@
     <string name="generic_title_total">Total</string>
     <string name="generic_to_do">Att göra</string>
     <string name="generic_update_completed">En uppdatering laddades precis ned.</string>
-    <string name="generic_urge_buy">Köp!</string>
-    <string name="generic_urge_sell">Sälj!</string>
+    <string name="generic_urge_buy">Köp %1$s!</string>
+    <string name="generic_urge_sell">Sälj %1$s!</string>
 
     <string name="home_add_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_add_stock_currency_label">Valuta</string>
