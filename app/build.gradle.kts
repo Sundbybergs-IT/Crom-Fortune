@@ -35,6 +35,12 @@ android {
         compose = true
         viewBinding = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.1.0-alpha02"
+    }
+    lint {
+        isAbortOnError = false
+    }
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
@@ -49,6 +55,7 @@ dependencies {
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)
     implementation(libs.androidxAppcompat)
+    implementation(libs.androidxComposeRuntimeLivedata)
     implementation(libs.androidxConstraintlayout)
     implementation(libs.androidxCore)
     implementation(libs.androidxLifecycleExtensions)
