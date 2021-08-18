@@ -45,8 +45,8 @@
     <string name="generic_title_total">Total</string>
     <string name="generic_to_do">To do</string>
     <string name="generic_update_completed">An update has just been downloaded.</string>
-    <string name="generic_urge_buy">Buy!</string>
-    <string name="generic_urge_sell">Sell!</string>
+    <string name="generic_urge_buy">Buy %1$s!</string>
+    <string name="generic_urge_sell">Sell %1$s!</string>
 
     <string name="home_add_commission_fee_label">Commission fee (in SEK)</string>
     <string name="home_add_stock_currency_label">Currency</string>
