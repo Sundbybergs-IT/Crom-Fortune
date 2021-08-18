@@ -112,8 +112,8 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             notificationsRepository.add(notification)
             val shortText: String =
                 when (recommendation.command) {
-                    is BuyStockCommand -> context.getString(R.string.generic_urge_buy)
-                    is SellStockCommand -> context.getString(R.string.generic_urge_sell)
+                    is BuyStockCommand -> context.getString(R.string.generic_urge_buy, recommendation.command.stockSymbol())
+                    is SellStockCommand -> context.getString(R.string.generic_urge_sell, recommendation.command.stockSymbol())
                     else -> ""
                 }
             NotificationUtil.doPostRegularNotification(
