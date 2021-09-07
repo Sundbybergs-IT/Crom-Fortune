@@ -21,6 +21,7 @@ import com.sundbybergsit.cromfortune.databinding.FragmentHomeBinding
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
+import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSplitDialogFragment
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
@@ -58,16 +59,17 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             when (item.itemId) {
                 R.id.action_buyStock -> {
                     val dialog = RegisterBuyStockDialogFragment(viewModel)
-                    dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
+                    dialog.show(parentFragmentManager, RegisterBuyStockDialogFragment.TAG)
                     true
                 }
                 R.id.action_sellStock -> {
                     val dialog = RegisterSellStockDialogFragment(viewModel)
-                    dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
+                    dialog.show(parentFragmentManager, RegisterSellStockDialogFragment.TAG)
                     true
                 }
                 R.id.action_addSplit -> {
-                    // TODO, show dialog, issues/12
+                    val dialog = RegisterSplitDialogFragment(viewModel)
+                    dialog.show(parentFragmentManager, RegisterSplitDialogFragment.TAG)
                     true
                 }
                 R.id.action_refresh -> {

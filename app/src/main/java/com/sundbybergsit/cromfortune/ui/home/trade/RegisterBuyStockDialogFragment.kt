@@ -28,6 +28,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
 
     companion object {
 
+        const val TAG = "RegisterBuyStockDialogF"
         const val EXTRA_STOCK_SYMBOL = "EXTRA_STOCK_SYMBOL"
 
     }
