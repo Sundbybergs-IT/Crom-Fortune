@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.ui.home
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -16,6 +17,7 @@ import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
@@ -130,6 +132,12 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                                 lambda = personalStockAggregate))))
             }
         }
+    }
+
+    fun save(context: Context, stockSplit: StockSplit) {
+        // FIXME: Implement, issues/12
+        Toast.makeText(context, "Not yet implemented", Toast.LENGTH_LONG).show()
+        refresh(context)
     }
 
     fun save(context: Context, stockOrder: StockOrder) {

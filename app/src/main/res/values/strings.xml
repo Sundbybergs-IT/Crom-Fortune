@@ -50,6 +50,8 @@
     <string name="generic_urge_sell">Sell %1$s!</string>
 
     <string name="home_add_commission_fee_label">Commission fee (in SEK)</string>
+    <string name="home_add_split_reverse">Reverse split</string>
+    <string name="home_add_split_message">Add one stock split at a time.</string>
     <string name="home_add_stock_currency_label">Currency</string>
     <string name="home_add_stock_date_label">Date</string>
     <string name="home_add_stock_name_label">Name</string>
@@ -89,6 +91,5 @@
     <string name="settings_title">Settings</string>
     <string name="settings_default_values">Default values</string>
     <string name="settings_dialog_time_intervals_title">Time interval during which Crom Fortune should fetch stock rates</string>
-
 
 </resources>

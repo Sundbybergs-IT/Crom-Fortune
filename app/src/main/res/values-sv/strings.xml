@@ -53,7 +53,9 @@
     <string name="home_add_stock_date_label">Datum</string>
     <string name="home_add_stock_name_label">Namn</string>
     <string name="home_add_stock_quantity_label">Kvantitet</string>
-    <string name="home_add_stock_message">Lägg till ett köp av aktier i taget.</string>
+    <string name="home_add_stock_message">Registrera ett köp av aktier i taget.</string>
+    <string name="home_add_split_reverse">Omvänd split</string>
+    <string name="home_add_split_message">Registrera en split i taget.</string>
     <string name="home_delete_stock_order">Det här innebär att transaktionen för detta datum kommer att raderas: %1$s.</string>
     <string name="home_delete_all_stock_orders">Det här innebär att alla transaktioner för denna aktie kommer att raderas: %1$s.</string>
     <string name="home_information_data_refreshed">Appen är nu uppdaterad med senaste kurserna. OBS: Uppdaterar automatiskt varje timme.</string>
@@ -64,7 +66,7 @@
     <string name="home_remove_stock_name_label">Namn</string>
     <string name="home_remove_stock_quantity_error_insufficient">Du har inte så många.</string>
     <string name="home_remove_stock_quantity_label">Kvantitet</string>
-    <string name="home_remove_stock_message">Lägg till en försäljning av aktier i taget.</string>
+    <string name="home_remove_stock_message">Registrera en försäljning av aktier i taget.</string>
     <string name="home_sort_alphabetical_down">A-Ö</string>
     <string name="home_sort_alphabetical_up">Ö-A</string>
     <string name="home_sort_profit_up">Bäst vinst</string>
