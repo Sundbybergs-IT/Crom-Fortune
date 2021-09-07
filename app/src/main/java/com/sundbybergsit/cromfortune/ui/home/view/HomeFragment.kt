@@ -66,6 +66,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                     dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
                     true
                 }
+                R.id.action_addSplit -> {
+                    // TODO, show dialog, issues/12
+                    true
+                }
                 R.id.action_refresh -> {
                     viewModel.refreshData(requireContext())
                     Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()

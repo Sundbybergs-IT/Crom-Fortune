@@ -6,9 +6,10 @@
     <string name="action_configure_stock_retrieval_intervals">Tidsintervaller för aktieprishämtning</string>
     <string name="action_delete">Radera</string>
     <string name="action_refresh">Uppdatera</string>
-    <string name="action_stock_buy">Registrera köp</string>>
+    <string name="action_stock_add_split">Registrera aktiesplit</string>>
+    <string name="action_stock_buy">Registrera aktieköp</string>>
     <string name="action_stock_buy_short">K</string>>
-    <string name="action_stock_sell">Registrera försäljning</string>>
+    <string name="action_stock_sell">Registrera aktieförsäljning</string>>
     <string name="action_stock_sell_short">S</string>>
     <string name="action_stocks_supported">Aktier som stöds</string>
 
