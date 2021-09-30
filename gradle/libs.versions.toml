@@ -3,8 +3,9 @@ android-gradle-plugin = "8.0.2"
 androidx-activity-compose = "1.3.1"
 androidx-annotation = "1.2.0"
 androidx-appcompat = "1.4.1"
-androidx-compose = "1.1.0-alpha03"
-androidx-constraintlayout = "2.1.3"
+androidx-compose = "1.1.0-rc01"
+androidx-constraintlayout-constraintlayout = "2.1.3"
+androidx-constraintlayout-compose = "1.0.0-beta02"
 androidx-core = "1.7.0"
 androidx-lifecycle-extensions = "2.2.0"
 androidx-lifecycle-livedata = "2.3.1"
@@ -43,12 +44,16 @@ androidxComposeMaterialIconsExtended = { module = "androidx.compose.material:mat
 androidxComposeMaterialMaterial = { module = "androidx.compose.material:material", version.ref = "androidx-compose" }
 androidxComposeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "androidx-compose" }
 androidxComposeRuntimeRxjava2 = { module = "androidx.compose.runtime:runtime-rxjava2", version.ref = "androidx-compose" }
+androidxConstraintlayoutConstraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout-constraintlayout" }
+androidxConstraintlayoutCompose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "androidx-constraintlayout-compose" }
 androidxConstraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidxLifecycleExtensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "androidx-lifecycle-extensions" }
 androidxLifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidx-lifecycle-livedata" }
 androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle-runtime" }
 androidxLifecycleViewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle-viewmodel" }
+androidxLifecycleViewmodelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle-viewmodelcompose" }
+androidxLocalbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "androidx-localbroadcastmanager" }
 androidxNavigationFragment = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidxNavigationUi = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "androidx-navigation" }
 androidxTestJunit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
@@ -68,6 +73,10 @@ pluginAndroidGradle = { module = "com.android.tools.build:gradle", version.ref =
 pluginKotlinGradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 yahooFinance = { module = "com.yahoofinance-api:YahooFinanceAPI", version.ref = "yahooFinance" }
+
+[bundles]
+compose = ["androidxActivityCompose", "androidxComposeMaterialMaterial", "androidxComposeRuntimeLivedata",
+    "androidxComposeUiUiTooling", "androidxConstraintlayoutCompose"]
 
 [plugins]
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
