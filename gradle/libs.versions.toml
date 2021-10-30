@@ -1,17 +1,13 @@
 [versions]
 android-gradle-plugin = "8.0.2"
-androidx-activity-compose = "1.3.1"
+androidx-activity-compose = "1.4.0"
 androidx-annotation = "1.2.0"
 androidx-appcompat = "1.4.1"
 androidx-compose = "1.1.0-rc01"
 androidx-constraintlayout-constraintlayout = "2.1.3"
 androidx-constraintlayout-compose = "1.0.0-beta02"
 androidx-core = "1.7.0"
-androidx-lifecycle-extensions = "2.2.0"
-androidx-lifecycle-livedata = "2.3.1"
-androidx-lifecycle-runtime = "2.3.1"
-androidx-lifecycle-viewmodel = "2.3.1"
-androidx-lifecycle-viewmodelcompose = "2.3.1"
+androidx-lifecycle = "2.4.0"
 androidx-localbroadcastmanager = "1.1.0"
 androidx-navigation = "2.3.5"
 androidx-test-junit = "1.1.2"
@@ -48,11 +44,11 @@ androidxConstraintlayoutConstraintlayout = { module = "androidx.constraintlayout
 androidxConstraintlayoutCompose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "androidx-constraintlayout-compose" }
 androidxConstraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-androidxLifecycleExtensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "androidx-lifecycle-extensions" }
-androidxLifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidx-lifecycle-livedata" }
-androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle-runtime" }
-androidxLifecycleViewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle-viewmodel" }
-androidxLifecycleViewmodelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle-viewmodelcompose" }
+androidxLifecycleExtensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "androidx-lifecycle" }
+androidxLifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidx-lifecycle" }
+androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
+androidxLifecycleViewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
+androidxLifecycleViewmodelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidxLocalbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "androidx-localbroadcastmanager" }
 androidxNavigationFragment = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidxNavigationUi = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "androidx-navigation" }
