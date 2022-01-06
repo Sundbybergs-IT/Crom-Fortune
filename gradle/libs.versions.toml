@@ -15,7 +15,7 @@ androidx-test-runner = "1.4.0"
 androidx-work = "2.5.0"
 desugar-jdk-libs = "1.1.5"
 google-material = "1.5.0-rc01"
-google-playCore = "1.10.2"
+google-playCore-ktx = "1.8.1"
 junit = "4.13.2"
 kotlinx-coroutinesTest = "1.4.0"
 kotlinx-serialization = "1.0.0"
@@ -43,7 +43,7 @@ androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref =
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 googleMaterial = { module = "com.google.android.material:material", version.ref = "google-material" }
-googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore" }
+googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore-ktx" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutinesTest" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
