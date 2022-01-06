@@ -32,6 +32,7 @@ data class StockPrice(val stockSymbol: String, val currency: Currency, val price
             Triple("MIPS.ST", "MIPS AB (publ)", "SEK"),
             Triple("NAS.OL", "Norwegian Air Shuttle ASA", "NOK"),
             Triple("NOKIA-SEK.ST", "Nokia Corporation", "SEK"),
+            Triple("POLYG.ST", "Polygiene AB (publ.)", "SEK"),
             Triple("RKT", "Rocket Companies, Inc.", "USD"),
             Triple("SALT-B.ST", "SaltX Technology Holding AB", "SEK"),
             Triple("SAND.ST", "Sandvik AB", "SEK"),
