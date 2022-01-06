@@ -9,11 +9,11 @@ apply(from = "../buildSrc/src/build.gradle")
 val baseVersionName = ext.get("baseVersionName") as String
 
 android {
-    compileSdk = 30
+    compileSdk = 31
 
     defaultConfig {
         minSdk = 29
-        targetSdk = 30
+        targetSdk = 31
     }
 
     compileOptions {
