@@ -30,7 +30,6 @@ yahooFinance = "3.17.0"
 androidxActivityCompose = { module = "androidx.activity:activity-compos", version.ref = "androidx-activity-compose" }
 androidxAnnotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidxAppcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
-androidxLocalbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "androidx-localbroadcastmanager" }
 androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose" }
 androidxComposeUiUi = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
 androidxComposeUiUitooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
