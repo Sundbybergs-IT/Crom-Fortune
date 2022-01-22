@@ -35,7 +35,7 @@ object NotificationUtil {
 
     private fun createRegularNotification(context: Context, title: String, shortText: String, text: String): Notification {
         val intent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+        val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         val notificationBuilder: NotificationCompat.Builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID_REGULAR)
                 .setSmallIcon(R.drawable.ic_cromfortune)
                 .setContentTitle(title)
