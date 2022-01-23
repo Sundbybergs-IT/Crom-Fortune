@@ -9,14 +9,17 @@ import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplitRepository
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.notifications.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
+import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock
@@ -37,6 +40,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
         const val COMMISSION_FEE = 39.0
 
         fun refreshFromYahoo(context: Context) {
+            val stockSplitRepository: StockSplitRepository = StockSplitRepositoryImpl(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
@@ -44,28 +48,28 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             }
             CurrencyRateRepository.add(currencyRates)
             val stocks: Map<String, Stock> =
-                YahooFinance.get(com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.map { pair -> pair.first }
+                YahooFinance.get(StockPrice.SYMBOLS.map { pair -> pair.first }
                     .toTypedArray())
-            val stockPrices = mutableSetOf<com.sundbybergsit.cromfortune.domain.StockPrice>()
-            for (triple in com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.iterator()) {
+            val stockPrices = mutableSetOf<StockPrice>()
+            for (triple in StockPrice.SYMBOLS.iterator()) {
                 val stockSymbol = triple.first
                 val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
                 val currency = triple.third
-                val stockPrice = com.sundbybergsit.cromfortune.domain.StockPrice(
+                val stockPrice = StockPrice(
                     stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
                     price = quote.price.toDouble().roundTo(3)
                 )
-                val previousOrders = StockOrderRepositoryImpl(context).list(stockSymbol)
+                val stockEvents = StockEventRepositoryImpl(context).list(stockSymbol)
                 val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
                 if (isStockMuted) {
                     Log.i(TAG, "Skipping recommendation for stock (${stockSymbol}) as it has been muted.")
-                } else if (previousOrders.isNotEmpty()) {
+                } else if (stockEvents.isNotEmpty()) {
                     val recommendation = CromFortuneV1RecommendationAlgorithm(context)
                         .getRecommendation(
                             stockPrice = stockPrice,
                             currencyRateInSek = currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
                             commissionFee = COMMISSION_FEE,
-                            previousOrders = previousOrders,
+                            stockEvents = stockEvents,
                             timeInMillis = System.currentTimeMillis()
                         )
                     if (recommendation != null) {
@@ -112,8 +116,14 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             notificationsRepository.add(notification)
             val shortText: String =
                 when (recommendation.command) {
-                    is BuyStockCommand -> context.getString(R.string.generic_urge_buy, recommendation.command.stockSymbol())
-                    is SellStockCommand -> context.getString(R.string.generic_urge_sell, recommendation.command.stockSymbol())
+                    is BuyStockCommand -> context.getString(
+                        R.string.generic_urge_buy,
+                        recommendation.command.stockSymbol()
+                    )
+                    is SellStockCommand -> context.getString(
+                        R.string.generic_urge_sell,
+                        recommendation.command.stockSymbol()
+                    )
                     else -> ""
                 }
             NotificationUtil.doPostRegularNotification(

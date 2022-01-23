@@ -3,7 +3,6 @@ package com.sundbybergsit.cromfortune.ui.home
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,10 +14,10 @@ import com.sundbybergsit.cromfortune.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.domain.StockOrder
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
-import com.sundbybergsit.cromfortune.domain.StockSplit
+import com.sundbybergsit.cromfortune.domain.*
+import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.Dispatchers
@@ -42,73 +41,86 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     val dialogViewState: LiveData<DialogViewState> = _dialogViewState
     private var showAll = false
 
-    private val cromStockAggregate: (MutableList<StockOrder>, Context) -> StockOrderAggregate = { sortedStockOrders, context ->
-        var stockOrderAggregate: StockOrderAggregate? = null
-        val cromSortedStockOrders: MutableList<StockOrder> = mutableListOf()
-        for (stockOrder in sortedStockOrders) {
-            if (stockOrderAggregate == null) {
-                val stockName = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
-                stockOrderAggregate = StockOrderAggregate(
+    private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
+        { stockEvents, context ->
+            val sortedStockEvents = stockEvents.filter { it.stockOrder != null }.sortedBy { it.dateInMillis }
+            var stockOrderAggregate: StockOrderAggregate? = null
+            val cromSortedStockEvents: MutableList<StockEvent> = mutableListOf()
+            for (stockEvent in sortedStockEvents) {
+                val stockOrder = checkNotNull(stockEvent.stockOrder)
+                if (stockOrderAggregate == null) {
+                    val stockName =
+                        StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                    stockOrderAggregate = StockOrderAggregate(
                         (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                                .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                            .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
                         "$stockName (${stockOrder.name})", stockOrder.name,
-                        Currency.getInstance(stockOrder.currency))
-                cromSortedStockOrders.add(stockOrder)
-                stockOrderAggregate.aggregate(stockOrder)
-            } else {
-                val recommendation = CromFortuneV1RecommendationAlgorithm(context)
+                        Currency.getInstance(stockOrder.currency)
+                    )
+                    cromSortedStockEvents.add(stockEvent)
+                    stockOrderAggregate.aggregate(stockEvent)
+                } else {
+                    val recommendation = CromFortuneV1RecommendationAlgorithm(context)
                         .getRecommendation(
-                            com.sundbybergsit.cromfortune.domain.StockPrice(
+                            StockPrice(
                                 stockOrder.name,
                                 stockOrderAggregate.currency, stockOrder.pricePerStock
                             ),
-                                stockOrderAggregate.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
-                                cromSortedStockOrders.toSet(), stockOrder.dateInMillis)
-                when (recommendation?.command) {
-                    is BuyStockCommand -> {
-                        val buyOrder = StockOrder(
-                            "Buy", stockOrderAggregate.currency.toString(),
-                            stockOrder.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                            StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                            stockOrderAggregate.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
+                            cromSortedStockEvents.toSet(),
+                            stockEvent.dateInMillis
                         )
-                        cromSortedStockOrders.add(buyOrder)
-                        stockOrderAggregate.aggregate(buyOrder)
-                    }
-                    is com.sundbybergsit.cromfortune.algorithm.SellStockCommand -> {
-                        val sellOrder = StockOrder(
-                            "Sell", stockOrderAggregate.currency.toString(),
-                            stockOrder.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                            StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
-                        )
-                        cromSortedStockOrders.add(sellOrder)
-                        stockOrderAggregate.aggregate(sellOrder)
-                    }
-                    else -> {
-                        // Do nothing
+                    when (recommendation?.command) {
+                        is BuyStockCommand -> {
+                            val buyOrder = StockOrder(
+                                "Buy", stockOrderAggregate.currency.toString(),
+                                stockEvent.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
+                                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                            )
+                            val buyEvent = StockEvent(buyOrder, null, stockEvent.dateInMillis)
+                            cromSortedStockEvents.add(buyEvent)
+                            stockOrderAggregate.aggregate(buyEvent)
+                        }
+                        is com.sundbybergsit.cromfortune.algorithm.SellStockCommand -> {
+                            val sellOrder = StockOrder(
+                                "Sell", stockOrderAggregate.currency.toString(),
+                                stockEvent.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
+                                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                            )
+                            val sellEvent = StockEvent(sellOrder, null, stockEvent.dateInMillis)
+                            cromSortedStockEvents.add(sellEvent)
+                            stockOrderAggregate.aggregate(sellEvent)
+                        }
+                        else -> {
+                            // Do nothing
+                        }
                     }
                 }
             }
+            stockOrderAggregate!!
         }
-        stockOrderAggregate!!
-    }
 
-    private val personalStockAggregate: (MutableList<StockOrder>, Context) -> StockOrderAggregate = { sortedStockOrders, _ ->
-        var stockOrderAggregate: StockOrderAggregate? = null
-        for (stockOrder in sortedStockOrders) {
-            if (stockOrderAggregate == null) {
-                val stockName = com.sundbybergsit.cromfortune.domain.StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
-                stockOrderAggregate = StockOrderAggregate(
+    private val personalStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
+        { sortedStockEvents, _ ->
+            var stockOrderAggregate: StockOrderAggregate? = null
+            for (stockEvent in sortedStockEvents) {
+                if (stockOrderAggregate == null) {
+                    val stockOrder = checkNotNull(stockEvent.stockOrder)
+                    val stockName =
+                        StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                    stockOrderAggregate = StockOrderAggregate(
                         (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                                .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                            .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
                         "$stockName (${stockOrder.name})", stockOrder.name,
-                        Currency.getInstance(stockOrder.currency))
-                stockOrderAggregate.aggregate(stockOrder)
-            } else {
-                stockOrderAggregate.aggregate(stockOrder)
+                        Currency.getInstance(stockOrder.currency)
+                    )
+                    stockOrderAggregate.aggregate(stockEvent)
+                } else {
+                    stockOrderAggregate.aggregate(stockEvent)
+                }
             }
+            stockOrderAggregate!!
         }
-        stockOrderAggregate!!
-    }
 
     @SuppressLint("ApplySharedPref")
     override fun onClickRemove(context: Context, stockName: String) {
@@ -116,27 +128,46 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     }
 
     fun refresh(context: Context) {
-        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
-        if (stockOrderRepository.isEmpty()) {
+        val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
+        if (stockEventRepository.isEmpty()) {
             _cromStocksViewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
             _personalStocksViewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
         } else {
             viewModelScope.launch {
-                _cromStocksViewState.postValue(ViewState.HasStocks(R.string.home_stocks,
+                _cromStocksViewState.postValue(
+                    ViewState.HasStocks(
+                        R.string.home_stocks,
                         StockAggregateAdapterItemUtil.convertToAdapterItems(
-                            list = stocks(context = context,
-                                    lambda = cromStockAggregate)
-                        )))
-                _personalStocksViewState.postValue(ViewState.HasStocks(R.string.home_stocks,
-                        StockAggregateAdapterItemUtil.convertToAdapterItems(list = stocks(context = context,
-                                lambda = personalStockAggregate))))
+                            list = stocks(
+                                context = context,
+                                lambda = cromStockAggregate
+                            )
+                        )
+                    )
+                )
+                _personalStocksViewState.postValue(
+                    ViewState.HasStocks(
+                        R.string.home_stocks,
+                        StockAggregateAdapterItemUtil.convertToAdapterItems(
+                            list = stocks(
+                                context = context,
+                                lambda = personalStockAggregate
+                            )
+                        )
+                    )
+                )
             }
         }
     }
 
     fun save(context: Context, stockSplit: StockSplit) {
-        // FIXME: Implement, issues/12
-        Toast.makeText(context, "Not yet implemented", Toast.LENGTH_LONG).show()
+        val stockSplitRepository = StockSplitRepositoryImpl(context = context)
+        if (stockSplitRepository.list(stockSplit.name).isNotEmpty()) {
+            val existingSplits = stockSplitRepository.list(stockSplit.name)
+            stockSplitRepository.putAll(stockSplit.name, existingSplits.toMutableSet() + stockSplit)
+        } else {
+            stockSplitRepository.putReplacingAll(stockSplit.name, stockSplit)
+        }
         refresh(context)
     }
 
@@ -151,23 +182,22 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         refresh(context)
     }
 
-    fun personalStockOrders(context: Context, stockSymbol: String): List<StockOrder> {
+    fun personalStockEvents(context: Context, stockSymbol: String): List<StockEvent> {
         return stocks(context, personalStockAggregate)
-                .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.orders.toList()
+            .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
     }
 
-    fun stocks(context: Context, lambda: (MutableList<StockOrder>, Context) -> StockOrderAggregate):
+    fun stocks(context: Context, lambda: (List<StockEvent>, Context) -> StockOrderAggregate):
             List<StockOrderAggregate> {
-        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
+        val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
-        for (stockSymbol in stockOrderRepository.listOfStockNames()) {
-            val stockOrders: Set<StockOrder> = stockOrderRepository.list(stockSymbol)
-            if (stockOrders.isEmpty()) {
+        for (stockSymbol in stockEventRepository.listOfStockNames()) {
+            val stockEvents: Set<StockEvent> = stockEventRepository.list(stockSymbol)
+            if (stockEvents.isEmpty()) {
                 // Preventive cleanup, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/20
-                stockOrderRepository.remove(stockSymbol)
+                stockEventRepository.remove(stockSymbol)
             } else {
-                val sortedStockOrders: MutableList<StockOrder> = stockOrders.toMutableList()
-                sortedStockOrders.sortBy { stockOrder -> stockOrder.dateInMillis }
+                val sortedStockOrders: List<StockEvent> = stockEvents.sortedBy { event -> event.dateInMillis }
                 val stockAggregate = lambda(sortedStockOrders, context)
                 if (!showAll && stockAggregate.getQuantity() == 0) {
                     Log.i(TAG, "Hiding this stock because of the filter option.")
@@ -179,9 +209,9 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         return stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
     }
 
-    fun cromStockOrders(context: Context, stockSymbol: String): List<StockOrder> {
+    fun cromStockEvents(context: Context, stockSymbol: String): List<StockEvent> {
         return stocks(context, cromStockAggregate)
-                .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.orders.toList()
+            .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
     }
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
@@ -225,7 +255,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
         object Loading : ViewState()
 
-        data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<NameAndValueAdapterItem>) : ViewState()
+        data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<NameAndValueAdapterItem>) :
+            ViewState()
 
         data class HasNoStocks(@StringRes val textResId: Int) : ViewState()
 

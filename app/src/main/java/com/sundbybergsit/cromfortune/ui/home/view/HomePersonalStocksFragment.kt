@@ -159,7 +159,7 @@ class HomePersonalStocksFragment : Fragment(R.layout.fragment_home_stocks), Stoc
     }
 
     override fun onClick(stockName: String, readOnly: Boolean) {
-        val dialog = StockOrdersDialogFragment(stockSymbol = stockName, stocks = viewModel.personalStockOrders(
+        val dialog = StockOrdersDialogFragment(stockSymbol = stockName, events = viewModel.personalStockEvents(
                 requireContext(), stockName),
                 readOnly = readOnly)
         dialog.show(parentFragmentManager, TAG)

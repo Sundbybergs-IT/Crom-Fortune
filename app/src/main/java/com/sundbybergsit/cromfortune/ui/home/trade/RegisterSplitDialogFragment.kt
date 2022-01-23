@@ -8,7 +8,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AutoCompleteTextView
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
@@ -79,7 +82,7 @@ class RegisterSplitDialogFragment(private val homeViewModel: HomeViewModel) : Di
                     val dateAsString = inputDate.text.toString()
                     val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)!!
                     val stockSplit = StockSplit(
-                        reverseEnabledSwitch.isEnabled, date.time, stockSymbol,
+                        reverseEnabledSwitch.isChecked, date.time, stockSymbol,
                         inputSplitQuantity.text.toString().toInt()
                     )
                     homeViewModel.save(requireContext(), stockSplit)
