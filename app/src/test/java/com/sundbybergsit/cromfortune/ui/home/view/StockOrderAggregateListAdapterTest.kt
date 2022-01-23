@@ -190,7 +190,7 @@ class StockOrderAggregateListAdapterTest {
             StockOrder(
                 "Buy", currencySymbol, 0,
                 stockSymbol, totalPrice, 0.0, 1
-            )
+            ).toStockEvent()
         )
         return stockOrderAggregate
     }

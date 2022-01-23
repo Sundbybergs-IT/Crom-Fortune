@@ -141,7 +141,7 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
     }
 
     override fun onClick(stockName: String, readOnly : Boolean) {
-        val dialog = StockOrdersDialogFragment(stockName, viewModel.cromStockOrders(context = requireContext(),
+        val dialog = StockOrdersDialogFragment(stockName, viewModel.cromStockEvents(context = requireContext(),
                 stockSymbol = stockName), readOnly)
         dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
     }

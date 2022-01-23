@@ -25,4 +25,8 @@ data class StockOrder(
         }
     }
 
+    fun toStockEvent(): StockEvent {
+        return StockEvent(this, null, dateInMillis)
+    }
+
 }
