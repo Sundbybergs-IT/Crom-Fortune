@@ -10,9 +10,10 @@ import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1AlgorithmConformanceScoreCalculator
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockEvent
+import com.sundbybergsit.cromfortune.domain.StockEventRepository
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -37,9 +38,9 @@ class DashboardViewModel : ViewModel() {
         if (timestamp.isAfter(lastUpdated)) {
             lastUpdated = timestamp
             viewModelScope.launch {
-                val repository = StockOrderRepositoryImpl(context)
+                val repository = StockEventRepositoryImpl(context)
                 val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(recommendationAlgorithm =
-                CromFortuneV1RecommendationAlgorithm(context), orders = stocks(repository).toSet(),
+                CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
                         currencyRateRepository = CurrencyRateRepository
                 )
                 _score.postValue(context.resources.getQuantityString(R.plurals.dashboard_croms_will_message,
@@ -50,14 +51,14 @@ class DashboardViewModel : ViewModel() {
         }
     }
 
-    private fun stocks(repository: StockOrderRepositoryImpl): List<StockOrder> {
-        val stocks = mutableListOf<StockOrder>()
+    private fun events(repository: StockEventRepository): List<StockEvent> {
+        val events = mutableListOf<StockEvent>()
         for (stockName in repository.listOfStockNames()) {
             for (entry in repository.list(stockName)) {
-                stocks.add(entry)
+                events.add(entry)
             }
         }
-        return stocks
+        return events
     }
 
 }
