@@ -18,9 +18,8 @@ import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
-import com.sundbybergsit.cromfortune.ui.AutoCompleteAdapter
+import com.sundbybergsit.cromfortune.ui.*
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
-import com.sundbybergsit.cromfortune.ui.transformIntoDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -74,16 +73,17 @@ class RegisterSplitDialogFragment(private val homeViewModel: HomeViewModel) : Di
             val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
             button.setOnClickListener {
                 try {
-                    validateDate(inputDate, inputLayoutDate)
-                    validateDouble(inputSplitQuantity, inputLayoutSplitQuantity)
-                    validateStockName(inputStockName, inputLayoutStockName)
+                    inputDate.validateDate(inputLayoutDate, DATE_FORMAT)
+                    inputSplitQuantity.validateInt(inputLayoutSplitQuantity)
+                    inputSplitQuantity.validateMinQuantity(inputLayoutSplitQuantity, StockSplit.MIN_QUANTITY)
+                    inputStockName.validateStockName(inputLayoutStockName)
                     val stockSymbol = inputStockName.text.toString().substringAfterLast('(')
                         .substringBeforeLast(')')
                     val dateAsString = inputDate.text.toString()
                     val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)!!
                     val stockSplit = StockSplit(
-                        reverseEnabledSwitch.isChecked, date.time, stockSymbol,
-                        inputSplitQuantity.text.toString().toInt()
+                        reverse = reverseEnabledSwitch.isChecked, dateInMillis = date.time, name = stockSymbol,
+                        quantity = inputSplitQuantity.text.toString().toInt()
                     )
                     homeViewModel.save(requireContext(), stockSplit)
                     Toast.makeText(requireContext(), getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
@@ -105,62 +105,5 @@ class RegisterSplitDialogFragment(private val homeViewModel: HomeViewModel) : Di
             android.R.id.text1, searchArrayList
         )
     }
-
-    private fun validateStockName(input: AutoCompleteTextView, inputLayout: TextInputLayout) {
-        when {
-            input.text.toString().isEmpty() -> {
-                inputLayout.error = getString(R.string.generic_error_empty)
-                input.requestFocus()
-                throw ValidatorException()
-            }
-            !StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
-                .toMutableList().contains(input.text.toString()) -> {
-                inputLayout.error = getString(R.string.generic_error_invalid_stock_symbol)
-                input.requestFocus()
-                throw ValidatorException()
-            }
-            else -> {
-                inputLayout.error = null
-            }
-        }
-    }
-
-    private fun validateDate(input: EditText, inputLayout: TextInputLayout) {
-        when {
-            input.text.toString().isEmpty() -> {
-                inputLayout.error = getString(R.string.generic_error_empty)
-                input.requestFocus()
-                throw ValidatorException()
-            }
-            SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(input.text.toString()) == null -> {
-                inputLayout.error = getString(R.string.generic_error_invalid_date)
-                input.requestFocus()
-                throw ValidatorException()
-            }
-            else -> {
-                inputLayout.error = null
-            }
-        }
-    }
-
-    private fun validateDouble(input: AutoCompleteTextView, inputLayout: TextInputLayout) {
-        when {
-            input.text.toString().isEmpty() -> {
-                inputLayout.error = getString(R.string.generic_error_empty)
-                input.requestFocus()
-                throw ValidatorException()
-            }
-            input.text.toString().toDoubleOrNull() == null -> {
-                inputLayout.error = getString(R.string.generic_error_invalid_number)
-                input.requestFocus()
-                throw ValidatorException()
-            }
-            else -> {
-                inputLayout.error = null
-            }
-        }
-    }
-
-    class ValidatorException : Exception()
 
 }
