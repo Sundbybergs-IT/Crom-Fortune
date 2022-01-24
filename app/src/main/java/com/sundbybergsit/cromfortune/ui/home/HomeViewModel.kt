@@ -43,12 +43,14 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
         { stockEvents, context ->
-            val sortedStockEvents = stockEvents.filter { it.stockOrder != null }.sortedBy { it.dateInMillis }
+            val sortedStockEvents = stockEvents.sortedBy { it.dateInMillis }
             var stockOrderAggregate: StockOrderAggregate? = null
             val cromSortedStockEvents: MutableList<StockEvent> = mutableListOf()
             for (stockEvent in sortedStockEvents) {
-                val stockOrder = checkNotNull(stockEvent.stockOrder)
-                if (stockOrderAggregate == null) {
+                if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
+                    // Ignore splits before first stock order
+                } else if (stockOrderAggregate == null) {
+                    val stockOrder = checkNotNull(stockEvent.stockOrder)
                     val stockName =
                         StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                     stockOrderAggregate = StockOrderAggregate(
@@ -59,7 +61,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                     )
                     cromSortedStockEvents.add(stockEvent)
                     stockOrderAggregate.aggregate(stockEvent)
-                } else {
+                } else if (stockEvent.stockOrder != null) {
+                    val stockOrder = checkNotNull(stockEvent.stockOrder)
                     val recommendation = CromFortuneV1RecommendationAlgorithm(context)
                         .getRecommendation(
                             StockPrice(
@@ -95,6 +98,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                             // Do nothing
                         }
                     }
+                } else {
+                    stockOrderAggregate.aggregate(stockEvent)
                 }
             }
             stockOrderAggregate!!
@@ -104,7 +109,9 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         { sortedStockEvents, _ ->
             var stockOrderAggregate: StockOrderAggregate? = null
             for (stockEvent in sortedStockEvents) {
-                if (stockOrderAggregate == null) {
+                if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
+                    // Ignore splits before first stock order
+                } else if (stockOrderAggregate == null) {
                     val stockOrder = checkNotNull(stockEvent.stockOrder)
                     val stockName =
                         StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
