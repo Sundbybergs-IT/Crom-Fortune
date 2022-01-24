@@ -10,6 +10,7 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.coroutines.runBlocking
@@ -53,18 +54,33 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     @Test(expected = IllegalStateException::class)
     fun `getScore - when initial sell order - throws exception`() {
         runBlocking {
-            calculator.getScore(SellRecommendationDummyAlgorithm(),
-                setOf(newSellStockOrder(1)).map { StockEvent(stockOrder = it, stockSplit = null, dateInMillis = it.dateInMillis) }.toSet(),
-                CurrencyRateRepository)
+            calculator.getScore(
+                SellRecommendationDummyAlgorithm(),
+                setOf(newSellStockEvent(1)),
+                CurrencyRateRepository
+            )
         }
+    }
+
+    @Test
+    fun `getScore - when initial split order - returns 100`() = runBlocking {
+        val score = calculator.getScore(
+            SellRecommendationDummyAlgorithm(),
+            setOf(StockSplit(false, 1L, StockPrice.SYMBOLS[0].first, 2).toStockEvent()),
+            CurrencyRateRepository
+        )
+
+        assertScore(100, score)
     }
 
     @Test
     fun `getScore - when initial buy order - returns 100`() = runBlocking {
         val score =
-            calculator.getScore(SellRecommendationDummyAlgorithm(),
-                setOf(newBuyStockOrder(1)).map { StockEvent(stockOrder = it, stockSplit = null, dateInMillis = it.dateInMillis) }.toSet(),
-                CurrencyRateRepository)
+            calculator.getScore(
+                SellRecommendationDummyAlgorithm(),
+                setOf(newBuyStockEvent(1)),
+                CurrencyRateRepository
+            )
 
         assertScore(100, score)
     }
@@ -72,10 +88,29 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     @Test
     fun `getScore - when 1 out of 2 correct decisions - returns 50`() = runBlocking {
         val score = calculator.getScore(
-            SellRecommendationDummyAlgorithm(), setOf(
-                newBuyStockOrder(1),
-                newBuyStockOrder(2)
-            ).map { StockEvent(stockOrder = it, stockSplit = null, dateInMillis = it.dateInMillis) }.toSet(), CurrencyRateRepository
+            SellRecommendationDummyAlgorithm(),
+            setOf(
+                newBuyStockEvent(1),
+                newBuyStockEvent(2)
+            ),
+            CurrencyRateRepository
+        )
+
+        assertScore(50, score)
+    }
+
+    @Test
+    fun `getScore - when 1 out of 2 correct decisions with splits that should not affect - returns 50`() = runBlocking {
+        val ticker = StockPrice.SYMBOLS[0].first
+        val score = calculator.getScore(
+            SellRecommendationDummyAlgorithm(),
+            setOf(
+                StockSplit(true, 2L, ticker, 5).toStockEvent(),
+                newBuyStockEvent(1, ticker),
+                StockSplit(false, 2L, ticker, 5).toStockEvent(),
+                newBuyStockEvent(2, ticker)
+            ),
+            CurrencyRateRepository
         )
 
         assertScore(50, score)
@@ -84,10 +119,12 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     @Test
     fun `getScore - when 2 out of 2 correct decisions - returns 100`() = runBlocking {
         val score = calculator.getScore(
-            SellRecommendationDummyAlgorithm(), setOf(
-                newBuyStockOrder(1),
-                newSellStockOrder(2)
-            ).map { StockEvent(stockOrder = it, stockSplit = null, dateInMillis = it.dateInMillis) }.toSet(), CurrencyRateRepository
+            SellRecommendationDummyAlgorithm(),
+            setOf(
+                newBuyStockEvent(1),
+                newSellStockEvent(2)
+            ),
+            CurrencyRateRepository
         )
 
         assertScore(100, score)
@@ -96,10 +133,13 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     @Test
     fun `getScore - when 2 out of 3 correct decisions - returns 66`() = runBlocking {
         val score = calculator.getScore(
-            SellRecommendationDummyAlgorithm(), setOf(
-                newBuyStockOrder(1),
-                newSellStockOrder(2), newBuyStockOrder(3)
-            ).map { StockEvent(stockOrder = it, stockSplit = null, dateInMillis = it.dateInMillis) }.toSet(), CurrencyRateRepository
+            SellRecommendationDummyAlgorithm(),
+            setOf(
+                newBuyStockEvent(1),
+                newSellStockEvent(2),
+                newBuyStockEvent(3)
+            ),
+            CurrencyRateRepository
         )
 
         assertScore(66, score)
@@ -108,10 +148,14 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     @Test
     fun `getScore - when 2 out of 4 correct decisions - returns 50`() = runBlocking {
         val score = calculator.getScore(
-            SellRecommendationDummyAlgorithm(), setOf(
-                newBuyStockOrder(1),
-                newSellStockOrder(2), newBuyStockOrder(3), newBuyStockOrder(4)
-            ).map { StockEvent(stockOrder = it, stockSplit = null, dateInMillis = it.dateInMillis) }.toSet(), CurrencyRateRepository
+            SellRecommendationDummyAlgorithm(),
+            setOf(
+                newBuyStockEvent(1),
+                newSellStockEvent(2),
+                newBuyStockEvent(3),
+                newBuyStockEvent(4)
+            ),
+            CurrencyRateRepository
         )
 
         assertScore(50, score)
@@ -121,7 +165,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         assertTrue("Expected score $expectedValue but was ${score.score}", score.score == expectedValue)
     }
 
-    private fun newSellStockOrder(dateInMillis: Long): StockOrder {
+    private fun newSellStockEvent(dateInMillis: Long): StockEvent {
         return StockOrder(
             "Sell",
             "SEK",
@@ -130,19 +174,19 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             1.0,
             0.0,
             1
-        )
+        ).toStockEvent()
     }
 
-    private fun newBuyStockOrder(dateInMillis: Long): StockOrder {
+    private fun newBuyStockEvent(dateInMillis: Long, ticker: String = StockPrice.SYMBOLS[0].first): StockEvent {
         return StockOrder(
             "Buy",
             "SEK",
             dateInMillis,
-            StockPrice.SYMBOLS[0].first,
+            ticker,
             1.0,
             0.0,
             1
-        )
+        ).toStockEvent()
     }
 
     class SellRecommendationDummyAlgorithm : RecommendationAlgorithm() {

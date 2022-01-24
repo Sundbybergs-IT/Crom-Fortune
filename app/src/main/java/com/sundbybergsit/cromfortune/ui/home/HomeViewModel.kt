@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.StockDataRetrievalCoroutineWorker
-import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.*
@@ -62,41 +61,15 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                     cromSortedStockEvents.add(stockEvent)
                     stockOrderAggregate.aggregate(stockEvent)
                 } else if (stockEvent.stockOrder != null) {
-                    val stockOrder = checkNotNull(stockEvent.stockOrder)
-                    val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                        .getRecommendation(
-                            StockPrice(
-                                stockOrder.name,
-                                stockOrderAggregate.currency, stockOrder.pricePerStock
-                            ),
-                            stockOrderAggregate.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
-                            cromSortedStockEvents.toSet(),
-                            stockEvent.dateInMillis
+                    val possibleNewStockEvent: StockEvent? =
+                        stockOrderAggregate.applyStockOrderForRecommendationAlgorithm(
+                            eventToConsider = stockEvent,
+                            existingEvents = cromSortedStockEvents,
+                            recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm(context)
                         )
-                    when (recommendation?.command) {
-                        is BuyStockCommand -> {
-                            val buyOrder = StockOrder(
-                                "Buy", stockOrderAggregate.currency.toString(),
-                                stockEvent.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
-                            )
-                            val buyEvent = StockEvent(buyOrder, null, stockEvent.dateInMillis)
-                            cromSortedStockEvents.add(buyEvent)
-                            stockOrderAggregate.aggregate(buyEvent)
-                        }
-                        is com.sundbybergsit.cromfortune.algorithm.SellStockCommand -> {
-                            val sellOrder = StockOrder(
-                                "Sell", stockOrderAggregate.currency.toString(),
-                                stockEvent.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
-                            )
-                            val sellEvent = StockEvent(sellOrder, null, stockEvent.dateInMillis)
-                            cromSortedStockEvents.add(sellEvent)
-                            stockOrderAggregate.aggregate(sellEvent)
-                        }
-                        else -> {
-                            // Do nothing
-                        }
+                    if (possibleNewStockEvent != null) {
+                        cromSortedStockEvents.add(possibleNewStockEvent)
+                        stockOrderAggregate.aggregate(possibleNewStockEvent)
                     }
                 } else {
                     stockOrderAggregate.aggregate(stockEvent)
