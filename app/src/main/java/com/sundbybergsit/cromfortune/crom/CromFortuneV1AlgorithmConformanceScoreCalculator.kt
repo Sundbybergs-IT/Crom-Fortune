@@ -41,34 +41,38 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 })
             }
         }
+        var firstItemAdded = false
         for (listOfStockEvents in listOfListOfStockEvents) {
             listOfStockEvents.forEachIndexed { index, event ->
-                if (index == 0) {
-                    if (event.stockOrder!!.orderAction != "Buy") {
-                        throw IllegalStateException("First order must be a buy order!")
-                    } else {
-                        correctDecision += 1
+                val stockOrder = event.stockOrder
+                if (!firstItemAdded) {
+                    when {
+                        stockOrder == null -> {
+                            // Ignore other types of events before the first purchase order
+                        }
+                        stockOrder.orderAction != "Buy" -> {
+                            throw IllegalStateException("First order must be a buy order!")
+                        }
+                        else -> {
+                            correctDecision += 1
+                            firstItemAdded = true
+                        }
                     }
-                } else if (event.stockSplit != null) {
-                    // Skip
-                } else {
-//                    val splits =
-//                        getTotalSplit(listOfStockEvents.subList(0, index).filter { event.stockSplit != null }
-//                            .map { event.stockSplit!! })
+                } else if (event.stockOrder != null) {
                     val currencyRateInSek = (currencyRateRepository.currencyRates.value as
-                            CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == event.stockOrder!!.currency }!!.rateInSek
+                            CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder!!.currency }!!.rateInSek
                     val recommendation = recommendationAlgorithm.getRecommendation(
                         StockPrice(
-                            event.stockOrder!!.name,
-                            Currency.getInstance(event.stockOrder!!.currency),
-                            event.stockOrder!!.pricePerStock
+                            stockOrder!!.name,
+                            Currency.getInstance(stockOrder.currency),
+                            stockOrder.pricePerStock
                         ),
                         currencyRateInSek,
-                        event.stockOrder!!.commissionFee,
+                        stockOrder.commissionFee,
                         listOfStockEvents.subList(0, index).toSet(),
                         event.dateInMillis
                     )
-                    if (event.stockOrder!!.orderAction == "Buy") {
+                    if (stockOrder.orderAction == "Buy") {
                         if (recommendation != null && recommendation.command is BuyStockCommand) {
                             correctDecision += 1
                         } else {
@@ -81,6 +85,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                             Log.v(TAG, "Bad decision.")
                         }
                     }
+                } else {
+                    Log.v(TAG, "Skipping other types of events as there is nothing to decide upon.")
                 }
             }
         }
