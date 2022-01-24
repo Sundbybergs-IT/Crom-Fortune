@@ -1,7 +1,15 @@
 package com.sundbybergsit.cromfortune.crom
 
 import android.util.Log
+import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
+import com.sundbybergsit.cromfortune.algorithm.ConformanceScore
+import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.domain.StockEvent
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import java.util.*
 
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {
@@ -13,65 +21,98 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
     }
 
     override suspend fun getScore(
-        recommendationAlgorithm: com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm,
-        orders: Set<com.sundbybergsit.cromfortune.domain.StockOrder>,
+        recommendationAlgorithm: RecommendationAlgorithm,
+        stockEvents: Set<StockEvent>,
         currencyRateRepository: CurrencyRateRepository,
-    ): com.sundbybergsit.cromfortune.algorithm.ConformanceScore {
+    ): ConformanceScore {
         var correctDecision = 0
-        val sortedOrders: MutableList<com.sundbybergsit.cromfortune.domain.StockOrder> = orders.toMutableList()
-        val stockNames = sortedOrders.map { order -> order.name }.toSet()
+        val stockOrders: MutableList<StockOrder> = stockEvents
+            .filter { stockEvent -> stockEvent.stockOrder != null }
+            .map { stockEvent -> stockEvent.stockOrder!! }.toMutableList()
+        val stockNames = stockOrders.map { order -> order.name }.toSet()
 
         // FIXME: recommend in groups of stocks
 
-        val listOfListOfStockOrders: MutableList<List<com.sundbybergsit.cromfortune.domain.StockOrder>> = mutableListOf()
-        for (stockName in stockNames) {
-            listOfListOfStockOrders.add(sortedOrders.filter { stockOrder -> stockOrder.name == stockName }.sortedBy { order -> order.dateInMillis })
+        val listOfListOfStockEvents: MutableList<List<StockEvent>> = mutableListOf<List<StockEvent>>().apply {
+            for (stockName in stockNames) {
+                add(stockEvents.sortedBy { it.dateInMillis }.filter { event ->
+                    (event.stockOrder != null && event.stockOrder!!.name == stockName) ||
+                            (event.stockSplit != null && event.stockSplit!!.name == stockName)
+                })
+            }
         }
-        for (listOfStockOrders in listOfListOfStockOrders) {
-            listOfStockOrders.forEachIndexed { index, order ->
-                if (index == 0) {
-                    if (order.orderAction != "Buy") {
-                        throw IllegalStateException("First order must be a buy order!")
+        var firstItemAdded = false
+        for (listOfStockEvents in listOfListOfStockEvents) {
+            listOfStockEvents.forEachIndexed { index, event ->
+                val stockOrder = event.stockOrder
+                if (!firstItemAdded) {
+                    when {
+                        stockOrder == null -> {
+                            // Ignore other types of events before the first purchase order
+                        }
+                        stockOrder.orderAction != "Buy" -> {
+                            throw IllegalStateException("First order must be a buy order!")
+                        }
+                        else -> {
+                            correctDecision += 1
+                            firstItemAdded = true
+                        }
+                    }
+                } else if (event.stockOrder != null) {
+                    val currencyRateInSek = (currencyRateRepository.currencyRates.value as
+                            CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder!!.currency }!!.rateInSek
+                    val recommendation = recommendationAlgorithm.getRecommendation(
+                        StockPrice(
+                            stockOrder!!.name,
+                            Currency.getInstance(stockOrder.currency),
+                            stockOrder.pricePerStock
+                        ),
+                        currencyRateInSek,
+                        stockOrder.commissionFee,
+                        listOfStockEvents.subList(0, index).toSet(),
+                        event.dateInMillis
+                    )
+                    if (stockOrder.orderAction == "Buy") {
+                        if (recommendation != null && recommendation.command is BuyStockCommand) {
+                            correctDecision += 1
+                        } else {
+                            Log.v(TAG, "Bad decision.")
+                        }
                     } else {
-                        correctDecision += 1
+                        if (recommendation != null && recommendation.command is SellStockCommand) {
+                            correctDecision += 1
+                        } else {
+                            Log.v(TAG, "Bad decision.")
+                        }
                     }
                 } else {
-                    val currencyRateInSek = (currencyRateRepository.currencyRates.value as
-                            CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == order.currency }!!.rateInSek
-                    val recommendation = recommendationAlgorithm.getRecommendation(
-                        com.sundbybergsit.cromfortune.domain.StockPrice(
-                            order.name,
-                            Currency.getInstance(order.currency),
-                            order.pricePerStock
-                        ), currencyRateInSek, order.commissionFee, listOfStockOrders.subList(0, index).toSet(),
-                            order.dateInMillis)
-                    if (order.orderAction == "Buy") {
-                        if (recommendation != null && recommendation.command is com.sundbybergsit.cromfortune.algorithm.BuyStockCommand) {
-                            correctDecision += 1
-                        } else {
-                            Log.v(TAG, "Bad decision.")
-                        }
-                    } else {
-                        if (recommendation != null && recommendation.command is com.sundbybergsit.cromfortune.algorithm.SellStockCommand) {
-                            correctDecision += 1
-                        } else {
-                            Log.v(TAG, "Bad decision.")
-                        }
-                    }
+                    Log.v(TAG, "Skipping other types of events as there is nothing to decide upon.")
                 }
             }
         }
         return when {
-            orders.size <= 1 -> {
-                com.sundbybergsit.cromfortune.algorithm.ConformanceScore(100)
+            stockOrders.size <= 1 -> {
+                ConformanceScore(100)
             }
             correctDecision == 0 -> {
-                com.sundbybergsit.cromfortune.algorithm.ConformanceScore(0)
+                ConformanceScore(0)
             }
             else -> {
-                com.sundbybergsit.cromfortune.algorithm.ConformanceScore(100 * correctDecision / orders.size)
+                ConformanceScore(100 * correctDecision / stockOrders.size)
             }
         }
+    }
+
+    private fun getTotalSplit(splits: List<StockSplit>): Int {
+        var result = 1
+        for (split in splits) {
+            result *= if (split.reverse) {
+                -1 * split.quantity
+            } else {
+                split.quantity
+            }
+        }
+        return result
     }
 
 }
