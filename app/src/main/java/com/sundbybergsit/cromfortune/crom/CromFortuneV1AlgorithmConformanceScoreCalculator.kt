@@ -9,7 +9,6 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.domain.StockSplit
 import java.util.*
 
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {
@@ -101,18 +100,6 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 ConformanceScore(100 * correctDecision / stockOrders.size)
             }
         }
-    }
-
-    private fun getTotalSplit(splits: List<StockSplit>): Int {
-        var result = 1
-        for (split in splits) {
-            result *= if (split.reverse) {
-                -1 * split.quantity
-            } else {
-                split.quantity
-            }
-        }
-        return result
     }
 
 }
