@@ -117,6 +117,38 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     }
 
     @Test
+    fun `getScore - when 2 out of 2 correct decisions with split that should affect - returns 100`() = runBlocking {
+        val ticker = StockPrice.SYMBOLS[0].first
+        val score = calculator.getScore(
+            CromFortuneV1RecommendationAlgorithm(context = ApplicationProvider.getApplicationContext()),
+            setOf(
+                newBuyStockEvent(dateInMillis = 1, ticker =  ticker, price = 5.0),
+                StockSplit(false, 2L, ticker, 1000).toStockEvent(),
+                newSellStockEvent(dateInMillis = 300000000L, ticker = ticker, price = 5.0)
+            ),
+            CurrencyRateRepository
+        )
+
+        assertScore(100, score)
+    }
+
+    @Test
+    fun `getScore - when 1 out of 2 correct decisions with split that should affect - returns 50`() = runBlocking {
+        val ticker = StockPrice.SYMBOLS[0].first
+        val score = calculator.getScore(
+            CromFortuneV1RecommendationAlgorithm(context = ApplicationProvider.getApplicationContext()),
+            setOf(
+                newBuyStockEvent(dateInMillis = 1, ticker =  ticker, price = 5.0),
+                StockSplit(true, 2L, ticker, 1000).toStockEvent(),
+                newSellStockEvent(dateInMillis = 300000000L, ticker = ticker, price = 5.0)
+            ),
+            CurrencyRateRepository
+        )
+
+        assertScore(50, score)
+    }
+
+    @Test
     fun `getScore - when 2 out of 2 correct decisions - returns 100`() = runBlocking {
         val score = calculator.getScore(
             SellRecommendationDummyAlgorithm(),
@@ -165,25 +197,33 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         assertTrue("Expected score $expectedValue but was ${score.score}", score.score == expectedValue)
     }
 
-    private fun newSellStockEvent(dateInMillis: Long): StockEvent {
+    private fun newSellStockEvent(
+        dateInMillis: Long,
+        ticker: String = StockPrice.SYMBOLS[0].first,
+        price: Double = 1.0
+    ): StockEvent {
         return StockOrder(
             "Sell",
             "SEK",
             dateInMillis,
-            StockPrice.SYMBOLS[0].first,
-            1.0,
+            ticker,
+            price,
             0.0,
             1
         ).toStockEvent()
     }
 
-    private fun newBuyStockEvent(dateInMillis: Long, ticker: String = StockPrice.SYMBOLS[0].first): StockEvent {
+    private fun newBuyStockEvent(
+        dateInMillis: Long,
+        ticker: String = StockPrice.SYMBOLS[0].first,
+        price: Double = 1.0
+    ): StockEvent {
         return StockOrder(
             "Buy",
             "SEK",
             dateInMillis,
             ticker,
-            1.0,
+            price,
             0.0,
             1
         ).toStockEvent()
