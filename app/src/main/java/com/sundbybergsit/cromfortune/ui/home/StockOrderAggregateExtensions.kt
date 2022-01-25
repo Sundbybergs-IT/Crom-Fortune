@@ -9,7 +9,7 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
 
-fun StockOrderAggregate.applyStockOrderForRecommendationAlgorithm(
+fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
     eventToConsider: StockEvent,
     existingEvents: List<StockEvent>,
     recommendationAlgorithm: CromFortuneV1RecommendationAlgorithm
