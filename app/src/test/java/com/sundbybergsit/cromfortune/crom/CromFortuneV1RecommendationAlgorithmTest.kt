@@ -83,6 +83,33 @@ class CromFortuneV1RecommendationAlgorithmTest {
         }
 
     @Test
+    fun `getRecommendation - bug 37 sample - returns null`() =
+        runBlocking {
+            val currency = Currency.getInstance("SEK")
+            val oldOrder1 = StockOrder(
+                "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                0.9039, 39.0, 1000
+            )
+            val oldOrder2 = StockOrder(
+                "Buy", currency.toString(), 10000L, DOMESTIC_STOCK_NAME,
+                0.55, 39.0, 196
+            )
+            val oldOrder3 = StockSplit(reverse = true, dateInMillis = 20000L, DOMESTIC_STOCK_NAME, 8)
+
+            val recommendation: Recommendation? = algorithm.getRecommendation(
+                StockPrice(
+                    stockSymbol = DOMESTIC_STOCK_NAME, currency = currency, price = 2.20
+                ), 1.0, 39.0, setOf(oldOrder1.toStockEvent(), oldOrder2.toStockEvent(), oldOrder3.toStockEvent()),
+                2 * TimeUnit.MILLISECONDS.convert(
+                    CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS,
+                    TimeUnit.DAYS
+                )
+            )
+
+            assertNull(recommendation)
+        }
+
+    @Test
     fun `getRecommendation - after huge stock split and price back to before split - returns sell recommendation of max 1000 SEK`() =
         runBlocking {
             val currency = Currency.getInstance("SEK")
@@ -90,7 +117,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 1.0, 39.0, 10
             )
-            val oldSplit = StockSplit(reverse = false, 1L, DOMESTIC_STOCK_NAME,
+            val oldSplit = StockSplit(
+                reverse = false, 1L, DOMESTIC_STOCK_NAME,
                 1000000
             )
             repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
@@ -121,7 +149,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 1.0, 39.0, 10000
             )
-            val oldSplit = StockSplit(reverse = true, 1L, DOMESTIC_STOCK_NAME,
+            val oldSplit = StockSplit(
+                reverse = true, 1L, DOMESTIC_STOCK_NAME,
                 500
             )
             repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
