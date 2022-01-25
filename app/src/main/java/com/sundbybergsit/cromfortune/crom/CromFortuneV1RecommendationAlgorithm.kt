@@ -1,7 +1,6 @@
 package com.sundbybergsit.cromfortune.crom
 
 import android.content.Context
-import android.util.Log
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.StockEvent
@@ -58,15 +57,17 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
         var soldQuantity = 0
         var accumulatedCostInSek = 0.0
         var splitMultiplicator = 1
+
+        // FIXME: Still recommends selling more stocks than exists
+
         for (stockOrder in sortedOrders) {
             for (sortedSplit in sortedSplits) {
                 if (sortedSplit.dateInMillis > stockOrder.dateInMillis) {
                     splitMultiplicator *= if (sortedSplit.reverse) {
-                        sortedSplit.quantity
-                    } else {
                         -sortedSplit.quantity
+                    } else {
+                        sortedSplit.quantity
                     }
-                    Log.e("CROM", "split multiplication: " + splitMultiplicator)
                 }
             }
             if (stockOrder.name == stockName) {

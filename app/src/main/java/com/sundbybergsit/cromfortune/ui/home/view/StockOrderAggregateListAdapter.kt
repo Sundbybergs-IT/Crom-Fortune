@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
@@ -23,7 +24,6 @@ import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateHeaderAdapterItem
-import com.sundbybergsit.cromfortune.ui.home.StockOrderAggregate
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
 import java.text.NumberFormat
