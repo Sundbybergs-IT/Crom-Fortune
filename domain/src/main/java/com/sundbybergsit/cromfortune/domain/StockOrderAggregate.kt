@@ -1,8 +1,5 @@
-package com.sundbybergsit.cromfortune.ui.home
+package com.sundbybergsit.cromfortune.domain
 
-import com.sundbybergsit.cromfortune.domain.StockEvent
-import com.sundbybergsit.cromfortune.domain.StockOrder
-import com.sundbybergsit.cromfortune.domain.StockSplit
 import java.util.*
 
 data class StockOrderAggregate(
@@ -27,7 +24,7 @@ data class StockOrderAggregate(
             }
             // Create new fake stock buy/sell order event corresponding to the split
             StockEvent(
-                oldAggregate.getCorrespondingSplitStockOrder(stockEvent.stockSplit!!),
+                oldAggregate.getCorrespondingSplitStockOrder(stockEvent.stockSplit),
                 null,
                 stockEvent.dateInMillis
             )

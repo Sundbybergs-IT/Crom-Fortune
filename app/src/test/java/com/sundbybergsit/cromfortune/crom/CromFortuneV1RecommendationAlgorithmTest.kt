@@ -11,6 +11,7 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import kotlinx.coroutines.runBlocking
@@ -18,7 +19,6 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.*
@@ -44,8 +44,9 @@ class CromFortuneV1RecommendationAlgorithmTest {
             )
         )
         ShadowLooper.runUiThreadTasks()
-        repository = StockOrderRepositoryImpl(ApplicationProvider.getApplicationContext() as Context)
-        algorithm = CromFortuneV1RecommendationAlgorithm(RuntimeEnvironment.systemContext)
+        val context = ApplicationProvider.getApplicationContext() as Context
+        repository = StockOrderRepositoryImpl(context)
+        algorithm = CromFortuneV1RecommendationAlgorithm(context)
     }
 
     @Test
@@ -72,6 +73,65 @@ class CromFortuneV1RecommendationAlgorithmTest {
                     DOMESTIC_STOCK_NAME, currency,
                     currentPrice
                 ), 1.0, 39.0, setOf(oldOrder1.toStockEvent(), oldOrder2.toStockEvent(), oldOrder3.toStockEvent()),
+                TimeUnit.MILLISECONDS.convert(
+                    CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS,
+                    TimeUnit.DAYS
+                )
+            )
+
+            assertNull(recommendation)
+        }
+
+    @Test
+    fun `getRecommendation - after huge stock split and price back to before split - returns sell recommendation of max 1000 SEK`() =
+        runBlocking {
+            val currency = Currency.getInstance("SEK")
+            val oldOrder1 = StockOrder(
+                "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                1.0, 39.0, 10
+            )
+            val oldSplit = StockSplit(reverse = false, 1L, DOMESTIC_STOCK_NAME,
+                1000000
+            )
+            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+            val currentPrice = 100.0
+
+            val recommendation: Recommendation? = algorithm.getRecommendation(
+                StockPrice(
+                    DOMESTIC_STOCK_NAME, currency,
+                    currentPrice
+                ), 1.0, 39.0, setOf(oldOrder1.toStockEvent(), oldSplit.toStockEvent()),
+                TimeUnit.MILLISECONDS.convert(
+                    CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS,
+                    TimeUnit.DAYS
+                )
+            )
+
+            assertNotNull(recommendation)
+            assertTrue(recommendation!!.command is SellStockCommand)
+            val sellStockCommand = recommendation.command as SellStockCommand
+            assertTrue(sellStockCommand.quantity * sellStockCommand.pricePerStock <= CromFortuneV1RecommendationAlgorithm.MAX_PURCHASE_ORDER_IN_SEK)
+        }
+
+    @Test
+    fun `getRecommendation - after huge reverse stock split and price increased by smaller factor - returns null`() =
+        runBlocking {
+            val currency = Currency.getInstance("SEK")
+            val oldOrder1 = StockOrder(
+                "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                1.0, 39.0, 10000
+            )
+            val oldSplit = StockSplit(reverse = true, 1L, DOMESTIC_STOCK_NAME,
+                500
+            )
+            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+            val currentPrice = 100.0
+
+            val recommendation: Recommendation? = algorithm.getRecommendation(
+                StockPrice(
+                    DOMESTIC_STOCK_NAME, currency,
+                    currentPrice
+                ), 10.0, 39.0, setOf(oldOrder1.toStockEvent(), oldSplit.toStockEvent()),
                 TimeUnit.MILLISECONDS.convert(
                     CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS,
                     TimeUnit.DAYS

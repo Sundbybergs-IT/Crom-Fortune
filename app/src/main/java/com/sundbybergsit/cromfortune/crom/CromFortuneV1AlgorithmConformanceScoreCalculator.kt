@@ -8,6 +8,7 @@ import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import java.util.*
 
@@ -32,44 +33,59 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
 
         // FIXME: recommend in groups of stocks
 
-        val listOfListOfStockEvents: MutableList<List<StockEvent>> = mutableListOf<List<StockEvent>>().apply {
-            for (stockName in stockNames) {
-                add(stockEvents.sortedBy { it.dateInMillis }.filter { event ->
-                    (event.stockOrder != null && event.stockOrder!!.name == stockName) ||
-                            (event.stockSplit != null && event.stockSplit!!.name == stockName)
-                })
-            }
-        }
-        var firstItemAdded = false
-        for (listOfStockEvents in listOfListOfStockEvents) {
-            listOfStockEvents.forEachIndexed { index, event ->
-                val stockOrder = event.stockOrder
+        for (stockName in stockNames) {
+            var firstItemAdded = false
+            val stockOrdersForStock: MutableList<StockOrder> = stockEvents
+                .filter { stockEvent -> stockEvent.stockOrder != null && stockEvent.stockOrder!!.name == stockName }
+                .map { stockEvent -> stockEvent.stockOrder!! }
+                .sortedBy { stockOrder -> stockOrder.dateInMillis }.toMutableList()
+            val firstStockOrderForStock = stockOrdersForStock.first()
+            val currencyRateInSek = (currencyRateRepository.currencyRates.value as
+                    CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
+            val stockOrderAggregate = StockOrderAggregate(
+                rateInSek = currencyRateInSek,
+                displayName = "FIXME",
+                stockSymbol = firstStockOrderForStock.name,
+                currency = Currency.getInstance(firstStockOrderForStock.currency)
+            )
+            val allSortedStockEvents = stockEvents.filter { stockEvent ->
+                (stockEvent.stockOrder != null && stockEvent.stockOrder!!.name == stockOrderAggregate.stockSymbol ||
+                        (stockEvent.stockSplit != null && stockEvent.stockSplit!!.name == stockOrderAggregate.stockSymbol))
+            }.sortedBy { stockEvent -> stockEvent.dateInMillis }
+            allSortedStockEvents.forEachIndexed { index, stockEvent ->
                 if (!firstItemAdded) {
                     when {
-                        stockOrder == null -> {
+                        stockEvent.stockOrder == null -> {
                             // Ignore other types of events before the first purchase order
                         }
-                        stockOrder.orderAction != "Buy" -> {
+                        stockEvent.stockOrder!!.orderAction != "Buy" -> {
                             throw IllegalStateException("First order must be a buy order!")
                         }
                         else -> {
                             correctDecision += 1
                             firstItemAdded = true
+                            stockOrderAggregate.aggregate(stockEvent)
                         }
                     }
-                } else if (event.stockOrder != null) {
-                    val currencyRateInSek = (currencyRateRepository.currencyRates.value as
-                            CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder!!.currency }!!.rateInSek
+                } else if (stockEvent.stockSplit != null) {
+                    stockOrderAggregate.aggregate(stockEvent)
+                } else if (stockEvent.stockOrder != null) {
+                    stockOrderAggregate.aggregate(stockEvent)
+                    val stockOrder = stockEvent.stockOrder!!
+                    val currencyRate = (currencyRateRepository.currencyRates.value as
+                            CurrencyRateRepository.ViewState.VALUES).currencyRates
+                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!
+                    val currencyRateInSek = currencyRate.rateInSek
                     val recommendation = recommendationAlgorithm.getRecommendation(
-                        StockPrice(
-                            stockOrder!!.name,
-                            Currency.getInstance(stockOrder.currency),
-                            stockOrder.pricePerStock
+                        stockPrice = StockPrice(
+                            stockSymbol = stockOrder.name,
+                            currency = Currency.getInstance(stockOrder.currency),
+                            price = stockOrder.pricePerStock
                         ),
-                        currencyRateInSek,
-                        stockOrder.commissionFee,
-                        listOfStockEvents.subList(0, index).toSet(),
-                        event.dateInMillis
+                        currencyRateInSek = currencyRateInSek,
+                        commissionFee = stockOrder.commissionFee,
+                        allSortedStockEvents.subList(0, index).toSet(),
+                        stockOrder.dateInMillis
                     )
                     if (stockOrder.orderAction == "Buy") {
                         if (recommendation != null && recommendation.command is BuyStockCommand) {
@@ -84,8 +100,6 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                             Log.v(TAG, "Bad decision.")
                         }
                     }
-                } else {
-                    Log.v(TAG, "Skipping other types of events as there is nothing to decide upon.")
                 }
             }
         }
