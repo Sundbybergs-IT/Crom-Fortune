@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
+import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
