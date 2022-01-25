@@ -56,7 +56,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
         var grossQuantity = 0
         var soldQuantity = 0
         var accumulatedCostInSek = 0.0
-        var splitMultiplicator = 1
+        var splitMultiplicator = 1.0
 
         // FIXME: Still recommends selling more stocks than exists
 
@@ -64,19 +64,19 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             for (sortedSplit in sortedSplits) {
                 if (sortedSplit.dateInMillis > stockOrder.dateInMillis) {
                     splitMultiplicator *= if (sortedSplit.reverse) {
-                        -sortedSplit.quantity
+                        -1.0/sortedSplit.quantity.toDouble()
                     } else {
-                        sortedSplit.quantity
+                        sortedSplit.quantity.toDouble()
                     }
                 }
             }
             if (stockOrder.name == stockName) {
                 if (stockOrder.orderAction == "Buy") {
-                    grossQuantity += stockOrder.quantity * splitMultiplicator
+                    grossQuantity += (stockOrder.quantity * splitMultiplicator).toInt()
                     accumulatedCostInSek += rateInSek * stockOrder.pricePerStock * stockOrder.quantity +
                             stockOrder.commissionFee
                 } else {
-                    soldQuantity += stockOrder.quantity * splitMultiplicator
+                    soldQuantity += (stockOrder.quantity * splitMultiplicator).toInt()
                 }
                 if (grossQuantity - soldQuantity == 0) {
                     accumulatedCostInSek = 0.0

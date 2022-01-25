@@ -62,7 +62,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                     stockOrderAggregate.aggregate(stockEvent)
                 } else if (stockEvent.stockOrder != null) {
                     val possibleNewStockEvent: StockEvent? =
-                        stockOrderAggregate.applyStockOrderForRecommendationAlgorithm(
+                        stockOrderAggregate.applyStockOrderForRecommendedEvent(
                             eventToConsider = stockEvent,
                             existingEvents = cromSortedStockEvents,
                             recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm(context)
@@ -72,6 +72,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                         stockOrderAggregate.aggregate(possibleNewStockEvent)
                     }
                 } else {
+                    cromSortedStockEvents.add(stockEvent)
                     stockOrderAggregate.aggregate(stockEvent)
                 }
             }
