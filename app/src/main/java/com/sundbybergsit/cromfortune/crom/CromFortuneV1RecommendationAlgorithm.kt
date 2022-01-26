@@ -56,11 +56,12 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
         var grossQuantity = 0
         var soldQuantity = 0
         var accumulatedCostInSek = 0.0
-        var splitMultiplicator = 1.0
+        var splitMultiplicator: Double
 
         // FIXME: Still recommends selling more stocks than exists
 
         for (stockOrder in sortedOrders) {
+            splitMultiplicator = 1.0
             for (sortedSplit in sortedSplits) {
                 if (sortedSplit.dateInMillis > stockOrder.dateInMillis) {
                     splitMultiplicator *= if (sortedSplit.reverse) {
