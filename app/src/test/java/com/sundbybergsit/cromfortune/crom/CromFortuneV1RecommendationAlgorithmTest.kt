@@ -110,6 +110,42 @@ class CromFortuneV1RecommendationAlgorithmTest {
         }
 
     @Test
+    fun `getRecommendation - bug 39 sample - returns null`() =
+        runBlocking {
+            val currency = Currency.getInstance("SEK")
+            val oldOrder1 = StockOrder(
+                "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
+                193.35, 39.0, 3
+            )
+            val oldOrder2 = StockOrder(
+                "Buy", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
+                182.95, 39.0, 25
+            )
+            val oldOrder3 = StockSplit(reverse = false, dateInMillis = 2L, DOMESTIC_STOCK_NAME, 2)
+            val oldOrder4 = StockOrder(
+                "Buy", currency.toString(), 3L, DOMESTIC_STOCK_NAME,
+                82.39, 5.0, 24
+            )
+            val oldOrder5 = StockOrder(
+                "Buy", currency.toString(), 4L, DOMESTIC_STOCK_NAME,
+                87.37, 5.0, 22
+            )
+
+            val recommendation: Recommendation? = algorithm.getRecommendation(
+                StockPrice(
+                    stockSymbol = DOMESTIC_STOCK_NAME, currency = currency, price = 86.99
+                ), 1.0, 39.0, setOf(oldOrder1.toStockEvent(), oldOrder2.toStockEvent(),
+                    oldOrder3.toStockEvent(), oldOrder4.toStockEvent(), oldOrder5.toStockEvent()),
+                2 * TimeUnit.MILLISECONDS.convert(
+                    CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS,
+                    TimeUnit.DAYS
+                )
+            )
+
+            assertNull(recommendation)
+        }
+
+    @Test
     fun `getRecommendation - after huge stock split and price back to before split - returns sell recommendation of max 1000 SEK`() =
         runBlocking {
             val currency = Currency.getInstance("SEK")
