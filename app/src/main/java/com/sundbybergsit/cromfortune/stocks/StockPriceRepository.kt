@@ -1,6 +1,7 @@
 package com.sundbybergsit.cromfortune.stocks
 
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.sundbybergsit.cromfortune.domain.StockPrice
@@ -18,6 +19,11 @@ object StockPriceRepository : StockPriceListener {
     fun put(stockPrice: Set<StockPrice>) {
         Log.v(TAG, "put(${stockPrice})")
         _stockPrices.postValue(ViewState.VALUES(Instant.now(), stockPrice))
+    }
+
+    @VisibleForTesting
+    fun clear() {
+        _stockPrices.postValue(ViewState.NotInitialized)
     }
 
     override fun getStockPrice(stockSymbol: String): StockPrice {
