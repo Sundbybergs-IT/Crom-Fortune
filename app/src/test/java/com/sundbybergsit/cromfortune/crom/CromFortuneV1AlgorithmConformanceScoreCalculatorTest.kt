@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.crom
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.CromTestRule
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
@@ -16,6 +17,7 @@ import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -27,6 +29,9 @@ import java.util.*
 class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     private lateinit var calculator: CromFortuneV1AlgorithmConformanceScoreCalculator
+
+    @get:Rule
+    val cromTestRule = CromTestRule()
 
     @Before
     fun setUp() {

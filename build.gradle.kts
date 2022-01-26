@@ -4,8 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.0.4")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.0")
+        classpath(libs.pluginAndroidGradle)
+        classpath(libs.pluginKotlinGradle)
     }
 }
 
@@ -14,7 +14,7 @@ plugins {
     id("org.sonarqube")
 }
 
-val baseVersionName = "0.5.4"
+val baseVersionName = "0.5.5"
 
 allprojects {
 

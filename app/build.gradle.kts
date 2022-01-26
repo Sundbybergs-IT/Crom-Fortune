@@ -16,7 +16,7 @@ android {
         applicationId = "com.sundbybergsit.cromfortune"
         minSdk = 29
         targetSdk = 31
-        versionCode = 94
+        versionCode = 95
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,9 +33,6 @@ android {
     }
     buildFeatures {
         viewBinding = true
-    }
-    lint {
-        isAbortOnError = false
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true

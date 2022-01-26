@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.fragment.app.FragmentManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.CromTestRule
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.assumeEquals
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
@@ -23,6 +24,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -43,6 +45,9 @@ class StockOrderAggregateListAdapterTest {
             return StockPrice(stockSymbol, Currency.getInstance("SEK"), 0.0)
         }
     }
+
+    @get:Rule
+    val cromTestRule = CromTestRule()
 
     @Before
     fun setUp() {
