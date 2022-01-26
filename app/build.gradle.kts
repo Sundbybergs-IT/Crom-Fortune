@@ -34,9 +34,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    lint {
-        isAbortOnError = false
-    }
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }

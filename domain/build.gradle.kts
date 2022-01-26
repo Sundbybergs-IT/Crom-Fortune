@@ -24,9 +24,6 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
-    lint {
-        isAbortOnError = false
-    }
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }

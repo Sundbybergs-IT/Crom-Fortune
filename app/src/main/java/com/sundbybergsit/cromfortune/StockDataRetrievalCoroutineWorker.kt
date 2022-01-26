@@ -10,7 +10,6 @@ import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.domain.StockSplitRepository
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.notifications.NotificationUtil
@@ -19,7 +18,6 @@ import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.Stock
@@ -40,7 +38,6 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
         const val COMMISSION_FEE = 39.0
 
         fun refreshFromYahoo(context: Context) {
-            val stockSplitRepository: StockSplitRepository = StockSplitRepositoryImpl(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {

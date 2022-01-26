@@ -47,16 +47,19 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
     }
 
     private fun setupDataListeners() {
-        StockPriceRepository.stockPrices.observe(viewLifecycleOwner, { viewState ->
+        StockPriceRepository.stockPrices.observe(viewLifecycleOwner) { viewState ->
             when (viewState) {
                 is StockPriceRepository.ViewState.VALUES -> {
                     dashboardViewModel.refresh(requireContext(), viewState.instant, viewState.stockPrices)
                 }
+                else -> {
+                    // Do nothing
+                }
             }
-        })
-        dashboardViewModel.score.observe(viewLifecycleOwner, {
+        }
+        dashboardViewModel.score.observe(viewLifecycleOwner) {
             binding.textViewFragmentDashboardScore.text = it
-        })
+        }
     }
 
 }

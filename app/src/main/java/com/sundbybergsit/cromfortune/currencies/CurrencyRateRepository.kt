@@ -1,6 +1,7 @@
 package com.sundbybergsit.cromfortune.currencies
 
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
@@ -10,8 +11,9 @@ object CurrencyRateRepository {
 
     private const val TAG = "CurrencyRateRepository"
 
+    @VisibleForTesting
     @Suppress("ObjectPropertyName")
-    private val _currencyRates = MutableLiveData<ViewState>()
+    val _currencyRates = MutableLiveData<ViewState>()
 
     val currencyRates: LiveData<ViewState> = _currencyRates
 
