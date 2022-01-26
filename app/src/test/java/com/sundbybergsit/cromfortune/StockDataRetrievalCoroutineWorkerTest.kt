@@ -9,6 +9,7 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -18,6 +19,9 @@ import org.robolectric.annotation.Config
 class StockDataRetrievalCoroutineWorkerTest {
 
     private lateinit var context: Context
+
+    @get:Rule
+    val cromTestRule = CromTestRule()
 
     @Before
     fun setUp() {
