@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.CromTestRule
 import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
@@ -17,6 +18,7 @@ import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -34,6 +36,9 @@ class CromFortuneV1RecommendationAlgorithmTest {
     private lateinit var algorithm: CromFortuneV1RecommendationAlgorithm
 
     private lateinit var repository: StockOrderRepository
+
+    @get:Rule
+    val cromTestRule = CromTestRule()
 
     @Before
     fun setUp() {
