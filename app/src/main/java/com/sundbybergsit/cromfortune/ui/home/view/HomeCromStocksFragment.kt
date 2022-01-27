@@ -70,11 +70,12 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
     }
 
     private fun setUpUiViewStateListener(textView: TextView, fab: FloatingActionButton, infoImage: ImageView) {
-        viewModel.cromStocksViewState.observe(viewLifecycleOwner, { viewState ->
+        viewModel.cromStocksViewState.observe(viewLifecycleOwner) { viewState ->
             Log.i(TAG, "New stock list view state.")
             when (viewState) {
                 is HomeViewModel.ViewState.Loading -> {
-                    requireView().findViewById<ProgressBar>(R.id.progressBar_fragmentHomeStocks).visibility = View.VISIBLE
+                    requireView().findViewById<ProgressBar>(R.id.progressBar_fragmentHomeStocks).visibility =
+                        View.VISIBLE
                     textView.text = ""
                     fab.visibility = View.GONE
                     infoImage.visibility = View.GONE
@@ -94,11 +95,11 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
                     stockOrderAggregateListAdapter.submitList(Collections.emptyList())
                 }
             }
-        })
+        }
     }
 
     private fun setUpStockPriceListener() {
-        StockPriceRepository.stockPrices.observe(viewLifecycleOwner, { viewState: StockPriceRepository.ViewState ->
+        StockPriceRepository.stockPrices.observe(viewLifecycleOwner) { viewState: StockPriceRepository.ViewState ->
             Log.i(TAG, "New stock price view state.")
             when (viewState) {
                 is StockPriceRepository.ViewState.VALUES -> {
@@ -108,11 +109,11 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
                     }
                 }
             }
-        })
+        }
     }
 
     private fun setUpCurrencyRateListener() {
-        CurrencyRateRepository.currencyRates.observe(viewLifecycleOwner, { viewState ->
+        CurrencyRateRepository.currencyRates.observe(viewLifecycleOwner) { viewState ->
             Log.i(TAG, "New currency rate view state.")
             when (viewState) {
                 is CurrencyRateRepository.ViewState.VALUES -> {
@@ -122,7 +123,7 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
                     }
                 }
             }
-        })
+        }
     }
 
     private fun refreshEverything() {
