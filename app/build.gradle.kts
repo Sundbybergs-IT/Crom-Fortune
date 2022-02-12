@@ -36,10 +36,10 @@ android {
         viewBinding = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.1.0-alpha02"
+        kotlinCompilerExtensionVersion = libs.versions.androidx.compose.get()
     }
     lint {
-        isAbortOnError = false
+        abortOnError = false
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
