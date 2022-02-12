@@ -32,7 +32,7 @@ androidxAnnotation = { module = "androidx.annotation:annotation", version.ref = 
 androidxAppcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose" }
 androidxComposeUiUi = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
-androidxComposeUiUitooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
+androidxComposeUiUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
 androidxComposeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-compose" }
 androidxComposeMaterialIconsCore = { module = "androidx.compose.material:material-icons-core", version.ref = "androidx-compose" }
 androidxComposeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "androidx-compose" }
@@ -41,7 +41,6 @@ androidxComposeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-li
 androidxComposeRuntimeRxjava2 = { module = "androidx.compose.runtime:runtime-rxjava2", version.ref = "androidx-compose" }
 androidxConstraintlayoutConstraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout-constraintlayout" }
 androidxConstraintlayoutCompose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "androidx-constraintlayout-compose" }
-androidxConstraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidxLifecycleExtensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "androidx-lifecycle" }
 androidxLifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidx-lifecycle" }
