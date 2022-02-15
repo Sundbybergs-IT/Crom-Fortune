@@ -26,6 +26,7 @@ data class StockPrice(val stockSymbol: String, val currency: Currency, val price
             Triple("SHB-A.ST", "Svenska Handelsbanken AB (publ)", "SEK"),
             Triple("HIMX", "Himax Technologies, Inc.", "USD"),
             Triple("IMMR", "Immersion Corporation", "USD"),
+            Triple("INVE-B.ST", "Investor AB (publ)", "SEK"),
             Triple("IPCO.ST", "International Petroleum Corporation", "SEK"),
             Triple("LHA.F", "Deutsche Lufthansa AG", "EUR"),
             Triple("LPK.DE", "LPKF Laser & Electronics AG", "EUR"),
