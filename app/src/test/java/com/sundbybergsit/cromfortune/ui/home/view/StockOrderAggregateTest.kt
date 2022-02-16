@@ -381,4 +381,66 @@ class StockOrderAggregateTest {
         assertEquals(100.0, profit, 0.000001)
     }
 
+    @Test
+    fun `getProfit - bug 48 sample - returns correct value`() {
+        val stockOrderAggregate = StockOrderAggregate(
+            1.0,
+            StockPrice.SYMBOLS[0].first,
+            StockPrice.SYMBOLS[0].first,
+            currency
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+                    35.30, 5.0, 100
+                ), null, 0L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), 1L, StockPrice.SYMBOLS[0].first,
+                    46.70, 5.0, 20
+                ), null, 1L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), 2L, StockPrice.SYMBOLS[0].first,
+                    50.44, 5.0, 19
+                ), null, 2L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), 3L, StockPrice.SYMBOLS[0].first,
+                    53.92, 5.0, 18
+                ), null, 3L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), 4L, StockPrice.SYMBOLS[0].first,
+                    52.58, 5.0, 190
+                ), null, 4L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), 5L, StockPrice.SYMBOLS[0].first,
+                    47.87, 5.0, 40
+                ), null, 5L
+            )
+        )
+
+        val profit = stockOrderAggregate.getProfit(53.90)
+
+        assertEquals(2142.62, profit, 0.000001)
+    }
+
 }
