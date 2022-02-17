@@ -87,16 +87,16 @@ data class StockOrderAggregate(
                 ((aggregateBuyQuantity - aggregateSellQuantity) + this.quantity)
 
     private fun StockOrder.sell() {
-        val previousAggregateAcquisitionValue =
+        val saleIncome = this.quantity * this.pricePerStock - (this.commissionFee / rateInSek)
+        val accumulatedCosts =
             aggregateAcquisitionValue * (aggregateBuyQuantity - aggregateSellQuantity)
         aggregateSellQuantity += this.quantity
         aggregateAcquisitionValue = if (aggregateBuyQuantity - aggregateSellQuantity == 0) {
             0.0
         } else {
-            (previousAggregateAcquisitionValue - (this.quantity * this.pricePerStock) / (getQuantity() + quantity)) /
-                    getQuantity()
+            (accumulatedCosts - saleIncome) / getQuantity()
         }
-        accumulatedSales += this.pricePerStock * this.quantity + this.commissionFee / rateInSek
+        accumulatedSales += saleIncome
     }
 
     fun getQuantity(): Int {
