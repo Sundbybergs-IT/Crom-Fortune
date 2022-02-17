@@ -120,6 +120,52 @@ class StockOrderAggregateTest {
     }
 
     @Test
+    fun `getAcquisitionValue - issue 45 - returns correct value`() {
+        val stockOrderAggregate = StockOrderAggregate(
+            1.0,
+            StockPrice.SYMBOLS[0].first,
+            StockPrice.SYMBOLS[0].first,
+            currency
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+                    17.10, 38.0, 200
+                ), null, 0L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), 1L, StockPrice.SYMBOLS[0].first,
+                    15.90, 38.0, 150
+                ), null, 1L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), 2L, StockPrice.SYMBOLS[0].first,
+                    12.50, 0.0, 14
+                ), null, 2L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), 3L, StockPrice.SYMBOLS[0].first,
+                    17.66, 13.0, 277
+                ), null, 3L
+            )
+        )
+
+        val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
+
+        assertEquals(13.53080, acquisitionValue, 0.0001)
+    }
+
+    @Test
     fun `getQuantity - when buy a stock without commission fee and then split - returns correct value`() {
         val stockOrderAggregate = StockOrderAggregate(
             1.0,
@@ -348,7 +394,7 @@ class StockOrderAggregateTest {
 
         val profit = stockOrderAggregate.getProfit(10000000.0)
 
-        assertEquals(0.0, profit, 0.000001)
+        assertEquals(-20.0, profit, 0.000001)
     }
 
     @Test
@@ -440,7 +486,7 @@ class StockOrderAggregateTest {
 
         val profit = stockOrderAggregate.getProfit(53.90)
 
-        assertEquals(2142.62, profit, 0.000001)
+        assertEquals(2112.62, profit, 0.000001)
     }
 
 }
