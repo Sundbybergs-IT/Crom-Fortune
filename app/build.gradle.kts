@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+import org.gradle.api.tasks.testing.logging.TestLogEvent.*
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -17,6 +20,7 @@ android {
         versionCode = 105
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
     }
     buildTypes {
         getByName("release") {
@@ -43,11 +47,20 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        unitTests.all { test ->
+            test.testLogging {
+                events.addAll(listOf(PASSED, SKIPPED, FAILED))
+                showCauses = true
+                showExceptions = true
+                exceptionFormat = FULL
+            }
+        }
     }
 }
 
 dependencies {
     api(projects.domain)
+    debugImplementation(libs.androidxComposeTestManifest)
     implementation(projects.algorithm)
     // https://youtrack.jetbrains.com/issue/KT-44452
     //noinspection(DifferentStdlibGradleVersion
@@ -65,9 +78,9 @@ dependencies {
     implementation(libs.androidxNavigationUi)
     implementation(libs.androidxWorkRuntime)
     implementation(libs.bundles.compose)
-    implementation(libs.materialdaypicker)
     implementation(libs.googleMaterial)
     implementation(libs.googlePlayCore)
+    implementation(libs.materialdaypicker)
     implementation(libs.yahooFinance)
     testImplementation(libs.androidxTestJunit)
     testImplementation(libs.androidxWorkTesting)

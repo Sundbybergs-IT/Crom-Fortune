@@ -4,11 +4,9 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.snackbar.Snackbar
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.InstallState
@@ -17,23 +15,27 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.sundbybergsit.cromfortune.navigation.AppNavigation
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.theme.AppTheme
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     companion object {
 
-        const val TAG: String = "MainActivity"
         private const val APP_UPDATE_REQUEST_CODE = 1711
 
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val navView: BottomNavigationView = findViewById(R.id.nav_view)
-        val navController = findNavController(R.id.nav_host_fragment)
-        navView.setupWithNavController(navController)
+        Log.v(TAG, String.format("onCreate(savedInstanceState=[%s])", savedInstanceState))
+
+        setContent {
+            AppTheme {
+                AppNavigation(navController = rememberAnimatedNavController())
+            }
+        }
 
         val appUpdateManager = AppUpdateManagerFactory.create(this)
         val appUpdateInfoTask = appUpdateManager.appUpdateInfo
@@ -93,15 +95,16 @@ class MainActivity : AppCompatActivity() {
 
         /* Displays the snackbar notification and call to action. */
         private fun popupSnackbarForCompleteUpdate() {
-            Snackbar.make(
-                    activity.findViewById(R.id.coordinatorLayout_activityMain),
-                    activity.getString(R.string.generic_update_completed),
-                    Snackbar.LENGTH_INDEFINITE
-            ).apply {
-                setAction("RESTART") { appUpdateManager.completeUpdate() }
-                setActionTextColor(activity.resources.getColor(R.color.colorAccent, null))
-                show()
-            }
+            // FIXME: Re-add snackbars, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+//            Snackbar.make(
+//                    activity.findViewById(R.id.coordinatorLayout_activityMain),
+//                    activity.getString(R.string.generic_update_completed),
+//                    Snackbar.LENGTH_INDEFINITE
+//            ).apply {
+//                setAction("RESTART") { appUpdateManager.completeUpdate() }
+//                setActionTextColor(activity.resources.getColor(R.color.colorSecondary, null))
+//                show()
+//            }
         }
 
     }

@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.TAG
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1AlgorithmConformanceScoreCalculator
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
@@ -18,12 +19,6 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 
 class DashboardViewModel : ViewModel() {
-
-    companion object {
-
-        const val TAG = "DashboardViewModel"
-
-    }
 
     private var lastUpdated: Instant = Instant.ofEpochMilli(0L)
 
