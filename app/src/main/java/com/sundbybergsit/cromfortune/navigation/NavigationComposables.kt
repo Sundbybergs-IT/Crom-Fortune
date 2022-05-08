@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -304,12 +306,12 @@ private val bottomNavigationItems = listOf(
         iconResId = R.drawable.ic_dashboard_black_24dp,
         selectedIconResId = R.drawable.ic_dashboard_black_24dp,
     ),
-    NavigationItem.ResourceIcon(
+    NavigationItem.ImageVectorIcon(
         screen = Screen.Notifications,
         labelResId = R.string.notifications_title,
         contentDescriptionResId = R.string.notifications_title,
-        iconResId = R.drawable.ic_notifications_black_24dp,
-        selectedIconResId = R.drawable.ic_notifications_black_24dp,
+        iconImageVector = Icons.Outlined.Notifications,
+        selectedImageVector = Icons.Filled.Notifications
     ),
     NavigationItem.ImageVectorIcon(
         screen = Screen.Settings,
