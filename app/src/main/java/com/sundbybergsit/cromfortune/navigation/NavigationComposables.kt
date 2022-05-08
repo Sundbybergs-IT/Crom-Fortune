@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -285,12 +290,12 @@ private sealed class NavigationItem(
 }
 
 private val bottomNavigationItems = listOf(
-    NavigationItem.ResourceIcon(
+    NavigationItem.ImageVectorIcon(
         screen = Screen.Home,
         labelResId = R.string.home_title,
         contentDescriptionResId = R.string.home_title,
-        iconResId = R.drawable.ic_home_black_24dp,
-        selectedIconResId = R.drawable.ic_home_black_24dp,
+        iconImageVector = Icons.Outlined.Home,
+        selectedImageVector = Icons.Filled.Home
     ),
     NavigationItem.ResourceIcon(
         screen = Screen.Dashboard,
@@ -306,11 +311,11 @@ private val bottomNavigationItems = listOf(
         iconResId = R.drawable.ic_notifications_black_24dp,
         selectedIconResId = R.drawable.ic_notifications_black_24dp,
     ),
-    NavigationItem.ResourceIcon(
+    NavigationItem.ImageVectorIcon(
         screen = Screen.Settings,
         labelResId = R.string.settings_title,
         contentDescriptionResId = R.string.settings_title,
-        iconResId = R.drawable.ic_settings_black_24dp,
-        selectedIconResId = R.drawable.ic_settings_black_24dp,
+        iconImageVector = Icons.Outlined.Settings,
+        selectedImageVector = Icons.Filled.Settings
     )
 )
