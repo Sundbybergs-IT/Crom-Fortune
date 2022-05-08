@@ -1,8 +1,7 @@
-package com.sundbybergsit.cromfortune.ui.dashboard
+package com.sundbybergsit.cromfortune.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModel
 
 class SettingsViewModelFactory : ViewModelProvider.Factory {
 

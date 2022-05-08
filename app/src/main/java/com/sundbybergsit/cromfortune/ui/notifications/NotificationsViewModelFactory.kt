@@ -1,8 +1,7 @@
-package com.sundbybergsit.cromfortune.ui.dashboard
+package com.sundbybergsit.cromfortune.ui.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModel
 
 class NotificationsViewModelFactory : ViewModelProvider.Factory {
 
