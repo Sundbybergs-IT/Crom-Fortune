@@ -25,13 +25,18 @@ import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.activityBoundViewModel
 import com.sundbybergsit.cromfortune.contentDescription
 import com.sundbybergsit.cromfortune.theme.MenuColorComposables
-import com.sundbybergsit.cromfortune.ui.dashboard.*
+import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
+import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
+import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModelFactory
 import com.sundbybergsit.cromfortune.ui.home.Home
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
+import com.sundbybergsit.cromfortune.ui.home.HomeViewModelFactory
 import com.sundbybergsit.cromfortune.ui.notifications.Notifications
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModel
+import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModelFactory
 import com.sundbybergsit.cromfortune.ui.settings.Settings
 import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModel
+import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModelFactory
 
 @Composable
 internal fun AppNavigation(navController: NavHostController) {
