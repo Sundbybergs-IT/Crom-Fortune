@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.navigation
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Box
@@ -8,9 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
@@ -19,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.*
@@ -239,11 +239,9 @@ private fun getLastRoot(navController: NavHostController) =
 @Composable
 private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
     val painter = when (item) {
-        is NavigationItem.ResourceIcon -> painterResource(item.iconResId)
         is NavigationItem.ImageVectorIcon -> rememberVectorPainter(item.iconImageVector)
     }
     val selectedPainter = when (item) {
-        is NavigationItem.ResourceIcon -> item.selectedIconResId?.let { painterResource(it) }
         is NavigationItem.ImageVectorIcon -> item.selectedImageVector?.let { rememberVectorPainter(it) }
     }
 
@@ -274,14 +272,6 @@ private sealed class NavigationItem(
     @StringRes val contentDescriptionResId: Int,
 ) {
 
-    class ResourceIcon(
-        screen: Screen,
-        @StringRes labelResId: Int,
-        @StringRes contentDescriptionResId: Int,
-        @DrawableRes val iconResId: Int,
-        @DrawableRes val selectedIconResId: Int? = null,
-    ) : NavigationItem(screen, labelResId, contentDescriptionResId)
-
     class ImageVectorIcon(
         screen: Screen,
         @StringRes labelResId: Int,
@@ -289,6 +279,7 @@ private sealed class NavigationItem(
         val iconImageVector: ImageVector,
         val selectedImageVector: ImageVector? = null,
     ) : NavigationItem(screen, labelResId, contentDescriptionResId)
+
 }
 
 private val bottomNavigationItems = listOf(
@@ -299,12 +290,12 @@ private val bottomNavigationItems = listOf(
         iconImageVector = Icons.Outlined.Home,
         selectedImageVector = Icons.Filled.Home
     ),
-    NavigationItem.ResourceIcon(
+    NavigationItem.ImageVectorIcon(
         screen = Screen.Dashboard,
         labelResId = R.string.dashboard_title,
         contentDescriptionResId = R.string.dashboard_title,
-        iconResId = R.drawable.ic_dashboard_black_24dp,
-        selectedIconResId = R.drawable.ic_dashboard_black_24dp,
+        iconImageVector = Icons.Outlined.Dashboard,
+        selectedImageVector = Icons.Filled.Dashboard
     ),
     NavigationItem.ImageVectorIcon(
         screen = Screen.Notifications,

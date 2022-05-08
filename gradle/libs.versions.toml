@@ -37,7 +37,6 @@ androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", versi
 androidxComposeUiUi = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
 androidxComposeUiUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
 androidxComposeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-compose" }
-androidxComposeMaterialIconsCore = { module = "androidx.compose.material:material-icons-core", version.ref = "androidx-compose" }
 androidxComposeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "androidx-compose" }
 androidxComposeMaterialMaterial = { module = "androidx.compose.material:material", version.ref = "androidx-compose" }
 androidxComposeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "androidx-compose" }
@@ -74,7 +73,8 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 yahooFinance = { module = "com.yahoofinance-api:YahooFinanceAPI", version.ref = "yahooFinance" }
 
 [bundles]
-compose = ["accompanistPager", "accompanistNavigationAnimation", "androidxActivityCompose", "androidxComposeMaterialMaterial", "androidxComposeRuntimeLivedata",
+compose = ["accompanistPager", "accompanistNavigationAnimation", "androidxActivityCompose", "androidxComposeMaterialMaterial",
+    "androidxComposeRuntimeLivedata", "androidxComposeMaterialIconsExtended",
     "androidxComposeUiUiTooling", "androidxConstraintlayoutCompose", "androidxNavigationCompose"]
 
 [plugins]
