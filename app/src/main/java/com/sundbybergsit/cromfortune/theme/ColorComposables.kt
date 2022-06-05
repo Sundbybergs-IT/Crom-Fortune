@@ -1,10 +1,15 @@
 package com.sundbybergsit.cromfortune.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.Colors
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+
+val Colors.onSurfaceVariant: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFECECEC) else Color(0xFF707070)
 
 internal val PrimaryColor = Color(0XFFBD516D)
 internal val PrimaryColorVariant = Color(0XFF8B3952)

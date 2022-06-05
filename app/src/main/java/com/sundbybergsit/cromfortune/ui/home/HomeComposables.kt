@@ -16,7 +16,13 @@ import com.sundbybergsit.cromfortune.R
 
 @Composable
 fun Home(viewModel: HomeViewModel) {
-    Scaffold { paddingValues ->
+    Scaffold(topBar = {
+        TopAppBar(
+            title = {
+                Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.h6)
+            }
+        )
+    }) { paddingValues ->
         val modifier = Modifier.fillMaxSize()
         Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
             // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
