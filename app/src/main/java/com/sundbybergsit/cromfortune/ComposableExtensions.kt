@@ -11,8 +11,8 @@ import androidx.lifecycle.ViewModelProvider
 @MainThread
 @Composable
 inline fun <reified VM : ViewModel> activityBoundViewModel(
-    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
+    noinline factoryProducer: (() -> ViewModelProvider.Factory)
 ): Lazy<VM> {
     val activity = LocalContext.current as ComponentActivity
-    return activity.viewModels(factoryProducer)
+    return activity.viewModels(extrasProducer = null, factoryProducer = factoryProducer)
 }
