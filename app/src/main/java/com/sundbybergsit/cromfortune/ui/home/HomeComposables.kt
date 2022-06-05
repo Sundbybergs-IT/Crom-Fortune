@@ -24,6 +24,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.accompanist.pager.HorizontalPager
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.contentDescription
+import com.sundbybergsit.cromfortune.ui.DialogButton
 import java.time.Instant
 
 @Composable
@@ -151,14 +152,15 @@ fun RegisterBuyStockAlertDialog(showDialog: Boolean, onConfirm: () -> Unit, onDi
                     errorMessage = amountErrorMessageMutableState.value,
                     contentDescriptor = "Amount Input Text"
                 )
-                // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                // FIXME: Finish dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
                 Row(modifier = Modifier
                     .padding(all = 16.dp)
                     .constrainAs(buttonsRef) {
                         end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
                     }) {
-
+                    DialogButton(text = stringResource(id = R.string.action_cancel), onClick = onDismiss)
+                    DialogButton(text = stringResource(id = android.R.string.ok), onClick = onConfirm)
                 }
             }
         }

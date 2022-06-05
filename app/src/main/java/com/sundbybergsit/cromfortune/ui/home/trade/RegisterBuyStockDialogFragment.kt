@@ -90,7 +90,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
             .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
                 dismiss()
             }
-            .setPositiveButton(getText(R.string.action_ok), confirmListener)
+            .setPositiveButton(getText(android.R.string.ok), confirmListener)
             .create()
         alertDialog.setOnShowListener {
             val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
