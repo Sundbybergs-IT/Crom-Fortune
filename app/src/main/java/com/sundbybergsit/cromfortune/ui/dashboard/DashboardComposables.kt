@@ -4,8 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,14 +15,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
+import com.sundbybergsit.cromfortune.theme.onSurfaceVariant
 
 @Composable
-fun Dashboard(viewModel: DashboardViewModel) {
+fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
     val viewState: StockPriceRepository.ViewState? by StockPriceRepository.stockPrices.observeAsState()
     val context = LocalContext.current
     LaunchedEffect(key1 = "RetrieveStocksLaunchedEffect") {
@@ -39,7 +42,16 @@ fun Dashboard(viewModel: DashboardViewModel) {
         }
     }
     Scaffold(topBar = {
-        // FIXME: Implement action bar with back button, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+        TopAppBar(
+            title = {
+                Text(text = stringResource(id = R.string.dashboard_title), style = MaterialTheme.typography.h6)
+            },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back Icon")
+                }
+            }
+        )
     }) {
         ConstraintLayout(
             modifier = Modifier
@@ -59,10 +71,15 @@ fun Dashboard(viewModel: DashboardViewModel) {
                 painter = painterResource(id = R.drawable.stonks),
                 contentDescription = "Stonk Image"
             )
-            Text(modifier = Modifier.constrainAs(scoreRef) {
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            }, text = viewModel.score.value ?: "")
+            Text(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .constrainAs(scoreRef) {
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }, text = viewModel.score.value ?: "",
+                style = MaterialTheme.typography.subtitle1, color = MaterialTheme.colors.onSurfaceVariant
+            )
         }
     }
 }

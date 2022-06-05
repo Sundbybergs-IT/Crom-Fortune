@@ -84,68 +84,68 @@ internal fun AppNavigation(navController: NavHostController) {
                 popEnterTransition = { defaultCromPopEnterTransition() },
                 popExitTransition = { defaultCromPopExitTransition() },
             ) {
-                addHomeTopLevel()
-                addDashboardTopLevel()
-                addNotificationsTopLevel()
-                addSettingsTopLevel()
+                addHomeTopLevel(navController = navController)
+                addDashboardTopLevel(navController = navController)
+                addNotificationsTopLevel(navController = navController)
+                addSettingsTopLevel(navController = navController)
             }
         }
     }
 }
 
-private fun NavGraphBuilder.addHomeTopLevel() {
-    addHome()
-    addDashboard()
-    addNotifications()
-    addSettings()
+private fun NavGraphBuilder.addHomeTopLevel(navController: NavHostController) {
+    addHome(navController = navController)
+    addDashboard(navController = navController)
+    addNotifications(navController = navController)
+    addSettings(navController = navController)
 }
 
-private fun NavGraphBuilder.addDashboardTopLevel() {
-    addHome()
-    addDashboard()
-    addNotifications()
-    addSettings()
+private fun NavGraphBuilder.addDashboardTopLevel(navController: NavHostController) {
+    addHome(navController = navController)
+    addDashboard(navController = navController)
+    addNotifications(navController = navController)
+    addSettings(navController = navController)
 }
 
-private fun NavGraphBuilder.addNotificationsTopLevel() {
-    addHome()
-    addDashboard()
-    addNotifications()
-    addSettings()
+private fun NavGraphBuilder.addNotificationsTopLevel(navController: NavHostController) {
+    addHome(navController = navController)
+    addDashboard(navController = navController)
+    addNotifications(navController = navController)
+    addSettings(navController = navController)
 }
 
-private fun NavGraphBuilder.addSettingsTopLevel() {
-    addHome()
-    addDashboard()
-    addNotifications()
-    addSettings()
+private fun NavGraphBuilder.addSettingsTopLevel(navController: NavHostController) {
+    addHome(navController = navController)
+    addDashboard(navController = navController)
+    addNotifications(navController = navController)
+    addSettings(navController = navController)
 }
 
-private fun NavGraphBuilder.addHome() {
+private fun NavGraphBuilder.addHome(navController: NavHostController) {
     composable(route = Screen.Home.route) {
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
         Home(viewModel = homeViewModel)
     }
 }
 
-private fun NavGraphBuilder.addDashboard() {
+private fun NavGraphBuilder.addDashboard(navController: NavHostController) {
     composable(route = Screen.Dashboard.route) {
         val dashboardViewModel: DashboardViewModel by activityBoundViewModel(factoryProducer = { DashboardViewModelFactory() })
-        Dashboard(viewModel = dashboardViewModel)
+        Dashboard(viewModel = dashboardViewModel, onBack = { navController.popBackStack() })
     }
 }
 
-private fun NavGraphBuilder.addNotifications() {
+private fun NavGraphBuilder.addNotifications(navController: NavHostController) {
     composable(route = Screen.Notifications.route) {
         val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = { NotificationsViewModelFactory() })
-        Notifications(viewModel = notificationsViewModel)
+        Notifications(viewModel = notificationsViewModel, onBack = { navController.popBackStack() })
     }
 }
 
-private fun NavGraphBuilder.addSettings() {
+private fun NavGraphBuilder.addSettings(navController: NavHostController) {
     composable(route = Screen.Settings.route) {
         val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = { SettingsViewModelFactory() })
-        Settings(viewModel = settingsViewModel)
+        Settings(viewModel = settingsViewModel, onBack = { navController.popBackStack() })
     }
 }
 
