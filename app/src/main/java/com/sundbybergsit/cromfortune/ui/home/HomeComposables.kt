@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -59,43 +60,41 @@ private fun StockOrderAggregates(modifier: Modifier, title: String, fabActive: B
             end.linkTo(parent.end)
         }, text = title)
         if (fabActive) {
-            val (showDialog, setShowDialog) = remember { mutableStateOf(false) }
-            RegisterBuyStockDialogFragment(showDialog = showDialog, setShowDialog = setShowDialog)
-            FloatingActionButton(modifier = Modifier.constrainAs(fabRef) {
-                end.linkTo(parent.end)
-                bottom.linkTo(parent.bottom)
-            }.padding(16.dp), onClick = { setShowDialog(true) }) {
+            val showDialog = remember { mutableStateOf(false) }
+            RegisterBuyStockAlertDialog(
+                showDialog = showDialog.value,
+                // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                onConfirm = {},
+                onDismiss = { showDialog.value = false })
+            FloatingActionButton(modifier = Modifier
+                .constrainAs(fabRef) {
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                }
+                .padding(16.dp), onClick = { showDialog.value = true }) {
+                Icon(painter = painterResource(id = R.drawable.ic_add), contentDescription = "Floating Action Button Icon")
             }
         }
     }
 }
 
 @Composable
-fun RegisterBuyStockDialogFragment(showDialog: Boolean, setShowDialog: (Boolean) -> Unit) {
+fun RegisterBuyStockAlertDialog(showDialog: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     // FIXME: Convert RegisterBuyStockDialogFragment into a composable
     if (showDialog) {
         AlertDialog(
-            onDismissRequest = {
-            },
+            onDismissRequest = onDismiss,
             title = {
                 Text(stringResource(id = R.string.action_stock_buy))
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        // Change the state to close the dialog
-                        setShowDialog(false)
-                    },
-                ) {
+                Button(onClick = onConfirm) {
                     Text(stringResource(id = R.string.action_ok))
                 }
             },
             dismissButton = {
                 Button(
-                    onClick = {
-                        // Change the state to close the dialog
-                        setShowDialog(false)
-                    },
+                    onClick = onDismiss,
                 ) {
                     Text(stringResource(id = R.string.action_cancel))
                 }
