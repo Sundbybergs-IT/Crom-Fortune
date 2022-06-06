@@ -179,7 +179,7 @@ fun RegisterBuyStockAlertDialog(
                     value = nameMutableState,
                     isError = nameErrorMutableState.value,
                     errorMessage = nameErrorMessageMutableState.value,
-                    contentDescriptor = "Name Input Text"
+                    contentDescriptor = "Stock Name Input Text"
                 )
                 val priceMutableState: MutableState<TextFieldValue> =
                     remember { mutableStateOf(TextFieldValue(text = "")) }
@@ -197,7 +197,7 @@ fun RegisterBuyStockAlertDialog(
                     value = priceMutableState,
                     isError = priceErrorMutableState.value,
                     errorMessage = priceErrorMessageMutableState.value,
-                    contentDescriptor = "Price Input Text"
+                    contentDescriptor = "Stock Price Input Text"
                 )
                 val currencyMutableState: MutableState<TextFieldValue> = remember {
                     mutableStateOf(
