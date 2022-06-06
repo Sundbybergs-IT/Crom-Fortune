@@ -1,9 +1,12 @@
 package com.sundbybergsit.cromfortune.ui.home
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -14,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -24,8 +28,11 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.accompanist.pager.HorizontalPager
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.contentDescription
-import com.sundbybergsit.cromfortune.ui.DialogButton
-import java.time.Instant
+import com.sundbybergsit.cromfortune.ui.*
+import java.text.SimpleDateFormat
+import java.util.*
+
+private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
 fun Home(viewModel: HomeViewModel) {
@@ -73,11 +80,9 @@ private fun StockOrderAggregates(modifier: Modifier, title: String, fabActive: B
         }, text = title)
         if (fabActive) {
             val showDialog = remember { mutableStateOf(false) }
-            RegisterBuyStockAlertDialog(
-                showDialog = showDialog.value,
-                // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-                onConfirm = {},
-                onDismiss = { showDialog.value = false })
+            RegisterBuyStockAlertDialog(showDialog = showDialog.value, viewModel = viewModel) {
+                showDialog.value = false
+            }
             FloatingActionButton(modifier = Modifier
                 .constrainAs(fabRef) {
                     end.linkTo(parent.end)
@@ -94,22 +99,38 @@ private fun StockOrderAggregates(modifier: Modifier, title: String, fabActive: B
 }
 
 @Composable
-fun RegisterBuyStockAlertDialog(showDialog: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+fun RegisterBuyStockAlertDialog(
+    showDialog: Boolean,
+    viewModel: HomeViewModel,
+    onDismiss: () -> Unit
+) {
     // FIXME: Convert RegisterBuyStockDialogFragment into a composable
     if (showDialog) {
         Dialog(onDismissRequest = onDismiss) {
-            ConstraintLayout {
-                val (titleRef, dateRef, currencyRef, amountRef, nameRef, priceRef, courtageRef, buttonsRef) = createRefs()
-                Text(modifier = Modifier.constrainAs(titleRef) {
-                    top.linkTo(parent.top)
-                }, text = stringResource(id = R.string.action_stock_buy))
+            val scrollState = rememberScrollState()
+            ConstraintLayout(
+                modifier = Modifier
+                    .background(MaterialTheme.colors.background)
+                    .verticalScroll(state = scrollState)
+            ) {
+                val (titleRef, dateRef, stockQuantityRef, stockNameRef, stockPriceRef, stockCurrencyRef, commissionFeeRef, buttonsRef) = createRefs()
+
+                Text(
+                    modifier = Modifier
+                        .padding(all = 16.dp)
+                        .constrainAs(titleRef) {
+                            top.linkTo(parent.top)
+                        }, text = stringResource(id = R.string.action_stock_buy)
+                )
+                val myCalendar = Calendar.getInstance()
+                val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
                 val dateMutableState: MutableState<TextFieldValue> = remember {
                     mutableStateOf(
-                        TextFieldValue(text = Instant.ofEpochMilli(System.currentTimeMillis()).toString())
+                        TextFieldValue(text = sdf.format(myCalendar.time))
                     )
                 }
-                val dateErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
                 val dateErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val dateErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
                 InputValidatedOutlinedTextField(
                     modifier = Modifier
                         .constrainAs(dateRef) {
@@ -118,49 +139,169 @@ fun RegisterBuyStockAlertDialog(showDialog: Boolean, onConfirm: () -> Unit, onDi
                         }
                         .background(color = MaterialTheme.colors.background)
                         .fillMaxWidth(),
+                    label = { Text(text = stringResource(id = R.string.home_add_stock_date_label)) },
                     value = dateMutableState,
                     isError = dateErrorMutableState.value,
                     errorMessage = dateErrorMessageMutableState.value,
                     contentDescriptor = "Date Input Text"
                 )
-                OutlinedTextField(
-                    modifier = Modifier
-                        .constrainAs(currencyRef) {
-                            top.linkTo(titleRef.bottom)
-                            start.linkTo(dateRef.start)
-                        }
-                        .background(color = MaterialTheme.colors.background)
-                        .fillMaxWidth(),
-                    onValueChange = {},
-                    enabled = false,
-                    value = ""
-                )
-                val amountMutableState: MutableState<TextFieldValue> =
+                val stockQuantityMutableState: MutableState<TextFieldValue> =
                     remember { mutableStateOf(TextFieldValue(text = "")) }
-                val amountErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
-                val amountErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val stockQuantityErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val stockQuantityErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
                 InputValidatedOutlinedTextField(
                     modifier = Modifier
-                        .constrainAs(amountRef) {
+                        .constrainAs(stockQuantityRef) {
                             top.linkTo(dateRef.bottom)
                             start.linkTo(parent.start)
                         }
                         .background(color = MaterialTheme.colors.background)
                         .fillMaxWidth(),
-                    value = amountMutableState,
-                    isError = amountErrorMutableState.value,
-                    errorMessage = amountErrorMessageMutableState.value,
-                    contentDescriptor = "Amount Input Text"
+                    label = { Text(text = stringResource(id = R.string.home_add_stock_quantity_label)) },
+                    value = stockQuantityMutableState,
+                    isError = stockQuantityErrorMutableState.value,
+                    errorMessage = stockQuantityErrorMessageMutableState.value,
+                    contentDescriptor = "Stock Quantity Input Text"
                 )
-                // FIXME: Finish dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                val nameMutableState: MutableState<TextFieldValue> =
+                    remember { mutableStateOf(TextFieldValue(text = "")) }
+                val nameErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val nameErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                InputValidatedOutlinedTextField(
+                    modifier = Modifier
+                        .constrainAs(stockNameRef) {
+                            top.linkTo(stockQuantityRef.bottom)
+                            start.linkTo(parent.start)
+                        }
+                        .background(color = MaterialTheme.colors.background)
+                        .fillMaxWidth(),
+                    label = { Text(text = stringResource(id = R.string.home_add_stock_name_label)) },
+                    value = nameMutableState,
+                    isError = nameErrorMutableState.value,
+                    errorMessage = nameErrorMessageMutableState.value,
+                    contentDescriptor = "Name Input Text"
+                )
+                val priceMutableState: MutableState<TextFieldValue> =
+                    remember { mutableStateOf(TextFieldValue(text = "")) }
+                val priceErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val priceErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                InputValidatedOutlinedTextField(
+                    modifier = Modifier
+                        .constrainAs(stockPriceRef) {
+                            top.linkTo(stockNameRef.bottom)
+                            start.linkTo(parent.start)
+                        }
+                        .background(color = MaterialTheme.colors.background)
+                        .fillMaxWidth(),
+                    label = { Text(text = stringResource(id = R.string.generic_price_per_stock)) },
+                    value = priceMutableState,
+                    isError = priceErrorMutableState.value,
+                    errorMessage = priceErrorMessageMutableState.value,
+                    contentDescriptor = "Price Input Text"
+                )
+                val currencyMutableState: MutableState<TextFieldValue> = remember {
+                    mutableStateOf(
+                        TextFieldValue(text = "")
+                    )
+                }
+                OutlinedTextField(
+                    modifier = Modifier
+                        .padding(horizontal = 28.dp)
+                        .constrainAs(stockCurrencyRef) {
+                            top.linkTo(stockPriceRef.bottom)
+                            start.linkTo(parent.start)
+                        }
+                        .background(color = MaterialTheme.colors.background)
+                        .fillMaxWidth(),
+                    label = { Text(text = stringResource(id = R.string.home_add_stock_currency_label)) },
+                    onValueChange = {},
+                    enabled = false,
+                    value = currencyMutableState.value,
+                    textStyle = MaterialTheme.typography.body1,
+                )
+                val commissionFeeMutableState: MutableState<TextFieldValue> =
+                    remember { mutableStateOf(TextFieldValue(text = "")) }
+                val commissionFeeErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val commissionFeeErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                InputValidatedOutlinedTextField(
+                    modifier = Modifier
+                        .constrainAs(commissionFeeRef) {
+                            top.linkTo(stockCurrencyRef.bottom)
+                            start.linkTo(parent.start)
+                        }
+                        .background(color = MaterialTheme.colors.background)
+                        .fillMaxWidth(),
+                    label = { Text(text = stringResource(id = R.string.home_add_commission_fee_label)) },
+                    value = commissionFeeMutableState,
+                    isError = commissionFeeErrorMutableState.value,
+                    errorMessage = commissionFeeErrorMessageMutableState.value,
+                    contentDescriptor = "Commission Fee Input Text"
+                )
                 Row(modifier = Modifier
                     .padding(all = 16.dp)
                     .constrainAs(buttonsRef) {
+                        top.linkTo(commissionFeeRef.bottom)
                         end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
                     }) {
                     DialogButton(text = stringResource(id = R.string.action_cancel), onClick = onDismiss)
-                    DialogButton(text = stringResource(id = android.R.string.ok), onClick = onConfirm)
+                    val context = LocalContext.current
+                    DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
+                        try {
+                            dateMutableState.value.validateDate(
+                                context = context,
+                                errorMutableState = dateErrorMutableState,
+                                errorMessageMutableState = dateErrorMessageMutableState,
+                                pattern = DATE_FORMAT
+                            )
+                            stockQuantityMutableState.value.validateInt(
+                                context = context,
+                                errorMutableState = stockQuantityErrorMutableState,
+                                errorMessageMutableState = stockQuantityErrorMessageMutableState
+                            )
+                            stockQuantityMutableState.value.validateMinQuantity(
+                                context = context,
+                                errorMutableState = stockQuantityErrorMutableState,
+                                errorMessageMutableState = stockQuantityErrorMessageMutableState,
+                                minValue = 1
+                            )
+                            nameMutableState.value.validateStockName(
+                                context = context,
+                                errorMutableState = nameErrorMutableState,
+                                errorMessageMutableState = nameErrorMessageMutableState
+                            )
+                            val stockSymbol = nameMutableState.value.text.substringAfterLast('(')
+                                .substringBeforeLast(')')
+                            priceMutableState.value.validateDouble(
+                                context = context,
+                                errorMutableState = priceErrorMutableState,
+                                errorMessageMutableState = priceErrorMessageMutableState
+                            )
+                            commissionFeeMutableState.value.validateDouble(
+                                context = context,
+                                errorMutableState = commissionFeeErrorMutableState,
+                                errorMessageMutableState = commissionFeeErrorMessageMutableState
+                            )
+                            val dateAsString = dateMutableState.value.text
+                            val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+                            val currency = Currency.getInstance(currencyMutableState.value.text)
+                            // TODO: Convert commission fee (in SEK) to selected currency
+                            val stockOrder = com.sundbybergsit.cromfortune.domain.StockOrder(
+                                "Buy",
+                                currency.toString(),
+                                date.time,
+                                stockSymbol,
+                                priceMutableState.value.text.toDouble(),
+                                commissionFeeMutableState.value.text.toDouble(),
+                                stockQuantityMutableState.value.text.toInt()
+                            )
+                            viewModel.save(context = context, stockOrder = stockOrder)
+                            Toast.makeText(context, context.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+                        } catch (e: ValidatorException) {
+                            // Shit happens ...
+                        }
+                    }
+                    )
                 }
             }
         }
