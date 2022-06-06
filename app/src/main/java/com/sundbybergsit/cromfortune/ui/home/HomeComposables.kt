@@ -206,7 +206,7 @@ fun RegisterBuyStockAlertDialog(
                 }
                 OutlinedTextField(
                     modifier = Modifier
-                        .padding(horizontal = 28.dp)
+                        .padding(horizontal = 32.dp)
                         .constrainAs(stockCurrencyRef) {
                             top.linkTo(stockPriceRef.bottom)
                             start.linkTo(parent.start)
