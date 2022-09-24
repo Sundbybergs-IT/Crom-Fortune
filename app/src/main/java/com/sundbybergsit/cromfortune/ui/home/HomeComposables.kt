@@ -29,6 +29,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.contentDescription
 import com.sundbybergsit.cromfortune.ui.*
+import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -47,21 +48,38 @@ fun Home(viewModel: HomeViewModel) {
         Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
             // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
             HorizontalPager(modifier = modifier, count = 2) { page ->
+                val items: List<NameAndValueAdapterItem>
                 if (page == 0) {
-                    // FIXME: Implement YOUR stocks, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                    items = when (viewModel.personalStocksViewState.value) {
+                        is HomeViewModel.ViewState.HasStocks -> {
+                            (viewModel.personalStocksViewState.value as HomeViewModel.ViewState.HasStocks).adapterItems
+                        }
+                        else -> {
+                            listOf()
+                        }
+                    }
                     StockOrderAggregates(
                         modifier = modifier,
                         title = stringResource(id = R.string.home_stocks_personal_title),
                         fabActive = true,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        items = items
                     )
                 } else {
-                    // FIXME: Implement Croms stocks, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                    items = when (viewModel.cromStocksViewState.value) {
+                        is HomeViewModel.ViewState.HasStocks -> {
+                            (viewModel.cromStocksViewState.value as HomeViewModel.ViewState.HasStocks).adapterItems
+                        }
+                        else -> {
+                            listOf()
+                        }
+                    }
                     StockOrderAggregates(
                         modifier = modifier,
                         title = stringResource(id = R.string.home_stocks_crom_title),
                         fabActive = false,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        items = items
                     )
                 }
             }
@@ -70,14 +88,27 @@ fun Home(viewModel: HomeViewModel) {
 }
 
 @Composable
-private fun StockOrderAggregates(modifier: Modifier, title: String, fabActive: Boolean, viewModel: HomeViewModel) {
+private fun StockOrderAggregates(
+    modifier: Modifier, title: String, fabActive: Boolean, viewModel: HomeViewModel,
+    items: List<NameAndValueAdapterItem>
+) {
     ConstraintLayout(modifier = modifier) {
-        val (titleRef, fabRef) = createRefs()
+        val (titleRef, listRef, fabRef) = createRefs()
         Text(modifier = Modifier.constrainAs(titleRef) {
             top.linkTo(parent.top)
             start.linkTo(parent.start)
             end.linkTo(parent.end)
         }, text = title)
+        Column(modifier = Modifier.constrainAs(listRef) {
+            top.linkTo(titleRef.bottom)
+            start.linkTo(parent.start)
+            end.linkTo(parent.end)
+        }) {
+            // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+            for (item in items) {
+                Text(text = item.name + " " + item.value)
+            }
+        }
         if (fabActive) {
             val showDialog = remember { mutableStateOf(false) }
             RegisterBuyStockAlertDialog(showDialog = showDialog.value, viewModel = viewModel) {
@@ -167,6 +198,7 @@ fun RegisterBuyStockAlertDialog(
                     remember { mutableStateOf(TextFieldValue(text = "")) }
                 val nameErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
                 val nameErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                // FIXME: Auto-complete for stock names
                 InputValidatedOutlinedTextField(
                     modifier = Modifier
                         .constrainAs(stockNameRef) {
@@ -204,6 +236,7 @@ fun RegisterBuyStockAlertDialog(
                         TextFieldValue(text = "")
                     )
                 }
+                // FIXME: Fill in currency automatically based on chosen stock
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
