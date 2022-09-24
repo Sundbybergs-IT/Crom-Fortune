@@ -108,6 +108,9 @@ class HomeCromStocksFragment : Fragment(R.layout.fragment_home_stocks), StockCli
                         refreshEverything()
                     }
                 }
+                else -> {
+                    Log.w(TAG, "Not handled. Ignoring...")
+                }
             }
         }
     }

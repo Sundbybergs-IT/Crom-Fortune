@@ -34,6 +34,8 @@ import org.robolectric.shadows.ShadowLooper
 import java.text.NumberFormat
 import java.util.*
 
+// FIXME: Cleanup
+@Ignore("To be removed after Compose conversion")
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.Q])
 class StockOrderAggregateListAdapterTest {

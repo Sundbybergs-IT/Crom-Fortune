@@ -12,11 +12,11 @@ val baseVersionName = ext.get("baseVersionName") as String
 
 android {
     namespace = "com.sundbybergsit.cromfortune"
-    compileSdk = 31
+    compileSdk = 33
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
         minSdk = 29
-        targetSdk = 31
+        targetSdk = 33
         versionCode = 105
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -37,10 +37,11 @@ android {
     }
     buildFeatures {
         compose = true
+        // FIXME: Remove after conversion to Compose
         viewBinding = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.androidx.compose.get()
+        kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
     }
     lint {
         abortOnError = false
