@@ -8,10 +8,10 @@ val baseVersionName = ext.get("baseVersionName") as String
 
 android {
     namespace = "com.sundbybergsit.cromfortune.algorithm"
-    compileSdk = 31
+    compileSdk = 33
     defaultConfig {
         minSdk = 29
-        targetSdk = 31
+        targetSdk = 33
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

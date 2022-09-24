@@ -1,14 +1,15 @@
 [versions]
+accompanist = "0.26.4-beta"
 android-gradle-plugin = "8.0.2"
 androidx-activity-compose = "1.4.0"
 androidx-annotation = "1.2.0"
 androidx-appcompat = "1.4.1"
-androidx-compose = "1.2.0-beta02"
-androidx-constraintlayout-constraintlayout = "2.1.3"
-androidx-constraintlayout-compose = "1.0.0-beta02"
+androidx-compose = "1.3.0-beta03"
+androidx-compose-compiler = "1.3.1"
+androidx-constraintlayout-constraintlayout = "2.1.4"
+androidx-constraintlayout-compose = "1.1.0-alpha01"
 androidx-core = "1.7.0"
-androidx-lifecycle = "2.4.0"
-androidx-lifecycle-extensions = "2.2.0"
+androidx-lifecycle = "2.5.1"
 androidx-localbroadcastmanager = "1.1.0"
 androidx-navigation = "2.4.1"
 androidx-test-junit = "1.1.2"
@@ -19,9 +20,9 @@ desugar-jdk-libs = "1.1.5"
 google-material = "1.5.0-rc01"
 google-playCore-ktx = "1.8.1"
 junit = "4.13.2"
-kotlin = "1.6.21"
-kotlinx-coroutinesTest = "1.6.0"
-kotlinx-serialization = "1.3.2"
+kotlin = "1.7.10"
+kotlinx-coroutinesTest = "1.6.4"
+kotlinx-serialization = "1.4.0"
 materialdaypicker = "0.7.4"
 robolectric = "4.9.2"
 sonarqube = "4.0.0.2929"
@@ -33,7 +34,7 @@ accompanistNavigationAnimation = { module = "com.google.accompanist:accompanist-
 androidxActivityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidxAnnotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidxAppcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
-androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose" }
+androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose-compiler" }
 androidxComposeUiUi = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
 androidxComposeUiUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
 androidxComposeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-compose" }
@@ -45,7 +46,6 @@ androidxComposeTestManifest = { module = "androidx.compose.ui:ui-test-manifest",
 androidxConstraintlayoutConstraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout-constraintlayout" }
 androidxConstraintlayoutCompose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "androidx-constraintlayout-compose" }
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-androidxLifecycleExtensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "androidx-lifecycle-extensions" }
 androidxLifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidx-lifecycle" }
 androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
 androidxLifecycleViewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
