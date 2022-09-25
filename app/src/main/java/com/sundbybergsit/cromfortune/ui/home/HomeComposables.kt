@@ -16,8 +16,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -28,8 +30,13 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.accompanist.pager.HorizontalPager
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.contentDescription
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.stocks.StockPriceListener
+import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.*
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -45,6 +52,12 @@ fun Home(viewModel: HomeViewModel) {
         )
     }) { paddingValues ->
         val modifier = Modifier.fillMaxSize()
+        val stockPriceListener: StockPriceListener = object : StockPriceListener {
+            override fun getStockPrice(stockSymbol: String): StockPrice {
+                return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES)
+                    .stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
+            }
+        }
         Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
             // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
             HorizontalPager(modifier = modifier, count = 2) { page ->
@@ -63,7 +76,8 @@ fun Home(viewModel: HomeViewModel) {
                         title = stringResource(id = R.string.home_stocks_personal_title),
                         fabActive = true,
                         viewModel = viewModel,
-                        items = items
+                        items = items,
+                        stockPriceListener = stockPriceListener
                     )
                 } else {
                     items = when (viewModel.cromStocksViewState.value) {
@@ -79,7 +93,8 @@ fun Home(viewModel: HomeViewModel) {
                         title = stringResource(id = R.string.home_stocks_crom_title),
                         fabActive = false,
                         viewModel = viewModel,
-                        items = items
+                        items = items,
+                        stockPriceListener = stockPriceListener
                     )
                 }
             }
@@ -90,7 +105,7 @@ fun Home(viewModel: HomeViewModel) {
 @Composable
 private fun StockOrderAggregates(
     modifier: Modifier, title: String, fabActive: Boolean, viewModel: HomeViewModel,
-    items: List<NameAndValueAdapterItem>
+    items: List<NameAndValueAdapterItem>, stockPriceListener: StockPriceListener,
 ) {
     ConstraintLayout(modifier = modifier) {
         val (titleRef, listRef, fabRef) = createRefs()
@@ -106,7 +121,41 @@ private fun StockOrderAggregates(
         }) {
             // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
             for (item in items) {
-                Text(text = item.name + " " + item.value)
+                if (item is StockAggregateHeaderAdapterItem) {
+                    var count = 0.0
+                    val currencyRates =
+                        (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+                            .currencyRates.toList()
+                    for (stockOrderAggregate in item.stockOrderAggregates.toList()) {
+                        for (currencyRate in currencyRates) {
+                            if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
+                                count += (stockOrderAggregate.getProfit(
+                                    stockPriceListener.getStockPrice(
+                                        stockOrderAggregate.stockSymbol
+                                    ).price
+                                )) * currencyRate.rateInSek
+                                break
+                            }
+                        }
+                    }
+                    val format: NumberFormat = NumberFormat.getCurrencyInstance()
+                    format.currency = Currency.getInstance("SEK")
+                    format.maximumFractionDigits = 2
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Total profit: " + format.format(count), color = colorResource(
+                                if (count >= 0.0) {
+                                    R.color.colorProfit
+                                } else {
+                                    R.color.colorLoss
+                                }
+                            )
+                        )
+                    }
+                    // FIXME: Add overflow menu with quick actions, issues/21
+                } else {
+                    Text(modifier = Modifier.fillMaxWidth(), text = item.name + " " + item.value)
+                }
             }
         }
         if (fabActive) {
@@ -194,10 +243,15 @@ fun RegisterBuyStockAlertDialog(
                     errorMessage = stockQuantityErrorMessageMutableState.value,
                     contentDescriptor = "Stock Quantity Input Text"
                 )
-                val nameMutableState: MutableState<TextFieldValue> =
+                val stockNameMutableState: MutableState<TextFieldValue> =
                     remember { mutableStateOf(TextFieldValue(text = "")) }
-                val nameErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
-                val nameErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                val stockNameErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val stockNameErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                val currencyMutableState: MutableState<TextFieldValue> = remember {
+                    mutableStateOf(
+                        TextFieldValue(text = "")
+                    )
+                }
                 // FIXME: Auto-complete for stock names
                 InputValidatedOutlinedTextField(
                     modifier = Modifier
@@ -208,10 +262,19 @@ fun RegisterBuyStockAlertDialog(
                         .background(color = MaterialTheme.colors.background)
                         .fillMaxWidth(),
                     label = { Text(text = stringResource(id = R.string.home_add_stock_name_label)) },
-                    value = nameMutableState,
-                    isError = nameErrorMutableState.value,
-                    errorMessage = nameErrorMessageMutableState.value,
-                    contentDescriptor = "Stock Name Input Text"
+                    value = stockNameMutableState,
+                    isError = stockNameErrorMutableState.value,
+                    errorMessage = stockNameErrorMessageMutableState.value,
+                    contentDescriptor = "Stock Name Input Text",
+                    onFocusChanged = {
+                        if (!it.hasFocus) {
+                            val find =
+                                StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == stockNameMutableState.value.text }
+                            if (find != null) {
+                                currencyMutableState.value = TextFieldValue(find.third)
+                            }
+                        }
+                    }
                 )
                 val priceMutableState: MutableState<TextFieldValue> =
                     remember { mutableStateOf(TextFieldValue(text = "")) }
@@ -231,11 +294,6 @@ fun RegisterBuyStockAlertDialog(
                     errorMessage = priceErrorMessageMutableState.value,
                     contentDescriptor = "Stock Price Input Text"
                 )
-                val currencyMutableState: MutableState<TextFieldValue> = remember {
-                    mutableStateOf(
-                        TextFieldValue(text = "")
-                    )
-                }
                 // FIXME: Fill in currency automatically based on chosen stock
                 OutlinedTextField(
                     modifier = Modifier
@@ -298,12 +356,12 @@ fun RegisterBuyStockAlertDialog(
                                 errorMessageMutableState = stockQuantityErrorMessageMutableState,
                                 minValue = 1
                             )
-                            nameMutableState.value.validateStockName(
+                            stockNameMutableState.value.validateStockName(
                                 context = context,
-                                errorMutableState = nameErrorMutableState,
-                                errorMessageMutableState = nameErrorMessageMutableState
+                                errorMutableState = stockNameErrorMutableState,
+                                errorMessageMutableState = stockNameErrorMessageMutableState
                             )
-                            val stockSymbol = nameMutableState.value.text.substringAfterLast('(')
+                            val stockSymbol = stockNameMutableState.value.text.substringAfterLast('(')
                                 .substringBeforeLast(')')
                             priceMutableState.value.validateDouble(
                                 context = context,
@@ -316,13 +374,14 @@ fun RegisterBuyStockAlertDialog(
                                 errorMessageMutableState = commissionFeeErrorMessageMutableState
                             )
                             val dateAsString = dateMutableState.value.text
-                            val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+                            val inputDate = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+
                             val currency = Currency.getInstance(currencyMutableState.value.text)
                             // TODO: Convert commission fee (in SEK) to selected currency
                             val stockOrder = com.sundbybergsit.cromfortune.domain.StockOrder(
                                 "Buy",
                                 currency.toString(),
-                                date.time,
+                                inputDate.time,
                                 stockSymbol,
                                 priceMutableState.value.text.toDouble(),
                                 commissionFeeMutableState.value.text.toDouble(),
@@ -330,6 +389,7 @@ fun RegisterBuyStockAlertDialog(
                             )
                             viewModel.save(context = context, stockOrder = stockOrder)
                             Toast.makeText(context, context.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+                            onDismiss.invoke()
                         } catch (e: ValidatorException) {
                             // Shit happens ...
                         }
@@ -351,7 +411,8 @@ private fun InputValidatedOutlinedTextField(
     contentDescriptor: String,
     errorMessage: String,
     isError: Boolean,
-    horizontalPadding: Dp = 28.dp
+    horizontalPadding: Dp = 28.dp,
+    onFocusChanged: ((FocusState) -> Unit)? = null
 ) {
     Column(
         modifier = modifier.padding(horizontal = horizontalPadding)
@@ -361,6 +422,7 @@ private fun InputValidatedOutlinedTextField(
             Modifier
                 .onFocusChanged {
                     shouldInputBeHighlighted.value = it.hasFocus
+                    onFocusChanged?.invoke(it)
                 }
                 .background(
                     color = if (shouldInputBeHighlighted.value && !isError) {
