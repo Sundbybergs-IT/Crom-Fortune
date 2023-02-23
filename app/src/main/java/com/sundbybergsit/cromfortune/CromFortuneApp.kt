@@ -16,6 +16,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        System.setProperty("http.agent", "");
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
