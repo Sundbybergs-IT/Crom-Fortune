@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.crom
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.CoroutineScopeTestRule
 import com.sundbybergsit.cromfortune.CromTestRule
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
@@ -32,6 +33,9 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     @get:Rule
     val cromTestRule = CromTestRule()
+
+    @get:Rule
+    val coroutineScopeTestRule = CoroutineScopeTestRule()
 
     @Before
     fun setUp() {

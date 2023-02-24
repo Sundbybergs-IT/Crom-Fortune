@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune
 
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import org.junit.rules.TestRule
 import org.junit.runner.Description
@@ -14,12 +15,14 @@ class CromTestRule : TestRule {
         @Throws(Throwable::class)
         override fun evaluate() {
             StockPriceRepository.clear()
+            CurrencyRateRepository.clear()
             try {
                 // Execute test
                 base.evaluate()
             } finally {
                 // After
                 StockPriceRepository.clear()
+                CurrencyRateRepository.clear()
             }
         }
 
