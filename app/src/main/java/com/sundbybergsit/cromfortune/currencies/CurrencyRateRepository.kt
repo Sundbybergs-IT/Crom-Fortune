@@ -22,8 +22,14 @@ object CurrencyRateRepository {
         _currencyRates.postValue(ViewState.VALUES(Instant.now(), currencyRates))
     }
 
+    @VisibleForTesting
+    fun clear() {
+        _currencyRates.postValue(ViewState.VALUES(Instant.now(), emptySet()))
+    }
+
     sealed class ViewState {
         data class VALUES(val instant: Instant, val currencyRates: Set<CurrencyRate>) : ViewState()
+
     }
 
 }
