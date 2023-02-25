@@ -26,6 +26,13 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+      - name: Lint
+        run: ./gradlew lintDebug
+      - name: Run tests
+        continue-on-error: true
+        run: ./gradlew testDebug
+      - name: Generate Jacoco test report
+        run: ./gradlew jacocoTestReport
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
