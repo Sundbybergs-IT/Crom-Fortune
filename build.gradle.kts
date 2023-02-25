@@ -46,8 +46,8 @@ fun isSnapshotVersion(): Boolean {
 sonar {
 
     properties {
-        property("sonar.projectKey", "com.sundbybergsit.cromfortune")
-        property("sonar.organization", "sundbybergsit")
+        property("sonar.projectKey", "Sundbybergs-IT_Crom-Fortune")
+        property("sonar.organization", "sundbybergs-it")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.projectName", "Crom Fortune :: Android")
         property("sonar.sourceEncoding", "UTF-8")
