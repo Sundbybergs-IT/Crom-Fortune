@@ -11,7 +11,7 @@ buildscript {
 
 plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("org.sonarqube")
+    alias(libs.plugins.sonarqube)
 }
 
 val baseVersionName = "0.5.10"
