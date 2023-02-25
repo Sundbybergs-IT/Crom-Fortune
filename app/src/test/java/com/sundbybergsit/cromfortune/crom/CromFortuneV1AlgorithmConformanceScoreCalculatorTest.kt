@@ -143,9 +143,9 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         val score = calculator.getScore(
             CromFortuneV1RecommendationAlgorithm(context = ApplicationProvider.getApplicationContext()),
             setOf(
-                newBuyStockEvent(dateInMillis = 1, ticker =  ticker, price = 5.0),
+                newBuyStockEvent(dateInMillis = 1, ticker =  ticker, price = 5.0, quantity = 1000),
                 StockSplit(true, 2L, ticker, 1000).toStockEvent(),
-                newSellStockEvent(dateInMillis = 300000000L, ticker = ticker, price = 5.0)
+                newSellStockEvent(dateInMillis = 300000000L, ticker = ticker, price = 5.0, quantity = 1)
             ),
             CurrencyRateRepository
         )
@@ -205,7 +205,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     private fun newSellStockEvent(
         dateInMillis: Long,
         ticker: String = StockPrice.SYMBOLS[0].first,
-        price: Double = 1.0
+        price: Double = 1.0,
+        quantity: Int = 1
     ): StockEvent {
         return StockOrder(
             "Sell",
@@ -214,14 +215,15 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             ticker,
             price,
             0.0,
-            1
+            quantity
         ).toStockEvent()
     }
 
     private fun newBuyStockEvent(
         dateInMillis: Long,
         ticker: String = StockPrice.SYMBOLS[0].first,
-        price: Double = 1.0
+        price: Double = 1.0,
+        quantity: Int = 1
     ): StockEvent {
         return StockOrder(
             "Buy",
@@ -230,7 +232,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             ticker,
             price,
             0.0,
-            1
+            quantity
         ).toStockEvent()
     }
 

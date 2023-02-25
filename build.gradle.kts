@@ -11,10 +11,10 @@ buildscript {
 
 plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("org.sonarqube")
+    alias(libs.plugins.sonarqube)
 }
 
-val baseVersionName = "0.5.9"
+val baseVersionName = "0.5.10"
 
 allprojects {
 
@@ -43,7 +43,7 @@ fun isSnapshotVersion(): Boolean {
     return envSnapshotVersion?.toBoolean() ?: true
 }
 
-sonarqube {
+sonar {
 
     properties {
         property("sonar.projectKey", "com.sundbybergsit.cromfortune")
@@ -51,6 +51,8 @@ sonarqube {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.projectName", "Crom Fortune :: Android")
         property("sonar.sourceEncoding", "UTF-8")
+        property("sonar.coverage.exclusions", "**/build.gradle.kts,")
+        property("sonar.qualitygate.wait", "true")
     }
 
 }

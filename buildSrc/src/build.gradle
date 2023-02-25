@@ -4,15 +4,16 @@ tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true
     // https://github.com/gradle/gradle/issues/5184
     jacoco.excludes = ['jdk.internal.*']
+    maxParallelForks = Math.max(Runtime.getRuntime().availableProcessors() - 2, 1)
 }
 
 task jacocoTestReport(type: JacocoReport) {
     group = "Reporting"
     description = "Generate Jacoco coverage reports"
     reports {
-        xml.enabled = true
-        html.enabled = false
-        csv.enabled = false
+        xml.required.set(true)
+        html.required.set(false)
+        csv.required.set(false)
     }
     def fileFilter = ['**/BuildConfig.class', 'src/main/gen/**/*', 'src/main/assets/**/*',]
     def debugTree = fileTree(dir: "${buildDir}/intermediates/javac/debug/classes", excludes: fileFilter)
@@ -23,7 +24,7 @@ task jacocoTestReport(type: JacocoReport) {
     executionData.from = fileTree(dir: project.projectDir, includes: ['**/**/*.exec', '**/**/*.ec'])
 }
 
-sonarqube {
+sonar {
 
     properties {
         property "sonar.exclusions", "**/BuildConfig.class,**/R.java,**/R\$*.java,src/main/gen/**/*"
