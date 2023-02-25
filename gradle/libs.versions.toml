@@ -23,6 +23,7 @@ kotlinx-coroutinesTest = "1.6.0"
 kotlinx-serialization = "1.3.2"
 materialdaypicker = "0.7.4"
 robolectric = "4.7.3"
+sonarqube = "4.0.0.2929"
 yahooFinance = "3.17.0"
 
 [libraries]
@@ -54,3 +55,6 @@ pluginAndroidGradle = { module = "com.android.tools.build:gradle", version.ref =
 pluginKotlinGradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 yahooFinance = { module = "com.yahoofinance-api:YahooFinanceAPI", version.ref = "yahooFinance" }
+
+[plugins]
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

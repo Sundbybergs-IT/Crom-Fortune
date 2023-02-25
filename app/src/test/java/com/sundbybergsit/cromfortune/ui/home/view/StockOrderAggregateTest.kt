@@ -166,6 +166,141 @@ class StockOrderAggregateTest {
     }
 
     @Test
+    fun `getAcquisitionValue - issue 52 - returns correct value`() {
+        val stockOrderAggregate = StockOrderAggregate(
+            1.0,
+            StockPrice.SYMBOLS[0].first,
+            StockPrice.SYMBOLS[0].first,
+            currency
+        )
+        var dateInMillis = 0L
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    22.50, 38.0, 150
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    20.50, 38.0, 150
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    18.38, 38.0, 100
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    20.10, 38.0, 150
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    19.74, 38.0, 200
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    19.12, 38.0, 150
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    18.48, 38.0, 100
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    15.52, 38.0, 9
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    15.16, 38.0, 200
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    20.70, 38.0, 409
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Buy", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    17.85, 38.0, 120
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    22.30, 38.0, 200
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    22.64, 38.0, 300
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    22.86, 38.0, 50
+                ), null, dateInMillis++
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder(
+                    "Sell", currency.toString(), dateInMillis, StockPrice.SYMBOLS[0].first,
+                    22.94, 38.0, 100
+                ), null, dateInMillis
+            )
+        )
+
+        val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
+
+        assertEquals(9.98288888, acquisitionValue, 0.0001)
+    }
+
+    @Test
     fun `getQuantity - when buy a stock without commission fee and then split - returns correct value`() {
         val stockOrderAggregate = StockOrderAggregate(
             1.0,
