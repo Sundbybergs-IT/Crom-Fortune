@@ -74,29 +74,33 @@ data class StockOrderAggregate(
     }
 
     private fun StockOrder.buy() {
-        aggregateAcquisitionValue = getCalculatedAcquisitionValue()
+        aggregateAcquisitionValue = getCalculatedAcquisitionValueAfterBuy()
         aggregateBuyQuantity += this.quantity
-        this.getAcquisitionValue(this@StockOrderAggregate.rateInSek)
-        accumulatedPurchases += this.pricePerStock * this.quantity +
-                this.commissionFee / rateInSek
+        accumulatedPurchases += this.pricePerStock * this.quantity + this.commissionFee / rateInSek
     }
 
-    private fun StockOrder.getCalculatedAcquisitionValue() =
-        ((aggregateBuyQuantity - aggregateSellQuantity) * aggregateAcquisitionValue +
-                this.quantity * this.getAcquisitionValue(this@StockOrderAggregate.rateInSek)) /
-                ((aggregateBuyQuantity - aggregateSellQuantity) + this.quantity)
-
     private fun StockOrder.sell() {
-        val saleIncome = this.quantity * this.pricePerStock - (this.commissionFee / rateInSek)
-        val accumulatedCosts =
-            aggregateAcquisitionValue * (aggregateBuyQuantity - aggregateSellQuantity)
+        aggregateAcquisitionValue = getCalculatedAcquisitionValueAfterSell()
+        val saleIncome = this.quantity * this.pricePerStock
+        accumulatedPurchases += (this.commissionFee / rateInSek)
         aggregateSellQuantity += this.quantity
-        aggregateAcquisitionValue = if (aggregateBuyQuantity - aggregateSellQuantity == 0) {
-            0.0
-        } else {
-            (accumulatedCosts - saleIncome) / getQuantity()
+        if (aggregateSellQuantity > aggregateBuyQuantity) {
+            throw IllegalStateException("Number of sold stocks exceed available quantity!")
         }
         accumulatedSales += saleIncome
+    }
+
+    private fun StockOrder.getCalculatedAcquisitionValueAfterBuy(): Double =
+        (accumulatedPurchases - accumulatedSales + (quantity * pricePerStock) + commissionFee / rateInSek) /
+                (aggregateBuyQuantity - aggregateSellQuantity + quantity)
+
+    private fun StockOrder.getCalculatedAcquisitionValueAfterSell(): Double {
+        return if (aggregateBuyQuantity - aggregateSellQuantity - quantity == 0) {
+            0.0
+        } else {
+            (accumulatedPurchases - accumulatedSales - (quantity * pricePerStock) + commissionFee / rateInSek) /
+                    (aggregateBuyQuantity - aggregateSellQuantity - quantity)
+        }
     }
 
     fun getQuantity(): Int {
