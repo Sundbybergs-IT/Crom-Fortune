@@ -1,4 +1,4 @@
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=com.sundbybergsit.cromfortune&metric=alert_status)](https://sonarcloud.io/dashboard?id=com.sundbybergsit.cromfortune)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Sundbybergs-IT_Crom-Fortune&metric=alert_status)](https://sonarcloud.io/dashboard?id=Sundbybergs-IT_Crom-Fortune)
 
 ![image info](logo.png)
 
