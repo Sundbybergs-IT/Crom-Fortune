@@ -82,6 +82,3 @@ compose = ["accompanistPager", "accompanistNavigationAnimation", "androidxActivi
 
 [plugins]
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
-
-[plugins]
-sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
