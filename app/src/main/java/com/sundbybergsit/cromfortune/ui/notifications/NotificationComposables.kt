@@ -19,14 +19,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.os.ConfigurationCompat
+import com.sundbybergsit.cromfortune.LeafScreen
+import com.sundbybergsit.cromfortune.OverflowMenu
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
-import com.sundbybergsit.cromfortune.ui.ButtonText
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit) {
+fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit, onNavigateTo: (String) -> Unit) {
     val selectedTabIndexMutableState = remember { mutableStateOf(0) }
     val context = LocalContext.current
     val formatter = SimpleDateFormat(
@@ -44,15 +45,10 @@ fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit) {
                 }
             },
             actions = {
-                TextButton(
-                    onClick = {
-                        viewModel.clearNotifications()
-                    }
-                ) {
-                    ButtonText(
-                        text = stringResource(id = R.string.action_clear)
-                    )
-                }
+                OverflowMenu(
+                    onNavigateTo = onNavigateTo, contentDescription = "Notifications Menu",
+                    route = LeafScreen.BottomSheetsNotifications.route
+                )
             }
         )
     }) {
