@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.ui.settings
 import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
+import android.view.View
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
@@ -41,7 +42,7 @@ fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit) {
                 LayoutInflater.from(context),
                 null,
                 null
-            )!!
+            )  ?: View(context)
         })
     }
     Scaffold(topBar = {
@@ -54,12 +55,13 @@ fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back Icon")
                 }
             }, actions = {
+                // FIXME: Cannot see items, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
                 TextButton(
                     onClick = {
                         showStockRetrievalTimeIntervalsDialog.value = true
                     }
                 ) {
-                    ButtonText(
+                    Text(
                         text = stringResource(id = R.string.action_configure_stock_retrieval_intervals)
                     )
                 }
