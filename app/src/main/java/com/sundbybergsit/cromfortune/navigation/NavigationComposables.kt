@@ -39,7 +39,6 @@ import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.sundbybergsit.cromfortune.*
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ShowSnackbarLaunchedEffect
 import com.sundbybergsit.cromfortune.theme.MenuColorComposables
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
@@ -131,6 +130,7 @@ private fun NavGraphBuilder.addNotificationsTopLevel(navController: NavHostContr
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
+    addNotificationsBottomSheet()
 }
 
 private fun NavGraphBuilder.addSettingsTopLevel(navController: NavHostController) {
@@ -138,7 +138,7 @@ private fun NavGraphBuilder.addSettingsTopLevel(navController: NavHostController
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
-    addSettingsBottomSheet(onNavigateTo = { route -> navController.navigate(route) })
+    addSettingsBottomSheet()
 }
 
 private fun NavGraphBuilder.addHome(navController: NavHostController) {
@@ -161,7 +161,10 @@ private fun NavGraphBuilder.addNotifications(navController: NavHostController) {
         val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
             NotificationsViewModelFactory(context = context)
         })
-        Notifications(viewModel = notificationsViewModel, onBack = { navController.popBackStack() })
+        Notifications(
+            viewModel = notificationsViewModel,
+            onBack = { navController.popBackStack() },
+            onNavigateTo = { route -> navController.navigate(route) })
     }
 }
 
@@ -173,17 +176,36 @@ private fun NavGraphBuilder.addSettings(navController: NavHostController) {
     }
 }
 
-private fun NavGraphBuilder.addSettingsBottomSheet(onNavigateTo: (String) -> Unit) {
-    bottomSheet(route = LeafScreen.BottomSheetsSettings.route) { backStackEntry ->
+private fun NavGraphBuilder.addNotificationsBottomSheet() {
+    bottomSheet(route = LeafScreen.BottomSheetsNotifications.route) {
+        val context = LocalContext.current
+        val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
+            NotificationsViewModelFactory(context = context)
+        })
         BottomSheetContent {
-            SettingsItems(onNavigateTo = onNavigateTo)
+            NotificationsItems(onClear = { notificationsViewModel.clearNotifications() })
+        }
+    }
+}
+
+private fun NavGraphBuilder.addSettingsBottomSheet() {
+    bottomSheet(route = LeafScreen.BottomSheetsSettings.route) {
+        BottomSheetContent {
+            SettingsItems()
         }
     }
 }
 
 @Composable
-private fun SettingsItems(onNavigateTo: (String) -> Unit) {
-    val context = LocalContext.current
+private fun NotificationsItems(onClear: () -> Unit) {
+    BottomSheetMenuItem(
+        onClick = onClear,
+        text = stringResource(id = R.string.action_clear)
+    )
+}
+
+@Composable
+private fun SettingsItems() {
     val showStockRetrievalTimeIntervalsDialog = remember { mutableStateOf(false) }
     if (showStockRetrievalTimeIntervalsDialog.value) {
         // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
@@ -216,6 +238,7 @@ private fun SettingsItems(onNavigateTo: (String) -> Unit) {
         onClick = { showSupportedStocksDialog.value = true },
         text = stringResource(id = R.string.action_stocks_supported)
     )
+    val context = LocalContext.current
     BottomSheetMenuItem(
         onClick = {
             val browserIntent = Intent(
