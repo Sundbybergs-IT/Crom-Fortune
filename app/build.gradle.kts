@@ -37,8 +37,6 @@ android {
     }
     buildFeatures {
         compose = true
-        // FIXME: Remove after conversion to Compose
-        viewBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
