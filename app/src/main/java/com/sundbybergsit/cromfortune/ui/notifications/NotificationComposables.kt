@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -83,7 +82,7 @@ fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit) {
                         when (selectedTabIndexMutableState.value) {
                             0 -> {
                                 val newNotification = viewModel.newNotifications.value.elementAt(page)
-                                NewNotificationsTab(
+                                NotificationsTab(
                                     notification = newNotification,
                                     backgroundColor = if (page % 2 == 0) {
                                         MaterialTheme.colors.secondary
@@ -94,7 +93,7 @@ fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit) {
                             }
                             1 -> {
                                 val oldNotification = viewModel.oldNotifications.value.elementAt(page)
-                                OldNotificationsTab(
+                                NotificationsTab(
                                     notification = oldNotification,
                                     backgroundColor = if (page % 2 == 0) {
                                         MaterialTheme.colors.secondary
@@ -112,7 +111,7 @@ fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-fun NewNotificationsTab(
+fun NotificationsTab(
     notification: NotificationMessage,
     backgroundColor: Color,
     formatter: SimpleDateFormat
@@ -136,47 +135,13 @@ fun NewNotificationsTab(
                 .padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
                 text = formatter.format(Date(notification.dateInMillis)),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Start
+                textAlign = TextAlign.Start,
+                style = MaterialTheme.typography.body2,
             )
-            Spacer(modifier = Modifier.weight(0.5f))
-            Text(modifier = Modifier.weight(1f), text = notification.message)
-        }
-    }
-}
-
-@Composable
-fun OldNotificationsTab(notification: NotificationMessage, backgroundColor: Color, formatter: SimpleDateFormat) {
-    val context = LocalContext.current
-    Column(
-        modifier = Modifier
-            .clickable {
-                Toast
-                    .makeText(context, R.string.generic_error_not_supported, Toast.LENGTH_LONG)
-                    .show()
-            }
-            .background(color = backgroundColor)
-            .padding(8.dp)
-            .fillMaxWidth()
-    ) {
-        Row(
-            modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                modifier = Modifier
-                    .weight(1f),
-                text = formatter.format(Date(notification.dateInMillis)),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Start
-            )
-            Spacer(modifier = Modifier.weight(0.5f))
-            Text(modifier = Modifier.weight(1f), text = notification.message)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(modifier = Modifier.weight(1f), text = notification.message, style = MaterialTheme.typography.body2)
         }
     }
 }
