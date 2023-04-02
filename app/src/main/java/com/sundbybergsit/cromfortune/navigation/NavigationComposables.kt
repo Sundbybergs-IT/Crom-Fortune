@@ -1,5 +1,9 @@
 package com.sundbybergsit.cromfortune.navigation
 
+import android.content.Intent
+import android.net.Uri
+import android.view.LayoutInflater
+import android.view.View
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Box
@@ -15,23 +19,27 @@ import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.*
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.material.ModalBottomSheetLayout
+import com.google.accompanist.navigation.material.bottomSheet
+import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
+import com.sundbybergsit.cromfortune.*
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.activityBoundViewModel
-import com.sundbybergsit.cromfortune.contentDescription
+import com.sundbybergsit.cromfortune.ShowSnackbarLaunchedEffect
 import com.sundbybergsit.cromfortune.theme.MenuColorComposables
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
@@ -42,53 +50,63 @@ import com.sundbybergsit.cromfortune.ui.home.HomeViewModelFactory
 import com.sundbybergsit.cromfortune.ui.notifications.Notifications
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModel
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModelFactory
-import com.sundbybergsit.cromfortune.ui.settings.Settings
-import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModel
-import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModelFactory
+import com.sundbybergsit.cromfortune.ui.settings.*
 
 @Composable
 internal fun AppNavigation(navController: NavHostController) {
     val scaffoldState = rememberScaffoldState()
-    Scaffold(
-        scaffoldState = scaffoldState,
-        bottomBar = {
-            BottomNavigation(
-                onNavigationSelected = { selected ->
-                    if (getLastRoot(navController = navController) == selected.route && navController.currentDestination?.route != selected.route) {
-                        navController.navigate(selected.route) {
-                            popUpTo(selected.route)
-                            launchSingleTop = true
-                        }
-                    } else {
-                        navController.navigate(selected.route) {
-                            navController.graph.findStartDestination().route?.let {
-                                popUpTo(it) {
-                                    saveState = true
-                                }
+    val bottomSheetNavigator = rememberBottomSheetNavigator()
+    navController.navigatorProvider += bottomSheetNavigator
+    ModalBottomSheetLayout(bottomSheetNavigator = bottomSheetNavigator) {
+        val snackbarHostState = remember { SnackbarHostState() }
+        val view = LocalView.current
+        ShowSnackbarLaunchedEffect(
+            dialogHandler = DialogHandler,
+            coroutineScope = rememberCoroutineScope(),
+            snackbarHostState = snackbarHostState,
+            view = view
+        )
+        Scaffold(
+            scaffoldState = scaffoldState,
+            bottomBar = {
+                BottomNavigation(
+                    onNavigationSelected = { selected ->
+                        if (getLastRoot(navController = navController) == selected.route && navController.currentDestination?.route != selected.route) {
+                            navController.navigate(selected.route) {
+                                popUpTo(selected.route)
+                                launchSingleTop = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
+                        } else {
+                            navController.navigate(selected.route) {
+                                navController.graph.findStartDestination().route?.let {
+                                    popUpTo(it) {
+                                        saveState = true
+                                    }
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                navController = navController
-            )
-        }
-    ) { innerPadding ->
-        Box(Modifier.padding(innerPadding)) {
-            AnimatedNavHost(
-                navController = navController,
-                startDestination = Screen.Home.route,
-                enterTransition = { defaultCromEnterTransition(initialState, targetState) },
-                exitTransition = { defaultCromExitTransition(initialState, targetState) },
-                popEnterTransition = { defaultCromPopEnterTransition() },
-                popExitTransition = { defaultCromPopExitTransition() },
-            ) {
-                addHomeTopLevel(navController = navController)
-                addDashboardTopLevel(navController = navController)
-                addNotificationsTopLevel(navController = navController)
-                addSettingsTopLevel(navController = navController)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    navController = navController
+                )
+            }
+        ) { innerPadding ->
+            Box(Modifier.padding(innerPadding)) {
+                AnimatedNavHost(
+                    navController = navController,
+                    startDestination = Screen.Home.route,
+                    enterTransition = { defaultCromEnterTransition(initialState, targetState) },
+                    exitTransition = { defaultCromExitTransition(initialState, targetState) },
+                    popEnterTransition = { defaultCromPopEnterTransition() },
+                    popExitTransition = { defaultCromPopExitTransition() },
+                ) {
+                    addHomeTopLevel(navController = navController)
+                    addDashboardTopLevel(navController = navController)
+                    addNotificationsTopLevel(navController = navController)
+                    addSettingsTopLevel(navController = navController)
+                }
             }
         }
     }
@@ -120,6 +138,7 @@ private fun NavGraphBuilder.addSettingsTopLevel(navController: NavHostController
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
+    addSettingsBottomSheet(onNavigateTo = { route -> navController.navigate(route) })
 }
 
 private fun NavGraphBuilder.addHome(navController: NavHostController) {
@@ -139,7 +158,9 @@ private fun NavGraphBuilder.addDashboard(navController: NavHostController) {
 private fun NavGraphBuilder.addNotifications(navController: NavHostController) {
     composable(route = Screen.Notifications.route) {
         val context = LocalContext.current
-        val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = { NotificationsViewModelFactory(context = context) })
+        val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
+            NotificationsViewModelFactory(context = context)
+        })
         Notifications(viewModel = notificationsViewModel, onBack = { navController.popBackStack() })
     }
 }
@@ -147,8 +168,64 @@ private fun NavGraphBuilder.addNotifications(navController: NavHostController) {
 private fun NavGraphBuilder.addSettings(navController: NavHostController) {
     composable(route = Screen.Settings.route) {
         val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = { SettingsViewModelFactory() })
-        Settings(viewModel = settingsViewModel, onBack = { navController.popBackStack() })
+        Settings(viewModel = settingsViewModel, onBack = { navController.popBackStack() },
+            onNavigateTo = { route -> navController.navigate(route) })
     }
+}
+
+private fun NavGraphBuilder.addSettingsBottomSheet(onNavigateTo: (String) -> Unit) {
+    bottomSheet(route = LeafScreen.BottomSheetsSettings.route) { backStackEntry ->
+        BottomSheetContent {
+            SettingsItems(onNavigateTo = onNavigateTo)
+        }
+    }
+}
+
+@Composable
+private fun SettingsItems(onNavigateTo: (String) -> Unit) {
+    val context = LocalContext.current
+    val showStockRetrievalTimeIntervalsDialog = remember { mutableStateOf(false) }
+    if (showStockRetrievalTimeIntervalsDialog.value) {
+        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+        AndroidView(factory = { context ->
+            val dialog = TimeIntervalStockRetrievalDialogFragment()
+            dialog.onCreateView(
+                LayoutInflater.from(context),
+                null,
+                null
+            ) ?: View(context)
+        })
+    }
+    val showSupportedStocksDialog = remember { mutableStateOf(false) }
+    if (showSupportedStocksDialog.value) {
+        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+        AndroidView(factory = { context ->
+            val dialog = SupportedStockDialogFragment()
+            dialog.onCreateView(
+                LayoutInflater.from(context),
+                null,
+                null
+            ) ?: View(context)
+        })
+    }
+    BottomSheetMenuItem(
+        onClick = { showStockRetrievalTimeIntervalsDialog.value = true },
+        text = stringResource(id = R.string.action_configure_stock_retrieval_intervals)
+    )
+    BottomSheetMenuItem(
+        onClick = { showSupportedStocksDialog.value = true },
+        text = stringResource(id = R.string.action_stocks_supported)
+    )
+    BottomSheetMenuItem(
+        onClick = {
+            val browserIntent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://github.com/Sundbybergs-IT/Crom-Fortune/issues")
+            )
+            context.startActivity(browserIntent)
+        },
+        text = stringResource(id = R.string.generic_to_do)
+    )
 }
 
 private fun AnimatedContentScope<*>.defaultCromEnterTransition(

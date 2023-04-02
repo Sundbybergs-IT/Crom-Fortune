@@ -1,9 +1,10 @@
 [versions]
-accompanist = "0.26.4-beta"
+accompanist = "0.29.1-alpha"
 android-gradle-plugin = "8.0.2"
 androidx-activity-compose = "1.4.0"
 androidx-annotation = "1.2.0"
 androidx-appcompat = "1.4.1"
+androidx-compose-bom = "2023.03.00"
 androidx-compose-compiler = "1.4.3"
 androidx-compose-foundation = "1.3.1"
 androidx-compose-material = "1.3.1"
@@ -34,12 +35,12 @@ yahooFinance = "3.17.0"
 [libraries]
 accompanistPager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist" }
 accompanistNavigationAnimation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
+accompanistNavigationMaterial = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
 androidxActivityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidxAnnotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidxAppcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose-compiler" }
 androidxComposeUiUi = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose-ui" }
-androidxComposeUiUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose-ui" }
 androidxComposeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-compose-foundation" }
 androidxComposeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "androidx-compose-material" }
 androidxComposeMaterialMaterial = { module = "androidx.compose.material:material", version.ref = "androidx-compose-material" }
@@ -62,6 +63,7 @@ androidxTestMonitor = { module = "androidx.test:monitor", version.ref = "android
 androidxTestRunner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
+composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
 desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 googleMaterial = { module = "com.google.android.material:material", version.ref = "google-material" }
 googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore-ktx" }
@@ -76,9 +78,10 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 yahooFinance = { module = "com.yahoofinance-api:YahooFinanceAPI", version.ref = "yahooFinance" }
 
 [bundles]
-compose = ["accompanistPager", "accompanistNavigationAnimation", "androidxActivityCompose", "androidxComposeMaterialMaterial",
-    "androidxComposeRuntimeLivedata", "androidxComposeMaterialIconsExtended",
-    "androidxComposeUiUiTooling", "androidxConstraintlayoutCompose", "androidxNavigationCompose"]
+compose = ["accompanistNavigationMaterial", "accompanistPager", "accompanistNavigationAnimation",
+    "androidxActivityCompose", "androidxComposeMaterialMaterial", "androidxComposeRuntimeLivedata",
+    "androidxComposeMaterialIconsExtended", "androidxComposeCompiler", "androidxConstraintlayoutCompose",
+    "androidxNavigationCompose"]
 
 [plugins]
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

@@ -1,6 +1,7 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -51,35 +52,38 @@ private const val DATE_FORMAT = "MM/dd/yyyy"
 fun Home(viewModel: HomeViewModel) {
     val showRegisterBuyStocksDialog = remember { mutableStateOf(false) }
     if (showRegisterBuyStocksDialog.value) {
+        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
         AndroidView(factory = { context ->
             val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.onCreateView(
                 LayoutInflater.from(context),
                 null,
                 null
-            )!!
+            ) ?: View(context)
         })
     }
     val showRegisterSellStocksDialog = remember { mutableStateOf(false) }
     if (showRegisterSellStocksDialog.value) {
+        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
         AndroidView(factory = { context ->
             val dialog = RegisterSellStockDialogFragment(viewModel)
             dialog.onCreateView(
                 LayoutInflater.from(context),
                 null,
                 null
-            )!!
+            ) ?: View(context)
         })
     }
     val showRegisterSplitStocksDialog = remember { mutableStateOf(false) }
     if (showRegisterSplitStocksDialog.value) {
+        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
         AndroidView(factory = { context ->
             val dialog = RegisterSplitDialogFragment(viewModel)
             dialog.onCreateView(
                 LayoutInflater.from(context),
                 null,
                 null
-            )!!
+            ) ?: View(context)
         })
     }
     val context = LocalContext.current
