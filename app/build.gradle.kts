@@ -59,13 +59,22 @@ android {
 
 dependencies {
     api(projects.domain)
-    debugImplementation(libs.androidxComposeTestManifest)
+    implementation(platform(libs.composeBom))
+    // Version determined by Compose BoM
+    debugImplementation( "androidx.compose.ui:ui-test-manifest")
+    // Version determined by Compose BoM
+    implementation("androidx.compose.runtime:runtime-livedata")
+    // Version determined by Compose BoM
+    implementation("androidx.compose.material3:material3")
+    // Version determined by Compose BoM
+    implementation("androidx.compose.ui:ui-tooling")
     implementation(projects.algorithm)
     // https://youtrack.jetbrains.com/issue/KT-44452
     //noinspection(DifferentStdlibGradleVersion
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)
+    implementation(libs.accompanistNavigationMaterial)
     implementation(libs.androidxAppcompat)
     implementation(libs.androidxConstraintlayoutConstraintlayout)
     implementation(libs.androidxCore)
