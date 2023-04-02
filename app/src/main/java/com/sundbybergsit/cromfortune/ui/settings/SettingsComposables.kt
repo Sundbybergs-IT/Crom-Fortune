@@ -1,7 +1,5 @@
 package com.sundbybergsit.cromfortune.ui.settings
 
-import android.content.Intent
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,16 +7,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.ui.ButtonText
 
 @Composable
 fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit) {
@@ -42,7 +38,7 @@ fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit) {
                 LayoutInflater.from(context),
                 null,
                 null
-            )  ?: View(context)
+            ) ?: View(context)
         })
     }
     Scaffold(topBar = {
@@ -55,36 +51,52 @@ fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back Icon")
                 }
             }, actions = {
-                // FIXME: Cannot see items, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-                TextButton(
-                    onClick = {
-                        showStockRetrievalTimeIntervalsDialog.value = true
+                var showMenu by remember { mutableStateOf(false) }
+                IconButton(onClick = {
+                    showMenu = !showMenu
+                    if (showMenu) {
+                        // Show options
+//                        onNavigateTo.invoke(route)
+                        /*
+                        // FIXME: Move to bottomsheet?, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                        TextButton(
+                            onClick = {
+                                showStockRetrievalTimeIntervalsDialog.value = true
+                            }
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.action_configure_stock_retrieval_intervals)
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                showSupportedStocksDialog.value = true
+                            }
+                        ) {
+                            ButtonText(
+                                text = stringResource(id = R.string.action_stocks_supported)
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                val browserIntent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://github.com/Sundbybergs-IT/Crom-Fortune/issues")
+                                )
+                                context.startActivity(browserIntent)
+                            }
+                        ) {
+                            ButtonText(
+                                text = stringResource(id = R.string.generic_to_do)
+                            )
+                        }
+                         */
                     }
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.action_configure_stock_retrieval_intervals)
-                    )
-                }
-                TextButton(
-                    onClick = {
-                        showSupportedStocksDialog.value = true
-                    }
-                ) {
-                    ButtonText(
-                        text = stringResource(id = R.string.action_stocks_supported)
-                    )
-                }
-                TextButton(
-                    onClick = {
-                        val browserIntent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://github.com/Sundbybergs-IT/Crom-Fortune/issues")
-                        )
-                        context.startActivity(browserIntent)
-                    }
-                ) {
-                    ButtonText(
-                        text = stringResource(id = R.string.generic_to_do)
+                }) {
+                    Icon(
+                        imageVector = Icons.Outlined.MoreVert,
+                        tint = MaterialTheme.colors.surface,
+                        contentDescription = "Overflow menu",
                     )
                 }
             }
