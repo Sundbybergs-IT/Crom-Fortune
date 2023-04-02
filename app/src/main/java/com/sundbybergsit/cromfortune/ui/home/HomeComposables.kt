@@ -12,15 +12,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -31,6 +29,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
+import com.sundbybergsit.cromfortune.PagerStateChangeDetectionLaunchedEffect
+import com.sundbybergsit.cromfortune.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.contentDescription
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
@@ -49,16 +51,22 @@ import java.util.*
 private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
-fun Home(viewModel: HomeViewModel) {
+fun Home(
+    viewModel: HomeViewModel,
+    previousPageSize: MutableState<Int>,
+    pagerState: PagerState = rememberPagerState(0)
+) {
+    val localContext = LocalContext.current
+    LaunchedEffect(key1 = "Test") {
+        viewModel.refreshData(localContext)
+    }
     val showRegisterBuyStocksDialog = remember { mutableStateOf(false) }
     if (showRegisterBuyStocksDialog.value) {
         // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
         AndroidView(factory = { context ->
             val dialog = RegisterBuyStockDialogFragment(viewModel)
             dialog.onCreateView(
-                LayoutInflater.from(context),
-                null,
-                null
+                LayoutInflater.from(context), null, null
             ) ?: View(context)
         })
     }
@@ -68,9 +76,7 @@ fun Home(viewModel: HomeViewModel) {
         AndroidView(factory = { context ->
             val dialog = RegisterSellStockDialogFragment(viewModel)
             dialog.onCreateView(
-                LayoutInflater.from(context),
-                null,
-                null
+                LayoutInflater.from(context), null, null
             ) ?: View(context)
         })
     }
@@ -80,68 +86,63 @@ fun Home(viewModel: HomeViewModel) {
         AndroidView(factory = { context ->
             val dialog = RegisterSplitDialogFragment(viewModel)
             dialog.onCreateView(
-                LayoutInflater.from(context),
-                null,
-                null
+                LayoutInflater.from(context), null, null
             ) ?: View(context)
         })
     }
     val context = LocalContext.current
     Scaffold(topBar = {
-        TopAppBar(
-            title = {
-                Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.h6)
-            }, actions = {
-                TextButton(
-                    onClick = {
-                        showRegisterBuyStocksDialog.value = true
-                    }
-                ) {
-                    ButtonText(
-                        text = stringResource(id = R.string.action_stock_buy)
-                    )
-                }
-                TextButton(
-                    onClick = {
-                        showRegisterSellStocksDialog.value = true
-                    }
-                ) {
-                    ButtonText(
-                        text = stringResource(id = R.string.action_stock_sell)
-                    )
-                }
-                TextButton(
-                    onClick = {
-                        showRegisterSplitStocksDialog.value = true
-                    }
-                ) {
-                    ButtonText(
-                        text = stringResource(id = R.string.action_stock_add_split)
-                    )
-                }
-                TextButton(
-                    onClick = {
-                        viewModel.refreshData(context)
-                        Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
-                    }
-                ) {
-                    ButtonText(
-                        text = stringResource(id = R.string.action_refresh)
-                    )
-                }
+        TopAppBar(title = {
+            Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.h6)
+        }, actions = {
+            TextButton(onClick = {
+                showRegisterBuyStocksDialog.value = true
+            }) {
+                ButtonText(
+                    text = stringResource(id = R.string.action_stock_buy)
+                )
             }
-        )
+            TextButton(onClick = {
+                showRegisterSellStocksDialog.value = true
+            }) {
+                ButtonText(
+                    text = stringResource(id = R.string.action_stock_sell)
+                )
+            }
+            TextButton(onClick = {
+                showRegisterSplitStocksDialog.value = true
+            }) {
+                ButtonText(
+                    text = stringResource(id = R.string.action_stock_add_split)
+                )
+            }
+            TextButton(onClick = {
+                viewModel.refreshData(context)
+                Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
+            }) {
+                ButtonText(
+                    text = stringResource(id = R.string.action_refresh)
+                )
+            }
+        })
     }) { paddingValues ->
         val modifier = Modifier.fillMaxSize()
         val stockPriceListener: StockPriceListener = object : StockPriceListener {
             override fun getStockPrice(stockSymbol: String): StockPrice {
-                return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES)
-                    .stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
+                return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
             }
         }
         Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
             // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-            HorizontalPager(modifier = modifier, count = 2) { page ->
+            val changedPagerMutableState = remember { mutableStateOf(false) }
+            val view = LocalView.current
+            PagerStateSelectionHapticFeedbackLaunchedEffect(
+                pagerState = pagerState, view = view, changedState = changedPagerMutableState
+            )
+            HorizontalPager(modifier = modifier, count = 2, state = pagerState) { page ->
+                PagerStateChangeDetectionLaunchedEffect(
+                    pagerState = pagerState, changedPagerMutableState = changedPagerMutableState
+                )
                 val items: List<NameAndValueAdapterItem>
                 if (page == 0) {
                     items = when (viewModel.personalStocksViewState.value) {
@@ -205,8 +206,7 @@ private fun StockOrderAggregates(
                 if (item is StockAggregateHeaderAdapterItem) {
                     var count = 0.0
                     val currencyRates =
-                        (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                            .currencyRates.toList()
+                        (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES).currencyRates.toList()
                     for (stockOrderAggregate in item.stockOrderAggregates.toList()) {
                         for (currencyRate in currencyRates) {
                             if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
@@ -233,9 +233,23 @@ private fun StockOrderAggregates(
                             )
                         )
                     }
-                    // FIXME: Add overflow menu with quick actions, issues/21
-                } else {
-                    Text(modifier = Modifier.fillMaxWidth(), text = item.name + " " + item.value)
+                    // FIXME: Add overflow menu with quick actions (sorting), issues/21
+                } else if (item is StockAggregateAdapterItem) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Column {
+                            Text(text = item.name, style = MaterialTheme.typography.body1)
+                            // FIXME: Add quantity
+                        }
+                        val format: NumberFormat = NumberFormat.getCurrencyInstance()
+                        format.currency = item.stockOrderAggregate.currency
+                        format.maximumFractionDigits = 2
+                        Text(
+                            text = format.format(stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price),
+                            style = MaterialTheme.typography.body1
+                        )
+
+                        // FIXME: Add overflow menu with quick actions (remove), issues/21
+                    }
                 }
             }
         }
@@ -261,9 +275,7 @@ private fun StockOrderAggregates(
 
 @Composable
 fun RegisterBuyStockAlertDialog(
-    showDialog: Boolean,
-    viewModel: HomeViewModel,
-    onDismiss: () -> Unit
+    showDialog: Boolean, viewModel: HomeViewModel, onDismiss: () -> Unit
 ) {
     // FIXME: Convert RegisterBuyStockDialogFragment into a composable
     if (showDialog) {
@@ -292,14 +304,13 @@ fun RegisterBuyStockAlertDialog(
                 }
                 val dateErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
                 val dateErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
-                InputValidatedOutlinedTextField(
-                    modifier = Modifier
-                        .constrainAs(dateRef) {
-                            top.linkTo(titleRef.bottom)
-                            start.linkTo(parent.start)
-                        }
-                        .background(color = MaterialTheme.colors.background)
-                        .fillMaxWidth(),
+                InputValidatedOutlinedTextField(modifier = Modifier
+                    .constrainAs(dateRef) {
+                        top.linkTo(titleRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .background(color = MaterialTheme.colors.background)
+                    .fillMaxWidth(),
                     label = { Text(text = stringResource(id = R.string.home_add_stock_date_label)) },
                     value = dateMutableState,
                     isError = dateErrorMutableState.value,
@@ -310,14 +321,13 @@ fun RegisterBuyStockAlertDialog(
                     remember { mutableStateOf(TextFieldValue(text = "")) }
                 val stockQuantityErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
                 val stockQuantityErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
-                InputValidatedOutlinedTextField(
-                    modifier = Modifier
-                        .constrainAs(stockQuantityRef) {
-                            top.linkTo(dateRef.bottom)
-                            start.linkTo(parent.start)
-                        }
-                        .background(color = MaterialTheme.colors.background)
-                        .fillMaxWidth(),
+                InputValidatedOutlinedTextField(modifier = Modifier
+                    .constrainAs(stockQuantityRef) {
+                        top.linkTo(dateRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .background(color = MaterialTheme.colors.background)
+                    .fillMaxWidth(),
                     label = { Text(text = stringResource(id = R.string.home_add_stock_quantity_label)) },
                     value = stockQuantityMutableState,
                     isError = stockQuantityErrorMutableState.value,
@@ -334,14 +344,13 @@ fun RegisterBuyStockAlertDialog(
                     )
                 }
                 // FIXME: Auto-complete for stock names
-                InputValidatedOutlinedTextField(
-                    modifier = Modifier
-                        .constrainAs(stockNameRef) {
-                            top.linkTo(stockQuantityRef.bottom)
-                            start.linkTo(parent.start)
-                        }
-                        .background(color = MaterialTheme.colors.background)
-                        .fillMaxWidth(),
+                InputValidatedOutlinedTextField(modifier = Modifier
+                    .constrainAs(stockNameRef) {
+                        top.linkTo(stockQuantityRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .background(color = MaterialTheme.colors.background)
+                    .fillMaxWidth(),
                     label = { Text(text = stringResource(id = R.string.home_add_stock_name_label)) },
                     value = stockNameMutableState,
                     isError = stockNameErrorMutableState.value,
@@ -355,20 +364,18 @@ fun RegisterBuyStockAlertDialog(
                                 currencyMutableState.value = TextFieldValue(find.third)
                             }
                         }
-                    }
-                )
+                    })
                 val priceMutableState: MutableState<TextFieldValue> =
                     remember { mutableStateOf(TextFieldValue(text = "")) }
                 val priceErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
                 val priceErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
-                InputValidatedOutlinedTextField(
-                    modifier = Modifier
-                        .constrainAs(stockPriceRef) {
-                            top.linkTo(stockNameRef.bottom)
-                            start.linkTo(parent.start)
-                        }
-                        .background(color = MaterialTheme.colors.background)
-                        .fillMaxWidth(),
+                InputValidatedOutlinedTextField(modifier = Modifier
+                    .constrainAs(stockPriceRef) {
+                        top.linkTo(stockNameRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .background(color = MaterialTheme.colors.background)
+                    .fillMaxWidth(),
                     label = { Text(text = stringResource(id = R.string.generic_price_per_stock)) },
                     value = priceMutableState,
                     isError = priceErrorMutableState.value,
@@ -395,14 +402,13 @@ fun RegisterBuyStockAlertDialog(
                     remember { mutableStateOf(TextFieldValue(text = "")) }
                 val commissionFeeErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
                 val commissionFeeErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
-                InputValidatedOutlinedTextField(
-                    modifier = Modifier
-                        .constrainAs(commissionFeeRef) {
-                            top.linkTo(stockCurrencyRef.bottom)
-                            start.linkTo(parent.start)
-                        }
-                        .background(color = MaterialTheme.colors.background)
-                        .fillMaxWidth(),
+                InputValidatedOutlinedTextField(modifier = Modifier
+                    .constrainAs(commissionFeeRef) {
+                        top.linkTo(stockCurrencyRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .background(color = MaterialTheme.colors.background)
+                    .fillMaxWidth(),
                     label = { Text(text = stringResource(id = R.string.home_add_commission_fee_label)) },
                     value = commissionFeeMutableState,
                     isError = commissionFeeErrorMutableState.value,
@@ -442,8 +448,8 @@ fun RegisterBuyStockAlertDialog(
                                 errorMutableState = stockNameErrorMutableState,
                                 errorMessageMutableState = stockNameErrorMessageMutableState
                             )
-                            val stockSymbol = stockNameMutableState.value.text.substringAfterLast('(')
-                                .substringBeforeLast(')')
+                            val stockSymbol =
+                                stockNameMutableState.value.text.substringAfterLast('(').substringBeforeLast(')')
                             priceMutableState.value.validateDouble(
                                 context = context,
                                 errorMutableState = priceErrorMutableState,
@@ -474,8 +480,7 @@ fun RegisterBuyStockAlertDialog(
                         } catch (e: ValidatorException) {
                             // Shit happens ...
                         }
-                    }
-                    )
+                    })
                 }
             }
         }
@@ -513,13 +518,11 @@ private fun InputValidatedOutlinedTextField(
                     }, shape = MaterialTheme.shapes.small
                 )
                 .padding(4.dp)
-                .clip(MaterialTheme.shapes.small)
-        ) {
-            OutlinedTextField(
-                modifier = Modifier
-                    .background(color = MaterialTheme.colors.background)
-                    .fillMaxWidth()
-                    .contentDescription(contentDescriptor),
+                .clip(MaterialTheme.shapes.small)) {
+            OutlinedTextField(modifier = Modifier
+                .background(color = MaterialTheme.colors.background)
+                .fillMaxWidth()
+                .contentDescription(contentDescriptor),
                 singleLine = true,
                 value = value.value,
                 isError = isError,
@@ -537,8 +540,7 @@ private fun InputValidatedOutlinedTextField(
                     }
                 } else {
                     null
-                }
-            )
+                })
         }
         if (isError) {
             Text(
