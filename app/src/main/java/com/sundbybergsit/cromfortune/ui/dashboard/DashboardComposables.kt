@@ -21,7 +21,6 @@ import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.theme.onSurfaceVariant
 
 @Composable
 fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
@@ -78,7 +77,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     }, text = viewModel.score.value ?: "",
-                style = MaterialTheme.typography.subtitle1, color = MaterialTheme.colors.onSurfaceVariant
+                style = MaterialTheme.typography.subtitle1, color = MaterialTheme.colors.onSurface
             )
         }
     }
