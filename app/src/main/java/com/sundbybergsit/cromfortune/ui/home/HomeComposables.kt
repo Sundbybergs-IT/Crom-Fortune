@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
+import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.accompanist.pager.HorizontalPager
@@ -35,6 +37,9 @@ import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.*
+import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
+import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
+import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSplitDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -44,10 +49,82 @@ private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
 fun Home(viewModel: HomeViewModel) {
+    val showRegisterBuyStocksDialog = remember { mutableStateOf(false) }
+    if (showRegisterBuyStocksDialog.value) {
+        AndroidView(factory = { context ->
+            val dialog = RegisterBuyStockDialogFragment(viewModel)
+            dialog.onCreateView(
+                LayoutInflater.from(context),
+                null,
+                null
+            )!!
+        })
+    }
+    val showRegisterSellStocksDialog = remember { mutableStateOf(false) }
+    if (showRegisterSellStocksDialog.value) {
+        AndroidView(factory = { context ->
+            val dialog = RegisterSellStockDialogFragment(viewModel)
+            dialog.onCreateView(
+                LayoutInflater.from(context),
+                null,
+                null
+            )!!
+        })
+    }
+    val showRegisterSplitStocksDialog = remember { mutableStateOf(false) }
+    if (showRegisterSplitStocksDialog.value) {
+        AndroidView(factory = { context ->
+            val dialog = RegisterSplitDialogFragment(viewModel)
+            dialog.onCreateView(
+                LayoutInflater.from(context),
+                null,
+                null
+            )!!
+        })
+    }
+    val context = LocalContext.current
     Scaffold(topBar = {
         TopAppBar(
             title = {
                 Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.h6)
+            }, actions = {
+                TextButton(
+                    onClick = {
+                        showRegisterBuyStocksDialog.value = true
+                    }
+                ) {
+                    ButtonText(
+                        text = stringResource(id = R.string.action_stock_buy)
+                    )
+                }
+                TextButton(
+                    onClick = {
+                        showRegisterSellStocksDialog.value = true
+                    }
+                ) {
+                    ButtonText(
+                        text = stringResource(id = R.string.action_stock_sell)
+                    )
+                }
+                TextButton(
+                    onClick = {
+                        showRegisterSplitStocksDialog.value = true
+                    }
+                ) {
+                    ButtonText(
+                        text = stringResource(id = R.string.action_stock_add_split)
+                    )
+                }
+                TextButton(
+                    onClick = {
+                        viewModel.refreshData(context)
+                        Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
+                    }
+                ) {
+                    ButtonText(
+                        text = stringResource(id = R.string.action_refresh)
+                    )
+                }
             }
         )
     }) { paddingValues ->

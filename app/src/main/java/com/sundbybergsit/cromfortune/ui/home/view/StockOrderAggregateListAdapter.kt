@@ -216,7 +216,7 @@ internal class StockOrderAggregateListAdapter(
             requireViewById<Button>(R.id.button_listrowStockItem_buy).setOnClickListener {
                 val dialog = RegisterBuyStockDialogFragment(viewModel)
                 dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
-                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
+//                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }
 
@@ -227,7 +227,7 @@ internal class StockOrderAggregateListAdapter(
             requireViewById<Button>(R.id.button_listrowStockItem_sell).setOnClickListener {
                 val dialog = RegisterSellStockDialogFragment(viewModel)
                 dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
-                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
+//                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }
 

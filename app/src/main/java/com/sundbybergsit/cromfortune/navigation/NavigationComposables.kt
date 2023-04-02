@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.*
@@ -137,7 +138,8 @@ private fun NavGraphBuilder.addDashboard(navController: NavHostController) {
 
 private fun NavGraphBuilder.addNotifications(navController: NavHostController) {
     composable(route = Screen.Notifications.route) {
-        val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = { NotificationsViewModelFactory() })
+        val context = LocalContext.current
+        val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = { NotificationsViewModelFactory(context = context) })
         Notifications(viewModel = notificationsViewModel, onBack = { navController.popBackStack() })
     }
 }
