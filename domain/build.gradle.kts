@@ -10,31 +10,21 @@ apply(from = "../buildSrc/src/build.gradle")
 val baseVersionName = ext.get("baseVersionName") as String
 
 android {
+    namespace = "com.sundbybergsit.cromfortune.domain"
     compileSdk = 31
-
     defaultConfig {
         minSdk = 29
         targetSdk = 31
     }
-
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
-    }
-}
-
-tasks.withType(KotlinCompile::class).all {
-    kotlinOptions {
-        jvmTarget = "11"
-
-        // For creation of default methods in interfaces
-        freeCompilerArgs = listOf("-Xjvm-default=all")
     }
 }
 
