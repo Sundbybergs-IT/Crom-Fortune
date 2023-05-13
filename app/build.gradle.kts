@@ -76,7 +76,6 @@ dependencies {
     implementation(libs.kotlinxSerializationJson)
     implementation(libs.accompanistNavigationMaterial)
     implementation(libs.androidxAppcompat)
-    implementation(libs.androidxConstraintlayoutConstraintlayout)
     implementation(libs.androidxCore)
     implementation(libs.androidxLifecycleExtensions)
     implementation(libs.androidxLifecycleLivedata)
