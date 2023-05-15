@@ -4,15 +4,33 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.runtime.*
+import androidx.compose.material.primarySurface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusState
@@ -39,21 +57,29 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.ui.*
+import com.sundbybergsit.cromfortune.ui.ButtonText
+import com.sundbybergsit.cromfortune.ui.DialogButton
+import com.sundbybergsit.cromfortune.ui.ValidatorException
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSplitDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
+import com.sundbybergsit.cromfortune.ui.validateDate
+import com.sundbybergsit.cromfortune.ui.validateDouble
+import com.sundbybergsit.cromfortune.ui.validateInt
+import com.sundbybergsit.cromfortune.ui.validateMinQuantity
+import com.sundbybergsit.cromfortune.ui.validateStockName
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Currency
+import java.util.Locale
 
 private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
 fun Home(
     viewModel: HomeViewModel,
-    previousPageSize: MutableState<Int>,
     pagerState: PagerState = rememberPagerState(0)
 ) {
     val localContext = LocalContext.current
