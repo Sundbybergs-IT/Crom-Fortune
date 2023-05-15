@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -16,7 +14,7 @@ android {
         applicationId = "com.sundbybergsit.cromfortune"
         minSdk = 29
         targetSdk = 31
-        versionCode = 100
+        versionCode = 101
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
