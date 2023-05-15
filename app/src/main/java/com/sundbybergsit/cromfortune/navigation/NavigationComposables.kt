@@ -205,8 +205,11 @@ private fun NotificationsItems(onClear: () -> Unit) {
 }
 
 @Composable
-private fun SettingsItems() {
-    val showStockRetrievalTimeIntervalsDialog = remember { mutableStateOf(false) }
+private fun SettingsItems(
+    showStockRetrievalTimeIntervalsDialog: MutableState<Boolean> = remember { mutableStateOf(false) },
+    showSupportedStocksDialog: MutableState<Boolean> = remember { mutableStateOf(false) }
+) {
+
     if (showStockRetrievalTimeIntervalsDialog.value) {
         // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
         AndroidView(factory = { context ->
@@ -218,7 +221,6 @@ private fun SettingsItems() {
             ) ?: View(context)
         })
     }
-    val showSupportedStocksDialog = remember { mutableStateOf(false) }
     if (showSupportedStocksDialog.value) {
         // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
         AndroidView(factory = { context ->

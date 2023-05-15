@@ -1,13 +1,21 @@
 package com.sundbybergsit.cromfortune.ui.settings
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.LeafScreen
 import com.sundbybergsit.cromfortune.OverflowMenu
@@ -36,7 +44,18 @@ fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit, onNavigateTo: (St
                 .fillMaxSize()
                 .padding(it)
         ) {
-            // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(id = R.string.settings_default_values),
+                    style = MaterialTheme.typography.h6,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = stringResource(id = R.string.generic_error_not_supported),
+                    style = MaterialTheme.typography.body1, textAlign = TextAlign.Center
+                )
+                // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+            }
         }
     }
 }
