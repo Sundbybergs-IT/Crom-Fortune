@@ -60,7 +60,7 @@ dependencies {
     implementation(libs.materialdaypicker)
     implementation(libs.googleMaterial)
     implementation(libs.googlePlayCore)
-    implementation(libs.yahooFinance)
+    implementation("com.github.polygon-io:client-jvm:v4.3.0")
     testImplementation(libs.androidxTestJunit)
     testImplementation(libs.androidxWorkTesting)
     testImplementation(libs.junit)

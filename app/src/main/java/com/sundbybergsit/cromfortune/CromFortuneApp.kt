@@ -16,8 +16,6 @@ class CromFortuneApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        System.setProperty("yahoofinance.baseurl.quotesquery1v7", "https://query1.finance.yahoo.com/v6/finance/quote");
-        System.setProperty("http.agent", "");
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
@@ -28,7 +26,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<StockDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
                 .setConstraints(constraints).build()
-        workManager.enqueueUniquePeriodicWork("fetchFromYahoo", ExistingPeriodicWorkPolicy.REPLACE,
+        workManager.enqueueUniquePeriodicWork("fetchFromPolygon", ExistingPeriodicWorkPolicy.REPLACE,
                 stockRetrievalWorkRequest)
     }
 

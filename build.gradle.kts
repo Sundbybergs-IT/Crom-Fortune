@@ -31,8 +31,10 @@ allprojects {
 
     repositories {
         google()
-        // TODO: Needed for materialdaypicker. Remove ASAP.
+        // TODO: Needed for materialdaypicker and Polygon. Remove ASAP.
         jcenter()
+        // TODO: Needed because of Polygon
+        maven("https://jitpack.io")
         mavenCentral()
     }
 

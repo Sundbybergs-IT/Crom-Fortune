@@ -24,7 +24,6 @@ kotlinx-serialization = "1.3.2"
 materialdaypicker = "0.7.4"
 robolectric = "4.9.2"
 sonarqube = "4.0.0.2929"
-yahooFinance = "3.17.0"
 
 [libraries]
 androidxAnnotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
@@ -54,7 +53,6 @@ materialdaypicker = { module = "ca.antonious:materialdaypicker", version.ref = "
 pluginAndroidGradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
 pluginKotlinGradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-yahooFinance = { module = "com.yahoofinance-api:YahooFinanceAPI", version.ref = "yahooFinance" }
 
 [plugins]
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

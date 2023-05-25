@@ -207,7 +207,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     fun refreshData(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context)
+            StockDataRetrievalCoroutineWorker.refreshFromPolygon(context)
             Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
         }
     }

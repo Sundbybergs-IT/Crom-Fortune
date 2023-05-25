@@ -18,17 +18,23 @@ import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
+import io.polygon.kotlin.sdk.rest.PolygonRestApiCallback
+import io.polygon.kotlin.sdk.rest.PolygonRestClient
+import io.polygon.kotlin.sdk.rest.forex.RealTimeConversionDTO
+import io.polygon.kotlin.sdk.rest.forex.RealTimeConversionParameters
+import io.polygon.kotlin.sdk.rest.stocks.LastQuoteResultV2
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import yahoofinance.Stock
-import yahoofinance.YahooFinance
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.*
+import java.util.Currency
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.roundToInt
 
-@Suppress("BlockingMethodInNonBlockingContext")
 open class StockDataRetrievalCoroutineWorker(val context: Context, workerParameters: WorkerParameters) :
     CoroutineWorker(context, workerParameters) {
 
@@ -37,24 +43,43 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
         const val TAG = "StockRetrievalCoroutineWorker"
         const val COMMISSION_FEE = 39.0
 
-        fun refreshFromYahoo(context: Context) {
+        // FIXME: Finish implementation
+        val polygonRestClient = PolygonRestClient("TODO: Pass from CI")
+
+        fun refreshFromPolygon(context: Context) {
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
                 currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
             }
             CurrencyRateRepository.add(currencyRates)
-            val stocks: Map<String, Stock> =
-                YahooFinance.get(StockPrice.SYMBOLS.map { pair -> pair.first }
-                    .toTypedArray())
+            val stocks = mutableMapOf<String, StockPrice>()
+            val callback = object : PolygonRestApiCallback<LastQuoteResultV2> {
+                override fun onError(error: Throwable) {
+                    TODO("Not yet implemented")
+                }
+
+                override fun onSuccess(result: LastQuoteResultV2) {
+                    stocks[result.results.ticker!!] =
+                        StockPrice(
+                            result.results.ticker!!,
+                            Currency.getInstance(StockPrice.SYMBOLS.filter { pair -> pair.first == result.results.ticker!! }
+                                .map { pair -> pair.third }.firstOrNull()),
+                            result.results.askPrice!!
+                        )
+                }
+            }
+            StockPrice.SYMBOLS.map { pair -> pair.first }.toTypedArray().forEach { ticker ->
+                polygonRestClient.stocksClient.getLastQuoteV2(ticker = ticker, callback = callback)
+            }
             val stockPrices = mutableSetOf<StockPrice>()
             for (triple in StockPrice.SYMBOLS.iterator()) {
                 val stockSymbol = triple.first
-                val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
+                val quote = stocks[stockSymbol]!!
                 val currency = triple.third
                 val stockPrice = StockPrice(
                     stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
-                    price = quote.price.toDouble().roundTo(3)
+                    price = quote.price.roundTo(3)
                 )
                 val stockEvents = StockEventRepositoryImpl(context).list(stockSymbol)
                 val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
@@ -91,6 +116,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                         (recommendation.command as BuyStockCommand).commissionFee.roundToInt()
                     )
                 }
+
                 is SellStockCommand -> {
                     context.getString(
                         R.string.notification_recommendation_body_sell,
@@ -101,6 +127,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                         (recommendation.command as SellStockCommand).commissionFee.roundToInt()
                     )
                 }
+
                 else -> {
                     ""
                 }
@@ -117,10 +144,12 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                         R.string.generic_urge_buy,
                         recommendation.command.stockSymbol()
                     )
+
                     is SellStockCommand -> context.getString(
                         R.string.generic_urge_sell,
                         recommendation.command.stockSymbol()
                     )
+
                     else -> ""
                 }
             NotificationUtil.doPostRegularNotification(
@@ -131,7 +160,23 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             )
         }
 
-        private fun getRateInSek(currency: String) = YahooFinance.getFx("${currency}SEK=X").price.toDouble()
+        private fun getRateInSek(currency: String): Double {
+            return runBlocking {
+                suspendCoroutine { continuation ->
+                    polygonRestClient.forexClient.getRealTimeConversion(
+                        RealTimeConversionParameters(currency, "SEK", 1.0, 2),
+                        object : PolygonRestApiCallback<RealTimeConversionDTO> {
+                            override fun onError(error: Throwable) {
+                                continuation.resumeWithException(error)
+                            }
+
+                            override fun onSuccess(result: RealTimeConversionDTO) {
+                                continuation.resume(result.converted!!)
+                            }
+                        })
+                }
+            }
+        }
 
     }
 
@@ -149,15 +194,17 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                     when {
                         isRefreshRequired() -> {
                             Log.i(TAG, "Initial retrieval of data.")
-                            refreshFromYahoo(context)
+                            refreshFromPolygon(context)
                         }
+
                         timeInterval.weekDays.isWithinConfiguredTimeInterval(
                             currentDayOfWeek, currentTime,
                             fromTime, toTime
                         ) -> {
                             Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
-                            refreshFromYahoo(context)
+                            refreshFromPolygon(context)
                         }
+
                         else -> {
                             Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
                         }
