@@ -16,7 +16,6 @@ import androidx.fragment.app.DialogFragment
 import com.google.android.material.textfield.TextInputLayout
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.ui.*
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import java.text.SimpleDateFormat
@@ -100,7 +99,7 @@ class RegisterBuyStockDialogFragment(private val homeViewModel: HomeViewModel) :
                     inputDate.validateDate(inputLayoutDate, DATE_FORMAT)
                     inputCurrency.validateCurrency(inputLayoutCurrency)
                     inputStockQuantity.validateInt(inputLayoutStockQuantity)
-                    inputStockQuantity.validateMinQuantity(inputLayoutStockQuantity, StockSplit.MIN_QUANTITY)
+                    inputStockQuantity.validateMinQuantity(inputLayoutStockQuantity, 1)
                     inputStockName.validateStockName(inputLayoutStockName)
                     val stockSymbol = inputStockName.text.toString().substringAfterLast('(')
                         .substringBeforeLast(')')
