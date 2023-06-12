@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.sonarqube)
 }
 
-val baseVersionName = "0.5.11"
+val baseVersionName = "0.6.0"
 
 allprojects {
 
