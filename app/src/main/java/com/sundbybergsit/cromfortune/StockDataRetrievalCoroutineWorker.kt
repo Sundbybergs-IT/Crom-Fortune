@@ -20,15 +20,15 @@ import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import yahoofinance.Stock
-import yahoofinance.YahooFinance
+import yahoofinance.StockV2
+import yahoofinance.get
+import yahoofinance.getFxHax
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.*
+import java.util.Currency
 import kotlin.math.roundToInt
 
-@Suppress("BlockingMethodInNonBlockingContext")
 open class StockDataRetrievalCoroutineWorker(val context: Context, workerParameters: WorkerParameters) :
     CoroutineWorker(context, workerParameters) {
 
@@ -44,8 +44,8 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                 currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
             }
             CurrencyRateRepository.add(currencyRates)
-            val stocks: Map<String, Stock> =
-                YahooFinance.get(StockPrice.SYMBOLS.map { pair -> pair.first }
+            val stocks: Map<String, StockV2> =
+                get(StockPrice.SYMBOLS.map { pair -> pair.first }
                     .toTypedArray())
             val stockPrices = mutableSetOf<StockPrice>()
             for (triple in StockPrice.SYMBOLS.iterator()) {
@@ -91,6 +91,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                         (recommendation.command as BuyStockCommand).commissionFee.roundToInt()
                     )
                 }
+
                 is SellStockCommand -> {
                     context.getString(
                         R.string.notification_recommendation_body_sell,
@@ -101,6 +102,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                         (recommendation.command as SellStockCommand).commissionFee.roundToInt()
                     )
                 }
+
                 else -> {
                     ""
                 }
@@ -117,10 +119,12 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                         R.string.generic_urge_buy,
                         recommendation.command.stockSymbol()
                     )
+
                     is SellStockCommand -> context.getString(
                         R.string.generic_urge_sell,
                         recommendation.command.stockSymbol()
                     )
+
                     else -> ""
                 }
             NotificationUtil.doPostRegularNotification(
@@ -131,7 +135,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             )
         }
 
-        private fun getRateInSek(currency: String) = YahooFinance.getFx("${currency}SEK=X").price.toDouble()
+        private fun getRateInSek(currency: String) = getFxHax("${currency}SEK=X").price.toDouble()
 
     }
 
@@ -141,7 +145,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             val asyncWork =
                 async {
                     val timeInterval = StockRetrievalSettings(context).timeInterval.value
-                            as StockRetrievalSettings.ViewState.VALUES
+                        as StockRetrievalSettings.ViewState.VALUES
                     val currentTime = LocalTime.now()
                     val currentDayOfWeek = LocalDate.now().dayOfWeek
                     val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
@@ -151,6 +155,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                             Log.i(TAG, "Initial retrieval of data.")
                             refreshFromYahoo(context)
                         }
+
                         timeInterval.weekDays.isWithinConfiguredTimeInterval(
                             currentDayOfWeek, currentTime,
                             fromTime, toTime
@@ -158,6 +163,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                             Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
                             refreshFromYahoo(context)
                         }
+
                         else -> {
                             Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
                         }
