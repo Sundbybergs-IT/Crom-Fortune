@@ -16,7 +16,6 @@ class CromFortuneApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        System.setProperty("yahoofinance.baseurl.quotesquery1v7", "https://query1.finance.yahoo.com/v6/finance/quote");
         System.setProperty("http.agent", "");
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
@@ -27,16 +26,18 @@ class CromFortuneApp : Application(), Configuration.Provider {
     private fun retrieveDataInBackground(workManager: WorkManager) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<StockDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
-                .setConstraints(constraints).build()
-        workManager.enqueueUniquePeriodicWork("fetchFromYahoo", ExistingPeriodicWorkPolicy.REPLACE,
-                stockRetrievalWorkRequest)
+            .setConstraints(constraints).build()
+        workManager.enqueueUniquePeriodicWork(
+            "fetchFromYahoo", ExistingPeriodicWorkPolicy.REPLACE,
+            stockRetrievalWorkRequest
+        )
     }
 
     override fun getWorkManagerConfiguration(): Configuration =
-            Configuration.Builder()
-                    .setExecutor(Executors.newSingleThreadExecutor())
-                    .setMinimumLoggingLevel(android.util.Log.INFO)
-                    .setWorkerFactory(StockRetrievalWorkerFactory())
-                    .build()
+        Configuration.Builder()
+            .setExecutor(Executors.newSingleThreadExecutor())
+            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .setWorkerFactory(StockRetrievalWorkerFactory())
+            .build()
 
 }
