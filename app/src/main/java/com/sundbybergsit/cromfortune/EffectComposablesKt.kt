@@ -48,14 +48,14 @@ internal fun ShowSnackbarLaunchedEffect(
         coroutineScope.launch {
             dialogHandler
                 .snackbarFlow
-                .collect { snackbarData ->
-                    if (snackbarData != null && snackbarData.isNotEmpty()) {
+                .collect { snackbar ->
+                    if (!snackbar.isNullOrEmpty()) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                         }
                         dialogHandler.acknowledgeSnack()
                         snackbarHostState.currentSnackbarData?.dismiss()
-                        snackbarHostState.showSnackbar(snackbarData)
+                        snackbarHostState.showSnackbar(snackbar)
                     }
                 }
         }
