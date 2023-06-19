@@ -1,7 +1,5 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import android.view.LayoutInflater
-import android.view.View
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -43,7 +41,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.accompanist.pager.HorizontalPager
@@ -60,9 +57,6 @@ import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.ButtonText
 import com.sundbybergsit.cromfortune.ui.DialogButton
 import com.sundbybergsit.cromfortune.ui.ValidatorException
-import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
-import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
-import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSplitDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import com.sundbybergsit.cromfortune.ui.validateDate
 import com.sundbybergsit.cromfortune.ui.validateDouble
@@ -87,35 +81,22 @@ fun Home(
         viewModel.refreshData(localContext)
     }
     val showRegisterBuyStocksDialog = remember { mutableStateOf(false) }
-    if (showRegisterBuyStocksDialog.value) {
-        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-        AndroidView(factory = { context ->
-            val dialog = RegisterBuyStockDialogFragment(viewModel)
-            dialog.onCreateView(
-                LayoutInflater.from(context), null, null
-            ) ?: View(context)
-        })
-    }
+    RegisterBuyStockAlertDialog(
+        showDialog = showRegisterBuyStocksDialog.value,
+        viewModel = viewModel,
+        onDismiss = { showRegisterBuyStocksDialog.value = false })
     val showRegisterSellStocksDialog = remember { mutableStateOf(false) }
-    if (showRegisterSellStocksDialog.value) {
-        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-        AndroidView(factory = { context ->
-            val dialog = RegisterSellStockDialogFragment(viewModel)
-            dialog.onCreateView(
-                LayoutInflater.from(context), null, null
-            ) ?: View(context)
-        })
-    }
+    RegisterSellStockAlertDialog(
+        showDialog = showRegisterSellStocksDialog.value,
+        viewModel = viewModel,
+        onDismiss = { showRegisterSellStocksDialog.value = false }
+    )
     val showRegisterSplitStocksDialog = remember { mutableStateOf(false) }
-    if (showRegisterSplitStocksDialog.value) {
-        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-        AndroidView(factory = { context ->
-            val dialog = RegisterSplitDialogFragment(viewModel)
-            dialog.onCreateView(
-                LayoutInflater.from(context), null, null
-            ) ?: View(context)
-        })
-    }
+    RegisterSplitStockAlertDialog(
+        showDialog = showRegisterSplitStocksDialog.value,
+        viewModel = viewModel,
+        onDismiss = { showRegisterSplitStocksDialog.value = false }
+    )
     val context = LocalContext.current
     Scaffold(topBar = {
         TopAppBar(title = {
@@ -175,6 +156,7 @@ fun Home(
                         is HomeViewModel.ViewState.HasStocks -> {
                             (viewModel.personalStocksViewState.value as HomeViewModel.ViewState.HasStocks).adapterItems
                         }
+
                         else -> {
                             listOf()
                         }
@@ -192,6 +174,7 @@ fun Home(
                         is HomeViewModel.ViewState.HasStocks -> {
                             (viewModel.cromStocksViewState.value as HomeViewModel.ViewState.HasStocks).adapterItems
                         }
+
                         else -> {
                             listOf()
                         }
@@ -514,12 +497,22 @@ fun RegisterBuyStockAlertDialog(
 }
 
 @Composable
+fun RegisterSellStockAlertDialog(showDialog: Boolean, viewModel: HomeViewModel, onDismiss: () -> Unit) {
+    // FIXME: Implement, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+}
+
+@Composable
+fun RegisterSplitStockAlertDialog(showDialog: Boolean, viewModel: HomeViewModel, onDismiss: () -> Unit) {
+    // FIXME: Implement, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+}
+
+@Composable
 private fun InputValidatedOutlinedTextField(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     value: MutableState<TextFieldValue>,
-    label: @Composable() (() -> Unit)? = null,
+    label: @Composable (() -> Unit)? = null,
     contentDescriptor: String,
     errorMessage: String,
     isError: Boolean,
