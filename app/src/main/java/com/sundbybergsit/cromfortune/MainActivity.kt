@@ -95,16 +95,7 @@ class MainActivity : ComponentActivity() {
 
         /* Displays the snackbar notification and call to action. */
         private fun popupSnackbarForCompleteUpdate() {
-            // FIXME: Re-add snackbars, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-//            Snackbar.make(
-//                    activity.findViewById(R.id.coordinatorLayout_activityMain),
-//                    activity.getString(R.string.generic_update_completed),
-//                    Snackbar.LENGTH_INDEFINITE
-//            ).apply {
-//                setAction("RESTART") { appUpdateManager.completeUpdate() }
-//                setActionTextColor(activity.resources.getColor(R.color.colorSecondary, null))
-//                show()
-//            }
+            DialogHandler.showSnack(activity.getString(R.string.generic_update_completed))
         }
 
     }
