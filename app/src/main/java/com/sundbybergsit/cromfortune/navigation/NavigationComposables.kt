@@ -6,10 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
@@ -19,8 +22,17 @@ import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +40,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.*
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -53,7 +67,6 @@ import com.sundbybergsit.cromfortune.ui.settings.*
 
 @Composable
 internal fun AppNavigation(navController: NavHostController) {
-    val scaffoldState = rememberScaffoldState()
     val bottomSheetNavigator = rememberBottomSheetNavigator()
     navController.navigatorProvider += bottomSheetNavigator
     ModalBottomSheetLayout(bottomSheetNavigator = bottomSheetNavigator) {
@@ -66,7 +79,45 @@ internal fun AppNavigation(navController: NavHostController) {
             view = view
         )
         Scaffold(
-            scaffoldState = scaffoldState,
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState) { hostData ->
+                    Snackbar {
+                        val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
+                        val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
+                        ConstraintLayout(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(backgroundColor),
+                        ) {
+                            val (textRef, leftLineRef) = createRefs()
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .background(lineColor)
+                                    .constrainAs(leftLineRef) {
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                        height = Dimension.fillToConstraints
+                                    }
+                                    .contentDescription("Left Line"),
+                            )
+                            androidx.compose.material3.Text(
+                                hostData.visuals.message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier
+                                    .constrainAs(textRef) {
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                        start.linkTo(leftLineRef.end, 18.dp)
+                                    }
+                                    .padding(end = 18.dp)
+                                    .contentDescription("Text"),
+                            )
+                        }
+                    }
+                }
+            },
             bottomBar = {
                 BottomNavigation(
                     onNavigationSelected = { selected ->
@@ -298,10 +349,10 @@ internal fun BottomNavigation(
     onNavigationSelected: (Screen) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    BottomNavigation(
+    androidx.compose.material.BottomNavigation(
         modifier = modifier.contentDescription("Bottom Navigation"),
-        backgroundColor = MaterialTheme.colors.surface.copy(alpha = MenuColorComposables.translucentBarAlpha()),
-        contentColor = contentColorFor(MaterialTheme.colors.surface),
+        backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = MenuColorComposables.translucentBarAlpha()),
+        contentColor = contentColorFor(MaterialTheme.colorScheme.surface),
         elevation = 8.dp,
     ) {
         // This is needed to "listen" to the back stack entry changing, even if android studio think its unused it doesnt work without it.
@@ -317,11 +368,11 @@ internal fun BottomNavigation(
                 label = {
                     Text(
                         text = stringResource(item.labelResId), color = if (isSelected) {
-                            MaterialTheme.colors.primary
+                            MaterialTheme.colorScheme.primary
                         } else {
-                            MaterialTheme.colors.onSurface
+                            MaterialTheme.colorScheme.onSurface
                         },
-                        style = MaterialTheme.typography.caption
+                        style = MaterialTheme.typography.labelSmall
                     )
                 },
                 selected = isSelected,
@@ -353,9 +404,9 @@ private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
         Crossfade(targetState = selected) {
             Icon(
                 tint = if (selected) {
-                    MaterialTheme.colors.primary
+                    MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colors.onSurface
+                    MaterialTheme.colorScheme.onSurface
                 },
                 painter = if (it) selectedPainter else painter,
                 contentDescription = stringResource(item.contentDescriptionResId),
@@ -363,7 +414,7 @@ private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
         }
     } else {
         Icon(
-            tint = MaterialTheme.colors.primary,
+            tint = MaterialTheme.colorScheme.primary,
             painter = painter,
             contentDescription = stringResource(item.contentDescriptionResId),
         )

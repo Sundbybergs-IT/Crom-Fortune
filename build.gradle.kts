@@ -47,7 +47,7 @@ allprojects {
                 "-Xjvm-default=all",
                 // Avoid having to stutter experimental annotations all over the codebase
                 "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
-                "-Xopt-in=androidx.compose.material.ExperimentalMaterialApi",
+                "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
                 "-Xopt-in=androidx.compose.runtime.ExperimentalComposeApi",
                 "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi",
                 "-Xopt-in=com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi",
