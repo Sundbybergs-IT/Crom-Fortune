@@ -47,9 +47,44 @@ private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
 fun RegisterSellStockAlertDialog(showDialog: Boolean, onDismiss: () -> Unit, onSave: (StockOrder) -> Unit) {
-    // FIXME: Implement, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
     if (showDialog) {
-
+        Dialog(onDismissRequest = onDismiss) {
+            val scrollState = rememberScrollState()
+            ConstraintLayout(
+                modifier = Modifier
+                    .background(MaterialTheme.colors.background)
+                    .verticalScroll(state = scrollState)
+            ) {
+                DialogButton(text = stringResource(id = R.string.action_cancel), onClick = onDismiss)
+                val context = LocalContext.current
+                DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
+                    // FIXME: Implement, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                    try {
+//                        inputDate.validateDate(inputLayoutDate, DATE_FORMAT)
+//                        inputCurrency.validateCurrency(inputLayoutCurrency)
+//                        inputStockQuantity.validateInt(inputLayoutStockQuantity)
+//                        inputStockName.validateStockName(inputLayoutStockName)
+//                        val stockSymbol = inputStockName.text.toString().substringAfterLast('(')
+//                            .substringBeforeLast(')')
+//                        validateHasStockQuantity(stockSymbol, inputStockQuantity, inputLayoutStockQuantity)
+//                        inputStockPrice.validateDouble(inputLayoutStockPrice)
+//                        inputCommissionFee.validateDouble(inputLayoutCommissionFee)
+//                        val dateAsString = inputDate.text.toString()
+//                        val date = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)!!
+//                        val currency = Currency.getInstance(inputCurrency.text.toString())
+                        // TODO: Convert commission fee (in SEK) to selected currency
+//                        val stockOrder = com.sundbybergsit.cromfortune.domain.StockOrder(
+//                            "Sell", currency.toString(), date.time, stockSymbol,
+//                            inputStockPrice.text.toString().toDouble(), inputCommissionFee.text.toString().toDouble(),
+//                            inputStockQuantity.text.toString().toInt()
+//                        )
+//                        onSave.invoke(stockOrder)
+                    } catch (e: ValidatorException) {
+                        // Shit happens ...
+                    }
+                })
+            }
+        }
     }
 }
 
