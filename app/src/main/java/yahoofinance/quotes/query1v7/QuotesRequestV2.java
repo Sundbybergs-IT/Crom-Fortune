@@ -106,6 +106,7 @@ public abstract class QuotesRequestV2<T> {
         redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
         Map<String, String> requestProperties = new HashMap<>();
         requestProperties.put("set-cookie", cookie);
+        requestProperties.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.2 Safari/605.1.15");
         URLConnection preConnection = redirectableRequest.openConnection(requestProperties);
 
         // Cast to HttpURLConnection to access additional methods
