@@ -5,8 +5,29 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.input.TextFieldValue
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
+
+fun TextFieldValue.validateStockQuantity(
+    context: Context,
+    errorMutableState: MutableState<Boolean>,
+    errorMessageMutableState: MutableState<String>,
+    stockName: String,
+    homeViewModel : HomeViewModel
+) {
+    when {
+        !homeViewModel.hasNumberOfStocks(context= context, stockName, quantity = text.toInt()) -> {
+            errorMutableState.value = true
+            errorMessageMutableState.value = context.getString(R.string.home_remove_stock_quantity_error_insufficient)
+            throw ValidatorException()
+        }
+        else -> {
+            errorMutableState.value = false
+            errorMessageMutableState.value = ""
+        }
+    }
+}
 
 fun TextFieldValue.validateMinQuantity(
     context: Context,

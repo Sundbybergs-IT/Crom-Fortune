@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.IdRes
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -24,8 +23,6 @@ import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateHeaderAdapterItem
-import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
-import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
 import java.text.NumberFormat
 import java.util.*
 
@@ -214,8 +211,8 @@ internal class StockOrderAggregateListAdapter(
                 requireViewById<View>(R.id.button_listrowStockItem_buy).visibility = View.INVISIBLE
             }
             requireViewById<Button>(R.id.button_listrowStockItem_buy).setOnClickListener {
-                val dialog = RegisterBuyStockDialogFragment(viewModel)
-                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
+//                val dialog = RegisterBuyStockDialogFragment(viewModel)
+//                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
 //                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }
@@ -225,8 +222,8 @@ internal class StockOrderAggregateListAdapter(
                 requireViewById<View>(R.id.button_listrowStockItem_sell).visibility = View.INVISIBLE
             }
             requireViewById<Button>(R.id.button_listrowStockItem_sell).setOnClickListener {
-                val dialog = RegisterSellStockDialogFragment(viewModel)
-                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
+//                val dialog = RegisterSellStockDialogFragment(viewModel)
+//                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
 //                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }

@@ -68,7 +68,8 @@ fun Home(
         onSave = { stockOrder ->
             viewModel.save(context = localContext, stockOrder = stockOrder)
             Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-        }
+        },
+        homeViewModel = viewModel
     )
     val showRegisterSplitStocksDialog = remember { mutableStateOf(false) }
     RegisterSplitStockAlertDialog(
