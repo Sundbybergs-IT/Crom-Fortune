@@ -14,11 +14,11 @@ val baseVersionName = ext.get("baseVersionName") as String
 
 android {
     namespace = "com.sundbybergsit.cromfortune"
-    compileSdk = 33
+    compileSdk = 34
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
         minSdk = 29
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 105
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

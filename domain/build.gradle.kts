@@ -9,10 +9,10 @@ val baseVersionName = ext.get("baseVersionName") as String
 
 android {
     namespace = "com.sundbybergsit.cromfortune.domain"
-    compileSdk = 33
+    compileSdk = 34
     defaultConfig {
         minSdk = 29
-        targetSdk = 33
+        targetSdk = 34
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
