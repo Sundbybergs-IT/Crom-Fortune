@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -16,6 +19,7 @@ import androidx.compose.material.TextButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -26,9 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
-import com.google.accompanist.pager.rememberPagerState
 import com.sundbybergsit.cromfortune.PagerStateChangeDetectionLaunchedEffect
 import com.sundbybergsit.cromfortune.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.R
@@ -47,7 +48,9 @@ import java.util.Currency
 @Composable
 fun Home(
     viewModel: HomeViewModel,
-    pagerState: PagerState = rememberPagerState(0)
+    personalStocksLiveData: State<HomeViewModel.ViewState> = viewModel.personalStocksViewState,
+    cromStocksLiveData: State<HomeViewModel.ViewState> = viewModel.cromStocksViewState,
+    pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
 ) {
     val localContext = LocalContext.current
     LaunchedEffect(key1 = "Test") {
@@ -129,15 +132,15 @@ fun Home(
             PagerStateSelectionHapticFeedbackLaunchedEffect(
                 pagerState = pagerState, view = view, changedState = changedPagerMutableState
             )
-            HorizontalPager(modifier = modifier, count = 2, state = pagerState) { page ->
+            HorizontalPager(modifier = modifier, state = pagerState) { page ->
                 PagerStateChangeDetectionLaunchedEffect(
                     pagerState = pagerState, changedPagerMutableState = changedPagerMutableState
                 )
                 val items: List<NameAndValueAdapterItem>
                 if (page == 0) {
-                    items = when (viewModel.personalStocksViewState.value) {
+                    items = when (personalStocksLiveData.value) {
                         is HomeViewModel.ViewState.HasStocks -> {
-                            (viewModel.personalStocksViewState.value as HomeViewModel.ViewState.HasStocks).adapterItems
+                            (personalStocksLiveData.value as HomeViewModel.ViewState.HasStocks).adapterItems
                         }
 
                         else -> {
@@ -153,9 +156,9 @@ fun Home(
                         stockPriceListener = stockPriceListener
                     )
                 } else {
-                    items = when (viewModel.cromStocksViewState.value) {
+                    items = when (cromStocksLiveData.value) {
                         is HomeViewModel.ViewState.HasStocks -> {
-                            (viewModel.cromStocksViewState.value as HomeViewModel.ViewState.HasStocks).adapterItems
+                            (cromStocksLiveData.value as HomeViewModel.ViewState.HasStocks).adapterItems
                         }
 
                         else -> {

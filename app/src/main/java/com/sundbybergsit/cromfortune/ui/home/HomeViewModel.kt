@@ -5,8 +5,8 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.runtime.MutableState
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.CromFortuneApp
@@ -32,13 +32,13 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     }
 
-    private val _cromStocksViewState = MutableState<ViewState>(ViewState.Loading)
-    private val _personalStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
-    private val _dialogViewState = MutableLiveData<DialogViewState>()
+    private val _cromStocksViewState: MutableState<ViewState> = mutableStateOf(ViewState.Loading)
+    private val _personalStocksViewState: MutableState<ViewState> = mutableStateOf(ViewState.Loading)
+    private val _dialogViewState: MutableState<DialogViewState> = mutableStateOf(DialogViewState.Dismissed)
 
-    val cromStocksViewState: LiveData<ViewState> = _cromStocksViewState
-    val personalStocksViewState: LiveData<ViewState> = _personalStocksViewState
-    val dialogViewState: LiveData<DialogViewState> = _dialogViewState
+    val cromStocksViewState: State<ViewState> = _cromStocksViewState
+    val personalStocksViewState: State<ViewState> = _personalStocksViewState
+    val dialogViewState: State<DialogViewState> = _dialogViewState
     private var showAll = false
 
     private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
@@ -106,17 +106,17 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     @SuppressLint("ApplySharedPref")
     override fun onClickRemove(context: Context, stockName: String) {
-        _dialogViewState.postValue(DialogViewState.ShowDeleteDialog(stockName))
+        _dialogViewState.value = DialogViewState.ShowDeleteDialog(stockName)
     }
 
     fun refresh(context: Context) {
         val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         if (stockEventRepository.isEmpty()) {
-            _cromStocksViewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
-            _personalStocksViewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
+            _cromStocksViewState.value = ViewState.HasNoStocks(R.string.home_no_stocks)
+            _personalStocksViewState.value = ViewState.HasNoStocks(R.string.home_no_stocks)
         } else {
             viewModelScope.launch {
-                _cromStocksViewState.postValue(
+                _cromStocksViewState.value =
                     ViewState.HasStocks(
                         R.string.home_stocks,
                         StockAggregateAdapterItemUtil.convertToAdapterItems(
@@ -126,8 +126,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                             )
                         )
                     )
-                )
-                _personalStocksViewState.postValue(
+                _personalStocksViewState.value =
                     ViewState.HasStocks(
                         R.string.home_stocks,
                         StockAggregateAdapterItemUtil.convertToAdapterItems(
@@ -137,7 +136,6 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                             )
                         )
                     )
-                )
             }
         }
     }
@@ -170,7 +168,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     }
 
     fun stocks(context: Context, lambda: (List<StockEvent>, Context) -> StockOrderAggregate):
-            List<StockOrderAggregate> {
+        List<StockOrderAggregate> {
         val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
         for (stockSymbol in stockEventRepository.listOfStockNames()) {
@@ -228,6 +226,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     }
 
     sealed class DialogViewState {
+
+        data object Dismissed : DialogViewState()
 
         data class ShowDeleteDialog(val stockName: String) : DialogViewState()
 
