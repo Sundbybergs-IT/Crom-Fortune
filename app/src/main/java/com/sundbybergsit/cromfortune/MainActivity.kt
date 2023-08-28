@@ -48,7 +48,9 @@ class MainActivity : ComponentActivity() {
             }
         }
         val reviewManager = ReviewManagerFactory.create(this)
-        appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this, appUpdateManager))
+        // FIXME: Crashes with:
+        // Caused by: java.lang.SecurityException: com.sundbybergsit.cromfortune: One of RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED should be specified when a receiver isn't being registered exclusively for system broadcasts
+        //appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this, appUpdateManager))
         if (StockOrderRepositoryImpl(this).countAll() > 4) {
             Log.i(TAG, "Time to nag about reviews! :-)")
             val request = reviewManager.requestReviewFlow()
