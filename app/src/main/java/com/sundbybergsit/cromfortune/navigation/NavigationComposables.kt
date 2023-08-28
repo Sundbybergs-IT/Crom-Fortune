@@ -45,9 +45,9 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.*
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
@@ -101,7 +101,7 @@ internal fun AppNavigation(navController: NavHostController) {
                                     }
                                     .contentDescription("Left Line"),
                             )
-                            androidx.compose.material3.Text(
+                            Text(
                                 hostData.visuals.message,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimary,
@@ -121,7 +121,7 @@ internal fun AppNavigation(navController: NavHostController) {
             bottomBar = {
                 BottomNavigation(
                     onNavigationSelected = { selected ->
-                        if (getLastRoot(navController = navController) == selected.route && navController.currentDestination?.route != selected.route) {
+                        if (navController.getLastRootRoute(bottomNavigationItems) == selected.route && navController.currentDestination?.route != selected.route) {
                             navController.navigate(selected.route) {
                                 popUpTo(selected.route)
                                 launchSingleTop = true
@@ -144,7 +144,7 @@ internal fun AppNavigation(navController: NavHostController) {
             }
         ) { innerPadding ->
             Box(Modifier.padding(innerPadding)) {
-                AnimatedNavHost(
+                NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,
                     enterTransition = { defaultCromEnterTransition(initialState, targetState) },
@@ -304,7 +304,7 @@ private fun SettingsItems(
     )
 }
 
-private fun AnimatedContentScope<*>.defaultCromEnterTransition(
+private fun AnimatedContentTransitionScope<*>.defaultCromEnterTransition(
     initial: NavBackStackEntry,
     target: NavBackStackEntry,
 ): EnterTransition {
@@ -315,10 +315,10 @@ private fun AnimatedContentScope<*>.defaultCromEnterTransition(
         return fadeIn()
     }
     // Otherwise we're in the same nav graph, we can imply a direction
-    return fadeIn() + slideIntoContainer(AnimatedContentScope.SlideDirection.Start)
+    return fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
 }
 
-private fun AnimatedContentScope<*>.defaultCromExitTransition(
+private fun AnimatedContentTransitionScope<*>.defaultCromExitTransition(
     initial: NavBackStackEntry,
     target: NavBackStackEntry,
 ): ExitTransition {
@@ -329,18 +329,18 @@ private fun AnimatedContentScope<*>.defaultCromExitTransition(
         return fadeOut()
     }
     // Otherwise we're in the same nav graph, we can imply a direction
-    return fadeOut() + slideOutOfContainer(AnimatedContentScope.SlideDirection.Start)
+    return fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start)
 }
 
 private val NavDestination.hostNavGraph: NavGraph
     get() = hierarchy.first { it is NavGraph } as NavGraph
 
-private fun AnimatedContentScope<*>.defaultCromPopEnterTransition(): EnterTransition {
-    return fadeIn() + slideIntoContainer(AnimatedContentScope.SlideDirection.End)
+private fun AnimatedContentTransitionScope<*>.defaultCromPopEnterTransition(): EnterTransition {
+    return fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End)
 }
 
-private fun AnimatedContentScope<*>.defaultCromPopExitTransition(): ExitTransition {
-    return fadeOut() + slideOutOfContainer(AnimatedContentScope.SlideDirection.End)
+private fun AnimatedContentTransitionScope<*>.defaultCromPopExitTransition(): ExitTransition {
+    return fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
 }
 
 @Composable
@@ -359,7 +359,7 @@ internal fun BottomNavigation(
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         @Suppress("UNUSED_VARIABLE") val currentDestination = navBackStackEntry?.destination
 
-        val selectedRoute = getLastRoot(navController)
+        val selectedRoute = navController.getLastRootRoute(bottomNavigationItems)
 
         bottomNavigationItems.forEach { item ->
             val isSelected = selectedRoute == item.screen.route
@@ -381,15 +381,6 @@ internal fun BottomNavigation(
         }
     }
 }
-
-/**
- * Here we evaluate the last "root" we were at, by reversing the backstack and picking the first item that is a root item.
- * And since it starts at null we default to Home.
- */
-private fun getLastRoot(navController: NavHostController) =
-    navController.backQueue.lastOrNull { backItem ->
-        bottomNavigationItems.map { it.screen.route }.any { it == backItem.destination.route }
-    }?.destination?.route ?: Screen.Home.route
 
 @Composable
 private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
@@ -421,7 +412,7 @@ private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
     }
 }
 
-private sealed class NavigationItem(
+internal sealed class NavigationItem(
     val screen: Screen,
     @StringRes val labelResId: Int,
     @StringRes val contentDescriptionResId: Int,
