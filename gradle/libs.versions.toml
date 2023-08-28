@@ -15,7 +15,6 @@ androidx-test-junit = "1.1.5"
 androidx-test-monitor = "1.6.1"
 androidx-test-runner = "1.5.2"
 androidx-work = "2.8.1"
-desugar-jdk-libs = "1.1.5"
 google-material = "1.9.0"
 google-playCore-ktx = "1.8.1"
 junit = "4.13.2"
@@ -58,7 +57,6 @@ androidxTestRunner = { module = "androidx.test:runner", version.ref = "androidx-
 androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 googleMaterial = { module = "com.google.android.material:material", version.ref = "google-material" }
 googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore-ktx" }
 junit = { module = "junit:junit", version.ref = "junit" }
