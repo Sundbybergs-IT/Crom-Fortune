@@ -104,7 +104,6 @@ fun RegisterSplitStockAlertDialog(showDialog: Boolean, onDismiss: () -> Unit, on
 fun RegisterBuyStockAlertDialog(
     showDialog: Boolean, onDismiss: () -> Unit, onSave: (StockOrder) -> Unit
 ) {
-    // FIXME: Convert RegisterBuyStockDialogFragment into a composable
     if (showDialog) {
         Dialog(onDismissRequest = onDismiss) {
             val scrollState = rememberScrollState()
@@ -125,9 +124,7 @@ fun RegisterBuyStockAlertDialog(
                 val myCalendar = Calendar.getInstance()
                 val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
                 val dateMutableState: MutableState<TextFieldValue> = remember {
-                    mutableStateOf(
-                        TextFieldValue(text = sdf.format(myCalendar.time))
-                    )
+                    mutableStateOf(TextFieldValue(text = sdf.format(myCalendar.time)))
                 }
                 val dateErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
                 val dateErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
@@ -229,7 +226,6 @@ fun RegisterBuyStockAlertDialog(
                     errorMessage = priceErrorMessageMutableState.value,
                     contentDescriptor = "Stock Price Input Text"
                 )
-                // FIXME: Fill in currency automatically based on chosen stock
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
