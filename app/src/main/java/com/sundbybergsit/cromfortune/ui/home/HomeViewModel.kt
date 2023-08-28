@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.annotation.StringRes
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -31,7 +32,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     }
 
-    private val _cromStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
+    private val _cromStocksViewState = MutableState<ViewState>(ViewState.Loading)
     private val _personalStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
     private val _dialogViewState = MutableLiveData<DialogViewState>()
 
@@ -234,7 +235,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     sealed class ViewState {
 
-        object Loading : ViewState()
+        data object Loading : ViewState()
 
         data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<NameAndValueAdapterItem>) :
             ViewState()
