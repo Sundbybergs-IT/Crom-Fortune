@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,7 +26,7 @@ fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit, onNavigateTo: (St
     Scaffold(topBar = {
         TopAppBar(
             title = {
-                Text(text = stringResource(id = R.string.settings_title), style = MaterialTheme.typography.h6)
+                Text(text = stringResource(id = R.string.settings_title), style = MaterialTheme.typography.titleMedium)
             },
             navigationIcon = {
                 IconButton(onClick = onBack) {
@@ -47,12 +47,12 @@ fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit, onNavigateTo: (St
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(id = R.string.settings_default_values),
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = stringResource(id = R.string.generic_error_not_supported),
-                    style = MaterialTheme.typography.body1, textAlign = TextAlign.Center
+                    style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
                 )
                 // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
             }

@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,7 +18,7 @@ fun BottomSheetContent(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .wrapContentSize()
-            .background(color = MaterialTheme.colors.surface)
+            .background(color = MaterialTheme.colorScheme.surface)
             .padding(8.dp)
     ) {
         content.invoke()
@@ -34,8 +34,8 @@ fun BottomSheetMenuItem(text: String, onClick: () -> Unit, enabled: Boolean = tr
         text = {
             Text(
                 text = text,
-                style = MaterialTheme.typography.body1,
-                color = if (enabled) MaterialTheme.colors.onSurface else MaterialTheme.colors.onSurface.disabled()
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.disabled()
             )
         }
     )

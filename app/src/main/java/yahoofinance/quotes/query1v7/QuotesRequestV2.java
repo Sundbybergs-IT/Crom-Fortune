@@ -73,6 +73,7 @@ public abstract class QuotesRequestV2<T> {
         Map<String, String> params = new LinkedHashMap<String, String>();
         params.put("symbols", this.symbols);
         params.put("crumb", crumb);
+        params.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.2 Safari/605.1.15");
 
         String url = YahooFinance.QUOTES_QUERY1V7_BASE_URL + "?" + Utils.getURLParameters(params);
 

@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.InstallState
@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                AppNavigation(navController = rememberAnimatedNavController())
+                AppNavigation(navController = rememberNavController())
             }
         }
 

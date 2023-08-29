@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -86,7 +86,7 @@ fun Home(
     val context = LocalContext.current
     Scaffold(topBar = {
         TopAppBar(title = {
-            Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.h6)
+            Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.titleMedium)
         }, actions = {
             TextButton(onClick = {
                 showRegisterBuyStocksDialog.value = true
@@ -232,7 +232,7 @@ private fun StockOrderAggregates(
                 } else if (item is StockAggregateAdapterItem) {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Column {
-                            Text(text = item.name, style = MaterialTheme.typography.body1)
+                            Text(text = item.name, style = MaterialTheme.typography.bodyMedium)
                             // FIXME: Add quantity
                         }
                         val format: NumberFormat = NumberFormat.getCurrencyInstance()
@@ -240,7 +240,7 @@ private fun StockOrderAggregates(
                         format.maximumFractionDigits = 2
                         Text(
                             text = format.format(stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price),
-                            style = MaterialTheme.typography.body1
+                            style = MaterialTheme.typography.bodyMedium
                         )
 
                         // FIXME: Add overflow menu with quick actions (remove), issues/21

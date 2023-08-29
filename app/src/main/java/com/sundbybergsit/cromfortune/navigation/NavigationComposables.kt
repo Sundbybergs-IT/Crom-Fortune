@@ -53,7 +53,6 @@ import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.sundbybergsit.cromfortune.*
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.theme.MenuColorComposables
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModelFactory
@@ -351,7 +350,7 @@ internal fun BottomNavigation(
 ) {
     androidx.compose.material.BottomNavigation(
         modifier = modifier.contentDescription("Bottom Navigation"),
-        backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = MenuColorComposables.translucentBarAlpha()),
+        backgroundColor = MaterialTheme.colorScheme.surface,
         contentColor = contentColorFor(MaterialTheme.colorScheme.surface),
         elevation = 8.dp,
     ) {
