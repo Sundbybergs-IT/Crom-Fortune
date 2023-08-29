@@ -2,8 +2,10 @@ package com.sundbybergsit.cromfortune
 
 sealed class LeafScreen(val route: String) {
 
-    object BottomSheetsNotifications : LeafScreen("bottom-sheet/notifications")
+    data object BottomSheetsHome : LeafScreen("bottom-sheet/home")
 
-    object BottomSheetsSettings : LeafScreen("bottom-sheet/settings")
+    data object BottomSheetsNotifications : LeafScreen("bottom-sheet/notifications")
+
+    data object BottomSheetsSettings : LeafScreen("bottom-sheet/settings")
 
 }

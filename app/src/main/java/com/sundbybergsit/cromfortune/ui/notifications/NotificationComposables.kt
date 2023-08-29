@@ -3,11 +3,26 @@ package com.sundbybergsit.cromfortune.ui.notifications
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,7 +39,7 @@ import com.sundbybergsit.cromfortune.OverflowMenu
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 @Composable
 fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit, onNavigateTo: (String) -> Unit) {
@@ -37,8 +52,15 @@ fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit, onNavig
     Scaffold(topBar = {
         TopAppBar(
             title = {
-                Text(text = stringResource(id = R.string.notifications_title), style = MaterialTheme.typography.h6)
-            },
+                Text(
+                    text = stringResource(id = R.string.notifications_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back Icon")
@@ -81,20 +103,21 @@ fun Notifications(viewModel: NotificationsViewModel, onBack: () -> Unit, onNavig
                                 NotificationsTab(
                                     notification = newNotification,
                                     backgroundColor = if (page % 2 == 0) {
-                                        MaterialTheme.colors.secondary
+                                        MaterialTheme.colorScheme.secondary
                                     } else {
-                                        MaterialTheme.colors.background
+                                        MaterialTheme.colorScheme.background
                                     }, formatter = formatter
                                 )
                             }
+
                             1 -> {
                                 val oldNotification = viewModel.oldNotifications.value.elementAt(page)
                                 NotificationsTab(
                                     notification = oldNotification,
                                     backgroundColor = if (page % 2 == 0) {
-                                        MaterialTheme.colors.secondary
+                                        MaterialTheme.colorScheme.secondary
                                     } else {
-                                        MaterialTheme.colors.background
+                                        MaterialTheme.colorScheme.background
                                     }, formatter = formatter
                                 )
                             }
@@ -134,10 +157,14 @@ fun NotificationsTab(
                 modifier = Modifier.weight(1f),
                 text = formatter.format(Date(notification.dateInMillis)),
                 textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodySmall,
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(modifier = Modifier.weight(1f), text = notification.message, style = MaterialTheme.typography.body2)
+            Text(
+                modifier = Modifier.weight(1f),
+                text = notification.message,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }

@@ -14,9 +14,10 @@ import androidx.compose.material.Icon
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -30,6 +31,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.sundbybergsit.cromfortune.LeafScreen
+import com.sundbybergsit.cromfortune.OverflowMenu
 import com.sundbybergsit.cromfortune.PagerStateChangeDetectionLaunchedEffect
 import com.sundbybergsit.cromfortune.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.R
@@ -37,7 +40,6 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.ui.ButtonText
 import com.sundbybergsit.cromfortune.ui.RegisterBuyStockAlertDialog
 import com.sundbybergsit.cromfortune.ui.RegisterSellStockAlertDialog
 import com.sundbybergsit.cromfortune.ui.RegisterSplitStockAlertDialog
@@ -50,129 +52,112 @@ fun Home(
     viewModel: HomeViewModel,
     personalStocksLiveData: State<HomeViewModel.ViewState> = viewModel.personalStocksViewState,
     cromStocksLiveData: State<HomeViewModel.ViewState> = viewModel.cromStocksViewState,
-    pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
+    pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 }),
+    onNavigateTo: (String) -> Unit
 ) {
     val localContext = LocalContext.current
     LaunchedEffect(key1 = "Test") {
         viewModel.refreshData(localContext)
     }
-    val showRegisterBuyStocksDialog = remember { mutableStateOf(false) }
     RegisterBuyStockAlertDialog(
-        showDialog = showRegisterBuyStocksDialog.value,
-        onDismiss = { showRegisterBuyStocksDialog.value = false }
+        showDialog = viewModel.showRegisterBuyStocksDialog.value,
+        onDismiss = { viewModel.showRegisterBuyStocksDialog.value = false }
     ) { stockOrder ->
         viewModel.save(context = localContext, stockOrder = stockOrder)
         Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
     }
-    val showRegisterSellStocksDialog = remember { mutableStateOf(false) }
     RegisterSellStockAlertDialog(
-        showDialog = showRegisterSellStocksDialog.value,
-        onDismiss = { showRegisterSellStocksDialog.value = false },
+        showDialog = viewModel.showRegisterSellStocksDialog.value,
+        onDismiss = { viewModel.showRegisterSellStocksDialog.value = false },
         onSave = { stockOrder ->
             viewModel.save(context = localContext, stockOrder = stockOrder)
             Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
         },
         homeViewModel = viewModel
     )
-    val showRegisterSplitStocksDialog = remember { mutableStateOf(false) }
     RegisterSplitStockAlertDialog(
-        showDialog = showRegisterSplitStocksDialog.value,
-        onDismiss = { showRegisterSplitStocksDialog.value = false },
+        showDialog = viewModel.showRegisterSplitStocksDialog.value,
+        onDismiss = { viewModel.showRegisterSplitStocksDialog.value = false },
         onSave = { stockSplit ->
             viewModel.save(context = localContext, stockSplit = stockSplit)
             Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
         }
     )
-    val context = LocalContext.current
+    val stockPriceListener: StockPriceListener = object : StockPriceListener {
+        override fun getStockPrice(stockSymbol: String): StockPrice {
+            return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
+        }
+    }
     Scaffold(topBar = {
         TopAppBar(title = {
             Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.titleMedium)
-        }, actions = {
-            TextButton(onClick = {
-                showRegisterBuyStocksDialog.value = true
-            }) {
-                ButtonText(
-                    text = stringResource(id = R.string.action_stock_buy)
-                )
-            }
-            TextButton(onClick = {
-                showRegisterSellStocksDialog.value = true
-            }) {
-                ButtonText(
-                    text = stringResource(id = R.string.action_stock_sell)
-                )
-            }
-            TextButton(onClick = {
-                showRegisterSplitStocksDialog.value = true
-            }) {
-                ButtonText(
-                    text = stringResource(id = R.string.action_stock_add_split)
-                )
-            }
-            TextButton(onClick = {
-                viewModel.refreshData(context)
-                Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
-            }) {
-                ButtonText(
-                    text = stringResource(id = R.string.action_refresh)
-                )
-            }
+        }, colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ), actions = {
+            OverflowMenu(
+                onNavigateTo = onNavigateTo, contentDescription = "Notifications Menu",
+                route = LeafScreen.BottomSheetsHome.route
+            )
         })
     }) { paddingValues ->
-        val modifier = Modifier.fillMaxSize()
-        val stockPriceListener: StockPriceListener = object : StockPriceListener {
-            override fun getStockPrice(stockSymbol: String): StockPrice {
-                return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
-            }
-        }
-        Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
-            // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-            val changedPagerMutableState = remember { mutableStateOf(false) }
-            val view = LocalView.current
-            PagerStateSelectionHapticFeedbackLaunchedEffect(
-                pagerState = pagerState, view = view, changedState = changedPagerMutableState
-            )
-            HorizontalPager(modifier = modifier, state = pagerState) { page ->
-                PagerStateChangeDetectionLaunchedEffect(
-                    pagerState = pagerState, changedPagerMutableState = changedPagerMutableState
-                )
-                val items: List<NameAndValueAdapterItem>
-                if (page == 0) {
-                    items = when (personalStocksLiveData.value) {
-                        is HomeViewModel.ViewState.HasStocks -> {
-                            (personalStocksLiveData.value as HomeViewModel.ViewState.HasStocks).adapterItems
-                        }
+        Surface {
+            ConstraintLayout(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
+                    // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                    val changedPagerMutableState = remember { mutableStateOf(false) }
+                    val view = LocalView.current
+                    PagerStateSelectionHapticFeedbackLaunchedEffect(
+                        pagerState = pagerState, view = view, changedState = changedPagerMutableState
+                    )
+                    HorizontalPager(modifier = Modifier.fillMaxSize(), state = pagerState) { page ->
+                        PagerStateChangeDetectionLaunchedEffect(
+                            pagerState = pagerState, changedPagerMutableState = changedPagerMutableState
+                        )
+                        val items: List<NameAndValueAdapterItem>
+                        if (page == 0) {
+                            items = when (personalStocksLiveData.value) {
+                                is HomeViewModel.ViewState.HasStocks -> {
+                                    (personalStocksLiveData.value as HomeViewModel.ViewState.HasStocks).adapterItems
+                                }
 
-                        else -> {
-                            listOf()
+                                else -> {
+                                    listOf()
+                                }
+                            }
+                            StockOrderAggregates(
+                                modifier = Modifier.fillMaxSize(),
+                                title = stringResource(id = R.string.home_stocks_personal_title),
+                                fabActive = true,
+                                viewModel = viewModel,
+                                items = items,
+                                stockPriceListener = stockPriceListener
+                            )
+                        } else {
+                            items = when (cromStocksLiveData.value) {
+                                is HomeViewModel.ViewState.HasStocks -> {
+                                    (cromStocksLiveData.value as HomeViewModel.ViewState.HasStocks).adapterItems
+                                }
+
+                                else -> {
+                                    listOf()
+                                }
+                            }
+                            StockOrderAggregates(
+                                modifier = Modifier.fillMaxSize(),
+                                title = stringResource(id = R.string.home_stocks_crom_title),
+                                fabActive = false,
+                                viewModel = viewModel,
+                                items = items,
+                                stockPriceListener = stockPriceListener
+                            )
                         }
                     }
-                    StockOrderAggregates(
-                        modifier = modifier,
-                        title = stringResource(id = R.string.home_stocks_personal_title),
-                        fabActive = true,
-                        viewModel = viewModel,
-                        items = items,
-                        stockPriceListener = stockPriceListener
-                    )
-                } else {
-                    items = when (cromStocksLiveData.value) {
-                        is HomeViewModel.ViewState.HasStocks -> {
-                            (cromStocksLiveData.value as HomeViewModel.ViewState.HasStocks).adapterItems
-                        }
-
-                        else -> {
-                            listOf()
-                        }
-                    }
-                    StockOrderAggregates(
-                        modifier = modifier,
-                        title = stringResource(id = R.string.home_stocks_crom_title),
-                        fabActive = false,
-                        viewModel = viewModel,
-                        items = items,
-                        stockPriceListener = stockPriceListener
-                    )
                 }
             }
         }

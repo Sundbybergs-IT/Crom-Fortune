@@ -41,6 +41,10 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     val dialogViewState: State<DialogViewState> = _dialogViewState
     private var showAll = false
 
+    val showRegisterBuyStocksDialog: MutableState<Boolean> = mutableStateOf(false)
+    val showRegisterSellStocksDialog: MutableState<Boolean> = mutableStateOf(false)
+    val showRegisterSplitStocksDialog: MutableState<Boolean> = mutableStateOf(false)
+
     private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
         { stockEvents, context ->
             val sortedStockEvents = stockEvents.sortedBy { it.dateInMillis }
