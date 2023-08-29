@@ -1,9 +1,6 @@
 package com.sundbybergsit.cromfortune
 
 import android.util.Log
-import androidx.compose.material.SnackbarData
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

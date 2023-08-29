@@ -1,10 +1,10 @@
 package com.sundbybergsit.cromfortune.ui
 
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,7 +17,7 @@ internal fun DialogButton(modifier: Modifier = Modifier, text: String, onClick: 
     Button(
         modifier = modifier.height(buttonHeightInDp), onClick = onClick, border = null,
         elevation = null,
-        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background)
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background)
     ) {
         ButtonText(text = text)
     }
@@ -25,5 +25,5 @@ internal fun DialogButton(modifier: Modifier = Modifier, text: String, onClick: 
 
 @Composable
 internal fun ButtonText(text: String, color: Color = Color.Unspecified) {
-    Text(text = text, style = MaterialTheme.typography.button, color = color)
+    Text(text = text, style = MaterialTheme.typography.labelLarge, color = color)
 }

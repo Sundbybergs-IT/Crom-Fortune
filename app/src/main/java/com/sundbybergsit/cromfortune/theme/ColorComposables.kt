@@ -1,15 +1,8 @@
 package com.sundbybergsit.cromfortune.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.Colors
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
-
-val Colors.onSurfaceVariant: Color
-    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFECECEC) else Color(0xFF707070)
 
 internal val PrimaryColor = Color(0XFFBD516D)
 internal val PrimaryColorVariant = Color(0XFF8B3952)
@@ -18,13 +11,14 @@ internal val SecondaryVariantColor = Color(0XFFD0D0BF)
 internal val ProfitColor = Color(0XFF0050EF)
 internal val LossColor = Color(0XFFA20025)
 
-internal val LightColors = lightColors(
+internal val LightColors = lightColorScheme(
     primary = PrimaryColor,
-    primaryVariant = PrimaryColorVariant,
+    primaryContainer = PrimaryColorVariant,
     secondary = SecondaryColor,
-    secondaryVariant = SecondaryVariantColor,
+    secondaryContainer = SecondaryVariantColor,
     background = Color.White,
     surface = Color.White,
+    onSurfaceVariant = Color(0xFF707070),
     error = LossColor,
     onPrimary = Color.White,
     onSecondary = Color.Black,
@@ -33,22 +27,19 @@ internal val LightColors = lightColors(
     onError = Color.White,
 )
 
-internal val DarkColors = darkColors(
+internal val DarkColors = darkColorScheme(
     primary = PrimaryColor,
-    primaryVariant = PrimaryColorVariant,
+    primaryContainer = PrimaryColorVariant,
     secondary = LightColors.secondary,
-    secondaryVariant = LightColors.secondaryVariant,
+    secondaryContainer = LightColors.secondaryContainer,
     // Default colors inherited from Material theme
     background = Color(0xFF121212),
     surface = Color(0xFF121212),
+    onSurfaceVariant = Color(0xFFECECEC),
     error = Color(0xFFCF6679),
     onPrimary = Color.White,
     onSecondary = Color.White,
     onBackground = Color.White,
     onSurface = Color.White,
     onError = Color.Black
-).withBrandedSurface()
-
-fun Colors.withBrandedSurface() = copy(
-    surface = primary.copy(alpha = 0.08f).compositeOver(this.surface),
 )
