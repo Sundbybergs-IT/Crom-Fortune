@@ -4,9 +4,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +41,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                     (viewState as StockPriceRepository.ViewState.VALUES).stockPrices
                 )
             }
+
             else -> {
                 // Do nothing
             }
@@ -43,8 +50,12 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
     Scaffold(topBar = {
         TopAppBar(
             title = {
-                Text(text = stringResource(id = R.string.dashboard_title), style = MaterialTheme.typography.h6)
-            },
+                Text(text = stringResource(id = R.string.dashboard_title), style = MaterialTheme.typography.titleMedium)
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back Icon")
@@ -77,7 +88,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     }, text = viewModel.score.value ?: "",
-                style = MaterialTheme.typography.subtitle1, color = MaterialTheme.colors.onSurface
+                style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
