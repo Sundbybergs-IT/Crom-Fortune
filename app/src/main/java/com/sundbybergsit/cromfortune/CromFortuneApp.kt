@@ -28,7 +28,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
         val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<StockDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
             .setConstraints(constraints).build()
         workManager.enqueueUniquePeriodicWork(
-            "fetchFromYahoo", ExistingPeriodicWorkPolicy.REPLACE,
+            "fetchFromYahoo", ExistingPeriodicWorkPolicy.UPDATE,
             stockRetrievalWorkRequest
         )
     }
