@@ -261,8 +261,46 @@ private fun NavGraphBuilder.addNotificationsBottomSheet() {
 
 private fun NavGraphBuilder.addSettingsBottomSheet() {
     bottomSheet(route = LeafScreen.BottomSheetsSettings.route) {
+        val context = LocalContext.current
+        val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = {
+            SettingsViewModelFactory()
+        })
+        if (settingsViewModel.showStockRetrievalTimeIntervalsDialog.value) {
+            // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+            AndroidView(factory = { context ->
+                val dialog = TimeIntervalStockRetrievalDialogFragment()
+                dialog.onCreateView(
+                    LayoutInflater.from(context),
+                    null,
+                    null
+                ) ?: View(context)
+            })
+        }
+        if (settingsViewModel.showSupportedStocksDialog.value) {
+            // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+            AndroidView(factory = { context ->
+                val dialog = SupportedStockDialogFragment()
+                dialog.onCreateView(
+                    LayoutInflater.from(context),
+                    null,
+                    null
+                ) ?: View(context)
+            })
+        }
         BottomSheetContent {
-            SettingsItems()
+            SettingsItems(
+                onShowSupportedStocks = { settingsViewModel._showSupportedStocksDialog.value = true },
+                onShowStockRetrievalTimeIntervals = {
+                    settingsViewModel._showStockRetrievalTimeIntervalsDialog.value = true
+                },
+                onShowTodo = {
+                    val browserIntent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://github.com/Sundbybergs-IT/Crom-Fortune/issues")
+                    )
+                    context.startActivity(browserIntent)
+                }
+            )
         }
     }
 }
@@ -297,49 +335,20 @@ private fun NotificationsItems(onClear: () -> Unit) {
 
 @Composable
 private fun SettingsItems(
-    showStockRetrievalTimeIntervalsDialog: MutableState<Boolean> = remember { mutableStateOf(false) },
-    showSupportedStocksDialog: MutableState<Boolean> = remember { mutableStateOf(false) }
+    onShowSupportedStocks: () -> Unit,
+    onShowStockRetrievalTimeIntervals: () -> Unit,
+    onShowTodo: () -> Unit,
 ) {
-
-    if (showStockRetrievalTimeIntervalsDialog.value) {
-        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-        AndroidView(factory = { context ->
-            val dialog = TimeIntervalStockRetrievalDialogFragment()
-            dialog.onCreateView(
-                LayoutInflater.from(context),
-                null,
-                null
-            ) ?: View(context)
-        })
-    }
-    if (showSupportedStocksDialog.value) {
-        // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-        AndroidView(factory = { context ->
-            val dialog = SupportedStockDialogFragment()
-            dialog.onCreateView(
-                LayoutInflater.from(context),
-                null,
-                null
-            ) ?: View(context)
-        })
-    }
     BottomSheetMenuItem(
-        onClick = { showStockRetrievalTimeIntervalsDialog.value = true },
+        onClick = onShowStockRetrievalTimeIntervals,
         text = stringResource(id = R.string.action_configure_stock_retrieval_intervals)
     )
     BottomSheetMenuItem(
-        onClick = { showSupportedStocksDialog.value = true },
+        onClick = onShowSupportedStocks,
         text = stringResource(id = R.string.action_stocks_supported)
     )
-    val context = LocalContext.current
     BottomSheetMenuItem(
-        onClick = {
-            val browserIntent = Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse("https://github.com/Sundbybergs-IT/Crom-Fortune/issues")
-            )
-            context.startActivity(browserIntent)
-        },
+        onClick = onShowTodo,
         text = stringResource(id = R.string.generic_to_do)
     )
 }
