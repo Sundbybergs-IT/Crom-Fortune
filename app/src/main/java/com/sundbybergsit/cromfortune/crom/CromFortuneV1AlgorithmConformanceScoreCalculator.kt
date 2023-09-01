@@ -10,7 +10,7 @@ import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import java.util.*
+import java.util.Currency
 
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {
 
@@ -40,8 +40,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 .map { stockEvent -> stockEvent.stockOrder!! }
                 .sortedBy { stockOrder -> stockOrder.dateInMillis }.toMutableList()
             val firstStockOrderForStock = stockOrdersForStock.first()
-            val currencyRateInSek = (currencyRateRepository.currencyRates.value as
-                    CurrencyRateRepository.ViewState.VALUES).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
+            val currencyRateInSek =
+                currencyRateRepository.currencyRates.value?.currencyRates?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
             val stockOrderAggregate = StockOrderAggregate(
                 rateInSek = currencyRateInSek,
                 displayName = "FIXME",
@@ -50,7 +50,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
             )
             val allSortedStockEvents = stockEvents.filter { stockEvent ->
                 (stockEvent.stockOrder != null && stockEvent.stockOrder!!.name == stockOrderAggregate.stockSymbol ||
-                        (stockEvent.stockSplit != null && stockEvent.stockSplit!!.name == stockOrderAggregate.stockSymbol))
+                    (stockEvent.stockSplit != null && stockEvent.stockSplit!!.name == stockOrderAggregate.stockSymbol))
             }.sortedBy { stockEvent -> stockEvent.dateInMillis }
             allSortedStockEvents.forEachIndexed { index, stockEvent ->
                 if (!firstItemAdded) {
@@ -58,9 +58,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                         stockEvent.stockOrder == null -> {
                             // Ignore other types of events before the first purchase order
                         }
+
                         stockEvent.stockOrder!!.orderAction != "Buy" -> {
                             throw IllegalStateException("First order must be a buy order!")
                         }
+
                         else -> {
                             correctDecision += 1
                             firstItemAdded = true
@@ -72,9 +74,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 } else if (stockEvent.stockOrder != null) {
                     stockOrderAggregate.aggregate(stockEvent)
                     val stockOrder = stockEvent.stockOrder!!
-                    val currencyRate = (currencyRateRepository.currencyRates.value as
-                            CurrencyRateRepository.ViewState.VALUES).currencyRates
-                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!
+                    val currencyRate = currencyRateRepository.currencyRates?.value?.currencyRates
+                        ?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!
                     val currencyRateInSek = currencyRate.rateInSek
                     val recommendation = recommendationAlgorithm.getRecommendation(
                         stockPrice = StockPrice(
@@ -107,9 +108,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
             stockOrders.size <= 1 -> {
                 ConformanceScore(100)
             }
+
             correctDecision == 0 -> {
                 ConformanceScore(0)
             }
+
             else -> {
                 ConformanceScore(100 * correctDecision / stockOrders.size)
             }

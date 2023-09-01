@@ -29,31 +29,32 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val stockRetrievalSettings = StockRetrievalSettings(requireContext())
         val dialogRootView: View = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_stock_retrieval_time_intervals, view as ViewGroup?, false)
-        val currentSettings = stockRetrievalSettings.timeInterval.value as StockRetrievalSettings.ViewState.VALUES
+            .inflate(R.layout.dialog_stock_retrieval_time_intervals, view as ViewGroup?, false)
+        val currentSettings = stockRetrievalSettings.timeInterval.value
         val inputFromTime: EditText = dialogRootView
-                .findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_fromTime)
+            .findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_fromTime)
         val inputLayoutFromTime: TextInputLayout = dialogRootView
-                .findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_fromTime)
+            .findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_fromTime)
         initFromTimePicker(currentSettings, inputFromTime, inputLayoutFromTime)
         val inputToTime: EditText = dialogRootView
-                .findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_toTime)
+            .findViewById(R.id.editText_dialogStockRetrievalTimeIntervals_toTime)
         val inputLayoutToTime: TextInputLayout = dialogRootView
-                .findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_toTime)
+            .findViewById(R.id.textInputLayout_dialogStockRetrievalTimeIntervals_toTime)
         initToTimePicker(currentSettings, inputToTime, inputLayoutToTime)
-        val dayPicker = dialogRootView.findViewById<MaterialDayPicker>(R.id.materialDayPicker_dialogStockRetrievalTimeIntervals)
+        val dayPicker =
+            dialogRootView.findViewById<MaterialDayPicker>(R.id.materialDayPicker_dialogStockRetrievalTimeIntervals)
         initDayPicker(currentSettings, dayPicker)
         val context = requireContext()
         val confirmListener: DialogInterface.OnClickListener = DialogInterface.OnClickListener { _, _ ->
         }
         val alertDialog = AlertDialog.Builder(context)
-                .setMessage(R.string.settings_dialog_time_intervals_title)
-                .setView(dialogRootView)
-                .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
-                    dismiss()
-                }
-                .setPositiveButton(getText(android.R.string.ok), confirmListener)
-                .create()
+            .setMessage(R.string.settings_dialog_time_intervals_title)
+            .setView(dialogRootView)
+            .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
+                dismiss()
+            }
+            .setPositiveButton(getText(android.R.string.ok), confirmListener)
+            .create()
         alertDialog.setOnShowListener {
             val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
             button.setOnClickListener {
@@ -70,7 +71,7 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
                         throw ValidatorException()
                     }
                     stockRetrievalSettings.set(fromTime.hours, fromTime.minutes, toTime.hours, toTime.minutes,
-                            dayPicker.selectedDays.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
+                        dayPicker.selectedDays.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
                     Toast.makeText(requireContext(), getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
                     alertDialog.dismiss()
                 } catch (e: ValidatorException) {
@@ -82,27 +83,39 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
     }
 
     private fun initFromTimePicker(
-            settings: StockRetrievalSettings.ViewState.VALUES,
-            inputFromTime: EditText,
-            inputLayoutFromTime: TextInputLayout,
+        settings: StockRetrievalSettings.ViewState,
+        inputFromTime: EditText,
+        inputLayoutFromTime: TextInputLayout,
     ) {
-        inputFromTime.setText(String.format("%s:%s", formatHoursAsString(settings.fromTimeHours),
-                formatMinutesAsString(settings.fromTimeMinutes)))
+        inputFromTime.setText(
+            String.format(
+                "%s:%s", formatHoursAsString(settings.fromTimeHours),
+                formatMinutesAsString(settings.fromTimeMinutes)
+            )
+        )
         inputFromTime.transformIntoTimePicker(requireContext(), TIME_FORMAT, inputLayoutFromTime)
     }
 
     private fun initToTimePicker(
-            settings: StockRetrievalSettings.ViewState.VALUES,
-            inputToTime: EditText,
-            inputLayoutToTime: TextInputLayout,
+        settings: StockRetrievalSettings.ViewState,
+        inputToTime: EditText,
+        inputLayoutToTime: TextInputLayout,
     ) {
-        inputToTime.setText(String.format("%s:%s", formatHoursAsString(settings.toTimeHours),
-                formatMinutesAsString(settings.toTimeMinutes)))
+        inputToTime.setText(
+            String.format(
+                "%s:%s", formatHoursAsString(settings.toTimeHours),
+                formatMinutesAsString(settings.toTimeMinutes)
+            )
+        )
         inputToTime.transformIntoTimePicker(requireContext(), TIME_FORMAT, inputLayoutToTime)
     }
 
-    private fun initDayPicker(currentSettings: StockRetrievalSettings.ViewState.VALUES, dayPicker: MaterialDayPicker) {
-        dayPicker.setSelectedDays(currentSettings.weekDays.map { dayOfWeek -> MaterialDayPicker.Weekday.valueOf(dayOfWeek.name) })
+    private fun initDayPicker(currentSettings: StockRetrievalSettings.ViewState, dayPicker: MaterialDayPicker) {
+        dayPicker.setSelectedDays(currentSettings.weekDays.map { dayOfWeek ->
+            MaterialDayPicker.Weekday.valueOf(
+                dayOfWeek.name
+            )
+        })
         dayPicker.firstDayOfWeek = MaterialDayPicker.Weekday.MONDAY
     }
 
@@ -129,11 +142,13 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
                 input.requestFocus()
                 throw ValidatorException()
             }
+
             SimpleDateFormat(TIME_FORMAT, Locale.getDefault()).parse(input.text.toString()) == null -> {
                 inputLayout.error = getString(R.string.generic_error_invalid_date)
                 input.requestFocus()
                 throw ValidatorException()
             }
+
             else -> {
                 inputLayout.error = null
             }

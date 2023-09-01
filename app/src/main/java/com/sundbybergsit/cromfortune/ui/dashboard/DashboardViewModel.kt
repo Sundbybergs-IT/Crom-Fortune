@@ -2,8 +2,9 @@ package com.sundbybergsit.cromfortune.ui.dashboard
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
@@ -22,11 +23,9 @@ class DashboardViewModel : ViewModel() {
 
     private var lastUpdated: Instant = Instant.ofEpochMilli(0L)
 
-    private val _score = MutableLiveData<String>().apply {
-        value = ""
-    }
+    private val _score : MutableState<String> = mutableStateOf("")
 
-    val score: LiveData<String> = _score
+    val score: State<String> = _score
 
     fun refresh(context: Context, timestamp: Instant, stockPrices: Set<StockPrice>) {
         Log.i(TAG, "refresh(${stockPrices})")
@@ -38,8 +37,8 @@ class DashboardViewModel : ViewModel() {
                 CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
                         currencyRateRepository = CurrencyRateRepository
                 )
-                _score.postValue(context.resources.getQuantityString(R.plurals.dashboard_croms_will_message,
-                        latestScore.score, latestScore.score))
+                _score.value = context.resources.getQuantityString(R.plurals.dashboard_croms_will_message,
+                        latestScore.score, latestScore.score)
             }
         } else {
             Log.w(TAG, "Ignoring old data...")

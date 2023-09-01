@@ -6,8 +6,7 @@ import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.ui.AdapterItem
 import com.sundbybergsit.cromfortune.ui.home.HeaderAdapterItem
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Currency
 
 internal object OpinionatedStockOrderWrapperAdapterItemUtil {
 
@@ -19,7 +18,7 @@ internal object OpinionatedStockOrderWrapperAdapterItemUtil {
         result.add(HeaderAdapterItem())
         val stockOrderEvents = list.filter { it.stockOrder != null }.toList()
         val currencyRateInSek =
-            (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES).currencyRates
+            checkNotNull(CurrencyRateRepository.currencyRates.value).currencyRates
                 .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrderEvents.first().stockOrder!!.currency }!!.rateInSek
         for (stockOrderEvent in stockOrderEvents) {
             with(checkNotNull(stockOrderEvent.stockOrder)) {

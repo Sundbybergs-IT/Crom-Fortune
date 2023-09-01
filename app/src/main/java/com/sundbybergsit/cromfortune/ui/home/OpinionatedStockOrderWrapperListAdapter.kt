@@ -19,7 +19,8 @@ import com.sundbybergsit.cromfortune.ui.home.view.DeleteStockOrderDialogFragment
 import com.sundbybergsit.cromfortune.ui.home.view.OpinionatedStockOrderWrapperAdapterItem
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Currency
+import java.util.Date
 
 class OpinionatedStockOrderWrapperListAdapter(
         private val context: Context, private val fragmentManager: FragmentManager, private val readOnly: Boolean,
@@ -92,7 +93,7 @@ class OpinionatedStockOrderWrapperListAdapter(
             }
             format.currency = Currency.getInstance(item.opinionatedStockOrderWrapper.stockOrder.currency)
             itemView.requireViewById<TextView>(R.id.textView_listrowStockOrderItem_price).text = format.format(pricePerStock)
-             val rateInSek: Double = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+             val rateInSek: Double = checkNotNull(CurrencyRateRepository.currencyRates.value)
                     .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol ==
                              item.opinionatedStockOrderWrapper.stockOrder.currency }!!.rateInSek
             itemView.requireViewById<TextView>(R.id.textView_listrowStockOrderItem_total).text =

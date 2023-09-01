@@ -65,8 +65,6 @@ dependencies {
     // Version determined by Compose BoM
     debugImplementation( "androidx.compose.ui:ui-test-manifest")
     // Version determined by Compose BoM
-    implementation("androidx.compose.runtime:runtime-livedata")
-    // Version determined by Compose BoM
     implementation("androidx.compose.material3:material3")
     // Version determined by Compose BoM
     implementation("androidx.compose.ui:ui-tooling")
@@ -79,7 +77,6 @@ dependencies {
     implementation(libs.accompanistNavigationMaterial)
     implementation(libs.androidxAppcompat)
     implementation(libs.androidxCore)
-    implementation(libs.androidxLifecycleLivedata)
     implementation(libs.androidxLifecycleRuntime)
     implementation(libs.androidxLifecycleViewmodel)
     implementation(libs.androidxNavigationFragment)

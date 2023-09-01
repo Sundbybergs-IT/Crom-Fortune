@@ -45,6 +45,7 @@ internal class StockOrderAggregateListAdapter(
                 itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
                 adapter = this
             )
+
             R.layout.listrow_stock_item -> StockOrderAggregateViewHolder(
                 context = parent.context,
                 viewModel = viewModel,
@@ -55,6 +56,7 @@ internal class StockOrderAggregateListAdapter(
                 itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
                 readOnly = readOnly
             )
+
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -65,6 +67,7 @@ internal class StockOrderAggregateListAdapter(
             is StockOrderAggregateHeaderViewHolder -> {
                 holder.bind(item as StockAggregateHeaderAdapterItem)
             }
+
             is StockOrderAggregateViewHolder -> {
                 holder.bind(item as StockAggregateAdapterItem)
             }
@@ -75,9 +78,11 @@ internal class StockOrderAggregateListAdapter(
         is StockAggregateHeaderAdapterItem -> {
             R.layout.listrow_stock_header
         }
+
         is StockAggregateAdapterItem -> {
             R.layout.listrow_stock_item
         }
+
         else -> {
             throw IllegalArgumentException("Unexpected item: " + item.javaClass.canonicalName)
         }
@@ -96,7 +101,7 @@ internal class StockOrderAggregateListAdapter(
 
         fun bind(item: StockAggregateHeaderAdapterItem) {
             var count = 0.0
-            val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+            val currencyRates = checkNotNull(CurrencyRateRepository.currencyRates.value)
                 .currencyRates.toList()
             for (stockOrderAggregate in item.stockOrderAggregates.toList()) {
                 for (currencyRate in currencyRates) {
@@ -139,28 +144,32 @@ internal class StockOrderAggregateListAdapter(
                 return when (item?.itemId) {
                     R.id.action_sort_alphabetical_up -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedByDescending { adapterItem -> adapterItem.name })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedByDescending { adapterItem -> adapterItem.name })
                         true
                     }
+
                     R.id.action_sort_alphabetical_down -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedBy { adapterItem -> adapterItem.name })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedBy { adapterItem -> adapterItem.name })
                         true
                     }
+
                     R.id.action_sort_profit_up -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedByDescending { adapterItem -> adapterItem.value })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedByDescending { adapterItem -> adapterItem.value })
                         true
                     }
+
                     R.id.action_sort_profit_down -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedBy { adapterItem -> adapterItem.value })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedBy { adapterItem -> adapterItem.value })
                         true
                     }
+
                     else -> {
                         false
                     }
@@ -193,7 +202,7 @@ internal class StockOrderAggregateListAdapter(
             val stockCurrencyFormat: NumberFormat = getStockCurrencyFormat(item, acquisitionValue)
             initializeCurrentStockPrice(item, stockCurrencyFormat, acquisitionValue)
             setUpMuteAndUnmuteMenu(item)
-            val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+            val currencyRates = checkNotNull(CurrencyRateRepository.currencyRates.value)
                 .currencyRates.toList()
             val profitInSek = getProfitInSek(currencyRates, stockOrderAggregate)
             setUpProfit(profitInSek)
@@ -357,7 +366,7 @@ internal class StockOrderAggregateListAdapter(
     }
 
     override fun getStockPrice(stockSymbol: String): com.sundbybergsit.cromfortune.domain.StockPrice {
-        return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES)
+        return checkNotNull(StockPriceRepository.stockPrices.value)
             .stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
     }
 
