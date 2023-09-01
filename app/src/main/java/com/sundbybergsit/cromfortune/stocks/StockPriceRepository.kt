@@ -2,8 +2,9 @@ package com.sundbybergsit.cromfortune.stocks
 
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import java.time.Instant
 
@@ -11,29 +12,24 @@ object StockPriceRepository : StockPriceListener {
 
     private const val TAG = "StockPriceRepository"
 
-    @Suppress("ObjectPropertyName")
-    private val _stockPrices = MutableLiveData<ViewState>(ViewState.NotInitialized)
+    private val _stockPrices: MutableState<ViewState?> = mutableStateOf(null)
 
-    val stockPrices: LiveData<ViewState> = _stockPrices
+    val stockPrices: State<ViewState?> = _stockPrices
 
     fun put(stockPrice: Set<StockPrice>) {
         Log.v(TAG, "put(${stockPrice})")
-        _stockPrices.postValue(ViewState.VALUES(Instant.now(), stockPrice))
+        _stockPrices.value = ViewState(Instant.now(), stockPrice)
     }
 
     @VisibleForTesting
     fun clear() {
-        _stockPrices.postValue(ViewState.NotInitialized)
+        _stockPrices.value = null
     }
 
     override fun getStockPrice(stockSymbol: String): StockPrice {
-        return (stockPrices.value as ViewState.VALUES)
-            .stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
+        return checkNotNull(checkNotNull(stockPrices.value).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol })
     }
 
-    sealed class ViewState {
-        object NotInitialized : ViewState()
-        data class VALUES(val instant: Instant, val stockPrices: Set<StockPrice>) : ViewState()
-    }
+    class ViewState(val instant: Instant, val stockPrices: Set<StockPrice>)
 
 }

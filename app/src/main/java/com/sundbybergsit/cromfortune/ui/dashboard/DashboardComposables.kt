@@ -16,7 +16,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,15 +29,15 @@ import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 
 @Composable
 fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
-    val viewState: StockPriceRepository.ViewState? by StockPriceRepository.stockPrices.observeAsState()
+    val viewState: StockPriceRepository.ViewState? by StockPriceRepository.stockPrices
     val context = LocalContext.current
     LaunchedEffect(key1 = "RetrieveStocksLaunchedEffect") {
         when (viewState) {
-            is StockPriceRepository.ViewState.VALUES -> {
+            is StockPriceRepository.ViewState -> {
                 viewModel.refresh(
                     context = context,
-                    (viewState as StockPriceRepository.ViewState.VALUES).instant,
-                    (viewState as StockPriceRepository.ViewState.VALUES).stockPrices
+                    timestamp = checkNotNull(viewState).instant,
+                    stockPrices = checkNotNull(viewState).stockPrices
                 )
             }
 

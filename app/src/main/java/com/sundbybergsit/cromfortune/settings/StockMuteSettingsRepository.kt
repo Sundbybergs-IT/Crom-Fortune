@@ -4,8 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.ui.settings.StockMuteSettings
 
 const val PREFERENCES_NAME = "StockMuteSettings"
@@ -16,14 +17,13 @@ object StockMuteSettingsRepository {
 
     private lateinit var sharedPreferences: SharedPreferences
 
-    @Suppress("ObjectPropertyName")
-    private val _stockMuteSettings = MutableLiveData<Collection<StockMuteSettings>>(emptyList())
+    private val _stockMuteSettings : MutableState<Collection<StockMuteSettings>> = mutableStateOf(emptyList())
 
-    val STOCK_MUTE_MUTE_SETTINGS: LiveData<Collection<StockMuteSettings>> = _stockMuteSettings
+    val STOCK_MUTE_MUTE_SETTINGS: State<Collection<StockMuteSettings>> = _stockMuteSettings
 
     fun init(context: Context) {
         sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-        _stockMuteSettings.postValue(list())
+        _stockMuteSettings.value = list()
     }
 
     @SuppressLint("ApplySharedPref")
@@ -32,7 +32,7 @@ object StockMuteSettingsRepository {
         sharedPreferences.edit().putString(stockSymbol, true.toString()).commit()
         val result: Collection<StockMuteSettings> = sharedPreferences.all
                 .map { entry -> StockMuteSettings(entry.key, (entry.value as String).toBoolean()) }
-        _stockMuteSettings.postValue(result)
+        _stockMuteSettings.value = result
     }
 
     @SuppressLint("ApplySharedPref")
@@ -41,7 +41,7 @@ object StockMuteSettingsRepository {
         sharedPreferences.edit().putString(stockSymbol, false.toString()).commit()
         val result: Collection<StockMuteSettings> = sharedPreferences.all
                 .map { entry -> StockMuteSettings(entry.key, (entry.value as String).toBoolean()) }
-        _stockMuteSettings.postValue(result)
+        _stockMuteSettings.value = result
     }
 
     fun list(): Collection<StockMuteSettings> {

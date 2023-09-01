@@ -32,12 +32,12 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     }
 
-    private val _cromStocksViewState: MutableState<ViewState> = mutableStateOf(ViewState.Loading)
-    private val _personalStocksViewState: MutableState<ViewState> = mutableStateOf(ViewState.Loading)
+    private val _cromStocksViewState: MutableState<ViewState?> = mutableStateOf(null)
+    private val _personalStocksViewState: MutableState<ViewState?> = mutableStateOf(null)
     private val _dialogViewState: MutableState<DialogViewState> = mutableStateOf(DialogViewState.Dismissed)
 
-    val cromStocksViewState: State<ViewState> = _cromStocksViewState
-    val personalStocksViewState: State<ViewState> = _personalStocksViewState
+    internal val cromStocksViewState: State<ViewState?> = _cromStocksViewState
+    internal val personalStocksViewState: State<ViewState?> = _personalStocksViewState
     val dialogViewState: State<DialogViewState> = _dialogViewState
     private var showAll = false
 
@@ -56,12 +56,11 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                 } else if (stockOrderAggregate == null) {
                     val stockOrder = checkNotNull(stockEvent.stockOrder)
                     val stockName =
-                        StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                        checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
                     stockOrderAggregate = StockOrderAggregate(
-                        (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                            .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
-                        "$stockName (${stockOrder.name})", stockOrder.name,
-                        Currency.getInstance(stockOrder.currency)
+                        rateInSek = checkNotNull(CurrencyRateRepository.currencyRates.value).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                        displayName = "$stockName (${stockOrder.name})", stockSymbol = stockOrder.name,
+                        currency = Currency.getInstance(stockOrder.currency)
                     )
                     cromSortedStockEvents.add(stockEvent)
                     stockOrderAggregate.aggregate(stockEvent)
@@ -95,8 +94,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                     val stockName =
                         StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                     stockOrderAggregate = StockOrderAggregate(
-                        (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                            .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                        CurrencyRateRepository.currencyRates.value?.currencyRates
+                            ?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
                         "$stockName (${stockOrder.name})", stockOrder.name,
                         Currency.getInstance(stockOrder.currency)
                     )
@@ -116,14 +115,14 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     fun refresh(context: Context) {
         val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         if (stockEventRepository.isEmpty()) {
-            _cromStocksViewState.value = ViewState.HasNoStocks(R.string.home_no_stocks)
-            _personalStocksViewState.value = ViewState.HasNoStocks(R.string.home_no_stocks)
+            _cromStocksViewState.value = ViewState(textResId = R.string.home_no_stocks, items = listOf())
+            _personalStocksViewState.value = ViewState(textResId = R.string.home_no_stocks, items = listOf())
         } else {
             viewModelScope.launch {
                 _cromStocksViewState.value =
-                    ViewState.HasStocks(
-                        R.string.home_stocks,
-                        StockAggregateAdapterItemUtil.convertToAdapterItems(
+                    ViewState(
+                        textResId = R.string.home_stocks,
+                        items = StockAggregateAdapterItemUtil.convertToAdapterItems(
                             list = stocks(
                                 context = context,
                                 lambda = cromStockAggregate
@@ -131,9 +130,9 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                         )
                     )
                 _personalStocksViewState.value =
-                    ViewState.HasStocks(
-                        R.string.home_stocks,
-                        StockAggregateAdapterItemUtil.convertToAdapterItems(
+                    ViewState(
+                        textResId = R.string.home_stocks,
+                        items = StockAggregateAdapterItemUtil.convertToAdapterItems(
                             list = stocks(
                                 context = context,
                                 lambda = personalStockAggregate
@@ -210,21 +209,21 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     fun refreshData(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context)
+            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context) { refresh(context) }
             Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
         }
     }
 
     fun showAll(context: Context) {
         showAll = true
-        if (_personalStocksViewState.value is ViewState.HasStocks) {
+        if (_personalStocksViewState.value?.items?.isNotEmpty() == true) {
             refresh(context)
         }
     }
 
     fun showCurrent(context: Context) {
         showAll = false
-        if (_personalStocksViewState.value is ViewState.HasStocks) {
+        if (_personalStocksViewState.value?.items?.isNotEmpty() == true) {
             refresh(context)
         }
     }
@@ -237,15 +236,6 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     }
 
-    sealed class ViewState {
-
-        data object Loading : ViewState()
-
-        data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<NameAndValueAdapterItem>) :
-            ViewState()
-
-        data class HasNoStocks(@StringRes val textResId: Int) : ViewState()
-
-    }
+    internal class ViewState(@StringRes val textResId: Int, val items: List<NameAndValueAdapterItem>)
 
 }
