@@ -1,6 +1,7 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -116,39 +117,45 @@ fun Home(
                 PagerStateChangeDetectionLaunchedEffect(
                     pagerState = pagerState, changedPagerMutableState = changedPagerMutableState
                 )
-                val items: List<NameAndValueAdapterItem>
                 if (page == 0) {
-                    items = if (personalStocksViewState != null) {
-                        checkNotNull(personalStocksViewState).items
-                    } else {
-                        listOf()
-                    }
-                    StockOrderAggregates(
+                    StocksTab(
                         modifier = modifier,
-                        title = stringResource(id = R.string.home_stocks_personal_title),
-                        fabActive = true,
+                        stocksViewState = personalStocksViewState,
                         viewModel = viewModel,
-                        items = items,
-                        stockPriceListener = stockPriceListener
+                        stockPriceListener = stockPriceListener,
+                        titleResId = R.string.home_stocks_personal_title
                     )
                 } else {
-                    items = if (cromStocksViewState != null) {
-                        checkNotNull(cromStocksViewState).items
-                    } else {
-                        listOf()
-                    }
+                    StocksTab(
+                        modifier = modifier,
+                        stocksViewState = cromStocksViewState,
+                        viewModel = viewModel,
+                        stockPriceListener = stockPriceListener,
+                        titleResId = R.string.home_stocks_crom_title
+                    )
                 }
-                StockOrderAggregates(
-                    modifier = modifier,
-                    title = stringResource(id = R.string.home_stocks_crom_title),
-                    fabActive = false,
-                    viewModel = viewModel,
-                    items = items,
-                    stockPriceListener = stockPriceListener
-                )
             }
         }
     }
+}
+
+@Composable
+private fun StocksTab(
+    modifier: Modifier,
+    stocksViewState: HomeViewModel.ViewState?,
+    viewModel: HomeViewModel,
+    stockPriceListener: StockPriceListener,
+    @StringRes titleResId: Int
+) {
+    val items: List<NameAndValueAdapterItem> = stocksViewState?.items ?: listOf()
+    StockOrderAggregates(
+        modifier = modifier,
+        title = stringResource(id = titleResId),
+        fabActive = true,
+        viewModel = viewModel,
+        items = items,
+        stockPriceListener = stockPriceListener
+    )
 }
 
 @Composable
