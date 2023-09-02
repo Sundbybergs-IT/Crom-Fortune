@@ -107,7 +107,6 @@ fun Home(
     }) { paddingValues ->
         val modifier = Modifier.fillMaxSize()
         Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
-            // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
             val changedPagerMutableState = remember { mutableStateOf(false) }
             val view = LocalView.current
             PagerStateSelectionHapticFeedbackLaunchedEffect(
