@@ -1,8 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.widget.Toast
-import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,13 +38,15 @@ import com.sundbybergsit.cromfortune.OverflowMenu
 import com.sundbybergsit.cromfortune.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
+import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.ui.RegisterBuyStockAlertDialog
 import com.sundbybergsit.cromfortune.ui.RegisterSellStockAlertDialog
 import com.sundbybergsit.cromfortune.ui.RegisterSplitStockAlertDialog
-import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import java.text.NumberFormat
 import java.util.Currency
 
@@ -109,8 +109,32 @@ fun Home(
             )
         })
     }) { paddingValues ->
-        Box(modifier =  Modifier.fillMaxSize().padding(paddingValues = paddingValues)) {
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+            val (pagerRef, fabRef) = createRefs()
             val view = LocalView.current
+            val localContext = LocalContext.current
+            val showBuyDialog = remember { mutableStateOf(false) }
+            RegisterBuyStockAlertDialog(showDialog = showBuyDialog.value, onDismiss = {
+                showBuyDialog.value = false
+            }) { stockOrder ->
+                viewModel.save(context = localContext, stockOrder = stockOrder)
+                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+            }
+            FloatingActionButton(modifier = Modifier
+                .constrainAs(fabRef) {
+                    end.linkTo(parent.end, 16.dp)
+                    bottom.linkTo(parent.bottom, 32.dp)
+                }
+                .padding(16.dp), onClick = { showBuyDialog.value = true }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_add),
+                    contentDescription = "Floating Action Button Icon"
+                )
+            }
             PagerStateSelectionHapticFeedbackLaunchedEffect(
                 pagerState = pagerState, view = view, changedState = viewModel.changedPagerMutableState
             )
@@ -118,35 +142,38 @@ fun Home(
                 stringResource(id = R.string.home_stocks_personal_title) to viewModel.personalStocksViewState,
                 stringResource(id = R.string.home_stocks_crom_title) to viewModel.cromStocksViewState,
             )
-            HorizontalPager(state = pagerState) {
+            HorizontalPager(
+                modifier = Modifier.constrainAs(pagerRef) {},
+                state = pagerState
+            ) {
                 Column {
                     TabRow(pagerState.currentPage) {
                         val coroutineScope = rememberCoroutineScope()
                         tabs.forEachIndexed { index, title ->
-                            Tab(
-                                text = { Text(text = title.first) },
-                                selected = index == pagerState.currentPage,
-                                onClick = {
-                                    viewModel.selectTab(index, pagerState, coroutineScope)
-                                }
-                            )
+                            Column {
+                                Tab(
+                                    text = { Text(text = title.first) },
+                                    selected = index == pagerState.currentPage,
+                                    onClick = {
+                                        viewModel.selectTab(index, pagerState, coroutineScope)
+                                    }
+                                )
+                            }
                         }
                     }
                     LazyColumn {
-                        items(tabs[pagerState.currentPage].second.value.items.size) { _ ->
+                        items(count = tabs[pagerState.currentPage].second.value.items.size) { lazyItemScope ->
                             when (pagerState.currentPage) {
                                 0 -> StocksTab(
-                                    stocksViewState = personalStocksViewState,
-                                    viewModel = viewModel,
-                                    stockPriceListener = stockPriceListener,
-                                    titleResId = R.string.home_stocks_personal_title
+                                    index = lazyItemScope,
+                                    viewState = personalStocksViewState,
+                                    stockPriceListener = stockPriceListener
                                 )
 
                                 1 -> StocksTab(
-                                    stocksViewState = cromStocksViewState,
-                                    viewModel = viewModel,
-                                    stockPriceListener = stockPriceListener,
-                                    titleResId = R.string.home_stocks_crom_title
+                                    index = lazyItemScope,
+                                    viewState = cromStocksViewState,
+                                    stockPriceListener = stockPriceListener
                                 )
                             }
                         }
@@ -158,113 +185,90 @@ fun Home(
 }
 
 @Composable
-private fun StocksTab(
-    modifier: Modifier = Modifier,
-    stocksViewState: HomeViewModel.ViewState,
-    viewModel: HomeViewModel,
+fun StocksHeader(
+    stockOrderAggregates: List<StockOrderAggregate>,
     stockPriceListener: StockPriceListener,
-    @StringRes titleResId: Int
+    currencyRates: List<CurrencyRate>
 ) {
-    val items: List<NameAndValueAdapterItem> = stocksViewState.items
-    StockOrderAggregates(
-        modifier = modifier,
-        title = stringResource(id = titleResId),
-        fabActive = true,
-        viewModel = viewModel,
-        items = items,
+    var count = 0.0
+    for (stockOrderAggregate in stockOrderAggregates) {
+        for (currencyRate in currencyRates) {
+            if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
+                count += (stockOrderAggregate.getProfit(
+                    stockPriceListener.getStockPrice(
+                        stockOrderAggregate.stockSymbol
+                    ).price
+                )) * currencyRate.rateInSek
+                break
+            }
+        }
+    }
+    val format: NumberFormat = NumberFormat.getCurrencyInstance()
+    format.currency = Currency.getInstance("SEK")
+    format.maximumFractionDigits = 2
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Total profit: " + format.format(count), color = colorResource(
+                if (count >= 0.0) {
+                    R.color.colorProfit
+                } else {
+                    R.color.colorLoss
+                }
+            )
+        )
+    }
+}
+
+@Composable
+private fun StocksTab(
+    index: Int,
+    viewState: HomeViewModel.ViewState,
+    stockPriceListener: StockPriceListener
+) {
+    if (index == 0) {
+        val currencyRates =
+            CurrencyRateRepository.currencyRates.value?.currencyRates?.toList() ?: listOf()
+        StocksHeader(
+            viewState.items,
+            stockPriceListener,
+            currencyRates
+        )
+    }
+    StockOrderAggregateItem(
+        item = viewState.items[index],
         stockPriceListener = stockPriceListener
     )
 }
 
 @Composable
-private fun StockOrderAggregates(
-    modifier: Modifier, title: String, fabActive: Boolean, viewModel: HomeViewModel,
-    items: List<NameAndValueAdapterItem>, stockPriceListener: StockPriceListener,
+private fun StockOrderAggregateItem(
+    item: StockOrderAggregate, stockPriceListener: StockPriceListener,
 ) {
-    ConstraintLayout(modifier = modifier) {
-        val (titleRef, listRef, fabRef) = createRefs()
-        Text(modifier = Modifier.constrainAs(titleRef) {
-            top.linkTo(parent.top)
-            start.linkTo(parent.start)
-            end.linkTo(parent.end)
-        }, text = title)
-        Column(modifier = Modifier.constrainAs(listRef) {
-            top.linkTo(titleRef.bottom)
-            start.linkTo(parent.start)
-            end.linkTo(parent.end)
-        }) {
-            // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-            for (item in items) {
-                if (item is StockAggregateHeaderAdapterItem) {
-                    var count = 0.0
-                    val currencyRates =
-                        checkNotNull(CurrencyRateRepository.currencyRates.value).currencyRates.toList()
-                    for (stockOrderAggregate in item.stockOrderAggregates.toList()) {
-                        for (currencyRate in currencyRates) {
-                            if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
-                                count += (stockOrderAggregate.getProfit(
-                                    stockPriceListener.getStockPrice(
-                                        stockOrderAggregate.stockSymbol
-                                    ).price
-                                )) * currencyRate.rateInSek
-                                break
-                            }
-                        }
-                    }
-                    val format: NumberFormat = NumberFormat.getCurrencyInstance()
-                    format.currency = Currency.getInstance("SEK")
-                    format.maximumFractionDigits = 2
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Total profit: " + format.format(count), color = colorResource(
-                                if (count >= 0.0) {
-                                    R.color.colorProfit
-                                } else {
-                                    R.color.colorLoss
-                                }
-                            )
-                        )
-                    }
-                    // FIXME: Add overflow menu with quick actions (sorting), issues/21
-                } else if (item is StockAggregateAdapterItem) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Column {
-                            Text(text = item.name, style = MaterialTheme.typography.bodyMedium)
-                            // FIXME: Add quantity
-                        }
-                        val format: NumberFormat = NumberFormat.getCurrencyInstance()
-                        format.currency = item.stockOrderAggregate.currency
-                        format.maximumFractionDigits = 2
-                        Text(
-                            text = format.format(stockPriceListener.getStockPrice(item.stockOrderAggregate.stockSymbol).price),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+    // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(text = item.displayName, style = MaterialTheme.typography.bodyMedium)
+            // FIXME: Add quantity
+        }
+        val format: NumberFormat = NumberFormat.getCurrencyInstance()
+        format.currency = item.currency
+        format.maximumFractionDigits = 2
+        Text(
+            text = format.format(stockPriceListener.getStockPrice(item.stockSymbol).price),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        if (StockMuteSettingsRepository.isMuted(item.stockSymbol)) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_fas_bell_slash),
+                contentDescription = "Muted stock"
+            )
+        } else {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_fas_bell),
+                contentDescription = "Unmuted stock"
+            )
+        }
 
-                        // FIXME: Add overflow menu with quick actions (remove), issues/21
-                    }
-                }
-            }
-        }
-        if (fabActive) {
-            val localContext = LocalContext.current
-            val showBuyDialog = remember { mutableStateOf(false) }
-            RegisterBuyStockAlertDialog(showDialog = showBuyDialog.value, onDismiss = {
-                showBuyDialog.value = false
-            }) { stockOrder ->
-                viewModel.save(context = localContext, stockOrder = stockOrder)
-                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-            }
-            FloatingActionButton(modifier = Modifier
-                .constrainAs(fabRef) {
-                    end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom)
-                }
-                .padding(16.dp), onClick = { showBuyDialog.value = true }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Floating Action Button Icon"
-                )
-            }
-        }
+        // FIXME: Add overflow menu with quick actions (remove), issues/21
     }
 }
