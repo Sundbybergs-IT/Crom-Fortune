@@ -118,6 +118,13 @@ fun Home(
             titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ), actions = {
+            // FIXME: Add dropdown selection: "Current" / "All", https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+            TextButton(onClick = {
+                // FIXME: Add "Update" button, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                DialogHandler.showSnack(localContext.getString(R.string.generic_error_not_supported))
+            }) {
+                Text(text = stringResource(id = R.string.action_refresh).uppercase())
+            }
             OverflowMenu(
                 onNavigateTo = onNavigateTo, contentDescription = "Home Menu",
                 route = LeafScreen.BottomSheetsHome.route
@@ -290,7 +297,7 @@ fun StocksHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end =16.dp, bottom = 16.dp)
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
         Box(
             modifier = Modifier
@@ -343,7 +350,7 @@ private fun StocksTab(
     ) {
         Text(
             modifier = Modifier.padding(top = 16.dp),
-                text = viewState . items [index].displayName,
+            text = viewState.items[index].displayName,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold
         )
@@ -367,8 +374,7 @@ private fun StockOrderAggregateItem(
     val format: NumberFormat = NumberFormat.getCurrencyInstance()
     format.currency = item.currency
     format.maximumFractionDigits = 2
-
-    // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+    val localContext = LocalContext.current
     Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol) }) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -420,7 +426,10 @@ private fun StockOrderAggregateItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(
-                    onClick = { /*TODO*/ }, colors = ButtonDefaults.textButtonColors(
+                    onClick = {
+                        // FIXME: Show buy dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                        DialogHandler.showSnack(localContext.getString(R.string.generic_error_not_supported))
+                    }, colors = ButtonDefaults.textButtonColors(
                         backgroundColor = colorResource(
                             id = (android.R.color.holo_green_dark)
                         )
@@ -430,7 +439,10 @@ private fun StockOrderAggregateItem(
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 TextButton(
-                    onClick = { /*TODO*/ }, colors = ButtonDefaults.textButtonColors(
+                    onClick = {
+                        // FIXME: Show sell dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+                        DialogHandler.showSnack(localContext.getString(R.string.generic_error_not_supported))
+                    }, colors = ButtonDefaults.textButtonColors(
                         backgroundColor = colorResource(
                             id = (android.R.color.holo_red_dark)
                         )
