@@ -19,7 +19,6 @@ import com.sundbybergsit.cromfortune.domain.*
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
-import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -135,22 +134,12 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
             _cromStocksViewState.value =
                 ViewState(
                     textResId = R.string.home_stocks,
-                    items = StockAggregateAdapterItemUtil.convertToAdapterItems(
-                        list = stocks(
-                            context = context,
-                            lambda = cromStockAggregate
-                        )
-                    )
+                    items = stocks(context = context, lambda = cromStockAggregate)
                 )
             _personalStocksViewState.value =
                 ViewState(
                     textResId = R.string.home_stocks,
-                    items = StockAggregateAdapterItemUtil.convertToAdapterItems(
-                        list = stocks(
-                            context = context,
-                            lambda = personalStockAggregate
-                        )
-                    )
+                    items = stocks(context = context, lambda = personalStockAggregate)
                 )
         }
     }
@@ -248,6 +237,6 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     }
 
-    internal class ViewState(@StringRes val textResId: Int, val items: List<NameAndValueAdapterItem>)
+    internal class ViewState(@StringRes val textResId: Int, val items: List<StockOrderAggregate>)
 
 }
