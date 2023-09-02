@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -15,6 +16,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -23,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -33,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.LeafScreen
 import com.sundbybergsit.cromfortune.OverflowMenu
-import com.sundbybergsit.cromfortune.PagerStateChangeDetectionLaunchedEffect
 import com.sundbybergsit.cromfortune.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
@@ -54,8 +57,8 @@ fun Home(
     onNavigateTo: (String) -> Unit
 ) {
     val localContext = LocalContext.current
-    val personalStocksViewState: HomeViewModel.ViewState? by viewModel.personalStocksViewState
-    val cromStocksViewState: HomeViewModel.ViewState? by viewModel.cromStocksViewState
+    val personalStocksViewState: HomeViewModel.ViewState by viewModel.personalStocksViewState
+    val cromStocksViewState: HomeViewModel.ViewState by viewModel.cromStocksViewState
     val showRegisterBuyDialog by viewModel.showRegisterBuyStocksDialog
     val showRegisterSellDialog by viewModel.showRegisterSellStocksDialog
     val showRegisterSplitDialog by viewModel.showRegisterSplitStocksDialog
@@ -106,33 +109,48 @@ fun Home(
             )
         })
     }) { paddingValues ->
-        val modifier = Modifier.fillMaxSize()
-        Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
-            val changedPagerMutableState = remember { mutableStateOf(false) }
+        Box(modifier =  Modifier.fillMaxSize().padding(paddingValues = paddingValues)) {
             val view = LocalView.current
             PagerStateSelectionHapticFeedbackLaunchedEffect(
-                pagerState = pagerState, view = view, changedState = changedPagerMutableState
+                pagerState = pagerState, view = view, changedState = viewModel.changedPagerMutableState
             )
-            HorizontalPager(modifier = modifier, state = pagerState) { page ->
-                PagerStateChangeDetectionLaunchedEffect(
-                    pagerState = pagerState, changedPagerMutableState = changedPagerMutableState
-                )
-                if (page == 0) {
-                    StocksTab(
-                        modifier = modifier,
-                        stocksViewState = personalStocksViewState,
-                        viewModel = viewModel,
-                        stockPriceListener = stockPriceListener,
-                        titleResId = R.string.home_stocks_personal_title
-                    )
-                } else {
-                    StocksTab(
-                        modifier = modifier,
-                        stocksViewState = cromStocksViewState,
-                        viewModel = viewModel,
-                        stockPriceListener = stockPriceListener,
-                        titleResId = R.string.home_stocks_crom_title
-                    )
+            val tabs = listOf(
+                stringResource(id = R.string.home_stocks_personal_title) to viewModel.personalStocksViewState,
+                stringResource(id = R.string.home_stocks_crom_title) to viewModel.cromStocksViewState,
+            )
+            HorizontalPager(state = pagerState) {
+                Column {
+                    TabRow(pagerState.currentPage) {
+                        val coroutineScope = rememberCoroutineScope()
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                text = { Text(text = title.first) },
+                                selected = index == pagerState.currentPage,
+                                onClick = {
+                                    viewModel.selectTab(index, pagerState, coroutineScope)
+                                }
+                            )
+                        }
+                    }
+                    LazyColumn {
+                        items(tabs[pagerState.currentPage].second.value.items.size) { _ ->
+                            when (pagerState.currentPage) {
+                                0 -> StocksTab(
+                                    stocksViewState = personalStocksViewState,
+                                    viewModel = viewModel,
+                                    stockPriceListener = stockPriceListener,
+                                    titleResId = R.string.home_stocks_personal_title
+                                )
+
+                                1 -> StocksTab(
+                                    stocksViewState = cromStocksViewState,
+                                    viewModel = viewModel,
+                                    stockPriceListener = stockPriceListener,
+                                    titleResId = R.string.home_stocks_crom_title
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -141,13 +159,13 @@ fun Home(
 
 @Composable
 private fun StocksTab(
-    modifier: Modifier,
-    stocksViewState: HomeViewModel.ViewState?,
+    modifier: Modifier = Modifier,
+    stocksViewState: HomeViewModel.ViewState,
     viewModel: HomeViewModel,
     stockPriceListener: StockPriceListener,
     @StringRes titleResId: Int
 ) {
-    val items: List<NameAndValueAdapterItem> = stocksViewState?.items ?: listOf()
+    val items: List<NameAndValueAdapterItem> = stocksViewState.items
     StockOrderAggregates(
         modifier = modifier,
         title = stringResource(id = titleResId),
@@ -229,9 +247,9 @@ private fun StockOrderAggregates(
         }
         if (fabActive) {
             val localContext = LocalContext.current
-            val showDialog = remember { mutableStateOf(false) }
-            RegisterBuyStockAlertDialog(showDialog = showDialog.value, onDismiss = {
-                showDialog.value = false
+            val showBuyDialog = remember { mutableStateOf(false) }
+            RegisterBuyStockAlertDialog(showDialog = showBuyDialog.value, onDismiss = {
+                showBuyDialog.value = false
             }) { stockOrder ->
                 viewModel.save(context = localContext, stockOrder = stockOrder)
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
@@ -241,7 +259,7 @@ private fun StockOrderAggregates(
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
                 }
-                .padding(16.dp), onClick = { showDialog.value = true }) {
+                .padding(16.dp), onClick = { showBuyDialog.value = true }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add),
                     contentDescription = "Floating Action Button Icon"
