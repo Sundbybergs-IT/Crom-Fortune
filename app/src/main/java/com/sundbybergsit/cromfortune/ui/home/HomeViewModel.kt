@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.annotation.StringRes
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -20,11 +21,14 @@ import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
 
-class HomeViewModel : ViewModel(), StockRemoveClickListener {
+class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel(),
+    StockRemoveClickListener {
 
     companion object {
 
@@ -32,18 +36,22 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     }
 
-    private val _cromStocksViewState: MutableState<ViewState?> = mutableStateOf(null)
-    private val _personalStocksViewState: MutableState<ViewState?> = mutableStateOf(null)
+    private val _cromStocksViewState: MutableState<ViewState> =
+        mutableStateOf(ViewState(R.string.home_no_stocks, listOf()))
+    private val _personalStocksViewState: MutableState<ViewState> =
+        mutableStateOf(ViewState(R.string.home_no_stocks, listOf()))
     private val _dialogViewState: MutableState<DialogViewState> = mutableStateOf(DialogViewState.Dismissed)
 
-    internal val cromStocksViewState: State<ViewState?> = _cromStocksViewState
-    internal val personalStocksViewState: State<ViewState?> = _personalStocksViewState
+    internal val cromStocksViewState: State<ViewState> = _cromStocksViewState
+    internal val personalStocksViewState: State<ViewState> = _personalStocksViewState
     val dialogViewState: State<DialogViewState> = _dialogViewState
     private var showAll = false
 
     val showRegisterBuyStocksDialog: MutableState<Boolean> = mutableStateOf(false)
     val showRegisterSellStocksDialog: MutableState<Boolean> = mutableStateOf(false)
     val showRegisterSplitStocksDialog: MutableState<Boolean> = mutableStateOf(false)
+
+    val changedPagerMutableState = mutableStateOf(false)
 
     private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
         { stockEvents, context ->
@@ -112,34 +120,38 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         _dialogViewState.value = DialogViewState.ShowDeleteDialog(stockName)
     }
 
-    fun refresh(context: Context) {
+    fun selectTab(index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
+        coroutineScope.launch {
+            pagerState.scrollToPage(page = index, pageOffsetFraction = 0f)
+        }
+    }
+
+    private fun refresh(context: Context) {
         val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         if (stockEventRepository.isEmpty()) {
             _cromStocksViewState.value = ViewState(textResId = R.string.home_no_stocks, items = listOf())
             _personalStocksViewState.value = ViewState(textResId = R.string.home_no_stocks, items = listOf())
         } else {
-            viewModelScope.launch {
-                _cromStocksViewState.value =
-                    ViewState(
-                        textResId = R.string.home_stocks,
-                        items = StockAggregateAdapterItemUtil.convertToAdapterItems(
-                            list = stocks(
-                                context = context,
-                                lambda = cromStockAggregate
-                            )
+            _cromStocksViewState.value =
+                ViewState(
+                    textResId = R.string.home_stocks,
+                    items = StockAggregateAdapterItemUtil.convertToAdapterItems(
+                        list = stocks(
+                            context = context,
+                            lambda = cromStockAggregate
                         )
                     )
-                _personalStocksViewState.value =
-                    ViewState(
-                        textResId = R.string.home_stocks,
-                        items = StockAggregateAdapterItemUtil.convertToAdapterItems(
-                            list = stocks(
-                                context = context,
-                                lambda = personalStockAggregate
-                            )
+                )
+            _personalStocksViewState.value =
+                ViewState(
+                    textResId = R.string.home_stocks,
+                    items = StockAggregateAdapterItemUtil.convertToAdapterItems(
+                        list = stocks(
+                            context = context,
+                            lambda = personalStockAggregate
                         )
                     )
-            }
+                )
         }
     }
 
@@ -208,7 +220,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     }
 
     fun refreshData(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             StockDataRetrievalCoroutineWorker.refreshFromYahoo(context) { refresh(context) }
             Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
         }
