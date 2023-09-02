@@ -1,19 +1,29 @@
 package com.sundbybergsit.cromfortune.ui.home
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
+import androidx.compose.material.TextButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -25,14 +35,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.sundbybergsit.cromfortune.DialogHandler
 import com.sundbybergsit.cromfortune.LeafScreen
 import com.sundbybergsit.cromfortune.OverflowMenu
 import com.sundbybergsit.cromfortune.PagerStateSelectionHapticFeedbackLaunchedEffect
@@ -44,6 +57,8 @@ import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
+import com.sundbybergsit.cromfortune.theme.Loss
+import com.sundbybergsit.cromfortune.theme.Profit
 import com.sundbybergsit.cromfortune.ui.RegisterBuyStockAlertDialog
 import com.sundbybergsit.cromfortune.ui.RegisterSellStockAlertDialog
 import com.sundbybergsit.cromfortune.ui.RegisterSplitStockAlertDialog
@@ -116,24 +131,26 @@ fun Home(
         ) {
             val (pagerRef, fabRef) = createRefs()
             val view = LocalView.current
-            val localContext = LocalContext.current
-            val showBuyDialog = remember { mutableStateOf(false) }
-            RegisterBuyStockAlertDialog(showDialog = showBuyDialog.value, onDismiss = {
-                showBuyDialog.value = false
+            val showBuyDialogMutableState = remember { mutableStateOf(false) }
+            val showFabMutableState = remember { mutableStateOf(false) }
+            RegisterBuyStockAlertDialog(showDialog = showBuyDialogMutableState.value, onDismiss = {
+                showBuyDialogMutableState.value = false
             }) { stockOrder ->
                 viewModel.save(context = localContext, stockOrder = stockOrder)
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
             }
-            FloatingActionButton(modifier = Modifier
-                .constrainAs(fabRef) {
-                    end.linkTo(parent.end, 16.dp)
-                    bottom.linkTo(parent.bottom, 32.dp)
+            if (showFabMutableState.value) {
+                FloatingActionButton(modifier = Modifier
+                    .constrainAs(fabRef) {
+                        end.linkTo(parent.end, 16.dp)
+                        bottom.linkTo(parent.bottom, 32.dp)
+                    }
+                    .padding(16.dp), onClick = { showBuyDialogMutableState.value = true }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        contentDescription = "Floating Action Button Icon"
+                    )
                 }
-                .padding(16.dp), onClick = { showBuyDialog.value = true }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Floating Action Button Icon"
-                )
             }
             PagerStateSelectionHapticFeedbackLaunchedEffect(
                 pagerState = pagerState, view = view, changedState = viewModel.changedPagerMutableState
@@ -142,6 +159,7 @@ fun Home(
                 stringResource(id = R.string.home_stocks_personal_title) to viewModel.personalStocksViewState,
                 stringResource(id = R.string.home_stocks_crom_title) to viewModel.cromStocksViewState,
             )
+            showFabMutableState.value = tabs[0].second.value.items.isEmpty()
             HorizontalPager(
                 modifier = Modifier.constrainAs(pagerRef) {},
                 state = pagerState
@@ -167,13 +185,29 @@ fun Home(
                                 0 -> StocksTab(
                                     index = lazyItemScope,
                                     viewState = personalStocksViewState,
-                                    stockPriceListener = stockPriceListener
+                                    stockPriceListener = stockPriceListener,
+                                    onShowStock = { stockSymbol ->
+                                        DialogHandler.showSnack(
+                                            "TODO: Show stocks: " + viewModel.personalStockEvents(
+                                                context = localContext,
+                                                stockSymbol = stockSymbol
+                                            )
+                                        )
+                                    }
                                 )
 
                                 1 -> StocksTab(
                                     index = lazyItemScope,
                                     viewState = cromStocksViewState,
-                                    stockPriceListener = stockPriceListener
+                                    stockPriceListener = stockPriceListener,
+                                    onShowStock = { stockSymbol ->
+                                        DialogHandler.showSnack(
+                                            "TODO: Show stocks: " + viewModel.cromStockEvents(
+                                                context = localContext,
+                                                stockSymbol = stockSymbol
+                                            )
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -206,16 +240,80 @@ fun StocksHeader(
     val format: NumberFormat = NumberFormat.getCurrencyInstance()
     format.currency = Currency.getInstance("SEK")
     format.maximumFractionDigits = 2
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Total profit: " + format.format(count), color = colorResource(
-                if (count >= 0.0) {
-                    R.color.colorProfit
-                } else {
-                    R.color.colorLoss
-                }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(all = 16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .width(IntrinsicSize.Max)
+        ) {
+            Text(
+                text = "#", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold
             )
-        )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .width(IntrinsicSize.Max)
+        ) {
+            Text(
+                text = stringResource(id = R.string.generic_acquisition_value),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .width(IntrinsicSize.Max)
+        ) {
+            Text(
+                text = stringResource(id = R.string.generic_title_latest), style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .width(IntrinsicSize.Max)
+        ) {
+            Text(
+                text = stringResource(id = R.string.generic_profit), style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        // FIXME: Add sorting Overflow menu, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end =16.dp, bottom = 16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(3f)
+                .width(IntrinsicSize.Max)
+        ) {
+            // Nothing
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .width(IntrinsicSize.Max)
+        ) {
+            Text(
+                text = format.format(count), color = colorResource(
+                    if (count >= 0.0) {
+                        R.color.colorProfit
+                    } else {
+                        R.color.colorLoss
+                    }
+                ), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -223,7 +321,8 @@ fun StocksHeader(
 private fun StocksTab(
     index: Int,
     viewState: HomeViewModel.ViewState,
-    stockPriceListener: StockPriceListener
+    stockPriceListener: StockPriceListener,
+    onShowStock: (String) -> Unit
 ) {
     if (index == 0) {
         val currencyRates =
@@ -234,41 +333,125 @@ private fun StocksTab(
             currencyRates
         )
     }
+    Divider(thickness = 1.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            modifier = Modifier.padding(top = 16.dp),
+                text = viewState . items [index].displayName,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold
+        )
+        // FIXME: Add overflow menu with quick actions (remove), issues/21
+        OverflowMenu(onNavigateTo = {}, route = "TODO")
+    }
     StockOrderAggregateItem(
         item = viewState.items[index],
-        stockPriceListener = stockPriceListener
+        stockPriceListener = stockPriceListener,
+        onShowStock = onShowStock
     )
 }
 
 @Composable
 private fun StockOrderAggregateItem(
     item: StockOrderAggregate, stockPriceListener: StockPriceListener,
+    onShowStock: (String) -> Unit
 ) {
-    // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Column {
-            Text(text = item.displayName, style = MaterialTheme.typography.bodyMedium)
-            // FIXME: Add quantity
-        }
-        val format: NumberFormat = NumberFormat.getCurrencyInstance()
-        format.currency = item.currency
-        format.maximumFractionDigits = 2
-        Text(
-            text = format.format(stockPriceListener.getStockPrice(item.stockSymbol).price),
-            style = MaterialTheme.typography.bodyMedium
-        )
-        if (StockMuteSettingsRepository.isMuted(item.stockSymbol)) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_fas_bell_slash),
-                contentDescription = "Muted stock"
-            )
-        } else {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_fas_bell),
-                contentDescription = "Unmuted stock"
-            )
-        }
+    val stockPrice = stockPriceListener.getStockPrice(item.stockSymbol)
+    val profit = item.getProfit(stockPrice.price)
+    val format: NumberFormat = NumberFormat.getCurrencyInstance()
+    format.currency = item.currency
+    format.maximumFractionDigits = 2
 
-        // FIXME: Add overflow menu with quick actions (remove), issues/21
+    // FIXME: https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+    Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol) }) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .width(IntrinsicSize.Max)
+                ) {
+                    Text(text = item.getQuantity().toString(), style = MaterialTheme.typography.bodySmall)
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .width(IntrinsicSize.Max)
+                ) {
+                    Text(text = format.format(item.getAcquisitionValue()), style = MaterialTheme.typography.bodySmall)
+
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .width(IntrinsicSize.Max)
+                ) {
+                    Text(
+                        text = format.format(stockPrice.price),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .width(IntrinsicSize.Max)
+                ) {
+                    Text(
+                        text = format.format(profit),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = when (profit.compareTo(0)) {
+                            1 -> Profit
+                            -1 -> Loss
+                            else -> MaterialTheme.colorScheme.onSurface
+                        }
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 16.dp), horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = { /*TODO*/ }, colors = ButtonDefaults.textButtonColors(
+                        backgroundColor = colorResource(
+                            id = (android.R.color.holo_green_dark)
+                        )
+                    )
+                ) {
+                    Text(text = stringResource(id = R.string.action_stock_buy_short))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                TextButton(
+                    onClick = { /*TODO*/ }, colors = ButtonDefaults.textButtonColors(
+                        backgroundColor = colorResource(
+                            id = (android.R.color.holo_red_dark)
+                        )
+                    )
+                ) {
+                    Text(text = stringResource(id = R.string.action_stock_sell_short))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                if (StockMuteSettingsRepository.isMuted(item.stockSymbol)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_fas_bell_slash),
+                        contentDescription = "Muted stock"
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_fas_bell),
+                        contentDescription = "Unmuted stock"
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+            }
+        }
     }
 }
