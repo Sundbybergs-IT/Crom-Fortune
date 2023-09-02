@@ -119,7 +119,7 @@ fun Home(
             actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ), actions = {
             OverflowMenu(
-                onNavigateTo = onNavigateTo, contentDescription = "Notifications Menu",
+                onNavigateTo = onNavigateTo, contentDescription = "Home Menu",
                 route = LeafScreen.BottomSheetsHome.route
             )
         })
