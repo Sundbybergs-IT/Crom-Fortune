@@ -156,8 +156,8 @@ fun Home(
                 pagerState = pagerState, view = view, changedState = viewModel.changedPagerMutableState
             )
             val tabs = listOf(
-                stringResource(id = R.string.home_stocks_personal_title) to viewModel.personalStocksViewState,
-                stringResource(id = R.string.home_stocks_crom_title) to viewModel.cromStocksViewState,
+                stringResource(id = R.string.home_stocks_personal_title).uppercase() to viewModel.personalStocksViewState,
+                stringResource(id = R.string.home_stocks_crom_title).uppercase() to viewModel.cromStocksViewState,
             )
             showFabMutableState.value = tabs[0].second.value.items.isEmpty()
             HorizontalPager(
