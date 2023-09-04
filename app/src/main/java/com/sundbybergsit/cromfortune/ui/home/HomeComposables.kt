@@ -20,6 +20,10 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,15 +36,18 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -110,6 +117,9 @@ fun Home(
             return checkNotNull(stockPricesViewState).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
         }
     }
+    var expanded by remember { mutableStateOf(false) }
+    val items = stringArrayResource(id = R.array.filter_array)
+    var selectedIndex by remember { mutableIntStateOf(0) }
     Scaffold(topBar = {
         TopAppBar(title = {
             Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.titleMedium)
@@ -118,7 +128,47 @@ fun Home(
             titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ), actions = {
-            // FIXME: Add dropdown selection: "Current" / "All", https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+            Box(
+                modifier = Modifier
+                    .width(178.dp)
+                    .padding(16.dp)
+                    .clickable(onClick = { expanded = true }),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = items[selectedIndex], modifier = Modifier.padding(16.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = "Dropdown arrow",
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items.forEachIndexed { index, label ->
+                        DropdownMenuItem(onClick = {
+                            selectedIndex = index
+                            expanded = false
+                            if (selectedIndex == 0) {
+                                viewModel.showCurrent(localContext)
+                            } else if (selectedIndex == 1) {
+                                viewModel.showAll(localContext)
+                            }
+                        },
+                            text = {
+                                Text(text = label)
+                            }
+                        )
+                    }
+                }
+            }
             TextButton(onClick = {
                 viewModel.refreshData(context = localContext)
             }) {
