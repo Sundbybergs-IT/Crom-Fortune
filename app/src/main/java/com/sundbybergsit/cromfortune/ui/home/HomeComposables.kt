@@ -120,8 +120,7 @@ fun Home(
         ), actions = {
             // FIXME: Add dropdown selection: "Current" / "All", https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
             TextButton(onClick = {
-                // FIXME: Add "Update" button, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-                DialogHandler.showSnack(localContext.getString(R.string.generic_error_not_supported))
+                viewModel.refreshData(context = localContext)
             }) {
                 Text(text = stringResource(id = R.string.action_refresh).uppercase())
             }
