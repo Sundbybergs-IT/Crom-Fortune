@@ -319,10 +319,6 @@ private fun HomeItems(onBuy: () -> Unit, onSell: () -> Unit, onSplit: () -> Unit
         onClick = onSplit,
         text = stringResource(id = R.string.action_stock_add_split)
     )
-    BottomSheetMenuItem(
-        onClick = onRefresh,
-        text = stringResource(id = R.string.action_refresh)
-    )
 }
 
 @Composable
