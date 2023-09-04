@@ -3,7 +3,6 @@ package com.sundbybergsit.cromfortune.ui.home
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import androidx.annotation.StringRes
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -11,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.CromFortuneApp
-import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
@@ -36,13 +34,14 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     private val _cromStocksViewState: MutableState<ViewState> =
-        mutableStateOf(ViewState(R.string.home_no_stocks, listOf()))
+        mutableStateOf(ViewState(listOf()))
     private val _personalStocksViewState: MutableState<ViewState> =
-        mutableStateOf(ViewState(R.string.home_no_stocks, listOf()))
+        mutableStateOf(ViewState(listOf()))
     private val _dialogViewState: MutableState<DialogViewState> = mutableStateOf(DialogViewState.Dismissed)
 
     internal val cromStocksViewState: State<ViewState> = _cromStocksViewState
     internal val personalStocksViewState: State<ViewState> = _personalStocksViewState
+    // FIXME: Implement dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
     val dialogViewState: State<DialogViewState> = _dialogViewState
     private var showAll = false
 
@@ -128,17 +127,15 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     private fun refresh(context: Context) {
         val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         if (stockEventRepository.isEmpty()) {
-            _cromStocksViewState.value = ViewState(textResId = R.string.home_no_stocks, items = listOf())
-            _personalStocksViewState.value = ViewState(textResId = R.string.home_no_stocks, items = listOf())
+            _cromStocksViewState.value = ViewState(items = listOf())
+            _personalStocksViewState.value = ViewState(items = listOf())
         } else {
             _cromStocksViewState.value =
                 ViewState(
-                    textResId = R.string.home_stocks,
                     items = stocks(context = context, lambda = cromStockAggregate)
                 )
             _personalStocksViewState.value =
                 ViewState(
-                    textResId = R.string.home_stocks,
                     items = stocks(context = context, lambda = personalStockAggregate)
                 )
         }
@@ -217,14 +214,14 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     fun showAll(context: Context) {
         showAll = true
-        if (_personalStocksViewState.value?.items?.isNotEmpty() == true) {
+        if (_personalStocksViewState.value.items.isNotEmpty()) {
             refresh(context)
         }
     }
 
     fun showCurrent(context: Context) {
         showAll = false
-        if (_personalStocksViewState.value?.items?.isNotEmpty() == true) {
+        if (_personalStocksViewState.value.items.isNotEmpty()) {
             refresh(context)
         }
     }
@@ -237,6 +234,6 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     }
 
-    internal class ViewState(@StringRes val textResId: Int, val items: List<StockOrderAggregate>)
+    internal class ViewState(val items: List<StockOrderAggregate>)
 
 }
