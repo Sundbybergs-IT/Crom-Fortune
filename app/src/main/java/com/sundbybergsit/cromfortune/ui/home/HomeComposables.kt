@@ -249,7 +249,8 @@ fun Home(
                                                 stockSymbol = stockSymbol
                                             )
                                         )
-                                    }
+                                    },
+                                    onNavigateTo = onNavigateTo
                                 )
 
                                 1 -> StocksTab(
@@ -263,7 +264,8 @@ fun Home(
                                                 stockSymbol = stockSymbol
                                             )
                                         )
-                                    }
+                                    },
+                                    onNavigateTo = onNavigateTo
                                 )
                             }
                         }
@@ -378,7 +380,8 @@ private fun StocksTab(
     index: Int,
     viewState: HomeViewModel.ViewState,
     stockPriceListener: StockPriceListener,
-    onShowStock: (String) -> Unit
+    onShowStock: (String) -> Unit,
+    onNavigateTo: (String) -> Unit,
 ) {
     if (index == 0) {
         val currencyRates =
@@ -403,8 +406,7 @@ private fun StocksTab(
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold
         )
-        // FIXME: Add overflow menu with quick actions (remove), issues/21
-        OverflowMenu(onNavigateTo = {}, route = "TODO")
+        OverflowMenu(onNavigateTo = onNavigateTo, route = LeafScreen.BottomSheetsHomeStock.createRoute(viewState.items[index].stockSymbol))
     }
     StockOrderAggregateItem(
         item = viewState.items[index],

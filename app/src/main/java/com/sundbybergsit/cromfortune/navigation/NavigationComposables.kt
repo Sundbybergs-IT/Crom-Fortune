@@ -168,6 +168,7 @@ private fun NavGraphBuilder.addHomeTopLevel(navController: NavHostController) {
     addNotifications(navController = navController)
     addSettings(navController = navController)
     addHomeBottomSheet()
+    addHomeStockBottomSheet()
 }
 
 private fun NavGraphBuilder.addDashboardTopLevel(navController: NavHostController) {
@@ -242,6 +243,31 @@ private fun NavGraphBuilder.addHomeBottomSheet() {
                     homeViewModel.refreshData(context)
                     Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
                 }
+            )
+        }
+    }
+}
+
+private fun NavGraphBuilder.addHomeStockBottomSheet() {
+    bottomSheet(
+        route = LeafScreen.BottomSheetsHomeStock.route,
+        arguments = listOf(
+            navArgument("stock_symbol") {
+                type = NavType.StringType
+                nullable = true
+            }),
+    ) { backStackEntry ->
+        val arguments = checkNotNull(backStackEntry.arguments)
+        val stockSymbol = checkNotNull(arguments.getString("stock_symbol"))
+        val context = LocalContext.current
+        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+            HomeViewModelFactory()
+        })
+        val onDelete = { homeViewModel.onClickRemove(context = context, stockName = stockSymbol) }
+        BottomSheetContent {
+            BottomSheetMenuItem(
+                onClick = onDelete,
+                text = stringResource(id = R.string.action_delete)
             )
         }
     }
