@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Switch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DropdownMenu
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusState
@@ -292,10 +294,191 @@ fun RegisterSellStockAlertDialog(
 }
 
 @Composable
-fun RegisterSplitStockAlertDialog(showDialog: Boolean, onDismiss: () -> Unit, onSave: (StockSplit) -> Unit) {
-    // FIXME: Implement, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+fun RegisterSplitStockAlertDialog(
+    showDialog: Boolean, onDismiss: () -> Unit,
+    onSave: (StockSplit) -> Unit,
+    homeViewModel: HomeViewModel
+) {
     if (showDialog) {
+        val horizontalPadding = 28.dp
+        Dialog(onDismissRequest = onDismiss) {
+            val scrollState = rememberScrollState()
+            ConstraintLayout(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(state = scrollState)
+            ) {
+                val (titleRef, dateRef, splitSwitchRef, stockQuantityRef, stockNameRef, buttonsRef) = createRefs()
 
+                Text(
+                    modifier = Modifier
+                        .padding(all = 16.dp)
+                        .constrainAs(titleRef) {
+                            top.linkTo(parent.top)
+                        }, text = stringResource(id = R.string.action_stock_add_split)
+                )
+                val myCalendar = Calendar.getInstance()
+                val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+                val dateMutableState: MutableState<TextFieldValue> = remember {
+                    mutableStateOf(TextFieldValue(text = sdf.format(myCalendar.time)))
+                }
+                val dateErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val dateErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                InputValidatedOutlinedTextField(modifier = Modifier
+                    .constrainAs(dateRef) {
+                        top.linkTo(titleRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .background(color = MaterialTheme.colorScheme.background)
+                    .fillMaxWidth(),
+                    horizontalPadding = horizontalPadding,
+                    label = { Text(text = stringResource(id = R.string.home_add_stock_date_label)) },
+                    value = dateMutableState,
+                    isError = dateErrorMutableState.value,
+                    errorMessage = dateErrorMessageMutableState.value,
+                    contentDescriptor = "Date Input Text"
+                )
+                val stockQuantityMutableState: MutableState<TextFieldValue> =
+                    remember { mutableStateOf(TextFieldValue(text = "")) }
+                val stockQuantityErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val stockQuantityErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                val reverseSplitMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                Row(modifier = Modifier
+                    .constrainAs(splitSwitchRef) {
+                        top.linkTo(dateRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .padding(horizontal = horizontalPadding), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(id = R.string.home_add_split_reverse),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    Switch(
+                        checked = reverseSplitMutableState.value,
+                        onCheckedChange = { reverseSplitMutableState.value = !reverseSplitMutableState.value })
+                }
+                InputValidatedOutlinedTextField(modifier = Modifier
+                    .constrainAs(stockQuantityRef) {
+                        top.linkTo(splitSwitchRef.bottom)
+                        start.linkTo(parent.start)
+                    }
+                    .background(color = MaterialTheme.colorScheme.background)
+                    .fillMaxWidth(),
+                    horizontalPadding = horizontalPadding,
+                    label = {
+                        Text(
+                            text = stringResource(id = R.string.generic_title_quantity),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    value = stockQuantityMutableState,
+                    isError = stockQuantityErrorMutableState.value,
+                    errorMessage = stockQuantityErrorMessageMutableState.value,
+                    contentDescriptor = "Stock Quantity Input Text"
+                )
+                val stockNameMutableState: MutableState<TextFieldValue> =
+                    remember { mutableStateOf(TextFieldValue(text = "")) }
+                val stockNameErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+                val stockNameErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+                val currencyMutableState: MutableState<TextFieldValue> = remember {
+                    mutableStateOf(
+                        TextFieldValue(text = "")
+                    )
+                }
+                val allStocks = ArrayList(StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+                    .toList())
+                val dropDownOptionsMutableState = remember { mutableStateOf(listOf<String>()) }
+                val dropDownExpandedMutableState = remember { mutableStateOf(false) }
+                fun onValueChanged(value: TextFieldValue) {
+                    dropDownExpandedMutableState.value = true
+                    stockNameMutableState.value = value
+                    dropDownOptionsMutableState.value =
+                        allStocks.filter { it.startsWith(value.text) && it != value.text }.take(3)
+                }
+                InputValidatedOutlinedTextFieldWithDropdown(
+                    modifier = Modifier
+                        .constrainAs(stockNameRef) {
+                            top.linkTo(stockQuantityRef.bottom)
+                            start.linkTo(parent.start)
+                        }
+                        .background(color = MaterialTheme.colorScheme.background)
+                        .fillMaxWidth(),
+                    horizontalPadding = horizontalPadding,
+                    label = { Text(text = stringResource(id = R.string.home_add_stock_name_label)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    value = stockNameMutableState,
+                    onValueChanged = ::onValueChanged,
+                    onDismissRequest = { dropDownExpandedMutableState.value = false },
+                    dropDownExpandedMutableState = dropDownExpandedMutableState,
+                    dropdownList = dropDownOptionsMutableState.value,
+                    isError = stockNameErrorMutableState.value,
+                    errorMessage = stockNameErrorMessageMutableState.value,
+                    contentDescriptor = "Stock Name Input Text",
+                    onFocusChanged = {
+                        if (!it.hasFocus) {
+                            val find =
+                                StockPrice.SYMBOLS.find { triple -> "${triple.second} (${triple.first})" == stockNameMutableState.value.text }
+                            if (find != null) {
+                                currencyMutableState.value = TextFieldValue(find.third)
+                            }
+                        }
+                    }
+                )
+                Row(modifier = Modifier
+                    .padding(all = 16.dp)
+                    .constrainAs(buttonsRef) {
+                        top.linkTo(stockNameRef.bottom)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom)
+                    }) {
+                    DialogButton(text = stringResource(id = R.string.action_cancel), onClick = onDismiss)
+                    val context = LocalContext.current
+                    DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
+                        try {
+                            dateMutableState.value.validateDate(
+                                context = context,
+                                errorMutableState = dateErrorMutableState,
+                                errorMessageMutableState = dateErrorMessageMutableState,
+                                pattern = DATE_FORMAT
+                            )
+                            stockQuantityMutableState.value.validateInt(
+                                context = context,
+                                errorMutableState = stockQuantityErrorMutableState,
+                                errorMessageMutableState = stockQuantityErrorMessageMutableState
+                            )
+                            if (reverseSplitMutableState.value) {
+                                stockQuantityMutableState.value.validateMinQuantity(
+                                    context = context,
+                                    errorMutableState = stockQuantityErrorMutableState,
+                                    errorMessageMutableState = stockQuantityErrorMessageMutableState,
+                                    minValue = StockSplit.MIN_QUANTITY
+                                )
+                            }
+                            stockNameMutableState.value.validateStockName(
+                                context = context,
+                                errorMutableState = stockNameErrorMutableState,
+                                errorMessageMutableState = stockNameErrorMessageMutableState
+                            )
+                            val stockSymbol =
+                                stockNameMutableState.value.text.substringAfterLast('(').substringBeforeLast(')')
+                            val dateAsString = dateMutableState.value.text
+                            val inputDate = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+                            val stockSplit = StockSplit(
+                                reverseSplitMutableState.value,
+                                inputDate.time,
+                                stockSymbol,
+                                stockQuantityMutableState.value.text.toInt()
+                            )
+                            onSave.invoke(stockSplit)
+                            onDismiss.invoke()
+                        } catch (e: ValidatorException) {
+                            // Shit happens ...
+                        }
+                    })
+                }
+            }
+        }
     }
 }
 
