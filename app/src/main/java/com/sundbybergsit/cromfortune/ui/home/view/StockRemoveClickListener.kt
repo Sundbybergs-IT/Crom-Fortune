@@ -4,6 +4,6 @@ import android.content.Context
 
 internal interface StockRemoveClickListener {
 
-    fun onClickRemove(context: Context, stockName : String)
+    fun onClickRemove(context: Context, stockSymbol : String)
 
 }
