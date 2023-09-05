@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.navigation
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,6 +32,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -69,6 +72,9 @@ import com.sundbybergsit.cromfortune.ui.settings.*
 internal fun AppNavigation(navController: NavHostController) {
     val bottomSheetNavigator = rememberBottomSheetNavigator()
     navController.navigatorProvider += bottomSheetNavigator
+    AddDialogs(
+        dialogHandler = DialogHandler,
+    )
     ModalBottomSheetLayout(bottomSheetNavigator = bottomSheetNavigator) {
         val snackbarHostState = remember { SnackbarHostState() }
         val view = LocalView.current
@@ -159,6 +165,45 @@ internal fun AppNavigation(navController: NavHostController) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun AddDialogs(dialogHandler: DialogHandler) {
+    if (dialogHandler.dialogViewState.value is DialogHandler.DialogViewState.ShowDeleteDialog) {
+        val viewState = dialogHandler.dialogViewState.value as DialogHandler.DialogViewState.ShowDeleteDialog
+        val context : Context = LocalContext.current
+        AlertDialog(
+            modifier = Modifier,
+            title = {
+                Text(
+                    text = stringResource(id = R.string.generic_dialog_title_are_you_sure),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(id = R.string.home_delete_all_stock_orders, viewState.stockName),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            onDismissRequest = { dialogHandler.dismissDialog() },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewState.onClickRemove(context =context, stockSymbol = viewState.stockName)
+                    dialogHandler.dismissDialog()
+                }) {
+                    Text(stringResource(id = R.string.action_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    dialogHandler.dismissDialog()
+                }) {
+                    Text(stringResource(id = R.string.action_close))
+                }
+            }
+        )
     }
 }
 
@@ -260,10 +305,7 @@ private fun NavGraphBuilder.addHomeStockBottomSheet() {
         val arguments = checkNotNull(backStackEntry.arguments)
         val stockSymbol = checkNotNull(arguments.getString("stock_symbol"))
         val context = LocalContext.current
-        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory()
-        })
-        val onDelete = { homeViewModel.onClickRemove(context = context, stockName = stockSymbol) }
+        val onDelete = { DialogHandler.showDeleteDialog(context = context, stockName = stockSymbol) }
         BottomSheetContent {
             BottomSheetMenuItem(
                 onClick = onDelete,

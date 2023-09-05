@@ -2,17 +2,19 @@ package com.sundbybergsit.cromfortune.stocks
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
+import com.sundbybergsit.cromfortune.Taggable
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+// FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
 class StockOrderRepositoryImpl(
         context: Context,
         private val sharedPreferences: SharedPreferences =
                 context.getSharedPreferences("Stocks", Context.MODE_PRIVATE),
-) : StockOrderRepository {
+) : StockOrderRepository, Taggable {
 
     override fun count(stockName: String): Int {
         val list: Set<StockOrder> = list(stockName)
@@ -46,6 +48,7 @@ class StockOrderRepositoryImpl(
     }
 
     override fun list(stockName: String): Set<StockOrder> {
+        Log.i(TAG, "list([$stockName])")
         val serializedOrders = sharedPreferences.getStringSet(stockName, emptySet()) as Set<String>
         val result = mutableSetOf<StockOrder>()
         for (serializedOrder in serializedOrders) {
@@ -56,6 +59,7 @@ class StockOrderRepositoryImpl(
     }
 
     override fun putAll(stockName: String, stockOrders: Set<StockOrder>) {
+        Log.i(TAG, "putAll([$stockName], [$stockOrders])")
         val serializedStockOrders = mutableSetOf<String>()
         // TODO: Yes, accidentally wrapped a collection too much... Must make upgrade script
         serializedStockOrders.add(Json.encodeToString(stockOrders))
@@ -63,14 +67,17 @@ class StockOrderRepositoryImpl(
     }
 
     override fun putReplacingAll(stockName: String, stockOrder: StockOrder) {
+        Log.i(TAG, "putReplacingAll([$stockName], [$stockOrder])")
         putAll(stockName, setOf(stockOrder))
     }
 
     override fun remove(stockName: String) {
+        Log.i(TAG, "remove([$stockName])")
         sharedPreferences.edit().remove(stockName).apply()
     }
 
     override fun remove(stockOrder: StockOrder) {
+        Log.i(TAG, "remove([$stockOrder])")
         val stockOrders =  list(stockOrder.name).toMutableSet()
         stockOrders.remove(stockOrder)
         if (stockOrders.isEmpty()) {

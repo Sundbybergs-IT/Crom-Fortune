@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.pager.PagerState
@@ -13,19 +12,23 @@ import com.sundbybergsit.cromfortune.CromFortuneApp
 import com.sundbybergsit.cromfortune.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.domain.*
+import com.sundbybergsit.cromfortune.domain.StockEvent
+import com.sundbybergsit.cromfortune.domain.StockEventRepository
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
+import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
-import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Currency
 
-class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel(),
-    StockRemoveClickListener {
+class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
 
     companion object {
 
@@ -37,12 +40,10 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
         mutableStateOf(ViewState(listOf()))
     private val _personalStocksViewState: MutableState<ViewState> =
         mutableStateOf(ViewState(listOf()))
-    private val _dialogViewState: MutableState<DialogViewState> = mutableStateOf(DialogViewState.Dismissed)
 
     internal val cromStocksViewState: State<ViewState> = _cromStocksViewState
     internal val personalStocksViewState: State<ViewState> = _personalStocksViewState
-    // FIXME: Implement dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-    val dialogViewState: State<DialogViewState> = _dialogViewState
+
     private var showAll = false
 
     val showRegisterBuyStocksDialog: MutableState<Boolean> = mutableStateOf(false)
@@ -112,11 +113,6 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
             }
             stockOrderAggregate!!
         }
-
-    @SuppressLint("ApplySharedPref")
-    override fun onClickRemove(context: Context, stockName: String) {
-        _dialogViewState.value = DialogViewState.ShowDeleteDialog(stockName)
-    }
 
     fun selectTab(index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
         coroutineScope.launch {
@@ -224,14 +220,6 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
         if (_personalStocksViewState.value.items.isNotEmpty()) {
             refresh(context)
         }
-    }
-
-    sealed class DialogViewState {
-
-        data object Dismissed : DialogViewState()
-
-        data class ShowDeleteDialog(val stockName: String) : DialogViewState()
-
     }
 
     internal class ViewState(val items: List<StockOrderAggregate>)
