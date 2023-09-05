@@ -110,7 +110,7 @@ fun Home(
         onSave = { stockSplit ->
             viewModel.save(context = localContext, stockSplit = stockSplit)
             Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-        }
+        }, homeViewModel = viewModel
     )
     val stockPriceListener: StockPriceListener = object : StockPriceListener {
         override fun getStockPrice(stockSymbol: String): StockPrice {
@@ -406,7 +406,10 @@ private fun StocksTab(
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold
         )
-        OverflowMenu(onNavigateTo = onNavigateTo, route = LeafScreen.BottomSheetsHomeStock.createRoute(viewState.items[index].stockSymbol))
+        OverflowMenu(
+            onNavigateTo = onNavigateTo,
+            route = LeafScreen.BottomSheetsHomeStock.createRoute(viewState.items[index].stockSymbol)
+        )
     }
     StockOrderAggregateItem(
         item = viewState.items[index],

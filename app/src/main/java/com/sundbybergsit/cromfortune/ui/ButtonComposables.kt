@@ -17,7 +17,7 @@ internal fun DialogButton(modifier: Modifier = Modifier, text: String, onClick: 
     Button(
         modifier = modifier.height(buttonHeightInDp), onClick = onClick, border = null,
         elevation = null,
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background)
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.primary)
     ) {
         ButtonText(text = text)
     }
