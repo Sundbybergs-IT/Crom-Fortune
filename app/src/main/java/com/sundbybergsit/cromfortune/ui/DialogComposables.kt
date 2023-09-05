@@ -447,14 +447,12 @@ fun RegisterSplitStockAlertDialog(
                                 errorMutableState = stockQuantityErrorMutableState,
                                 errorMessageMutableState = stockQuantityErrorMessageMutableState
                             )
-                            if (reverseSplitMutableState.value) {
-                                stockQuantityMutableState.value.validateMinQuantity(
-                                    context = context,
-                                    errorMutableState = stockQuantityErrorMutableState,
-                                    errorMessageMutableState = stockQuantityErrorMessageMutableState,
-                                    minValue = StockSplit.MIN_QUANTITY
-                                )
-                            }
+                            stockQuantityMutableState.value.validateMinQuantity(
+                                context = context,
+                                errorMutableState = stockQuantityErrorMutableState,
+                                errorMessageMutableState = stockQuantityErrorMessageMutableState,
+                                minValue = StockSplit.MIN_QUANTITY
+                            )
                             stockNameMutableState.value.validateStockName(
                                 context = context,
                                 errorMutableState = stockNameErrorMutableState,
