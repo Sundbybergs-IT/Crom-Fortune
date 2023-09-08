@@ -6,6 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.domain.StockEventRepository
+import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,6 @@ object DialogHandler {
 
     private val _dialogViewState: MutableState<DialogViewState> = mutableStateOf(DialogViewState.Dismissed)
 
-    // FIXME: Implement dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
     val dialogViewState: State<DialogViewState> = _dialogViewState
 
     fun showSnack(text: String) {
@@ -34,12 +34,20 @@ object DialogHandler {
         _snackbarFlow.value = null
     }
 
-    fun showDeleteDialog(context : Context, stockName: String) {
-        _dialogViewState.value = DialogViewState.ShowDeleteDialog(stockEventRepository= StockEventRepositoryImpl(context), stockName = stockName)
+    fun showDeleteDialog(context: Context, stockName: String) {
+        _dialogViewState.value = DialogViewState.ShowDeleteDialog(
+            stockEventRepository = StockEventRepositoryImpl(context),
+            stockName = stockName
+        )
     }
 
     fun dismissDialog() {
         _dialogViewState.value = DialogViewState.Dismissed
+    }
+
+    fun showStockRetrievalTimeIntervalsDialog(stockRetrievalSettings: StockRetrievalSettings) {
+        _dialogViewState.value =
+            DialogViewState.ShowStockRetrievalTimeIntervalsDialog(stockRetrievalSettings = stockRetrievalSettings)
     }
 
     sealed class DialogViewState {
@@ -54,6 +62,11 @@ object DialogHandler {
             override fun onClickRemove(context: Context, stockSymbol: String) {
                 stockEventRepository.remove(stockSymbol)
             }
+
+        }
+
+        class ShowStockRetrievalTimeIntervalsDialog(val stockRetrievalSettings: StockRetrievalSettings) :
+            DialogViewState() {
 
         }
 

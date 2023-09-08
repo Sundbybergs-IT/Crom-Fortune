@@ -10,6 +10,7 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,6 +34,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -57,6 +60,8 @@ import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.sundbybergsit.cromfortune.*
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
+import com.sundbybergsit.cromfortune.ui.DayPicker
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModelFactory
@@ -67,6 +72,7 @@ import com.sundbybergsit.cromfortune.ui.notifications.Notifications
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModel
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModelFactory
 import com.sundbybergsit.cromfortune.ui.settings.*
+import java.time.DayOfWeek
 
 @Composable
 internal fun AppNavigation(navController: NavHostController) {
@@ -170,9 +176,9 @@ internal fun AppNavigation(navController: NavHostController) {
 
 @Composable
 fun AddDialogs(dialogHandler: DialogHandler) {
-    if (dialogHandler.dialogViewState.value is DialogHandler.DialogViewState.ShowDeleteDialog) {
-        val viewState = dialogHandler.dialogViewState.value as DialogHandler.DialogViewState.ShowDeleteDialog
-        val context : Context = LocalContext.current
+    val dialogViewState = dialogHandler.dialogViewState.value
+    if (dialogViewState is DialogHandler.DialogViewState.ShowDeleteDialog) {
+        val context: Context = LocalContext.current
         AlertDialog(
             modifier = Modifier,
             title = {
@@ -183,14 +189,14 @@ fun AddDialogs(dialogHandler: DialogHandler) {
             },
             text = {
                 Text(
-                    text = stringResource(id = R.string.home_delete_all_stock_orders, viewState.stockName),
+                    text = stringResource(id = R.string.home_delete_all_stock_orders, dialogViewState.stockName),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
             onDismissRequest = { dialogHandler.dismissDialog() },
             confirmButton = {
                 TextButton(onClick = {
-                    viewState.onClickRemove(context =context, stockSymbol = viewState.stockName)
+                    dialogViewState.onClickRemove(context = context, stockSymbol = dialogViewState.stockName)
                     dialogHandler.dismissDialog()
                 }) {
                     Text(stringResource(id = R.string.action_delete))
@@ -201,6 +207,77 @@ fun AddDialogs(dialogHandler: DialogHandler) {
                     dialogHandler.dismissDialog()
                 }) {
                     Text(stringResource(id = R.string.action_close))
+                }
+            }
+        )
+    } else if (dialogViewState is DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog) {
+        val settingsViewState by dialogViewState.stockRetrievalSettings.timeInterval
+        val selectedDaysMutableState = remember { mutableStateOf(settingsViewState.weekDays.toSet()) }
+        val fromHourMutableState: MutableState<Int> = remember { mutableIntStateOf(settingsViewState.fromTimeHours) }
+        val fromMinuteMutableState: MutableState<Int> =
+            remember { mutableIntStateOf(settingsViewState.fromTimeMinutes) }
+        val toHourMutableState: MutableState<Int> = remember { mutableIntStateOf(settingsViewState.toTimeHours) }
+        val toMinuteMutableState: MutableState<Int> = remember { mutableIntStateOf(settingsViewState.toTimeMinutes) }
+        // FIXME: Values are reset when changing focus, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+        val fromTimePickerState = TimePickerState(
+            initialHour = fromHourMutableState.value,
+            initialMinute = fromMinuteMutableState.value,
+            is24Hour = true
+        )
+        val toTimePickerState = TimePickerState(
+            initialHour = toHourMutableState.value,
+            initialMinute = toMinuteMutableState.value,
+            is24Hour = true
+        )
+        AlertDialog(
+            modifier = Modifier,
+            title = {
+                Text(
+                    text = stringResource(id = R.string.settings_dialog_time_intervals_title),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(id = R.string.generic_time_start_label),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    TimeInput(state = fromTimePickerState)
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(id = R.string.generic_time_end_label),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    TimeInput(state = toTimePickerState)
+                    DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
+                        if (selectedDaysMutableState.value.contains(day)) {
+                            selectedDaysMutableState.value = selectedDaysMutableState.value - day
+                        } else {
+                            selectedDaysMutableState.value = selectedDaysMutableState.value + day
+                        }
+                    })
+                }
+            },
+            onDismissRequest = { dialogHandler.dismissDialog() },
+            confirmButton = {
+                TextButton(onClick = {
+                    dialogViewState.stockRetrievalSettings.set(fromTimePickerState.hour,
+                        fromTimePickerState.minute,
+                        toTimePickerState.hour,
+                        toTimePickerState.minute,
+                        selectedDaysMutableState.value.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
+                    dialogHandler.dismissDialog()
+                }) {
+                    Text(stringResource(id = android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    dialogHandler.dismissDialog()
+                }) {
+                    Text(stringResource(id = android.R.string.cancel))
                 }
             }
         )
@@ -334,15 +411,7 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
             SettingsViewModelFactory()
         })
         if (settingsViewModel.showStockRetrievalTimeIntervalsDialog.value) {
-            // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-            AndroidView(factory = { context ->
-                val dialog = TimeIntervalStockRetrievalDialogFragment()
-                dialog.onCreateView(
-                    LayoutInflater.from(context),
-                    null,
-                    null
-                ) ?: View(context)
-            })
+            DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(context))
         }
         if (settingsViewModel.showSupportedStocksDialog.value) {
             // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21

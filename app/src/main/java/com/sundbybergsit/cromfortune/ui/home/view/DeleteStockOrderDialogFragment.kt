@@ -52,7 +52,7 @@ class DeleteStockOrderDialogFragment(
                 }
                 adapter.notifyDataSetChanged()
             }
-            .setNegativeButton(R.string.action_cancel) { _, _ -> dismiss() }.create()
+            .setNegativeButton(android.R.string.cancel) { _, _ -> dismiss() }.create()
     }
 
 }
