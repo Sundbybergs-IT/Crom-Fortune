@@ -1,5 +1,4 @@
 <resources>
-    <string name="action_cancel">Avbryt</string>
     <string name="action_clear">Rensa</string>
     <string name="action_close">Stäng</string>
     <string name="action_configure_stock_retrieval_intervals">Tidsintervaller för aktieprishämtning</string>

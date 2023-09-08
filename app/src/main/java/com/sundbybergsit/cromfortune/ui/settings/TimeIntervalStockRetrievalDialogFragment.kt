@@ -50,7 +50,7 @@ class TimeIntervalStockRetrievalDialogFragment : DialogFragment() {
         val alertDialog = AlertDialog.Builder(context)
             .setMessage(R.string.settings_dialog_time_intervals_title)
             .setView(dialogRootView)
-            .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
+            .setNegativeButton(getText(android.R.string.cancel)) { _, _ ->
                 dismiss()
             }
             .setPositiveButton(getText(android.R.string.ok), confirmListener)

@@ -1,5 +1,4 @@
 <resources>
-    <string name="action_cancel">Cancel</string>
     <string name="action_clear">Clear</string>
     <string name="action_close">Close</string>
     <string name="action_configure_stock_retrieval_intervals">Stock retrieval time intervals</string>

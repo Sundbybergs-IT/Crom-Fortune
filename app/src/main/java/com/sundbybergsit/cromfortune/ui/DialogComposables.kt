@@ -222,7 +222,7 @@ fun RegisterSellStockAlertDialog(
                         end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
                     }) {
-                    DialogButton(text = stringResource(id = R.string.action_cancel), onClick = onDismiss)
+                    DialogButton(text = stringResource(id = android.R.string.cancel), onClick = onDismiss)
                     val context = LocalContext.current
                     DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
                         try {
@@ -432,7 +432,7 @@ fun RegisterSplitStockAlertDialog(
                         end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
                     }) {
-                    DialogButton(text = stringResource(id = R.string.action_cancel), onClick = onDismiss)
+                    DialogButton(text = stringResource(id = android.R.string.cancel), onClick = onDismiss)
                     val context = LocalContext.current
                     DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
                         try {
@@ -647,7 +647,7 @@ fun RegisterBuyStockAlertDialog(
                         end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
                     }) {
-                    DialogButton(text = stringResource(id = R.string.action_cancel), onClick = onDismiss)
+                    DialogButton(text = stringResource(id = android.R.string.cancel), onClick = onDismiss)
                     val context = LocalContext.current
                     DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
                         try {
