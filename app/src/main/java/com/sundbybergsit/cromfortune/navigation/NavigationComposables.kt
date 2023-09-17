@@ -175,7 +175,16 @@ internal fun AppNavigation(navController: NavHostController) {
 }
 
 @Composable
-fun AddDialogs(dialogHandler: DialogHandler) {
+fun AddDialogs(
+    dialogHandler: DialogHandler,
+    selectedDaysMutableState: MutableState<Set<DayOfWeek>> = remember { mutableStateOf(setOf()) },
+    fromHourMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
+    fromMinuteMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
+    toHourMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
+    toMinuteMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
+    fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) },
+    toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
+) {
     val dialogViewState = dialogHandler.dialogViewState.value
     if (dialogViewState is DialogHandler.DialogViewState.ShowDeleteDialog) {
         val context: Context = LocalContext.current
@@ -212,23 +221,12 @@ fun AddDialogs(dialogHandler: DialogHandler) {
         )
     } else if (dialogViewState is DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog) {
         val settingsViewState by dialogViewState.stockRetrievalSettings.timeInterval
-        val selectedDaysMutableState = remember { mutableStateOf(settingsViewState.weekDays.toSet()) }
-        val fromHourMutableState: MutableState<Int> = remember { mutableIntStateOf(settingsViewState.fromTimeHours) }
-        val fromMinuteMutableState: MutableState<Int> =
-            remember { mutableIntStateOf(settingsViewState.fromTimeMinutes) }
-        val toHourMutableState: MutableState<Int> = remember { mutableIntStateOf(settingsViewState.toTimeHours) }
-        val toMinuteMutableState: MutableState<Int> = remember { mutableIntStateOf(settingsViewState.toTimeMinutes) }
-        // FIXME: Values are reset when changing focus, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-        val fromTimePickerState = TimePickerState(
-            initialHour = fromHourMutableState.value,
-            initialMinute = fromMinuteMutableState.value,
-            is24Hour = true
+        UpdateTimePickerLaunchedEffect(
+            settingsViewState, dialogViewState, selectedDaysMutableState,
+            fromHourMutableState, fromMinuteMutableState, toHourMutableState, toMinuteMutableState,
+            fromTimePickerState, toTimePickerState
         )
-        val toTimePickerState = TimePickerState(
-            initialHour = toHourMutableState.value,
-            initialMinute = toMinuteMutableState.value,
-            is24Hour = true
-        )
+        val context = LocalContext.current
         AlertDialog(
             modifier = Modifier,
             title = {
@@ -244,13 +242,17 @@ fun AddDialogs(dialogHandler: DialogHandler) {
                         text = stringResource(id = R.string.generic_time_start_label),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    TimeInput(state = fromTimePickerState)
+                    fromTimePickerState.value?.let { nullSafeTimePickerState ->
+                        TimeInput(state = nullSafeTimePickerState)
+                    }
                     Text(
                         modifier = Modifier.fillMaxWidth(),
                         text = stringResource(id = R.string.generic_time_end_label),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    TimeInput(state = toTimePickerState)
+                    toTimePickerState.value?.let { nullSafeTimePickerState ->
+                        TimeInput(state = nullSafeTimePickerState)
+                    }
                     DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
                         if (selectedDaysMutableState.value.contains(day)) {
                             selectedDaysMutableState.value = selectedDaysMutableState.value - day
@@ -263,12 +265,15 @@ fun AddDialogs(dialogHandler: DialogHandler) {
             onDismissRequest = { dialogHandler.dismissDialog() },
             confirmButton = {
                 TextButton(onClick = {
-                    dialogViewState.stockRetrievalSettings.set(fromTimePickerState.hour,
-                        fromTimePickerState.minute,
-                        toTimePickerState.hour,
-                        toTimePickerState.minute,
+                    val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
+                    val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
+                    dialogViewState.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
+                        nullSafeFromTimePickerState.minute,
+                        nullSafeToTimePickerState.hour,
+                        nullSafeToTimePickerState.minute,
                         selectedDaysMutableState.value.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
                     dialogHandler.dismissDialog()
+                    dialogHandler.showSnack(context.getString(R.string.generic_saved))
                 }) {
                     Text(stringResource(id = android.R.string.ok))
                 }
