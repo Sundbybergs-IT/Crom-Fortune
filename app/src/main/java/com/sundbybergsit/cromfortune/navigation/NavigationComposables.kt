@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -355,19 +354,13 @@ private fun NavGraphBuilder.addSettings(navController: NavHostController) {
 
 private fun NavGraphBuilder.addHomeBottomSheet() {
     bottomSheet(route = LeafScreen.BottomSheetsHome.route) {
-        val context = LocalContext.current
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
             HomeViewModelFactory()
         })
         BottomSheetContent {
             HomeItems(onBuy = { homeViewModel.showRegisterBuyStocksDialog.value = true },
-                onSell = { homeViewModel.showRegisterSellStocksDialog.value = true },
-                onSplit = { homeViewModel.showRegisterSplitStocksDialog.value = true },
-                onRefresh = {
-                    homeViewModel.refreshData(context)
-                    Toast.makeText(context, R.string.home_information_data_refreshed, Toast.LENGTH_LONG).show()
-                }
-            )
+                onSell = { homeViewModel.showRegisterSellStocksDialog.value = true }
+            ) { homeViewModel.showRegisterSplitStocksDialog.value = true }
         }
     }
 }
@@ -442,7 +435,7 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
 }
 
 @Composable
-private fun HomeItems(onBuy: () -> Unit, onSell: () -> Unit, onSplit: () -> Unit, onRefresh: () -> Unit) {
+private fun HomeItems(onBuy: () -> Unit, onSell: () -> Unit, onSplit: () -> Unit) {
     BottomSheetMenuItem(
         onClick = onBuy,
         text = stringResource(id = R.string.action_stock_buy)
@@ -573,7 +566,7 @@ private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
     }
 
     if (selectedPainter != null) {
-        Crossfade(targetState = selected) {
+        Crossfade(targetState = selected, label = "Navigation Crossfade") {
             Icon(
                 tint = if (selected) {
                     MaterialTheme.colorScheme.primary
