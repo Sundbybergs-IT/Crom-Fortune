@@ -7,6 +7,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -32,30 +33,26 @@ internal fun UpdateTimePickerLaunchedEffect(
     settingsViewState: StockRetrievalSettings.ViewState,
     dialogViewState: DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog,
     selectedDaysMutableState: MutableState<Set<DayOfWeek>>,
-    fromHourMutableState: MutableState<Int>,
-    fromMinuteMutableState: MutableState<Int>,
-    toHourMutableState: MutableState<Int>,
-    toMinuteMutableState: MutableState<Int>,
     fromTimePickerState: MutableState<TimePickerState?>,
     toTimePickerState: MutableState<TimePickerState?>
 ) {
-    LaunchedEffect(key1 = settingsViewState) {
+    DisposableEffect(key1 = settingsViewState) {
         val settingsViewState = dialogViewState.stockRetrievalSettings.timeInterval
         selectedDaysMutableState.value = settingsViewState.value.weekDays.toSet()
-        fromHourMutableState.value = settingsViewState.value.fromTimeHours
-        fromMinuteMutableState.value = settingsViewState.value.fromTimeMinutes
-        toHourMutableState.value = settingsViewState.value.toTimeHours
-        toMinuteMutableState.value = settingsViewState.value.toTimeMinutes
         fromTimePickerState.value = TimePickerState(
-            initialHour = fromHourMutableState.value,
-            initialMinute = fromMinuteMutableState.value,
+            initialHour = settingsViewState.value.fromTimeHours,
+            initialMinute = settingsViewState.value.fromTimeMinutes,
             is24Hour = true
         )
         toTimePickerState.value = TimePickerState(
-            initialHour = toHourMutableState.value,
-            initialMinute = toMinuteMutableState.value,
+            initialHour = settingsViewState.value.toTimeHours,
+            initialMinute = settingsViewState.value.toTimeMinutes,
             is24Hour = true
         )
+        onDispose {
+            fromTimePickerState.value = null
+            toTimePickerState.value = null
+        }
     }
 }
 

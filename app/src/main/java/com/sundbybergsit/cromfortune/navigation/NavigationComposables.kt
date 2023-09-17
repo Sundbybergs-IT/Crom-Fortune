@@ -178,10 +178,6 @@ internal fun AppNavigation(navController: NavHostController) {
 fun AddDialogs(
     dialogHandler: DialogHandler,
     selectedDaysMutableState: MutableState<Set<DayOfWeek>> = remember { mutableStateOf(setOf()) },
-    fromHourMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
-    fromMinuteMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
-    toHourMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
-    toMinuteMutableState: MutableState<Int> = remember { mutableIntStateOf(0) },
     fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) },
     toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
 ) {
@@ -223,69 +219,70 @@ fun AddDialogs(
         val settingsViewState by dialogViewState.stockRetrievalSettings.timeInterval
         UpdateTimePickerLaunchedEffect(
             settingsViewState, dialogViewState, selectedDaysMutableState,
-            fromHourMutableState, fromMinuteMutableState, toHourMutableState, toMinuteMutableState,
             fromTimePickerState, toTimePickerState
         )
         val context = LocalContext.current
-        AlertDialog(
-            modifier = Modifier,
-            title = {
-                Text(
-                    text = stringResource(id = R.string.settings_dialog_time_intervals_title),
-                    style = MaterialTheme.typography.titleSmall
-                )
-            },
-            text = {
-                Column {
+        if (fromTimePickerState.value != null && toTimePickerState.value != null) {
+            AlertDialog(
+                modifier = Modifier,
+                title = {
                     Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(id = R.string.generic_time_start_label),
+                        text = stringResource(id = R.string.settings_dialog_time_intervals_title),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    fromTimePickerState.value?.let { nullSafeTimePickerState ->
-                        TimeInput(state = nullSafeTimePickerState)
-                    }
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(id = R.string.generic_time_end_label),
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    toTimePickerState.value?.let { nullSafeTimePickerState ->
-                        TimeInput(state = nullSafeTimePickerState)
-                    }
-                    DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
-                        if (selectedDaysMutableState.value.contains(day)) {
-                            selectedDaysMutableState.value = selectedDaysMutableState.value - day
-                        } else {
-                            selectedDaysMutableState.value = selectedDaysMutableState.value + day
+                },
+                text = {
+                    Column {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = stringResource(id = R.string.generic_time_start_label),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        fromTimePickerState.value?.let { nullSafeTimePickerState ->
+                            TimeInput(state = nullSafeTimePickerState)
                         }
-                    })
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = stringResource(id = R.string.generic_time_end_label),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        toTimePickerState.value?.let { nullSafeTimePickerState ->
+                            TimeInput(state = nullSafeTimePickerState)
+                        }
+                        DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
+                            if (selectedDaysMutableState.value.contains(day)) {
+                                selectedDaysMutableState.value = selectedDaysMutableState.value - day
+                            } else {
+                                selectedDaysMutableState.value = selectedDaysMutableState.value + day
+                            }
+                        })
+                    }
+                },
+                onDismissRequest = { dialogHandler.dismissDialog() },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
+                        val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
+                        dialogViewState.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
+                            nullSafeFromTimePickerState.minute,
+                            nullSafeToTimePickerState.hour,
+                            nullSafeToTimePickerState.minute,
+                            selectedDaysMutableState.value.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
+                        dialogHandler.dismissDialog()
+                        dialogHandler.showSnack(context.getString(R.string.generic_saved))
+                    }) {
+                        Text(stringResource(id = android.R.string.ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        dialogHandler.dismissDialog()
+                    }) {
+                        Text(stringResource(id = android.R.string.cancel))
+                    }
                 }
-            },
-            onDismissRequest = { dialogHandler.dismissDialog() },
-            confirmButton = {
-                TextButton(onClick = {
-                    val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
-                    val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
-                    dialogViewState.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
-                        nullSafeFromTimePickerState.minute,
-                        nullSafeToTimePickerState.hour,
-                        nullSafeToTimePickerState.minute,
-                        selectedDaysMutableState.value.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
-                    dialogHandler.dismissDialog()
-                    dialogHandler.showSnack(context.getString(R.string.generic_saved))
-                }) {
-                    Text(stringResource(id = android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    dialogHandler.dismissDialog()
-                }) {
-                    Text(stringResource(id = android.R.string.cancel))
-                }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -415,9 +412,6 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
         val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = {
             SettingsViewModelFactory()
         })
-        if (settingsViewModel.showStockRetrievalTimeIntervalsDialog.value) {
-            DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(context))
-        }
         if (settingsViewModel.showSupportedStocksDialog.value) {
             // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
             AndroidView(factory = { context ->
@@ -433,7 +427,7 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
             SettingsItems(
                 onShowSupportedStocks = { settingsViewModel._showSupportedStocksDialog.value = true },
                 onShowStockRetrievalTimeIntervals = {
-                    settingsViewModel._showStockRetrievalTimeIntervalsDialog.value = true
+                    DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(context))
                 },
                 onShowTodo = {
                     val browserIntent = Intent(
