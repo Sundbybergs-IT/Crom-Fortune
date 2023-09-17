@@ -6,6 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.domain.StockEventRepository
+import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.SYMBOLS
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
@@ -50,6 +51,15 @@ object DialogHandler {
             DialogViewState.ShowStockRetrievalTimeIntervalsDialog(stockRetrievalSettings = stockRetrievalSettings)
     }
 
+    fun showSupportedStocksDialog() {
+        val allStocks = SYMBOLS
+        var message = ""
+        for (stock in allStocks) {
+            message += "$stock, "
+        }
+        _dialogViewState.value = DialogViewState.ShowSupportedStocksDialog(text = message)
+    }
+
     sealed class DialogViewState {
 
         data object Dismissed : DialogViewState()
@@ -69,6 +79,8 @@ object DialogHandler {
             DialogViewState() {
 
         }
+
+        data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
 
     }
 
