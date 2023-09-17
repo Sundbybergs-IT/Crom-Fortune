@@ -28,7 +28,8 @@ class StockRetrievalSettings(
     fun set(fromTimeHours: Int, fromTimeMinutes: Int, toTimeHours: Int, toTimeMinutes: Int, weekDays: List<DayOfWeek>) {
         Log.v(
             TAG,
-            "set(fromTimeHours=[${fromTimeHours}],fromTimeMinutes=[${fromTimeMinutes}], toTimeHours=[${toTimeHours}], toTimeMinutes=[${toTimeMinutes})"
+            "set(fromTimeHours=[${fromTimeHours}],fromTimeMinutes=[${fromTimeMinutes}], " +
+                "toTimeHours=[${toTimeHours}], toTimeMinutes=[${toTimeMinutes}], weekDays=[${weekDays}])"
         )
 
         sharedPreferences.edit().putInt("fromTimeHours", fromTimeHours).putInt("fromTimeMinutes", fromTimeMinutes)

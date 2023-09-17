@@ -5,14 +5,17 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshotFlow
+import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 
 @Composable
 internal fun PagerStateChangeDetectionLaunchedEffect(
@@ -21,6 +24,38 @@ internal fun PagerStateChangeDetectionLaunchedEffect(
 ) {
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.distinctUntilChanged().collect { changedPagerMutableState.value = true }
+    }
+}
+
+@Composable
+internal fun UpdateTimePickerLaunchedEffect(
+    settingsViewState: StockRetrievalSettings.ViewState,
+    dialogViewState: DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog,
+    selectedDaysMutableState: MutableState<Set<DayOfWeek>>,
+    fromHourMutableState: MutableState<Int>,
+    fromMinuteMutableState: MutableState<Int>,
+    toHourMutableState: MutableState<Int>,
+    toMinuteMutableState: MutableState<Int>,
+    fromTimePickerState: MutableState<TimePickerState?>,
+    toTimePickerState: MutableState<TimePickerState?>
+) {
+    LaunchedEffect(key1 = settingsViewState) {
+        val settingsViewState = dialogViewState.stockRetrievalSettings.timeInterval
+        selectedDaysMutableState.value = settingsViewState.value.weekDays.toSet()
+        fromHourMutableState.value = settingsViewState.value.fromTimeHours
+        fromMinuteMutableState.value = settingsViewState.value.fromTimeMinutes
+        toHourMutableState.value = settingsViewState.value.toTimeHours
+        toMinuteMutableState.value = settingsViewState.value.toTimeMinutes
+        fromTimePickerState.value = TimePickerState(
+            initialHour = fromHourMutableState.value,
+            initialMinute = fromMinuteMutableState.value,
+            is24Hour = true
+        )
+        toTimePickerState.value = TimePickerState(
+            initialHour = toHourMutableState.value,
+            initialMinute = toMinuteMutableState.value,
+            is24Hour = true
+        )
     }
 }
 
