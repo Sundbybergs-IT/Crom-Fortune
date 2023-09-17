@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.ui.home.view
 
+import android.content.Context
 import android.os.Build
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -101,7 +102,11 @@ class StockOrderAggregateListAdapterTest {
                 )
             ),
         )
-        listAdapter.setListener(HomeViewModel())
+        listAdapter.setListener(object : StockRemoveClickListener {
+            override fun onClickRemove(context: Context, stockSymbol: String) {
+                TODO("Not yet implemented")
+            }
+        })
         listAdapter.submitList(list)
     }
 

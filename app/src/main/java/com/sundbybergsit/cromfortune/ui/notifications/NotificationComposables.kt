@@ -107,7 +107,7 @@ fun Notifications(viewModel: NotificationsViewModel,
                                 NotificationsTab(
                                     notification = newNotification,
                                     backgroundColor = if (page % 2 == 0) {
-                                        MaterialTheme.colorScheme.secondary
+                                        MaterialTheme.colorScheme.primaryContainer
                                     } else {
                                         MaterialTheme.colorScheme.background
                                     }, formatter = formatter
@@ -119,7 +119,7 @@ fun Notifications(viewModel: NotificationsViewModel,
                                 NotificationsTab(
                                     notification = oldNotification,
                                     backgroundColor = if (page % 2 == 0) {
-                                        MaterialTheme.colorScheme.secondary
+                                        MaterialTheme.colorScheme.primaryContainer
                                     } else {
                                         MaterialTheme.colorScheme.background
                                     }, formatter = formatter
