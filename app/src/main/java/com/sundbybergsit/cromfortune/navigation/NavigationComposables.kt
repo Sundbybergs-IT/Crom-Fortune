@@ -3,8 +3,6 @@ package com.sundbybergsit.cromfortune.navigation
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.view.LayoutInflater
-import android.view.View
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -45,7 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.*
@@ -282,6 +279,31 @@ fun AddDialogs(
                 }
             )
         }
+    } else if (dialogViewState is DialogHandler.DialogViewState.ShowSupportedStocksDialog) {
+        AlertDialog(
+            modifier = Modifier,
+            title = {
+                Text(
+                    text = stringResource(id = R.string.action_stocks_supported),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            },
+            text = {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = dialogViewState.text,
+                    style = MaterialTheme.typography.titleSmall
+                )
+            },
+            onDismissRequest = { dialogHandler.dismissDialog() },
+            confirmButton = {
+                TextButton(onClick = {
+                    dialogHandler.dismissDialog()
+                }) {
+                    Text(stringResource(id = android.R.string.ok))
+                }
+            }
+        )
     }
 }
 
@@ -402,23 +424,9 @@ private fun NavGraphBuilder.addNotificationsBottomSheet() {
 private fun NavGraphBuilder.addSettingsBottomSheet() {
     bottomSheet(route = LeafScreen.BottomSheetsSettings.route) {
         val context = LocalContext.current
-        val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = {
-            SettingsViewModelFactory()
-        })
-        if (settingsViewModel.showSupportedStocksDialog.value) {
-            // FIXME: Dialog doesn't work, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-            AndroidView(factory = { context ->
-                val dialog = SupportedStockDialogFragment()
-                dialog.onCreateView(
-                    LayoutInflater.from(context),
-                    null,
-                    null
-                ) ?: View(context)
-            })
-        }
         BottomSheetContent {
             SettingsItems(
-                onShowSupportedStocks = { settingsViewModel._showSupportedStocksDialog.value = true },
+                onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
                 onShowStockRetrievalTimeIntervals = {
                     DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(context))
                 },
