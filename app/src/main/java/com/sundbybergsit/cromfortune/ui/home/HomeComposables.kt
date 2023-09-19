@@ -245,8 +245,8 @@ fun Home(
                                     viewState = personalStocksViewState,
                                     stockPriceListener = stockPriceListener,
                                     onShowStock = { stockSymbol ->
-                                        DialogHandler.showSnack(
-                                            "TODO: Show stocks: " + viewModel.personalStockEvents(
+                                        DialogHandler.showStockEvents(
+                                            stockSymbol, viewModel.personalStockEvents(
                                                 context = localContext,
                                                 stockSymbol = stockSymbol
                                             )
@@ -260,8 +260,8 @@ fun Home(
                                     viewState = cromStocksViewState,
                                     stockPriceListener = stockPriceListener,
                                     onShowStock = { stockSymbol ->
-                                        DialogHandler.showSnack(
-                                            "TODO: Show stocks: " + viewModel.cromStockEvents(
+                                        DialogHandler.showStockEvents(
+                                            stockSymbol, viewModel.cromStockEvents(
                                                 context = localContext,
                                                 stockSymbol = stockSymbol
                                             )

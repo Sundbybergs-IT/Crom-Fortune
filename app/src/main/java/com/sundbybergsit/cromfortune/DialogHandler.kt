@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockEventRepository
 import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.SYMBOLS
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
@@ -60,6 +61,16 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowSupportedStocksDialog(text = message)
     }
 
+    fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>) {
+        _dialogViewState.value = DialogViewState.ShowStockEvents(
+            title = "${
+                SYMBOLS.single { triple ->
+                    triple.first == stockSymbol
+                }.second
+            } ($stockSymbol)", stockEvents = stockEvents
+        )
+    }
+
     sealed class DialogViewState {
 
         data object Dismissed : DialogViewState()
@@ -81,6 +92,7 @@ object DialogHandler {
         }
 
         data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
+        data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>) : DialogViewState()
 
     }
 
