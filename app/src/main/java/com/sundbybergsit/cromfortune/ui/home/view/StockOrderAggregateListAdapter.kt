@@ -39,13 +39,6 @@ internal class StockOrderAggregateListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.listrow_stock_header -> StockOrderAggregateHeaderViewHolder(
-                context = parent.context,
-                stockPriceListener = this,
-                itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                adapter = this
-            )
-
             R.layout.listrow_stock_item -> StockOrderAggregateViewHolder(
                 context = parent.context,
                 viewModel = viewModel,
@@ -75,9 +68,6 @@ internal class StockOrderAggregateListAdapter(
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)!!) {
-        is StockAggregateHeaderAdapterItem -> {
-            R.layout.listrow_stock_header
-        }
 
         is StockAggregateAdapterItem -> {
             R.layout.listrow_stock_item
@@ -118,22 +108,6 @@ internal class StockOrderAggregateListAdapter(
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
             format.currency = Currency.getInstance("SEK")
             format.maximumFractionDigits = 2
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockHeader_totalProfit).text = format.format(count)
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockHeader_totalProfit).setTextColor(
-                ContextCompat.getColor(
-                    context, if (count >= 0.0) {
-                        R.color.colorProfit
-                    } else {
-                        R.color.colorLoss
-                    }
-                )
-            )
-            val overflowMenuImageView =
-                itemView.requireViewById<ImageView>(R.id.imageView_listrowStockHeader_overflowMenu)
-            val overflowMenu = PopupMenu(context, overflowMenuImageView)
-            overflowMenuImageView.setOnClickListener { overflowMenu.show() }
-            overflowMenu.inflate(R.menu.home_listrowheader_actions)
-            overflowMenu.setOnMenuItemClickListener(PopupMenuListener(adapter))
         }
 
         class PopupMenuListener(

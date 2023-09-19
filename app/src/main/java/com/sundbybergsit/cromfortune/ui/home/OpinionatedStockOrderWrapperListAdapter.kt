@@ -37,9 +37,6 @@ class OpinionatedStockOrderWrapperListAdapter(
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)!!) {
-        is HeaderAdapterItem -> {
-            R.layout.listrow_stock_order_header
-        }
         is OpinionatedStockOrderWrapperAdapterItem -> {
             R.layout.listrow_stock_order_item
         }
@@ -50,8 +47,6 @@ class OpinionatedStockOrderWrapperListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.listrow_stock_order_header -> HeaderViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(viewType, parent, false))
             R.layout.listrow_stock_order_item -> StockViewHolder(context = context, adapter = this,
                     fragmentManager = fragmentManager, itemView = LayoutInflater.from(parent.context)
                     .inflate(viewType, parent, false), readOnly = readOnly)
