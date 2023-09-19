@@ -8,6 +8,8 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
@@ -48,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavBackStackEntry
@@ -75,7 +79,10 @@ import com.sundbybergsit.cromfortune.ShowSnackbarLaunchedEffect
 import com.sundbybergsit.cromfortune.UpdateTimePickerLaunchedEffect
 import com.sundbybergsit.cromfortune.activityBoundViewModel
 import com.sundbybergsit.cromfortune.contentDescription
+import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
+import com.sundbybergsit.cromfortune.theme.Loss
+import com.sundbybergsit.cromfortune.theme.Profit
 import com.sundbybergsit.cromfortune.ui.DayPicker
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
@@ -89,7 +96,12 @@ import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModelFact
 import com.sundbybergsit.cromfortune.ui.settings.Settings
 import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModel
 import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModelFactory
+import java.text.SimpleDateFormat
 import java.time.DayOfWeek
+import java.util.Date
+import java.util.Locale
+
+private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
 internal fun AppNavigation(navController: NavHostController) {
@@ -196,133 +208,272 @@ fun AddDialogs(
     fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) },
     toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
 ) {
-    val dialogViewState = dialogHandler.dialogViewState.value
-    if (dialogViewState is DialogHandler.DialogViewState.ShowDeleteDialog) {
-        val context: Context = LocalContext.current
-        AlertDialog(
-            modifier = Modifier,
-            title = {
-                Text(
-                    text = stringResource(id = R.string.generic_dialog_title_are_you_sure),
-                    style = MaterialTheme.typography.titleSmall
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(id = R.string.home_delete_all_stock_orders, dialogViewState.stockName),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            onDismissRequest = { dialogHandler.dismissDialog() },
-            confirmButton = {
-                TextButton(onClick = {
-                    dialogViewState.onClickRemove(context = context, stockSymbol = dialogViewState.stockName)
-                    dialogHandler.dismissDialog()
-                }) {
-                    Text(stringResource(id = R.string.action_delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    dialogHandler.dismissDialog()
-                }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    } else if (dialogViewState is DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog) {
-        val settingsViewState by dialogViewState.stockRetrievalSettings.timeInterval
-        UpdateTimePickerLaunchedEffect(
-            settingsViewState, dialogViewState, selectedDaysMutableState,
-            fromTimePickerState, toTimePickerState
-        )
-        val context = LocalContext.current
-        if (fromTimePickerState.value != null && toTimePickerState.value != null) {
+    when (val dialogViewState = dialogHandler.dialogViewState.value) {
+        is DialogHandler.DialogViewState.ShowDeleteDialog -> {
+            val context: Context = LocalContext.current
             AlertDialog(
                 modifier = Modifier,
                 title = {
                     Text(
-                        text = stringResource(id = R.string.settings_dialog_time_intervals_title),
+                        text = stringResource(id = R.string.generic_dialog_title_are_you_sure),
                         style = MaterialTheme.typography.titleSmall
                     )
                 },
                 text = {
-                    Column {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(id = R.string.generic_time_start_label),
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                        fromTimePickerState.value?.let { nullSafeTimePickerState ->
-                            TimeInput(state = nullSafeTimePickerState)
-                        }
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(id = R.string.generic_time_end_label),
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                        toTimePickerState.value?.let { nullSafeTimePickerState ->
-                            TimeInput(state = nullSafeTimePickerState)
-                        }
-                        DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
-                            if (selectedDaysMutableState.value.contains(day)) {
-                                selectedDaysMutableState.value = selectedDaysMutableState.value - day
-                            } else {
-                                selectedDaysMutableState.value = selectedDaysMutableState.value + day
-                            }
-                        })
-                    }
+                    Text(
+                        text = stringResource(id = R.string.home_delete_all_stock_orders, dialogViewState.stockName),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 },
                 onDismissRequest = { dialogHandler.dismissDialog() },
                 confirmButton = {
                     TextButton(onClick = {
-                        val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
-                        val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
-                        dialogViewState.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
-                            nullSafeFromTimePickerState.minute,
-                            nullSafeToTimePickerState.hour,
-                            nullSafeToTimePickerState.minute,
-                            selectedDaysMutableState.value.map { materialWeekday -> DayOfWeek.valueOf(materialWeekday.name) })
+                        dialogViewState.onClickRemove(context = context, stockSymbol = dialogViewState.stockName)
                         dialogHandler.dismissDialog()
-                        dialogHandler.showSnack(context.getString(R.string.generic_saved))
                     }) {
-                        Text(stringResource(id = android.R.string.ok))
+                        Text(stringResource(id = R.string.action_delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = {
                         dialogHandler.dismissDialog()
                     }) {
-                        Text(stringResource(id = android.R.string.cancel))
+                        Text(stringResource(id = R.string.action_close))
                     }
                 }
             )
         }
-    } else if (dialogViewState is DialogHandler.DialogViewState.ShowSupportedStocksDialog) {
-        AlertDialog(
-            modifier = Modifier,
-            title = {
-                Text(
-                    text = stringResource(id = R.string.action_stocks_supported),
-                    style = MaterialTheme.typography.titleSmall
+
+        is DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog -> {
+            val settingsViewState by dialogViewState.stockRetrievalSettings.timeInterval
+            UpdateTimePickerLaunchedEffect(
+                settingsViewState, dialogViewState, selectedDaysMutableState,
+                fromTimePickerState, toTimePickerState
+            )
+            val context = LocalContext.current
+            if (fromTimePickerState.value != null && toTimePickerState.value != null) {
+                AlertDialog(
+                    modifier = Modifier,
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.settings_dialog_time_intervals_title),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                    },
+                    text = {
+                        Column {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(id = R.string.generic_time_start_label),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            fromTimePickerState.value?.let { nullSafeTimePickerState ->
+                                TimeInput(state = nullSafeTimePickerState)
+                            }
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(id = R.string.generic_time_end_label),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            toTimePickerState.value?.let { nullSafeTimePickerState ->
+                                TimeInput(state = nullSafeTimePickerState)
+                            }
+                            DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
+                                if (selectedDaysMutableState.value.contains(day)) {
+                                    selectedDaysMutableState.value = selectedDaysMutableState.value - day
+                                } else {
+                                    selectedDaysMutableState.value = selectedDaysMutableState.value + day
+                                }
+                            })
+                        }
+                    },
+                    onDismissRequest = { dialogHandler.dismissDialog() },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
+                            val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
+                            dialogViewState.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
+                                nullSafeFromTimePickerState.minute,
+                                nullSafeToTimePickerState.hour,
+                                nullSafeToTimePickerState.minute,
+                                selectedDaysMutableState.value.map { materialWeekday ->
+                                    DayOfWeek.valueOf(
+                                        materialWeekday.name
+                                    )
+                                })
+                            dialogHandler.dismissDialog()
+                            dialogHandler.showSnack(context.getString(R.string.generic_saved))
+                        }) {
+                            Text(stringResource(id = android.R.string.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            dialogHandler.dismissDialog()
+                        }) {
+                            Text(stringResource(id = android.R.string.cancel))
+                        }
+                    }
                 )
-            },
-            text = {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = dialogViewState.text,
-                    style = MaterialTheme.typography.titleSmall
-                )
-            },
-            onDismissRequest = { dialogHandler.dismissDialog() },
-            confirmButton = {
-                TextButton(onClick = {
-                    dialogHandler.dismissDialog()
-                }) {
-                    Text(stringResource(id = android.R.string.ok))
+            }
+        }
+
+        is DialogHandler.DialogViewState.ShowSupportedStocksDialog -> {
+            AlertDialog(
+                modifier = Modifier,
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.action_stocks_supported),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                },
+                text = {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = dialogViewState.text,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                },
+                onDismissRequest = { dialogHandler.dismissDialog() },
+                confirmButton = {
+                    TextButton(onClick = {
+                        dialogHandler.dismissDialog()
+                    }) {
+                        Text(stringResource(id = android.R.string.ok))
+                    }
+                }
+            )
+        }
+
+        DialogHandler.DialogViewState.Dismissed -> {
+            // Do nothing
+        }
+
+        is DialogHandler.DialogViewState.ShowStockEvents -> {
+            Dialog(onDismissRequest = { dialogHandler.dismissDialog() }) {
+                Surface {
+                    ConstraintLayout(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                        val (tableRef, buttonRef) = createRefs()
+                        Column(modifier = Modifier.constrainAs(tableRef) {
+                            bottom.linkTo(buttonRef.top)
+                        }) {
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = stringResource(id = R.string.generic_title_stock_orders),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+                            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
+                                Text(
+                                    text = dialogViewState.title,
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                            }
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_date),
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_title_quantity),
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_price_per_stock),
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_title_total_cost),
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                            val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+                            for (stockEvent in dialogViewState.stockEvents) {
+                                val backgroundColor =
+                                    if (stockEvent.stockOrder == null && checkNotNull(stockEvent.stockSplit).reverse) {
+                                        Profit
+                                    } else if (stockEvent.stockOrder == null) {
+                                        Loss
+                                    } else if (checkNotNull(stockEvent.stockOrder).orderAction == "Buy") {
+                                        Profit
+                                    } else {
+                                        Loss
+                                    }
+                                Row(
+                                    modifier = Modifier
+                                        .background(backgroundColor)
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = sdf.format(Date(stockEvent.dateInMillis)),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "${
+                                            if (stockEvent.stockOrder == null) {
+                                                checkNotNull(stockEvent.stockSplit).quantity
+                                            } else {
+                                                checkNotNull(stockEvent.stockOrder).quantity
+                                            }
+                                        }",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "${
+                                            if (stockEvent.stockOrder == null) {
+                                                0
+                                            } else {
+                                                checkNotNull(stockEvent.stockOrder).pricePerStock
+                                            }
+                                        }",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "${
+                                            if (stockEvent.stockOrder == null) {
+                                                0
+                                            } else {
+                                                val nullSafeStockOrder = checkNotNull(stockEvent.stockOrder)
+                                                nullSafeStockOrder.getTotalCost(
+                                                    checkNotNull(CurrencyRateRepository.currencyRates.value)
+                                                        .currencyRates.single { currencyRate -> currencyRate.iso4217CurrencySymbol == nullSafeStockOrder.currency }.rateInSek
+                                                )
+                                            }
+                                        }",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "FIXME: Emoji",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                        TextButton(
+                            modifier = Modifier.constrainAs(buttonRef) {
+                                end.linkTo(parent.end)
+                                bottom.linkTo(parent.bottom)
+                            },
+                            onClick = {
+                                dialogHandler.dismissDialog()
+                            }
+                        ) {
+                            Text(stringResource(id = R.string.action_close).uppercase())
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 }
 
