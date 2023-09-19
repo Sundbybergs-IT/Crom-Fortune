@@ -45,9 +45,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 @Composable
-fun Notifications(viewModel: NotificationsViewModel,
-                  pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 }),
-                  onBack: () -> Unit, onNavigateTo: (String) -> Unit) {
+fun Notifications(
+    viewModel: NotificationsViewModel,
+    pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 }),
+    onBack: () -> Unit, onNavigateTo: (String) -> Unit
+) {
     val context = LocalContext.current
     val formatter = SimpleDateFormat(
         "yyyy-MM-dd HH:mm", ConfigurationCompat.getLocales(context.resources.configuration)[0]
@@ -98,6 +100,15 @@ fun Notifications(viewModel: NotificationsViewModel,
                             }
                         )
                     }
+                }
+                if (tabs[viewModel.selectedTabIndexMutableState.value].second.value.items.isEmpty()) {
+                    Text(
+                        modifier = Modifier.padding(top = 160.dp).fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        text = stringResource(id = R.string.notifications_empty),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 LazyColumn {
                     items(tabs[viewModel.selectedTabIndexMutableState.value].second.value.items.size) { page ->
