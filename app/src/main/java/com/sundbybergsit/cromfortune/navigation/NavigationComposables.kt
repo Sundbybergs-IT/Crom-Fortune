@@ -34,7 +34,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.contentColorFor
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -45,17 +50,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.navigation.*
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
+import androidx.navigation.plusAssign
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
-import com.sundbybergsit.cromfortune.*
+import com.sundbybergsit.cromfortune.BottomSheetContent
+import com.sundbybergsit.cromfortune.BottomSheetMenuItem
+import com.sundbybergsit.cromfortune.DialogHandler
+import com.sundbybergsit.cromfortune.LeafScreen
 import com.sundbybergsit.cromfortune.R
+import com.sundbybergsit.cromfortune.ShowSnackbarLaunchedEffect
+import com.sundbybergsit.cromfortune.UpdateTimePickerLaunchedEffect
+import com.sundbybergsit.cromfortune.activityBoundViewModel
+import com.sundbybergsit.cromfortune.contentDescription
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.ui.DayPicker
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
@@ -67,16 +86,16 @@ import com.sundbybergsit.cromfortune.ui.home.HomeViewModelFactory
 import com.sundbybergsit.cromfortune.ui.notifications.Notifications
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModel
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModelFactory
-import com.sundbybergsit.cromfortune.ui.settings.*
+import com.sundbybergsit.cromfortune.ui.settings.Settings
+import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModel
+import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModelFactory
 import java.time.DayOfWeek
 
 @Composable
 internal fun AppNavigation(navController: NavHostController) {
     val bottomSheetNavigator = rememberBottomSheetNavigator()
     navController.navigatorProvider += bottomSheetNavigator
-    AddDialogs(
-        dialogHandler = DialogHandler,
-    )
+    AddDialogs(dialogHandler = DialogHandler)
     ModalBottomSheetLayout(bottomSheetNavigator = bottomSheetNavigator) {
         val snackbarHostState = remember { SnackbarHostState() }
         val view = LocalView.current
