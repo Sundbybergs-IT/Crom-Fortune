@@ -16,9 +16,10 @@ androidx-test-monitor = "1.6.1"
 androidx-test-runner = "1.5.2"
 androidx-work = "2.8.1"
 google-material = "1.9.0"
-google-playCore-ktx = "1.8.1"
+google-play-appupdate = "2.1.0"
+google-play-review = "2.0.1"
 junit = "4.13.2"
-kotlin = "1.9.0"
+kotlin = "1.9.10"
 kotlinx-coroutinesTest = "1.7.2"
 kotlinx-serialization = "1.5.1"
 materialdaypicker = "0.7.4"
@@ -56,7 +57,8 @@ androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref =
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
 googleMaterial = { module = "com.google.android.material:material", version.ref = "google-material" }
-googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore-ktx" }
+googlePlayAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-play-appupdate" }
+googlePlayReview = { module = "com.google.android.play:review-ktx", version.ref = "google-play-review" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutinesTest" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }

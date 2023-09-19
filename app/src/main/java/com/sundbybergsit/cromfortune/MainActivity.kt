@@ -7,8 +7,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.rememberNavController
-import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.InstallState
 import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
@@ -41,16 +41,16 @@ class MainActivity : ComponentActivity() {
         val appUpdateInfoTask = appUpdateManager.appUpdateInfo
         appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
             if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-                    && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+                && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
             ) {
-                appUpdateManager.startUpdateFlowForResult(appUpdateInfo, AppUpdateType.FLEXIBLE, this,
-                        APP_UPDATE_REQUEST_CODE)
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateInfo, this, AppUpdateOptions.defaultOptions(AppUpdateType.FLEXIBLE),
+                    APP_UPDATE_REQUEST_CODE
+                )
             }
         }
         val reviewManager = ReviewManagerFactory.create(this)
-        // FIXME: Crashes with:
-        // Caused by: java.lang.SecurityException: com.sundbybergsit.cromfortune: One of RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED should be specified when a receiver isn't being registered exclusively for system broadcasts
-        //appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this, appUpdateManager))
+        appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this))
         if (StockOrderRepositoryImpl(this).countAll() > 4) {
             Log.i(TAG, "Time to nag about reviews! :-)")
             val request = reviewManager.requestReviewFlow()
@@ -84,10 +84,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    class UpdateInstallStateUpdatedListener(
-            private val activity: Activity,
-            private val appUpdateManager: AppUpdateManager,
-    ) : InstallStateUpdatedListener {
+    class UpdateInstallStateUpdatedListener(private val activity: Activity) : InstallStateUpdatedListener {
 
         override fun onStateUpdate(state: InstallState) {
             if (state.installStatus() == InstallStatus.DOWNLOADED) {
