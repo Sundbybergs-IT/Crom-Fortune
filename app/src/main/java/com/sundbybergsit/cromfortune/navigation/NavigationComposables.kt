@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -78,11 +79,15 @@ import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.ShowSnackbarLaunchedEffect
 import com.sundbybergsit.cromfortune.UpdateTimePickerLaunchedEffect
 import com.sundbybergsit.cromfortune.activityBoundViewModel
+import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.contentDescription
+import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.domain.StockEvent
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.theme.Loss
-import com.sundbybergsit.cromfortune.theme.Profit
 import com.sundbybergsit.cromfortune.ui.DayPicker
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
@@ -90,6 +95,7 @@ import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModelFactory
 import com.sundbybergsit.cromfortune.ui.home.Home
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModelFactory
+import com.sundbybergsit.cromfortune.ui.home.view.OpinionatedStockOrderWrapper
 import com.sundbybergsit.cromfortune.ui.notifications.Notifications
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModel
 import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModelFactory
@@ -98,6 +104,7 @@ import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModel
 import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModelFactory
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
+import java.util.Currency
 import java.util.Date
 import java.util.Locale
 
@@ -352,8 +359,13 @@ fun AddDialogs(
         is DialogHandler.DialogViewState.ShowStockEvents -> {
             Dialog(onDismissRequest = { dialogHandler.dismissDialog() }) {
                 Surface {
-                    ConstraintLayout(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                    ConstraintLayout(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
                         val (tableRef, buttonRef) = createRefs()
+                        val context = LocalContext.current
                         Column(modifier = Modifier.constrainAs(tableRef) {
                             bottom.linkTo(buttonRef.top)
                         }) {
@@ -363,7 +375,11 @@ fun AddDialogs(
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
-                            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 32.dp)
+                            ) {
                                 Text(
                                     text = dialogViewState.title,
                                     style = MaterialTheme.typography.titleSmall
@@ -392,71 +408,24 @@ fun AddDialogs(
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
                             }
-                            val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+
+                            val opinionatedEvents : List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
+                                dialogViewState.stockEvents,
+                                CromFortuneV1RecommendationAlgorithm(context)
+                            )
                             for (stockEvent in dialogViewState.stockEvents) {
-                                val backgroundColor =
-                                    if (stockEvent.stockOrder == null && checkNotNull(stockEvent.stockSplit).reverse) {
-                                        Profit
-                                    } else if (stockEvent.stockOrder == null) {
-                                        Loss
-                                    } else if (checkNotNull(stockEvent.stockOrder).orderAction == "Buy") {
-                                        Profit
-                                    } else {
-                                        Loss
-                                    }
-                                Row(
-                                    modifier = Modifier
-                                        .background(backgroundColor)
-                                        .fillMaxWidth()
-                                ) {
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = sdf.format(Date(stockEvent.dateInMillis)),
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "${
-                                            if (stockEvent.stockOrder == null) {
-                                                checkNotNull(stockEvent.stockSplit).quantity
-                                            } else {
-                                                checkNotNull(stockEvent.stockOrder).quantity
-                                            }
-                                        }",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "${
-                                            if (stockEvent.stockOrder == null) {
-                                                0
-                                            } else {
-                                                checkNotNull(stockEvent.stockOrder).pricePerStock
-                                            }
-                                        }",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "${
-                                            if (stockEvent.stockOrder == null) {
-                                                0
-                                            } else {
-                                                val nullSafeStockOrder = checkNotNull(stockEvent.stockOrder)
-                                                nullSafeStockOrder.getTotalCost(
-                                                    checkNotNull(CurrencyRateRepository.currencyRates.value)
-                                                        .currencyRates.single { currencyRate -> currencyRate.iso4217CurrencySymbol == nullSafeStockOrder.currency }.rateInSek
-                                                )
-                                            }
-                                        }",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "FIXME: Emoji",
-                                        style = MaterialTheme.typography.bodyMedium
+                                stockEvent.stockOrder?.let { nullSafeStockOrder ->
+                                    val opinionatedStockOrder =
+                                        opinionatedEvents.single { opinionatedStockOrderWrapper -> opinionatedStockOrderWrapper.stockOrder == nullSafeStockOrder }
+                                    StockOrderRow(
+                                        stockOrder = nullSafeStockOrder,
+                                        opinionatedStockOrder= opinionatedStockOrder
                                     )
                                 }
+                                // FIXME: Is this necessary?
+//                                stockEvent.stockSplit?.let { nullSafeStockSplit ->
+//                                    StockSplitRow(stockSplit = nullSafeStockSplit)
+//                                }
                             }
                         }
                         TextButton(
@@ -474,6 +443,138 @@ fun AddDialogs(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun getOpinionatedStockOrders(
+    stockEvents: List<StockEvent>,
+    recommendationAlgorithm: RecommendationAlgorithm
+): List<OpinionatedStockOrderWrapper> {
+    val stockOrderEvents = stockEvents.filter { it.stockOrder != null }.toList()
+    val currencyRateInSek =
+        checkNotNull(CurrencyRateRepository.currencyRates.value).currencyRates
+            .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrderEvents.first().stockOrder!!.currency }!!.rateInSek
+    val opinionatedStockOrderWrappers: MutableList<OpinionatedStockOrderWrapper> =
+        mutableListOf()
+    for (stockOrderEvent in stockOrderEvents) {
+        with(checkNotNull(stockOrderEvent.stockOrder)) {
+            opinionatedStockOrderWrappers.add(
+                OpinionatedStockOrderWrapper(
+                    this,
+                    recommendationAlgorithm.getRecommendation(
+                        StockPrice(
+                            name,
+                            Currency.getInstance(currency),
+                            pricePerStock
+                        ),
+                        currencyRateInSek, commissionFee,
+                        stockOrderEvents.subList(0, stockOrderEvents.indexOf(stockOrderEvent))
+                            .toSet(),
+                        stockOrderEvent.dateInMillis
+                    )
+                )
+            )
+        }
+    }
+    return opinionatedStockOrderWrappers.toList()
+}
+
+@Composable
+fun StockSplitRow(stockSplit: StockSplit) {
+    val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+    val backgroundColor = colorResource(
+        id =
+        if (stockSplit.reverse) {
+            android.R.color.holo_green_light
+        } else {
+            android.R.color.holo_red_light
+        }
+    )
+    Row(
+        modifier = Modifier
+            .background(backgroundColor)
+            .fillMaxWidth()
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = sdf.format(Date(stockSplit.dateInMillis)),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "${stockSplit.quantity}",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "0",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "0",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "FIXME: Verdict?",
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+internal fun StockOrderRow(stockOrder: StockOrder, opinionatedStockOrder: OpinionatedStockOrderWrapper) {
+    val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+    val backgroundColor = colorResource(
+        id =
+        if (stockOrder.orderAction == "Buy") {
+            android.R.color.holo_green_light
+        } else {
+            android.R.color.holo_red_light
+        }
+    )
+    Row(
+        modifier = Modifier
+            .background(backgroundColor)
+            .fillMaxWidth()
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = sdf.format(Date(stockOrder.dateInMillis)),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "${stockOrder.quantity}",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "${stockOrder.pricePerStock}",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "${
+                stockOrder.getTotalCost(
+                    checkNotNull(CurrencyRateRepository.currencyRates.value)
+                        .currencyRates.single { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }.rateInSek
+                )
+            }",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text =
+            (if (opinionatedStockOrder.isApprovedByAlgorithm()) {
+                "\uD83D\uDC4D"
+            } else {
+                "\uD83D\uDC4E"
+            }),
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 
