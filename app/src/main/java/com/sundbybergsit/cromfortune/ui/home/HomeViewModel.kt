@@ -201,9 +201,12 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
         refresh(context)
     }
 
-    fun refreshData(context: Context) {
+    fun refreshData(context: Context, onFinished: () -> Unit = {}) {
         viewModelScope.launch(ioDispatcher) {
-            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context) { refresh(context) }
+            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context, onFinished = {
+                refresh(context)
+                onFinished.invoke()
+            })
             Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
         }
     }
