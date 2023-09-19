@@ -85,7 +85,7 @@ fun Home(
     val showRegisterSellDialog by viewModel.showRegisterSellStocksDialog
     val showRegisterSplitDialog by viewModel.showRegisterSplitStocksDialog
     val stockPricesViewState: StockPriceRepository.ViewState? by StockPriceRepository.stockPrices
-    LaunchedEffect(key1 = "Test") {
+    LaunchedEffect(key1 = Unit) {
         viewModel.refreshData(localContext)
     }
     RegisterBuyStockAlertDialog(
@@ -170,7 +170,9 @@ fun Home(
                 }
             }
             TextButton(onClick = {
-                viewModel.refreshData(context = localContext)
+                viewModel.refreshData(
+                    context = localContext,
+                    onFinished = { DialogHandler.showSnack(localContext.getString(R.string.home_information_data_refreshed)) })
             }) {
                 Text(text = stringResource(id = R.string.action_refresh).uppercase())
             }
