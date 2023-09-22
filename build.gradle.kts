@@ -35,8 +35,6 @@ allprojects {
 
     repositories {
         google()
-        // TODO: Needed for materialdaypicker. Remove ASAP.
-        jcenter()
         mavenCentral()
     }
 
