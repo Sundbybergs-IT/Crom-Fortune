@@ -2,8 +2,9 @@ package com.sundbybergsit.cromfortune.currencies
 
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import java.time.Instant
 
@@ -13,17 +14,20 @@ object CurrencyRateRepository {
 
     @VisibleForTesting
     @Suppress("ObjectPropertyName")
-    val _currencyRates = MutableLiveData<ViewState>()
+    val _currencyRates : MutableState<ViewState?> = mutableStateOf(null)
 
-    val currencyRates: LiveData<ViewState> = _currencyRates
+    val currencyRates: State<ViewState?> = _currencyRates
 
     fun add(currencyRates: Set<CurrencyRate>) {
         Log.v(TAG, "put(${currencyRates})")
-        _currencyRates.postValue(ViewState.VALUES(Instant.now(), currencyRates))
+        _currencyRates.value = ViewState(Instant.now(), currencyRates)
     }
 
-    sealed class ViewState {
-        data class VALUES(val instant: Instant, val currencyRates: Set<CurrencyRate>) : ViewState()
+    @VisibleForTesting
+    fun clear() {
+        _currencyRates.value = ViewState(Instant.now(), emptySet())
     }
+
+    class ViewState(val instant: Instant, val currencyRates: Set<CurrencyRate>)
 
 }

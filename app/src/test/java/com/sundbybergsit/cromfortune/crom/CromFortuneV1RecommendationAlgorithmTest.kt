@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.CoroutineScopeTestRule
 import com.sundbybergsit.cromfortune.CromTestRule
 import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
@@ -39,6 +40,9 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
     @get:Rule
     val cromTestRule = CromTestRule()
+
+    @get:Rule
+    val coroutineScopeTestRule = CoroutineScopeTestRule()
 
     @Before
     fun setUp() {

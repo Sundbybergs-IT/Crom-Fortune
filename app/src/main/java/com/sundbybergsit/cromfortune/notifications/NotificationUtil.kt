@@ -40,7 +40,7 @@ object NotificationUtil {
                 .setSmallIcon(R.drawable.ic_cromfortune)
                 .setContentTitle(title)
                 .setContentText(shortText)
-                .setColor(ContextCompat.getColor(context, R.color.colorAccent))
+                .setColor(ContextCompat.getColor(context, R.color.colorSecondary))
                 .setShowWhen(true)
                 .setLocalOnly(true)
                 .setAutoCancel(true)

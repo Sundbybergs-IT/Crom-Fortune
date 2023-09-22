@@ -1,19 +1,14 @@
 package com.sundbybergsit.cromfortune.ui.settings
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
 class SettingsViewModel : ViewModel() {
 
-    private val _text = MutableLiveData<String>().apply {
-        value = "This is settings Fragment"
-    }
-    val text: LiveData<String> = _text
+    private val _todoText: MutableState<String> = mutableStateOf("")
 
-    private val _todoText = MutableLiveData<String>().apply {
-        value = ""
-    }
-    val todoText: LiveData<String> = _todoText
+    val todoText: State<String> = _todoText
 
 }

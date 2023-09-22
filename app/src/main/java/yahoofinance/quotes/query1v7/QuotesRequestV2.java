@@ -68,11 +68,12 @@ public abstract class QuotesRequestV2<T> {
             CrumbManagerV2.refresh();
         }
 
-        List<T> result = new ArrayList<T>();
+        List<T> result = new ArrayList<>();
 
-        Map<String, String> params = new LinkedHashMap<String, String>();
+        Map<String, String> params = new LinkedHashMap<>();
         params.put("symbols", this.symbols);
         params.put("crumb", crumb);
+        params.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
 
         String url = YahooFinance.QUOTES_QUERY1V7_BASE_URL + "?" + Utils.getURLParameters(params);
 

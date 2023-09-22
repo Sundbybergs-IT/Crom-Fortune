@@ -1,29 +1,35 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import androidx.annotation.StringRes
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.CromFortuneApp
-import com.sundbybergsit.cromfortune.R
 import com.sundbybergsit.cromfortune.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.domain.*
+import com.sundbybergsit.cromfortune.domain.StockEvent
+import com.sundbybergsit.cromfortune.domain.StockEventRepository
+import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
+import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
-import com.sundbybergsit.cromfortune.ui.home.view.NameAndValueAdapterItem
-import com.sundbybergsit.cromfortune.ui.home.view.StockRemoveClickListener
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Currency
 
-class HomeViewModel : ViewModel(), StockRemoveClickListener {
+class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
 
     companion object {
 
@@ -31,14 +37,17 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
 
     }
 
-    private val _cromStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
-    private val _personalStocksViewState = MutableLiveData<ViewState>(ViewState.Loading)
-    private val _dialogViewState = MutableLiveData<DialogViewState>()
+    private val _cromStocksViewState: MutableState<ViewState> =
+        mutableStateOf(ViewState(listOf()))
+    private val _personalStocksViewState: MutableState<ViewState> =
+        mutableStateOf(ViewState(listOf()))
 
-    val cromStocksViewState: LiveData<ViewState> = _cromStocksViewState
-    val personalStocksViewState: LiveData<ViewState> = _personalStocksViewState
-    val dialogViewState: LiveData<DialogViewState> = _dialogViewState
+    internal val cromStocksViewState: State<ViewState> = _cromStocksViewState
+    internal val personalStocksViewState: State<ViewState> = _personalStocksViewState
+
     private var showAll = false
+
+    val changedPagerMutableState = mutableStateOf(false)
 
     private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
         { stockEvents, context ->
@@ -51,12 +60,11 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                 } else if (stockOrderAggregate == null) {
                     val stockOrder = checkNotNull(stockEvent.stockOrder)
                     val stockName =
-                        StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                        checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
                     stockOrderAggregate = StockOrderAggregate(
-                        (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                            .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
-                        "$stockName (${stockOrder.name})", stockOrder.name,
-                        Currency.getInstance(stockOrder.currency)
+                        rateInSek = checkNotNull(CurrencyRateRepository.currencyRates.value).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                        displayName = "$stockName (${stockOrder.name})", stockSymbol = stockOrder.name,
+                        currency = Currency.getInstance(stockOrder.currency)
                     )
                     cromSortedStockEvents.add(stockEvent)
                     stockOrderAggregate.aggregate(stockEvent)
@@ -90,8 +98,8 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
                     val stockName =
                         StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                     stockOrderAggregate = StockOrderAggregate(
-                        (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
-                            .currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                        CurrencyRateRepository.currencyRates.value?.currencyRates
+                            ?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
                         "$stockName (${stockOrder.name})", stockOrder.name,
                         Currency.getInstance(stockOrder.currency)
                     )
@@ -103,41 +111,26 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
             stockOrderAggregate!!
         }
 
-    @SuppressLint("ApplySharedPref")
-    override fun onClickRemove(context: Context, stockName: String) {
-        _dialogViewState.postValue(DialogViewState.ShowDeleteDialog(stockName))
+    fun selectTab(index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
+        coroutineScope.launch {
+            pagerState.scrollToPage(page = index, pageOffsetFraction = 0f)
+        }
     }
 
-    fun refresh(context: Context) {
+    private fun refresh(context: Context) {
         val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         if (stockEventRepository.isEmpty()) {
-            _cromStocksViewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
-            _personalStocksViewState.postValue(ViewState.HasNoStocks(R.string.home_no_stocks))
+            _cromStocksViewState.value = ViewState(items = listOf())
+            _personalStocksViewState.value = ViewState(items = listOf())
         } else {
-            viewModelScope.launch {
-                _cromStocksViewState.postValue(
-                    ViewState.HasStocks(
-                        R.string.home_stocks,
-                        StockAggregateAdapterItemUtil.convertToAdapterItems(
-                            list = stocks(
-                                context = context,
-                                lambda = cromStockAggregate
-                            )
-                        )
-                    )
+            _cromStocksViewState.value =
+                ViewState(
+                    items = stocks(context = context, lambda = cromStockAggregate)
                 )
-                _personalStocksViewState.postValue(
-                    ViewState.HasStocks(
-                        R.string.home_stocks,
-                        StockAggregateAdapterItemUtil.convertToAdapterItems(
-                            list = stocks(
-                                context = context,
-                                lambda = personalStockAggregate
-                            )
-                        )
-                    )
+            _personalStocksViewState.value =
+                ViewState(
+                    items = stocks(context = context, lambda = personalStockAggregate)
                 )
-            }
         }
     }
 
@@ -169,7 +162,7 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
     }
 
     fun stocks(context: Context, lambda: (List<StockEvent>, Context) -> StockOrderAggregate):
-            List<StockOrderAggregate> {
+        List<StockOrderAggregate> {
         val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
         for (stockSymbol in stockEventRepository.listOfStockNames()) {
@@ -205,42 +198,102 @@ class HomeViewModel : ViewModel(), StockRemoveClickListener {
         refresh(context)
     }
 
-    fun refreshData(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
-            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context)
+    fun refreshData(context: Context, onFinished: () -> Unit = {}) {
+        viewModelScope.launch(ioDispatcher) {
+            StockDataRetrievalCoroutineWorker.refreshFromYahoo(context, onFinished = {
+                refresh(context)
+                onFinished.invoke()
+            })
             Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
         }
     }
 
     fun showAll(context: Context) {
         showAll = true
-        if (_personalStocksViewState.value is ViewState.HasStocks) {
+        if (_personalStocksViewState.value.items.isNotEmpty()) {
             refresh(context)
         }
     }
 
     fun showCurrent(context: Context) {
         showAll = false
-        if (_personalStocksViewState.value is ViewState.HasStocks) {
+        if (_personalStocksViewState.value.items.isNotEmpty()) {
             refresh(context)
         }
     }
 
-    sealed class DialogViewState {
+    fun sortNameAscending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedBy { item -> item.displayName })
 
-        data class ShowDeleteDialog(val stockName: String) : DialogViewState()
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedBy { item -> item.displayName })
 
+            else -> TODO("Not yet implemented")
+        }
     }
 
-    sealed class ViewState {
+    fun sortNameDescending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedByDescending { item -> item.displayName })
 
-        object Loading : ViewState()
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedByDescending { item -> item.displayName })
 
-        data class HasStocks(@StringRes val textResId: Int, val adapterItems: List<NameAndValueAdapterItem>) :
-            ViewState()
-
-        data class HasNoStocks(@StringRes val textResId: Int) : ViewState()
-
+            else -> TODO("Not yet implemented")
+        }
     }
+
+    fun sortProfitAscending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedBy { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedBy { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            else -> TODO("Not yet implemented")
+        }
+    }
+
+    fun sortProfitDescending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedByDescending { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedByDescending { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            else -> TODO("Not yet implemented")
+        }
+    }
+
+    internal class ViewState(val items: List<StockOrderAggregate>)
 
 }

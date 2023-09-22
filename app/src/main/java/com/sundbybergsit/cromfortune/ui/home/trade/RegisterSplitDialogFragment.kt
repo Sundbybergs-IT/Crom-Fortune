@@ -64,10 +64,10 @@ class RegisterSplitDialogFragment(private val homeViewModel: HomeViewModel) : Di
         val alertDialog = AlertDialog.Builder(requireContext())
             .setView(dialogRootView)
             .setMessage(R.string.home_add_split_message)
-            .setNegativeButton(getText(R.string.action_cancel)) { _, _ ->
+            .setNegativeButton(getText(android.R.string.cancel)) { _, _ ->
                 dismiss()
             }
-            .setPositiveButton(getText(R.string.action_ok), confirmListener)
+            .setPositiveButton(getText(android.R.string.ok), confirmListener)
             .create()
         alertDialog.setOnShowListener {
             val button: Button = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
