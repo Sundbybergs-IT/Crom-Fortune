@@ -12,11 +12,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.text.input.TextFieldValue
+import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+
+@Composable
+internal fun LoadValueFromParameterLaunchedEffect(
+    stockSymbol: String?,
+    stockNameMutableState: MutableState<TextFieldValue>,
+    stockCurrencyMutableState: MutableState<TextFieldValue>,
+) {
+    LaunchedEffect(stockSymbol) {
+        val triple = StockPrice.SYMBOLS.find { triple -> triple.first == stockSymbol }
+        triple?.let { nullSafeTriple ->
+            stockNameMutableState.value = TextFieldValue("${nullSafeTriple.second} (${nullSafeTriple.first}")
+            stockCurrencyMutableState.value = TextFieldValue(nullSafeTriple.third)
+        }
+    }
+}
 
 @Composable
 internal fun PagerStateChangeDetectionLaunchedEffect(

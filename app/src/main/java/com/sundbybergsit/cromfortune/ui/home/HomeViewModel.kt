@@ -47,10 +47,6 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     private var showAll = false
 
-    val showRegisterBuyStocksDialog: MutableState<Boolean> = mutableStateOf(false)
-    val showRegisterSellStocksDialog: MutableState<Boolean> = mutableStateOf(false)
-    val showRegisterSplitStocksDialog: MutableState<Boolean> = mutableStateOf(false)
-
     val changedPagerMutableState = mutableStateOf(false)
 
     private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
