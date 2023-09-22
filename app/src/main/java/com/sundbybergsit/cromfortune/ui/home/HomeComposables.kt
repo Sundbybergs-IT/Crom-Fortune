@@ -406,6 +406,7 @@ private fun StocksTab(
             modifier = Modifier.padding(top = 16.dp),
             text = viewState.items[index].displayName,
             style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold
         )
         OverflowMenu(
@@ -439,15 +440,18 @@ private fun StockOrderAggregateItem(
                         .weight(1f)
                         .width(IntrinsicSize.Max)
                 ) {
-                    Text(text = item.getQuantity().toString(), style = MaterialTheme.typography.bodySmall)
+                    Text(text = item.getQuantity().toString(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall)
                 }
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .width(IntrinsicSize.Max)
                 ) {
-                    Text(text = format.format(item.getAcquisitionValue()), style = MaterialTheme.typography.bodySmall)
-
+                    Text(text = format.format(item.getAcquisitionValue()),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall)
                 }
                 Box(
                     modifier = Modifier
@@ -456,7 +460,9 @@ private fun StockOrderAggregateItem(
                 ) {
                     Text(
                         text = format.format(stockPrice.price),
-                        style = MaterialTheme.typography.bodySmall
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 Box(
