@@ -13,7 +13,7 @@ apply(from = "../buildSrc/src/build.gradle")
 val baseVersionName = ext.get("baseVersionName") as String
 
 android {
-    namespace = "com.sundbybergsit.cromfortune"
+    namespace = "com.sundbybergsit.cromfortune.main"
     compileSdk = 34
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
