@@ -436,7 +436,8 @@ fun AddDialogs(
                                         opinionatedEvents.single { opinionatedStockOrderWrapper -> opinionatedStockOrderWrapper.stockOrder == nullSafeStockOrder }
                                     StockOrderRow(
                                         stockOrder = nullSafeStockOrder,
-                                        opinionatedStockOrder = opinionatedStockOrder
+                                        opinionatedStockOrder = opinionatedStockOrder,
+                                        readOnly = dialogViewState.readOnly
                                     )
                                 }
                             }
@@ -538,7 +539,8 @@ internal fun StockOrderRow(
     modifier: Modifier = Modifier,
     stockOrder: StockOrder,
     opinionatedStockOrder: OpinionatedStockOrderWrapper,
-    showDeleteDialog: MutableState<Boolean> = remember { mutableStateOf(false) }
+    showDeleteDialog: MutableState<Boolean> = remember { mutableStateOf(false) },
+    readOnly: Boolean
 ) {
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
     val nf: NumberFormat = NumberFormat.getCurrencyInstance()
@@ -599,7 +601,11 @@ internal fun StockOrderRow(
     }
 
     Row(modifier = modifier
-        .clickable { showDeleteDialog.value = true }
+        .clickable {
+            if (!readOnly) {
+                showDeleteDialog.value = true
+            }
+        }
         .background(backgroundColor)
         .padding(8.dp)
         .fillMaxWidth(),

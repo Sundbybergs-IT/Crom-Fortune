@@ -65,13 +65,13 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowBuyStockDialog(stockSymbol = stockSymbol)
     }
 
-    fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>) {
+    fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>, readOnly: Boolean) {
         _dialogViewState.value = DialogViewState.ShowStockEvents(
             title = "${
                 SYMBOLS.single { triple ->
                     triple.first == stockSymbol
                 }.second
-            } ($stockSymbol)", stockEvents = stockEvents
+            } ($stockSymbol)", stockEvents = stockEvents, readOnly = readOnly
         )
     }
 
@@ -104,7 +104,8 @@ object DialogHandler {
         }
 
         data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
-        data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>) : DialogViewState()
+        data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>, val readOnly: Boolean) :
+            DialogViewState()
 
         data class ShowBuyStockDialog(val stockSymbol: String? = null) : DialogViewState()
 
