@@ -9,12 +9,16 @@ buildscript {
     }
 }
 
+@Suppress(
+    "DSL_SCOPE_VIOLATION",
+    "UNRESOLVED_REFERENCE_WRONG_RECEIVER",
+)
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization")
+    kotlin("plugin.serialization") version libs.versions.kotlin
     alias(libs.plugins.sonarqube)
 }
 
-val baseVersionName = "0.6.3"
+val baseVersionName = "0.7.0"
 
 allprojects {
 
@@ -34,6 +38,26 @@ allprojects {
         // TODO: Needed for materialdaypicker. Remove ASAP.
         jcenter()
         mavenCentral()
+    }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).all {
+        kotlinOptions {
+            freeCompilerArgs = freeCompilerArgs + listOf(
+                // For creation of default methods in interfaces
+                "-Xjvm-default=all",
+                // Avoid having to stutter experimental annotations all over the codebase
+                "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
+                "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+                "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+                "-Xopt-in=androidx.compose.runtime.ExperimentalComposeApi",
+                "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi",
+                "-Xopt-in=com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi",
+                "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
+                "-Xopt-in=kotlin.ExperimentalUnsignedTypes",
+                "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-Xopt-in=kotlinx.coroutines.InternalCoroutinesApi"
+            )
+        }
     }
 
 }

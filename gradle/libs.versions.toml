@@ -1,41 +1,53 @@
 [versions]
-android-gradle-plugin = "8.0.2"
-androidx-annotation = "1.3.0"
-androidx-appcompat = "1.4.1"
-androidx-constraintlayout = "2.1.3"
-androidx-core = "1.7.0"
-androidx-lifecycle-extensions = "2.2.0"
-androidx-lifecycle-livedata = "2.3.1"
-androidx-lifecycle-runtime = "2.3.1"
-androidx-lifecycle-viewmodel = "2.3.1"
+accompanist = "0.33.1-alpha"
+android-gradle-plugin = "8.1.1"
+androidx-activity-compose = "1.7.2"
+androidx-annotation = "1.7.0"
+androidx-appcompat = "1.6.1"
+androidx-compose-bom = "2023.09.00"
+androidx-compose-compiler = "1.5.3"
+androidx-constraintlayout-compose = "1.1.0-alpha12"
+androidx-core = "1.12.0"
+androidx-lifecycle = "2.6.2"
 androidx-localbroadcastmanager = "1.1.0"
-androidx-navigation = "2.3.5"
-androidx-test-junit = "1.1.2"
-androidx-test-monitor = "1.4.0"
-androidx-test-runner = "1.4.0"
-androidx-work = "2.7.1"
-desugar-jdk-libs = "1.1.5"
-google-material = "1.5.0-rc01"
-google-playCore-ktx = "1.8.1"
+androidx-navigation = "2.7.2"
+androidx-test-junit = "1.1.5"
+androidx-test-monitor = "1.6.1"
+androidx-test-runner = "1.5.2"
+androidx-work = "2.8.1"
+google-material = "1.9.0"
+google-play-appupdate = "2.1.0"
+google-play-review = "2.0.1"
 junit = "4.13.2"
-kotlin = "1.6.10"
-kotlinx-coroutinesTest = "1.6.0"
-kotlinx-serialization = "1.3.2"
+kotlin = "1.9.10"
+kotlinx-coroutinesTest = "1.7.2"
+kotlinx-serialization = "1.5.1"
 materialdaypicker = "0.7.4"
-robolectric = "4.9.2"
+robolectric = "4.10.3"
 sonarqube = "4.0.0.2929"
 yahooFinance = "3.17.0"
 
 [libraries]
+accompanistPager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist" }
+accompanistNavigationAnimation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
+accompanistNavigationMaterial = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
+androidxActivityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidxAnnotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidxAppcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
-androidxLocalbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "androidx-localbroadcastmanager" }
-androidxConstraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
+androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose-compiler" }
+androidxComposeUiUi = { module = "androidx.compose.ui:ui" }
+androidxComposeFoundation = { module = "androidx.compose.foundation:foundation" }
+androidxComposeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended" }
+androidxComposeMaterialMaterial = { module = "androidx.compose.material:material" }
+androidxComposeRuntimeRxjava2 = { module = "androidx.compose.runtime:runtime-rxjava2" }
+androidxComposeTestManifest = { module = "androidx.compose.ui:ui-test-manifest" }
+androidxConstraintlayoutCompose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "androidx-constraintlayout-compose" }
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-androidxLifecycleExtensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "androidx-lifecycle-extensions" }
-androidxLifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidx-lifecycle-livedata" }
-androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle-runtime" }
-androidxLifecycleViewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle-viewmodel" }
+androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
+androidxLifecycleViewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
+androidxLifecycleViewmodelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidxLocalbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "androidx-localbroadcastmanager" }
+androidxNavigationCompose = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 androidxNavigationFragment = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidxNavigationUi = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "androidx-navigation" }
 androidxTestJunit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
@@ -43,9 +55,10 @@ androidxTestMonitor = { module = "androidx.test:monitor", version.ref = "android
 androidxTestRunner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
+composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
 googleMaterial = { module = "com.google.android.material:material", version.ref = "google-material" }
-googlePlayCore = { module = "com.google.android.play:core-ktx", version.ref = "google-playCore-ktx" }
+googlePlayAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-play-appupdate" }
+googlePlayReview = { module = "com.google.android.play:review-ktx", version.ref = "google-play-review" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutinesTest" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
@@ -55,6 +68,12 @@ pluginAndroidGradle = { module = "com.android.tools.build:gradle", version.ref =
 pluginKotlinGradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 yahooFinance = { module = "com.yahoofinance-api:YahooFinanceAPI", version.ref = "yahooFinance" }
+
+[bundles]
+compose = ["accompanistNavigationMaterial", "accompanistPager", "accompanistNavigationAnimation",
+    "androidxActivityCompose", "androidxComposeMaterialMaterial",
+    "androidxComposeMaterialIconsExtended", "androidxComposeCompiler", "androidxConstraintlayoutCompose",
+    "androidxNavigationCompose"]
 
 [plugins]
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

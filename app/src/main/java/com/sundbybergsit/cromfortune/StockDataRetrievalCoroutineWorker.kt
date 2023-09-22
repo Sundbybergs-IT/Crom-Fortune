@@ -37,7 +37,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
         const val TAG = "StockRetrievalCoroutineWorker"
         const val COMMISSION_FEE = 39.0
 
-        fun refreshFromYahoo(context: Context) {
+        fun refreshFromYahoo(context: Context, onFinished: () -> Unit) {
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
@@ -77,6 +77,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             }
             (context.applicationContext as CromFortuneApp).lastRefreshed = Instant.now()
             StockPriceRepository.put(stockPrices)
+            onFinished()
         }
 
         private fun notifyRecommendation(context: Context, recommendation: Recommendation) {
@@ -145,7 +146,6 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             val asyncWork =
                 async {
                     val timeInterval = StockRetrievalSettings(context).timeInterval.value
-                        as StockRetrievalSettings.ViewState.VALUES
                     val currentTime = LocalTime.now()
                     val currentDayOfWeek = LocalDate.now().dayOfWeek
                     val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
@@ -153,7 +153,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                     when {
                         isRefreshRequired() -> {
                             Log.i(TAG, "Initial retrieval of data.")
-                            refreshFromYahoo(context)
+                            refreshFromYahoo(context = context, onFinished = { })
                         }
 
                         timeInterval.weekDays.isWithinConfiguredTimeInterval(
@@ -161,7 +161,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                             fromTime, toTime
                         ) -> {
                             Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
-                            refreshFromYahoo(context)
+                            refreshFromYahoo(context = context, onFinished = { })
                         }
 
                         else -> {
@@ -177,7 +177,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
     }
 
     private fun isRefreshRequired(): Boolean {
-        return StockPriceRepository.stockPrices.value is StockPriceRepository.ViewState.NotInitialized
+        return StockPriceRepository.stockPrices.value == null
     }
 
 }

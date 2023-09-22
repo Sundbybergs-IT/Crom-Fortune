@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("com.android.library")
     id("kotlin-android")
@@ -11,10 +9,10 @@ val baseVersionName = ext.get("baseVersionName") as String
 
 android {
     namespace = "com.sundbybergsit.cromfortune.domain"
-    compileSdk = 31
+    compileSdk = 34
     defaultConfig {
         minSdk = 29
-        targetSdk = 31
+        targetSdk = 34
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

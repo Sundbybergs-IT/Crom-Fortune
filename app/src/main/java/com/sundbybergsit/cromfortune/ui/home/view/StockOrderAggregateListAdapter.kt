@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.IdRes
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -24,8 +23,6 @@ import com.sundbybergsit.cromfortune.ui.AdapterItemDiffUtil
 import com.sundbybergsit.cromfortune.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateAdapterItem
 import com.sundbybergsit.cromfortune.ui.home.StockAggregateHeaderAdapterItem
-import com.sundbybergsit.cromfortune.ui.home.trade.RegisterBuyStockDialogFragment
-import com.sundbybergsit.cromfortune.ui.home.trade.RegisterSellStockDialogFragment
 import java.text.NumberFormat
 import java.util.*
 
@@ -42,12 +39,6 @@ internal class StockOrderAggregateListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.listrow_stock_header -> StockOrderAggregateHeaderViewHolder(
-                context = parent.context,
-                stockPriceListener = this,
-                itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                adapter = this
-            )
             R.layout.listrow_stock_item -> StockOrderAggregateViewHolder(
                 context = parent.context,
                 viewModel = viewModel,
@@ -58,6 +49,7 @@ internal class StockOrderAggregateListAdapter(
                 itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false),
                 readOnly = readOnly
             )
+
             else -> throw IllegalArgumentException("Unexpected viewType: $viewType")
         }
     }
@@ -68,6 +60,7 @@ internal class StockOrderAggregateListAdapter(
             is StockOrderAggregateHeaderViewHolder -> {
                 holder.bind(item as StockAggregateHeaderAdapterItem)
             }
+
             is StockOrderAggregateViewHolder -> {
                 holder.bind(item as StockAggregateAdapterItem)
             }
@@ -75,12 +68,11 @@ internal class StockOrderAggregateListAdapter(
     }
 
     override fun getItemViewType(position: Int): Int = when (val item = getItem(position)!!) {
-        is StockAggregateHeaderAdapterItem -> {
-            R.layout.listrow_stock_header
-        }
+
         is StockAggregateAdapterItem -> {
             R.layout.listrow_stock_item
         }
+
         else -> {
             throw IllegalArgumentException("Unexpected item: " + item.javaClass.canonicalName)
         }
@@ -99,7 +91,7 @@ internal class StockOrderAggregateListAdapter(
 
         fun bind(item: StockAggregateHeaderAdapterItem) {
             var count = 0.0
-            val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+            val currencyRates = checkNotNull(CurrencyRateRepository.currencyRates.value)
                 .currencyRates.toList()
             for (stockOrderAggregate in item.stockOrderAggregates.toList()) {
                 for (currencyRate in currencyRates) {
@@ -116,22 +108,6 @@ internal class StockOrderAggregateListAdapter(
             val format: NumberFormat = NumberFormat.getCurrencyInstance()
             format.currency = Currency.getInstance("SEK")
             format.maximumFractionDigits = 2
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockHeader_totalProfit).text = format.format(count)
-            itemView.requireViewById<TextView>(R.id.textView_listrowStockHeader_totalProfit).setTextColor(
-                ContextCompat.getColor(
-                    context, if (count >= 0.0) {
-                        R.color.colorProfit
-                    } else {
-                        R.color.colorLoss
-                    }
-                )
-            )
-            val overflowMenuImageView =
-                itemView.requireViewById<ImageView>(R.id.imageView_listrowStockHeader_overflowMenu)
-            val overflowMenu = PopupMenu(context, overflowMenuImageView)
-            overflowMenuImageView.setOnClickListener { overflowMenu.show() }
-            overflowMenu.inflate(R.menu.home_listrowheader_actions)
-            overflowMenu.setOnMenuItemClickListener(PopupMenuListener(adapter))
         }
 
         class PopupMenuListener(
@@ -142,28 +118,32 @@ internal class StockOrderAggregateListAdapter(
                 return when (item?.itemId) {
                     R.id.action_sort_alphabetical_up -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedByDescending { adapterItem -> adapterItem.name })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedByDescending { adapterItem -> adapterItem.name })
                         true
                     }
+
                     R.id.action_sort_alphabetical_down -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedBy { adapterItem -> adapterItem.name })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedBy { adapterItem -> adapterItem.name })
                         true
                     }
+
                     R.id.action_sort_profit_up -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedByDescending { adapterItem -> adapterItem.value })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedByDescending { adapterItem -> adapterItem.value })
                         true
                     }
+
                     R.id.action_sort_profit_down -> {
                         adapter.submitList(adapter.currentList.subList(0, 1) +
-                                adapter.currentList.subList(1, adapter.currentList.size)
-                                    .sortedBy { adapterItem -> adapterItem.value })
+                            adapter.currentList.subList(1, adapter.currentList.size)
+                                .sortedBy { adapterItem -> adapterItem.value })
                         true
                     }
+
                     else -> {
                         false
                     }
@@ -196,7 +176,7 @@ internal class StockOrderAggregateListAdapter(
             val stockCurrencyFormat: NumberFormat = getStockCurrencyFormat(item, acquisitionValue)
             initializeCurrentStockPrice(item, stockCurrencyFormat, acquisitionValue)
             setUpMuteAndUnmuteMenu(item)
-            val currencyRates = (CurrencyRateRepository.currencyRates.value as CurrencyRateRepository.ViewState.VALUES)
+            val currencyRates = checkNotNull(CurrencyRateRepository.currencyRates.value)
                 .currencyRates.toList()
             val profitInSek = getProfitInSek(currencyRates, stockOrderAggregate)
             setUpProfit(profitInSek)
@@ -214,9 +194,9 @@ internal class StockOrderAggregateListAdapter(
                 requireViewById<View>(R.id.button_listrowStockItem_buy).visibility = View.INVISIBLE
             }
             requireViewById<Button>(R.id.button_listrowStockItem_buy).setOnClickListener {
-                val dialog = RegisterBuyStockDialogFragment(viewModel)
-                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
-                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
+//                val dialog = RegisterBuyStockDialogFragment(viewModel)
+//                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
+//                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }
 
@@ -225,9 +205,9 @@ internal class StockOrderAggregateListAdapter(
                 requireViewById<View>(R.id.button_listrowStockItem_sell).visibility = View.INVISIBLE
             }
             requireViewById<Button>(R.id.button_listrowStockItem_sell).setOnClickListener {
-                val dialog = RegisterSellStockDialogFragment(viewModel)
-                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
-                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
+//                val dialog = RegisterSellStockDialogFragment(viewModel)
+//                dialog.arguments = bundleOf(Pair(RegisterSellStockDialogFragment.EXTRA_STOCK_SYMBOL, stockSymbol))
+//                dialog.show(parentFragmentManager, HomePersonalStocksFragment.TAG)
             }
         }
 
@@ -360,7 +340,7 @@ internal class StockOrderAggregateListAdapter(
     }
 
     override fun getStockPrice(stockSymbol: String): com.sundbybergsit.cromfortune.domain.StockPrice {
-        return (StockPriceRepository.stockPrices.value as StockPriceRepository.ViewState.VALUES)
+        return checkNotNull(StockPriceRepository.stockPrices.value)
             .stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
     }
 

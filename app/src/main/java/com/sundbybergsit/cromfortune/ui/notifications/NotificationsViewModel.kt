@@ -1,60 +1,67 @@
 package com.sundbybergsit.cromfortune.ui.notifications
 
-import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.annotation.StringRes
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.R
-import com.sundbybergsit.cromfortune.notifications.NotificationsRepositoryImpl
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationsRepository
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-class NotificationsViewModel : ViewModel() {
+class NotificationsViewModel(private val notificationsRepository: NotificationsRepository) : ViewModel() {
 
-    private val _newNotifications = MutableLiveData<NotificationsViewState>()
-    val newNotifications: LiveData<NotificationsViewState> = _newNotifications
-    private val _oldNotifications = MutableLiveData<NotificationsViewState>()
-    val oldNotifications: LiveData<NotificationsViewState> = _oldNotifications
+    private val _selectedTabIndexMutableState : MutableState<Int> = mutableIntStateOf(0)
+    val selectedTabIndexMutableState : State<Int> = _selectedTabIndexMutableState
 
+    private val _newNotifications: MutableState<NotificationsViewState> = mutableStateOf(NotificationsViewState(R.string.generic_error_empty, listOf()))
+    val newNotifications: State<NotificationsViewState> = _newNotifications
+    private val _oldNotifications: MutableState<NotificationsViewState> = mutableStateOf(NotificationsViewState(R.string.generic_error_empty, listOf()))
+    val oldNotifications: State<NotificationsViewState> = _oldNotifications
 
-    fun refreshNew(context: Context) {
+    init {
         viewModelScope.launch {
-            val notifications = NotificationsRepositoryImpl(context).list().filter { notificationMessage ->
-                LocalDate.now().isEqual(Instant.ofEpochMilli(notificationMessage.dateInMillis).atZone(ZoneId.systemDefault()).toLocalDate()) }
-                    .sortedByDescending {
-                notificationMessage -> notificationMessage.dateInMillis }
+            val notifications = notificationsRepository.list().filter { notificationMessage ->
+                LocalDate.now().isEqual(
+                    Instant.ofEpochMilli(notificationMessage.dateInMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+                )
+            }
+                .sortedByDescending { notificationMessage -> notificationMessage.dateInMillis }
             if (notifications.isEmpty()) {
-                _newNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
+                _newNotifications.value = NotificationsViewState(R.string.generic_error_empty, listOf())
             } else {
-                _newNotifications.postValue(NotificationsViewState.HasNotifications(R.string.notifications_title,
-                        NotificationAdapterItemUtil.convertToAdapterItems(notifications)))
+                _newNotifications.value = NotificationsViewState(R.string.notifications_title, notifications)
+            }
+
+            val notifications2 = notificationsRepository.list()
+                .filter { notificationMessage ->
+                    Instant.ofEpochMilli(notificationMessage.dateInMillis).atZone(ZoneId.systemDefault())
+                        .toLocalDate().isBefore(LocalDate.now(ZoneId.systemDefault()))
+                }.sortedByDescending { notificationMessage -> notificationMessage.dateInMillis }
+            if (notifications2.isEmpty()) {
+                _oldNotifications.value = NotificationsViewState(R.string.generic_error_empty, listOf())
+            } else {
+                _oldNotifications.value = NotificationsViewState(R.string.notifications_title, notifications2)
             }
         }
     }
 
-    fun refreshOld(context: Context) {
-        viewModelScope.launch {
-            val notifications = NotificationsRepositoryImpl(context).list()
-                    .filter { notificationMessage ->
-                        Instant.ofEpochMilli(notificationMessage.dateInMillis).atZone(ZoneId.systemDefault())
-                                .toLocalDate().isBefore(LocalDate.now(ZoneId.systemDefault()))
-                    }.sortedByDescending { notificationMessage -> notificationMessage.dateInMillis }
-            if (notifications.isEmpty()) {
-                _oldNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
-            } else {
-                _oldNotifications.postValue(NotificationsViewState.HasNotifications(R.string.notifications_title,
-                        NotificationAdapterItemUtil.convertToAdapterItems(notifications)))
-            }
-        }
+    fun selectTab(index: Int) {
+        _selectedTabIndexMutableState.value = index
     }
 
-    fun clearNotifications(context: Context) {
-        NotificationsRepositoryImpl(context).clear()
-        _oldNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
-        _newNotifications.postValue(NotificationsViewState.HasNoNotifications(R.string.generic_error_empty))
+    fun clearNotifications() {
+        notificationsRepository.clear()
+        _oldNotifications.value = NotificationsViewState(R.string.generic_error_empty, listOf())
+        _newNotifications.value = NotificationsViewState(R.string.generic_error_empty, listOf())
     }
+
+    class NotificationsViewState(@StringRes val textResId: Int, val items: Collection<NotificationMessage>)
 
 }
