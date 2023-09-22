@@ -18,6 +18,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -34,6 +35,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -397,7 +399,8 @@ private fun StocksTab(
 @Composable
 private fun StockOrderAggregateItem(
     item: StockOrderAggregate, stockPriceListener: StockPriceListener,
-    onShowStock: (String) -> Unit
+    onShowStock: (String) -> Unit,
+    muteMutableState: MutableState<Boolean> = remember { mutableStateOf(StockMuteSettingsRepository.isMuted(item.stockSymbol)) }
 ) {
     val stockPrice = stockPriceListener.getStockPrice(item.stockSymbol)
     val profit = item.getProfit(stockPrice.price)
@@ -486,16 +489,26 @@ private fun StockOrderAggregateItem(
                     Text(text = stringResource(id = R.string.action_stock_sell_short))
                 }
                 Spacer(modifier = Modifier.width(16.dp))
-                if (StockMuteSettingsRepository.isMuted(item.stockSymbol)) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_fas_bell_slash),
-                        contentDescription = "Muted stock"
-                    )
+                if (StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
+                        .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.stockSymbol && stockMuteSettings.muted } != null
+                ) {
+                    IconButton(onClick = {
+                        StockMuteSettingsRepository.unmute(item.stockSymbol)
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_fas_bell_slash),
+                            contentDescription = "Muted stock"
+                        )
+                    }
                 } else {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_fas_bell),
-                        contentDescription = "Unmuted stock"
-                    )
+                    IconButton(onClick = {
+                        StockMuteSettingsRepository.mute(item.stockSymbol)
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_fas_bell),
+                            contentDescription = "Unmuted stock"
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(16.dp))
             }
