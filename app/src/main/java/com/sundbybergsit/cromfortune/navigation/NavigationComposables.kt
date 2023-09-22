@@ -3,9 +3,11 @@ package com.sundbybergsit.cromfortune.navigation
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -86,8 +89,9 @@ import com.sundbybergsit.cromfortune.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
+import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.DayPicker
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
@@ -102,6 +106,7 @@ import com.sundbybergsit.cromfortune.ui.notifications.NotificationsViewModelFact
 import com.sundbybergsit.cromfortune.ui.settings.Settings
 import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModel
 import com.sundbybergsit.cromfortune.ui.settings.SettingsViewModelFactory
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.util.Currency
@@ -382,34 +387,42 @@ fun AddDialogs(
                             ) {
                                 Text(
                                     text = dialogViewState.title,
-                                    style = MaterialTheme.typography.titleSmall
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Text(
                                     modifier = Modifier.weight(1f),
                                     text = stringResource(id = R.string.generic_date),
-                                    style = MaterialTheme.typography.titleSmall
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                Spacer(modifier = Modifier.padding(4.dp))
                                 Text(
                                     modifier = Modifier.weight(1f),
                                     text = stringResource(id = R.string.generic_title_quantity),
-                                    style = MaterialTheme.typography.titleSmall
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                Spacer(modifier = Modifier.padding(4.dp))
                                 Text(
                                     modifier = Modifier.weight(1f),
                                     text = stringResource(id = R.string.generic_price_per_stock),
-                                    style = MaterialTheme.typography.titleSmall
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                Spacer(modifier = Modifier.padding(4.dp))
                                 Text(
                                     modifier = Modifier.weight(1f),
                                     text = stringResource(id = R.string.generic_title_total_cost),
-                                    style = MaterialTheme.typography.titleSmall
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
                             }
 
-                            val opinionatedEvents : List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
+                            val opinionatedEvents: List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
                                 dialogViewState.stockEvents,
                                 CromFortuneV1RecommendationAlgorithm(context)
                             )
@@ -419,20 +432,18 @@ fun AddDialogs(
                                         opinionatedEvents.single { opinionatedStockOrderWrapper -> opinionatedStockOrderWrapper.stockOrder == nullSafeStockOrder }
                                     StockOrderRow(
                                         stockOrder = nullSafeStockOrder,
-                                        opinionatedStockOrder= opinionatedStockOrder
+                                        opinionatedStockOrder = opinionatedStockOrder
                                     )
                                 }
-                                // FIXME: Is this necessary?
-//                                stockEvent.stockSplit?.let { nullSafeStockSplit ->
-//                                    StockSplitRow(stockSplit = nullSafeStockSplit)
-//                                }
                             }
                         }
                         TextButton(
-                            modifier = Modifier.constrainAs(buttonRef) {
-                                end.linkTo(parent.end)
-                                bottom.linkTo(parent.bottom)
-                            },
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .constrainAs(buttonRef) {
+                                    end.linkTo(parent.end)
+                                    bottom.linkTo(parent.bottom)
+                                },
                             onClick = {
                                 dialogHandler.dismissDialog()
                             }
@@ -481,52 +492,20 @@ private fun getOpinionatedStockOrders(
 }
 
 @Composable
-fun StockSplitRow(stockSplit: StockSplit) {
+internal fun StockOrderRow(
+    modifier: Modifier = Modifier,
+    stockOrder: StockOrder,
+    opinionatedStockOrder: OpinionatedStockOrderWrapper,
+    showDeleteDialog: MutableState<Boolean> = remember { mutableStateOf(false) }
+) {
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
-    val backgroundColor = colorResource(
-        id =
-        if (stockSplit.reverse) {
-            android.R.color.holo_green_light
-        } else {
-            android.R.color.holo_red_light
-        }
-    )
-    Row(
-        modifier = Modifier
-            .background(backgroundColor)
-            .fillMaxWidth()
-    ) {
-        Text(
-            modifier = Modifier.weight(1f),
-            text = sdf.format(Date(stockSplit.dateInMillis)),
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Text(
-            modifier = Modifier.weight(1f),
-            text = "${stockSplit.quantity}",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Text(
-            modifier = Modifier.weight(1f),
-            text = "0",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Text(
-            modifier = Modifier.weight(1f),
-            text = "0",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Text(
-            modifier = Modifier.weight(1f),
-            text = "FIXME: Verdict?",
-            style = MaterialTheme.typography.bodyMedium
-        )
+    val nf: NumberFormat = NumberFormat.getCurrencyInstance()
+    if (stockOrder.pricePerStock < 1) {
+        nf.maximumFractionDigits = 3
+    } else {
+        nf.maximumFractionDigits = 2
     }
-}
-
-@Composable
-internal fun StockOrderRow(stockOrder: StockOrder, opinionatedStockOrder: OpinionatedStockOrderWrapper) {
-    val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+    nf.currency = Currency.getInstance(opinionatedStockOrder.stockOrder.currency)
     val backgroundColor = colorResource(
         id =
         if (stockOrder.orderAction == "Buy") {
@@ -535,36 +514,88 @@ internal fun StockOrderRow(stockOrder: StockOrder, opinionatedStockOrder: Opinio
             android.R.color.holo_red_light
         }
     )
-    Row(
-        modifier = Modifier
-            .background(backgroundColor)
-            .fillMaxWidth()
+    val context = LocalContext.current
+    val stockEventDate = sdf.format(Date(stockOrder.dateInMillis))
+    if (showDeleteDialog.value) {
+        AlertDialog(onDismissRequest = { showDeleteDialog.value = false },
+            title = {
+                Text(
+                    text = stringResource(id = R.string.generic_dialog_title_are_you_sure),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }, text = {
+                Text(
+                    text = stringResource(id = R.string.home_delete_stock_order, stockEventDate),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }, confirmButton = {
+                TextButton(onClick = {
+                    val stockSplitRepository = StockSplitRepositoryImpl(context = context)
+                    val listOfSplits = stockSplitRepository.list(stockOrder.name)
+                    var isStockSplit = false
+                    for (split in listOfSplits) {
+                        if (split.dateInMillis == stockOrder.dateInMillis) {
+                            Log.i("DeleteStockOrderDialogFragment", "Assuming stock split... Removing.")
+                            // Assume that this entry is a fake stock order and really is a split
+                            stockSplitRepository.remove(split)
+                            isStockSplit = true
+                        }
+                    }
+                    if (!isStockSplit) {
+                        val stockOrderRepository = StockOrderRepositoryImpl(context)
+                        stockOrderRepository.remove(stockOrder)
+                    }
+                    showDeleteDialog.value = false
+                }) {
+                    Text(text = stringResource(id = R.string.action_delete).uppercase())
+                }
+            }, dismissButton = {
+                TextButton(onClick = { showDeleteDialog.value = false }) {
+                    Text(text = stringResource(id = android.R.string.cancel).uppercase())
+                }
+            })
+    }
+
+    Row(modifier = modifier
+        .clickable { showDeleteDialog.value = true }
+        .background(backgroundColor)
+        .padding(8.dp)
+        .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             modifier = Modifier.weight(1f),
-            text = sdf.format(Date(stockOrder.dateInMillis)),
-            style = MaterialTheme.typography.bodyMedium
+            text = stockEventDate,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(modifier = Modifier.padding(4.dp))
         Text(
             modifier = Modifier.weight(1f),
             text = "${stockOrder.quantity}",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(modifier = Modifier.padding(4.dp))
         Text(
             modifier = Modifier.weight(1f),
-            text = "${stockOrder.pricePerStock}",
-            style = MaterialTheme.typography.bodyMedium
+            text = nf.format(stockOrder.pricePerStock),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(modifier = Modifier.padding(4.dp))
         Text(
             modifier = Modifier.weight(1f),
-            text = "${
+            text = nf.format(
                 stockOrder.getTotalCost(
                     checkNotNull(CurrencyRateRepository.currencyRates.value)
                         .currencyRates.single { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }.rateInSek
                 )
-            }",
-            style = MaterialTheme.typography.bodyMedium
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(modifier = Modifier.padding(4.dp))
         Text(
             modifier = Modifier.weight(1f),
             text =
@@ -573,7 +604,7 @@ internal fun StockOrderRow(stockOrder: StockOrder, opinionatedStockOrder: Opinio
             } else {
                 "\uD83D\uDC4E"
             }),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
         )
     }
 }
