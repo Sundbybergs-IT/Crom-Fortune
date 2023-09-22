@@ -21,6 +21,7 @@ import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -222,6 +223,78 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
         showAll = false
         if (_personalStocksViewState.value.items.isNotEmpty()) {
             refresh(context)
+        }
+    }
+
+    fun sortNameAscending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedBy { item -> item.displayName })
+
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedBy { item -> item.displayName })
+
+            else -> TODO("Not yet implemented")
+        }
+    }
+
+    fun sortNameDescending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedByDescending { item -> item.displayName })
+
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedByDescending { item -> item.displayName })
+
+            else -> TODO("Not yet implemented")
+        }
+    }
+
+    fun sortProfitAscending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedBy { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedBy { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            else -> TODO("Not yet implemented")
+        }
+    }
+
+    fun sortProfitDescending(profile: String) {
+        when (profile) {
+            "personal" -> _personalStocksViewState.value =
+                ViewState(personalStocksViewState.value.items.sortedByDescending { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            "crom" -> _cromStocksViewState.value =
+                ViewState(cromStocksViewState.value.items.sortedByDescending { item ->
+                    item.getProfit(
+                        StockPriceRepository.getStockPrice(
+                            item.stockSymbol
+                        ).price
+                    )
+                })
+
+            else -> TODO("Not yet implemented")
         }
     }
 

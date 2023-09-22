@@ -241,6 +241,7 @@ fun Home(
                         items(count = tabs[pagerState.currentPage].second.value.items.size) { lazyItemScope ->
                             when (pagerState.currentPage) {
                                 0 -> StocksTab(
+                                    profile = "personal",
                                     index = lazyItemScope,
                                     viewState = personalStocksViewState,
                                     stockPriceListener = stockPriceListener,
@@ -256,6 +257,7 @@ fun Home(
                                 )
 
                                 1 -> StocksTab(
+                                    profile = "crom",
                                     index = lazyItemScope,
                                     viewState = cromStocksViewState,
                                     stockPriceListener = stockPriceListener,
@@ -280,6 +282,8 @@ fun Home(
 
 @Composable
 fun StocksHeader(
+    profile : String,
+    onNavigateTo: (String) -> Unit,
     stockOrderAggregates: List<StockOrderAggregate>,
     stockPriceListener: StockPriceListener,
     currencyRates: List<CurrencyRate>
@@ -345,7 +349,10 @@ fun StocksHeader(
                 fontWeight = FontWeight.Bold
             )
         }
-        // FIXME: Add sorting Overflow menu, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
+        OverflowMenu(
+            onNavigateTo = onNavigateTo, contentDescription = "Home All Stocks Menu",
+            route = LeafScreen.BottomSheetsHomeAllStocks.createRoute(profile = profile)
+        )
     }
     Row(
         modifier = Modifier
@@ -379,6 +386,7 @@ fun StocksHeader(
 
 @Composable
 private fun StocksTab(
+    profile : String,
     index: Int,
     viewState: HomeViewModel.ViewState,
     stockPriceListener: StockPriceListener,
@@ -389,9 +397,11 @@ private fun StocksTab(
         val currencyRates =
             CurrencyRateRepository.currencyRates.value?.currencyRates?.toList() ?: listOf()
         StocksHeader(
-            viewState.items,
-            stockPriceListener,
-            currencyRates
+            profile = profile,
+            onNavigateTo = onNavigateTo,
+            stockOrderAggregates = viewState.items,
+            stockPriceListener = stockPriceListener,
+            currencyRates = currencyRates
         )
     }
     Divider(thickness = 1.dp)

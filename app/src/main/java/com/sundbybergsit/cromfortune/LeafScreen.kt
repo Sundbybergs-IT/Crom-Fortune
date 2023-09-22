@@ -4,10 +4,15 @@ sealed class LeafScreen(val route: String) {
 
     data object BottomSheetsHome : LeafScreen("bottom-sheet/home")
 
-    data object BottomSheetsHomeStock : LeafScreen("bottom-sheet/home/stock?{stock_symbol}") {
+    data object BottomSheetsHomeAllStocks : LeafScreen("bottom-sheet/home/stocks?profile={profile}") {
 
-        fun createRoute(stockSymbol: String): String =
-            "bottom-sheet/home/stock?stock_symbol=$stockSymbol"
+        fun createRoute(profile: String): String = "bottom-sheet/home/stocks?profile=$profile"
+
+    }
+
+    data object BottomSheetsHomeStock : LeafScreen("bottom-sheet/home/stock?stock_symbol={stock_symbol}") {
+
+        fun createRoute(stockSymbol: String): String = "bottom-sheet/home/stock?stock_symbol=$stockSymbol"
 
     }
 

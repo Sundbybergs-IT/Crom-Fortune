@@ -615,6 +615,7 @@ private fun NavGraphBuilder.addHomeTopLevel(navController: NavHostController) {
     addNotifications(navController = navController)
     addSettings(navController = navController)
     addHomeBottomSheet()
+    addHomeAllStocksBottomSheet()
     addHomeStockBottomSheet()
 }
 
@@ -685,6 +686,43 @@ private fun NavGraphBuilder.addHomeBottomSheet() {
             HomeItems(onBuy = { homeViewModel.showRegisterBuyStocksDialog.value = true },
                 onSell = { homeViewModel.showRegisterSellStocksDialog.value = true }
             ) { homeViewModel.showRegisterSplitStocksDialog.value = true }
+        }
+    }
+}
+
+private fun NavGraphBuilder.addHomeAllStocksBottomSheet() {
+    bottomSheet(route = LeafScreen.BottomSheetsHomeAllStocks.route,
+        arguments = listOf(
+            navArgument("profile") {
+                type = NavType.StringType
+                nullable = false
+            }),) { backStackEntry ->
+        val arguments = checkNotNull(backStackEntry.arguments)
+        val profile = checkNotNull(arguments.getString("profile"))
+        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+            HomeViewModelFactory()
+        })
+        val onSortNameAscending = { homeViewModel.sortNameAscending(profile) }
+        val onSortNameDescending = { homeViewModel.sortNameDescending(profile) }
+        val onSortProfitAscending = { homeViewModel.sortProfitAscending(profile) }
+        val onSortProfitDescending = { homeViewModel.sortProfitDescending(profile) }
+        BottomSheetContent {
+            BottomSheetMenuItem(
+                onClick = onSortNameAscending,
+                text = stringResource(id = R.string.home_sort_alphabetical_down)
+            )
+            BottomSheetMenuItem(
+                onClick = onSortNameDescending,
+                text = stringResource(id = R.string.home_sort_alphabetical_up)
+            )
+            BottomSheetMenuItem(
+                onClick = onSortProfitAscending,
+                text = stringResource(id = R.string.home_sort_profit_down)
+            )
+            BottomSheetMenuItem(
+                onClick = onSortProfitDescending,
+                text = stringResource(id = R.string.home_sort_profit_up)
+            )
         }
     }
 }
