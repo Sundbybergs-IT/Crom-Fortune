@@ -35,7 +35,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -210,15 +209,16 @@ fun Home(
                                     index = lazyItemScope,
                                     viewState = personalStocksViewState,
                                     stockPriceListener = stockPriceListener,
-                                    onShowStock = { stockSymbol ->
+                                    onShowStock = { stockSymbol, readOnly ->
                                         DialogHandler.showStockEvents(
-                                            stockSymbol, viewModel.personalStockEvents(
+                                            stockSymbol = stockSymbol, stockEvents = viewModel.personalStockEvents(
                                                 context = localContext,
                                                 stockSymbol = stockSymbol
-                                            )
+                                            ), readOnly = readOnly
                                         )
                                     },
-                                    onNavigateTo = onNavigateTo
+                                    onNavigateTo = onNavigateTo,
+                                    readOnly = false
                                 )
 
                                 1 -> StocksTab(
@@ -226,15 +226,16 @@ fun Home(
                                     index = lazyItemScope,
                                     viewState = cromStocksViewState,
                                     stockPriceListener = stockPriceListener,
-                                    onShowStock = { stockSymbol ->
+                                    onShowStock = { stockSymbol,readOnly ->
                                         DialogHandler.showStockEvents(
-                                            stockSymbol, viewModel.cromStockEvents(
+                                            stockSymbol = stockSymbol, stockEvents = viewModel.cromStockEvents(
                                                 context = localContext,
                                                 stockSymbol = stockSymbol
-                                            )
+                                            ), readOnly = readOnly
                                         )
                                     },
-                                    onNavigateTo = onNavigateTo
+                                    onNavigateTo = onNavigateTo,
+                                    readOnly = true
                                 )
                             }
                         }
@@ -355,8 +356,9 @@ private fun StocksTab(
     index: Int,
     viewState: HomeViewModel.ViewState,
     stockPriceListener: StockPriceListener,
-    onShowStock: (String) -> Unit,
+    onShowStock: (String, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
+    readOnly: Boolean,
 ) {
     if (index == 0) {
         val currencyRates =
@@ -384,30 +386,33 @@ private fun StocksTab(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold
         )
-        OverflowMenu(
-            onNavigateTo = onNavigateTo,
-            route = LeafScreen.BottomSheetsHomeStock.createRoute(viewState.items[index].stockSymbol)
-        )
+        if (!readOnly) {
+            OverflowMenu(
+                onNavigateTo = onNavigateTo,
+                route = LeafScreen.BottomSheetsHomeStock.createRoute(stockSymbol = viewState.items[index].stockSymbol)
+            )
+        }
     }
     StockOrderAggregateItem(
         item = viewState.items[index],
         stockPriceListener = stockPriceListener,
-        onShowStock = onShowStock
+        onShowStock = onShowStock,
+        readOnly = readOnly
     )
 }
 
 @Composable
 private fun StockOrderAggregateItem(
     item: StockOrderAggregate, stockPriceListener: StockPriceListener,
-    onShowStock: (String) -> Unit,
-    muteMutableState: MutableState<Boolean> = remember { mutableStateOf(StockMuteSettingsRepository.isMuted(item.stockSymbol)) }
+    onShowStock: (String, Boolean) -> Unit,
+    readOnly: Boolean
 ) {
     val stockPrice = stockPriceListener.getStockPrice(item.stockSymbol)
     val profit = item.getProfit(stockPrice.price)
     val format: NumberFormat = NumberFormat.getCurrencyInstance()
     format.currency = item.currency
     format.maximumFractionDigits = 2
-    Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol) }) {
+    Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol, readOnly) }) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Box(
@@ -460,57 +465,59 @@ private fun StockOrderAggregateItem(
                     )
                 }
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 16.dp), horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(
-                    onClick = {
-                        DialogHandler.showBuyStockDialog(stockSymbol = item.stockSymbol)
-                    }, colors = ButtonDefaults.textButtonColors(
-                        backgroundColor = colorResource(
-                            id = (android.R.color.holo_green_dark)
-                        )
-                    )
+            if (!readOnly) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 16.dp), horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = stringResource(id = R.string.action_stock_buy_short))
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                TextButton(
-                    onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.stockSymbol) },
-                    colors = ButtonDefaults.textButtonColors(
-                        backgroundColor = colorResource(
-                            id = (android.R.color.holo_red_dark)
+                    TextButton(
+                        onClick = {
+                            DialogHandler.showBuyStockDialog(stockSymbol = item.stockSymbol)
+                        }, colors = ButtonDefaults.textButtonColors(
+                            backgroundColor = colorResource(
+                                id = (android.R.color.holo_green_dark)
+                            )
                         )
-                    )
-                ) {
-                    Text(text = stringResource(id = R.string.action_stock_sell_short))
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                if (StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
-                        .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.stockSymbol && stockMuteSettings.muted } != null
-                ) {
-                    IconButton(onClick = {
-                        StockMuteSettingsRepository.unmute(item.stockSymbol)
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_fas_bell_slash),
-                            contentDescription = "Muted stock"
-                        )
+                    ) {
+                        Text(text = stringResource(id = R.string.action_stock_buy_short))
                     }
-                } else {
-                    IconButton(onClick = {
-                        StockMuteSettingsRepository.mute(item.stockSymbol)
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_fas_bell),
-                            contentDescription = "Unmuted stock"
+                    Spacer(modifier = Modifier.width(16.dp))
+                    TextButton(
+                        onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.stockSymbol) },
+                        colors = ButtonDefaults.textButtonColors(
+                            backgroundColor = colorResource(
+                                id = (android.R.color.holo_red_dark)
+                            )
                         )
+                    ) {
+                        Text(text = stringResource(id = R.string.action_stock_sell_short))
                     }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    if (StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
+                            .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.stockSymbol && stockMuteSettings.muted } != null
+                    ) {
+                        IconButton(onClick = {
+                            StockMuteSettingsRepository.unmute(item.stockSymbol)
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_fas_bell_slash),
+                                contentDescription = "Muted stock"
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = {
+                            StockMuteSettingsRepository.mute(item.stockSymbol)
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_fas_bell),
+                                contentDescription = "Unmuted stock"
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
                 }
-                Spacer(modifier = Modifier.width(16.dp))
             }
         }
     }
