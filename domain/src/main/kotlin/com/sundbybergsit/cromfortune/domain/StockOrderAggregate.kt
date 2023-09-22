@@ -1,6 +1,6 @@
 package com.sundbybergsit.cromfortune.domain
 
-import java.util.*
+import java.util.Currency
 
 data class StockOrderAggregate(
     val rateInSek: Double,
