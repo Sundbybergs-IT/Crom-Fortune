@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.ui.home
 
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,9 +65,6 @@ import com.sundbybergsit.cromfortune.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.theme.Loss
 import com.sundbybergsit.cromfortune.theme.Profit
-import com.sundbybergsit.cromfortune.ui.RegisterBuyStockAlertDialog
-import com.sundbybergsit.cromfortune.ui.RegisterSellStockAlertDialog
-import com.sundbybergsit.cromfortune.ui.RegisterSplitStockAlertDialog
 import java.text.NumberFormat
 import java.util.Currency
 
@@ -81,37 +77,10 @@ fun Home(
     val localContext = LocalContext.current
     val personalStocksViewState: HomeViewModel.ViewState by viewModel.personalStocksViewState
     val cromStocksViewState: HomeViewModel.ViewState by viewModel.cromStocksViewState
-    val showRegisterBuyDialog by viewModel.showRegisterBuyStocksDialog
-    val showRegisterSellDialog by viewModel.showRegisterSellStocksDialog
-    val showRegisterSplitDialog by viewModel.showRegisterSplitStocksDialog
     val stockPricesViewState: StockPriceRepository.ViewState? by StockPriceRepository.stockPrices
     LaunchedEffect(key1 = Unit) {
         viewModel.refreshData(localContext)
     }
-    RegisterBuyStockAlertDialog(
-        showDialog = showRegisterBuyDialog,
-        onDismiss = { viewModel.showRegisterBuyStocksDialog.value = false }
-    ) { stockOrder ->
-        viewModel.save(context = localContext, stockOrder = stockOrder)
-        Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-    }
-    RegisterSellStockAlertDialog(
-        showDialog = showRegisterSellDialog,
-        onDismiss = { viewModel.showRegisterSellStocksDialog.value = false },
-        onSave = { stockOrder ->
-            viewModel.save(context = localContext, stockOrder = stockOrder)
-            Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-        },
-        homeViewModel = viewModel
-    )
-    RegisterSplitStockAlertDialog(
-        showDialog = showRegisterSplitDialog,
-        onDismiss = { viewModel.showRegisterSplitStocksDialog.value = false },
-        onSave = { stockSplit ->
-            viewModel.save(context = localContext, stockSplit = stockSplit)
-            Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-        }, homeViewModel = viewModel
-    )
     val stockPriceListener: StockPriceListener = object : StockPriceListener {
         override fun getStockPrice(stockSymbol: String): StockPrice {
             return checkNotNull(stockPricesViewState).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
@@ -189,14 +158,8 @@ fun Home(
         ) {
             val (pagerRef, fabRef) = createRefs()
             val view = LocalView.current
-            val showBuyDialogMutableState = remember { mutableStateOf(false) }
             val showFabMutableState = remember { mutableStateOf(false) }
-            RegisterBuyStockAlertDialog(showDialog = showBuyDialogMutableState.value, onDismiss = {
-                showBuyDialogMutableState.value = false
-            }) { stockOrder ->
-                viewModel.save(context = localContext, stockOrder = stockOrder)
-                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
-            }
+            val showBuyDialogMutableState = remember { mutableStateOf(false) }
             if (showFabMutableState.value) {
                 FloatingActionButton(modifier = Modifier
                     .constrainAs(fabRef) {
@@ -282,7 +245,7 @@ fun Home(
 
 @Composable
 fun StocksHeader(
-    profile : String,
+    profile: String,
     onNavigateTo: (String) -> Unit,
     stockOrderAggregates: List<StockOrderAggregate>,
     stockPriceListener: StockPriceListener,
@@ -386,7 +349,7 @@ fun StocksHeader(
 
 @Composable
 private fun StocksTab(
-    profile : String,
+    profile: String,
     index: Int,
     viewState: HomeViewModel.ViewState,
     stockPriceListener: StockPriceListener,
@@ -441,7 +404,6 @@ private fun StockOrderAggregateItem(
     val format: NumberFormat = NumberFormat.getCurrencyInstance()
     format.currency = item.currency
     format.maximumFractionDigits = 2
-    val localContext = LocalContext.current
     Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol) }) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -450,18 +412,22 @@ private fun StockOrderAggregateItem(
                         .weight(1f)
                         .width(IntrinsicSize.Max)
                 ) {
-                    Text(text = item.getQuantity().toString(),
+                    Text(
+                        text = item.getQuantity().toString(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall)
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .width(IntrinsicSize.Max)
                 ) {
-                    Text(text = format.format(item.getAcquisitionValue()),
+                    Text(
+                        text = format.format(item.getAcquisitionValue()),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall)
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
                 Box(
                     modifier = Modifier
@@ -499,8 +465,7 @@ private fun StockOrderAggregateItem(
             ) {
                 TextButton(
                     onClick = {
-                        // FIXME: Show buy dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-                        DialogHandler.showSnack(localContext.getString(R.string.generic_error_not_supported))
+                        DialogHandler.showBuyStockDialog(stockSymbol = item.stockSymbol)
                     }, colors = ButtonDefaults.textButtonColors(
                         backgroundColor = colorResource(
                             id = (android.R.color.holo_green_dark)
@@ -511,10 +476,8 @@ private fun StockOrderAggregateItem(
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 TextButton(
-                    onClick = {
-                        // FIXME: Show sell dialog, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-                        DialogHandler.showSnack(localContext.getString(R.string.generic_error_not_supported))
-                    }, colors = ButtonDefaults.textButtonColors(
+                    onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.stockSymbol) },
+                    colors = ButtonDefaults.textButtonColors(
                         backgroundColor = colorResource(
                             id = (android.R.color.holo_red_dark)
                         )

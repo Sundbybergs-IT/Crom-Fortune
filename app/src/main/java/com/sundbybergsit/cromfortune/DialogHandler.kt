@@ -61,6 +61,10 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowSupportedStocksDialog(text = message)
     }
 
+    fun showBuyStockDialog(stockSymbol: String? = null) {
+        _dialogViewState.value = DialogViewState.ShowBuyStockDialog(stockSymbol = stockSymbol)
+    }
+
     fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>) {
         _dialogViewState.value = DialogViewState.ShowStockEvents(
             title = "${
@@ -69,6 +73,14 @@ object DialogHandler {
                 }.second
             } ($stockSymbol)", stockEvents = stockEvents
         )
+    }
+
+    fun showSellStockDialog(stockSymbol: String? = null) {
+        _dialogViewState.value = DialogViewState.ShowSellStockDialog(stockSymbol = stockSymbol)
+    }
+
+    fun showSplitStockDialog(stockSymbol: String? = null) {
+        _dialogViewState.value = DialogViewState.ShowRegisterSplitStockDialog(stockSymbol = stockSymbol)
     }
 
     sealed class DialogViewState {
@@ -93,6 +105,12 @@ object DialogHandler {
 
         data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
         data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>) : DialogViewState()
+
+        data class ShowBuyStockDialog(val stockSymbol: String? = null) : DialogViewState()
+
+        data class ShowSellStockDialog(val stockSymbol: String? = null) : DialogViewState()
+
+        data class ShowRegisterSplitStockDialog(val stockSymbol: String? = null) : DialogViewState()
 
     }
 

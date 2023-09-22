@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -93,6 +94,9 @@ import com.sundbybergsit.cromfortune.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.stocks.StockOrderRepositoryImpl
 import com.sundbybergsit.cromfortune.stocks.StockSplitRepositoryImpl
 import com.sundbybergsit.cromfortune.ui.DayPicker
+import com.sundbybergsit.cromfortune.ui.RegisterBuyStockAlertDialog
+import com.sundbybergsit.cromfortune.ui.RegisterSellStockAlertDialog
+import com.sundbybergsit.cromfortune.ui.RegisterSplitStockAlertDialog
 import com.sundbybergsit.cromfortune.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModel
 import com.sundbybergsit.cromfortune.ui.dashboard.DashboardViewModelFactory
@@ -454,6 +458,44 @@ fun AddDialogs(
                 }
             }
         }
+
+        is DialogHandler.DialogViewState.ShowBuyStockDialog -> {
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
+            val localContext = LocalContext.current
+            RegisterBuyStockAlertDialog(onDismiss = {
+                dialogHandler.dismissDialog()
+            }, stockSymbolParam = dialogViewState.stockSymbol) { stockOrder ->
+                homeViewModel.save(context = localContext, stockOrder = stockOrder)
+                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        is DialogHandler.DialogViewState.ShowSellStockDialog -> {
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
+            val localContext = LocalContext.current
+            RegisterSellStockAlertDialog(
+                onDismiss = {
+                    dialogHandler.dismissDialog()
+                }, stockSymbolParam = dialogViewState.stockSymbol,
+                onSave = { stockOrder ->
+                    homeViewModel.save(context = localContext, stockOrder = stockOrder)
+                    Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT)
+                        .show()
+                },
+                homeViewModel = homeViewModel
+            )
+        }
+
+        is DialogHandler.DialogViewState.ShowRegisterSplitStockDialog -> {
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
+            val localContext = LocalContext.current
+            RegisterSplitStockAlertDialog(
+                onDismiss = { DialogHandler.dismissDialog() }, stockSymbolParam = dialogViewState.stockSymbol
+            ) { stockSplit ->
+                homeViewModel.save(context = localContext, stockSplit = stockSplit)
+                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
 
@@ -679,24 +721,24 @@ private fun NavGraphBuilder.addSettings(navController: NavHostController) {
 
 private fun NavGraphBuilder.addHomeBottomSheet() {
     bottomSheet(route = LeafScreen.BottomSheetsHome.route) {
-        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory()
-        })
         BottomSheetContent {
-            HomeItems(onBuy = { homeViewModel.showRegisterBuyStocksDialog.value = true },
-                onSell = { homeViewModel.showRegisterSellStocksDialog.value = true }
-            ) { homeViewModel.showRegisterSplitStocksDialog.value = true }
+            HomeItems(onBuy = { DialogHandler.showBuyStockDialog() },
+                onSell = { DialogHandler.showSellStockDialog() },
+                onSplit = { DialogHandler.showSplitStockDialog() }
+            )
         }
     }
 }
 
 private fun NavGraphBuilder.addHomeAllStocksBottomSheet() {
-    bottomSheet(route = LeafScreen.BottomSheetsHomeAllStocks.route,
+    bottomSheet(
+        route = LeafScreen.BottomSheetsHomeAllStocks.route,
         arguments = listOf(
             navArgument("profile") {
                 type = NavType.StringType
                 nullable = false
-            }),) { backStackEntry ->
+            }),
+    ) { backStackEntry ->
         val arguments = checkNotNull(backStackEntry.arguments)
         val profile = checkNotNull(arguments.getString("profile"))
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
