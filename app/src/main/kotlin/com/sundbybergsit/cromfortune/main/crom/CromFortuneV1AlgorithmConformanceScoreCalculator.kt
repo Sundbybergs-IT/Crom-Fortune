@@ -9,7 +9,7 @@ import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateApi
 import java.util.Currency
 
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {
@@ -23,7 +23,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
     override suspend fun getScore(
         recommendationAlgorithm: RecommendationAlgorithm,
         stockEvents: Set<StockEvent>,
-        currencyRateRepository: CurrencyRateRepository,
+        currencyRateApi: CurrencyRateApi,
     ): ConformanceScore {
         var correctDecision = 0
         val stockOrders: MutableList<StockOrder> = stockEvents
@@ -41,7 +41,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 .sortedBy { stockOrder -> stockOrder.dateInMillis }.toMutableList()
             val firstStockOrderForStock = stockOrdersForStock.first()
             val currencyRateInSek =
-                currencyRateRepository.currencyRates.value?.currencyRates?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
+                currencyRateApi.currencyRates.value?.currencyRates?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
             val stockOrderAggregate = StockOrderAggregate(
                 rateInSek = currencyRateInSek,
                 displayName = "FIXME",
@@ -74,7 +74,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 } else if (stockEvent.stockOrder != null) {
                     stockOrderAggregate.aggregate(stockEvent)
                     val stockOrder = stockEvent.stockOrder!!
-                    val currencyRate = currencyRateRepository.currencyRates?.value?.currencyRates
+                    val currencyRate = currencyRateApi.currencyRates?.value?.currencyRates
                         ?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!
                     val currencyRateInSek = currencyRate.rateInSek
                     val recommendation = recommendationAlgorithm.getRecommendation(
