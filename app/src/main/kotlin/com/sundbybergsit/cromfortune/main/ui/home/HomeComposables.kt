@@ -23,6 +23,9 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
@@ -96,7 +99,7 @@ fun Home(
         ), actions = {
             Box(
                 modifier = Modifier
-                    .width(178.dp)
+                    .width(164.dp)
                     .padding(16.dp)
                     .clickable(onClick = { expanded = true }),
                 contentAlignment = Alignment.CenterStart
@@ -135,12 +138,15 @@ fun Home(
                     }
                 }
             }
-            TextButton(onClick = {
+            IconButton(onClick = {
                 viewModel.refreshData(
                     context = localContext,
                     onFinished = { DialogHandler.showSnack(localContext.getString(R.string.home_information_data_refreshed)) })
             }) {
-                Text(text = stringResource(id = R.string.action_refresh).uppercase())
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Refresh",
+                )
             }
             OverflowMenu(
                 onNavigateTo = onNavigateTo, contentDescription = "Home Menu",
@@ -503,8 +509,9 @@ private fun StockOrderAggregateItem(
                             StockMuteSettingsRepository.unmute(item.stockSymbol)
                         }) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_fas_bell_slash),
-                                contentDescription = "Muted stock"
+                                imageVector = Icons.Filled.NotificationsOff,
+                                contentDescription = "Muted stock",
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     } else {
@@ -512,8 +519,9 @@ private fun StockOrderAggregateItem(
                             StockMuteSettingsRepository.mute(item.stockSymbol)
                         }) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_fas_bell),
-                                contentDescription = "Unmuted stock"
+                                imageVector = Icons.Filled.NotificationsActive,
+                                contentDescription = "Unmuted stock",
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
