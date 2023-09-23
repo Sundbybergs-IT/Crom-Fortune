@@ -1,4 +1,8 @@
 [versions]
+# @keep
+compileSdk = "34"
+# @keep
+minSdk = "29"
 accompanist = "0.33.1-alpha"
 android-gradle-plugin = "8.1.1"
 androidx-activity-compose = "1.7.2"
@@ -19,6 +23,8 @@ google-material = "1.9.0"
 google-play-appupdate = "2.1.0"
 google-play-review = "2.0.1"
 junit = "4.13.2"
+junit-reporting = "1.10.0"
+junit5 = "5.10.0"
 kotlin = "1.9.10"
 kotlinx-coroutinesTest = "1.7.2"
 kotlinx-serialization = "1.5.1"
@@ -58,6 +64,9 @@ composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "
 googlePlayAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-play-appupdate" }
 googlePlayReview = { module = "com.google.android.play:review-ktx", version.ref = "google-play-review" }
 junit = { module = "junit:junit", version.ref = "junit" }
+junit5Api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+junit5Engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+junit5Reporting = { module = "org.junit.platform:junit-platform-reporting", version.ref = "junit-reporting" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutinesTest" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -73,4 +82,5 @@ compose = ["accompanistNavigationMaterial", "accompanistPager", "accompanistNavi
     "androidxNavigationCompose"]
 
 [plugins]
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

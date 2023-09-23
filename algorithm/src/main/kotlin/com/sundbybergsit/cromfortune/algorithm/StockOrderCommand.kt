@@ -1,6 +1,6 @@
 package com.sundbybergsit.cromfortune.algorithm
 
-import java.util.*
+import java.util.Currency
 
 interface StockOrderCommand : Command {
 
