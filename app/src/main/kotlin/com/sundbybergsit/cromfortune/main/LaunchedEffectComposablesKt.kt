@@ -29,7 +29,7 @@ internal fun LoadValueFromParameterLaunchedEffect(
     LaunchedEffect(stockSymbol) {
         val triple = StockPrice.SYMBOLS.find { triple -> triple.first == stockSymbol }
         triple?.let { nullSafeTriple ->
-            stockNameMutableState.value = TextFieldValue("${nullSafeTriple.second} (${nullSafeTriple.first}")
+            stockNameMutableState.value = TextFieldValue("${nullSafeTriple.second} (${nullSafeTriple.first})")
             stockCurrencyMutableState.value = TextFieldValue(nullSafeTriple.third)
         }
     }
