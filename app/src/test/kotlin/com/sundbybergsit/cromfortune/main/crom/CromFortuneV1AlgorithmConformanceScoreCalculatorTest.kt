@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.main.crom
 
-import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
@@ -27,7 +26,7 @@ import org.robolectric.shadows.ShadowLooper
 import java.util.*
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.Q])
+@Config(sdk = [Config.OLDEST_SDK])
 class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     private lateinit var calculator: CromFortuneV1AlgorithmConformanceScoreCalculator

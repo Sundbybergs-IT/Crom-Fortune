@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.main.ui.home.view
 
-import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
@@ -14,7 +13,7 @@ import org.robolectric.annotation.Config
 import java.util.*
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.Q])
+@Config(sdk = [Config.OLDEST_SDK])
 class OpinionatedStockOrderWrapperTest {
 
     @Test

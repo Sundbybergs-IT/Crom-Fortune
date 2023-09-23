@@ -1,7 +1,6 @@
 package com.sundbybergsit.cromfortune.main.crom
 
 import android.content.Context
-import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
@@ -31,7 +30,7 @@ private const val DOMESTIC_STOCK_NAME = "Aktie med normal valutakurs"
 private const val FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME = "Aktie med annan valutakurs"
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.Q])
+@Config(sdk = [Config.OLDEST_SDK])
 class CromFortuneV1RecommendationAlgorithmTest {
 
     private lateinit var algorithm: CromFortuneV1RecommendationAlgorithm
