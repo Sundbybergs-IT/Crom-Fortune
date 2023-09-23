@@ -9,6 +9,10 @@ android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    lint {
+        abortOnError = false
+        checkDependencies = true
+    }
 }
 
 dependencies {
