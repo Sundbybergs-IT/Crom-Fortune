@@ -1,9 +1,7 @@
 package com.sundbybergsit.cromfortune.algorithm.api
 
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+fun interface Command<T> {
 
-interface Command {
-
-    fun execute(repository : StockOrderRepository)
+    fun execute(item : T)
 
 }
