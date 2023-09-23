@@ -7,6 +7,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
@@ -32,7 +33,7 @@ class DashboardViewModel : ViewModel() {
             lastUpdated = timestamp
             viewModelScope.launch {
                 val repository = StockEventRepository(context)
-                val latestScore = com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator()
+                val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator()
                     .getScore(recommendationAlgorithm =
                 CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
                         currencyRateApi = CurrencyRateRepository
