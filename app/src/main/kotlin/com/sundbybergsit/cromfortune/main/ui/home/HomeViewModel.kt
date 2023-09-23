@@ -62,7 +62,8 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
                     val stockName =
                         checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
                     stockOrderAggregate = StockOrderAggregate(
-                        rateInSek = checkNotNull(CurrencyRateRepository.currencyRates.value).currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                        rateInSek = checkNotNull(CurrencyRateRepository.currencyRates.value)
+                            .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
                         displayName = "$stockName (${stockOrder.name})", stockSymbol = stockOrder.name,
                         currency = Currency.getInstance(stockOrder.currency)
                     )
@@ -98,8 +99,8 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
                     val stockName =
                         StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                     stockOrderAggregate = StockOrderAggregate(
-                        CurrencyRateRepository.currencyRates.value?.currencyRates
-                            ?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                        CurrencyRateRepository.currencyRates.value
+                            .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
                         "$stockName (${stockOrder.name})", stockOrder.name,
                         Currency.getInstance(stockOrder.currency)
                     )

@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.main.navigation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -79,6 +80,7 @@ import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BottomSheetContent
 import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
 import com.sundbybergsit.cromfortune.main.DialogHandler
@@ -500,6 +502,8 @@ fun AddDialogs(
     }
 }
 
+// FIXME: Move calculation to view model
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 private fun getOpinionatedStockOrders(
     stockEvents: List<StockEvent>,
@@ -507,7 +511,7 @@ private fun getOpinionatedStockOrders(
 ): List<OpinionatedStockOrderWrapper> {
     val stockOrderEvents = stockEvents.filter { it.stockOrder != null }.toList()
     val currencyRateInSek =
-        checkNotNull(CurrencyRateRepository.currencyRates.value).currencyRates
+        checkNotNull(CurrencyRateRepository.currencyRates).value
             .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrderEvents.first().stockOrder!!.currency }!!.rateInSek
     val opinionatedStockOrderWrappers: MutableList<OpinionatedStockOrderWrapper> =
         mutableListOf()
@@ -534,12 +538,14 @@ private fun getOpinionatedStockOrders(
     return opinionatedStockOrderWrappers.toList()
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 internal fun StockOrderRow(
     modifier: Modifier = Modifier,
     stockOrder: StockOrder,
     opinionatedStockOrder: OpinionatedStockOrderWrapper,
     showDeleteDialog: MutableState<Boolean> = remember { mutableStateOf(false) },
+    currencyRateApi: CurrencyRateApi = CurrencyRateRepository,
     readOnly: Boolean
 ) {
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
@@ -636,8 +642,8 @@ internal fun StockOrderRow(
             modifier = Modifier.weight(1f),
             text = nf.format(
                 stockOrder.getTotalCost(
-                    checkNotNull(CurrencyRateRepository.currencyRates.value)
-                        .currencyRates.single { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }.rateInSek
+                    currencyRateApi.currencyRates.value
+                        .single { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }.rateInSek
                 )
             ),
             style = MaterialTheme.typography.bodyMedium,

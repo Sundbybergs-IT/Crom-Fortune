@@ -40,7 +40,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     @Before
     fun setUp() {
-        CurrencyRateRepository.add(setOf(CurrencyRate("SEK", 1.0)))
+        CurrencyRateRepository.addAll(setOf(CurrencyRate("SEK", 1.0)))
         StockPriceRepository.put(
             setOf(
                 StockPrice(

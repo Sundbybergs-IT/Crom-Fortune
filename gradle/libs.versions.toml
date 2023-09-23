@@ -26,7 +26,7 @@ junit = "4.13.2"
 junit-reporting = "1.10.0"
 junit5 = "5.10.0"
 kotlin = "1.9.10"
-kotlinx-coroutinesTest = "1.7.2"
+kotlinx-coroutines = "1.7.2"
 kotlinx-serialization = "1.5.1"
 robolectric = "4.10.3"
 sonarqube = "4.3.1.3277"
@@ -67,7 +67,8 @@ junit = { module = "junit:junit", version.ref = "junit" }
 junit5Api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
 junit5Engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
 junit5Reporting = { module = "org.junit.platform:junit-platform-reporting", version.ref = "junit-reporting" }
-kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutinesTest" }
+kotlinxCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 pluginAndroidGradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
