@@ -44,7 +44,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
             for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
                 currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
             }
-            CurrencyRateRepository.add(currencyRates)
+            CurrencyRateRepository.addAll(currencyRates)
             val stocks: Map<String, StockV2> =
                 get(StockPrice.SYMBOLS.map { pair -> pair.first }
                     .toTypedArray())

@@ -86,7 +86,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                     .constrainAs(scoreRef) {
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
-                    }, text = viewModel.score.value ?: "",
+                    }, text = viewModel.score.value,
                 style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface
             )
         }

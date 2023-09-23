@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.LeafScreen
 import com.sundbybergsit.cromfortune.main.OverflowMenu
@@ -161,6 +163,7 @@ fun Home(
             val view = LocalView.current
             val showFabMutableState = remember { mutableStateOf(false) }
             val showBuyDialogMutableState = remember { mutableStateOf(false) }
+            val currencyRateApi :CurrencyRateApi =CurrencyRateRepository
             if (showFabMutableState.value) {
                 FloatingActionButton(modifier = Modifier
                     .constrainAs(fabRef) {
@@ -218,7 +221,8 @@ fun Home(
                                         )
                                     },
                                     onNavigateTo = onNavigateTo,
-                                    readOnly = false
+                                    readOnly = false,
+                                    currencyRateApi=currencyRateApi
                                 )
 
                                 1 -> StocksTab(
@@ -226,7 +230,7 @@ fun Home(
                                     index = lazyItemScope,
                                     viewState = cromStocksViewState,
                                     stockPriceListener = stockPriceListener,
-                                    onShowStock = { stockSymbol,readOnly ->
+                                    onShowStock = { stockSymbol, readOnly ->
                                         DialogHandler.showStockEvents(
                                             stockSymbol = stockSymbol, stockEvents = viewModel.cromStockEvents(
                                                 context = localContext,
@@ -235,7 +239,8 @@ fun Home(
                                         )
                                     },
                                     onNavigateTo = onNavigateTo,
-                                    readOnly = true
+                                    readOnly = true,
+                                    currencyRateApi=currencyRateApi
                                 )
                             }
                         }
@@ -350,6 +355,8 @@ fun StocksHeader(
     }
 }
 
+/// FIXME: Move calculation to view model
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 private fun StocksTab(
     profile: String,
@@ -359,10 +366,10 @@ private fun StocksTab(
     onShowStock: (String, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
     readOnly: Boolean,
+    currencyRateApi: CurrencyRateApi
 ) {
     if (index == 0) {
-        val currencyRates =
-            CurrencyRateRepository.currencyRates.value?.currencyRates?.toList() ?: listOf()
+        val currencyRates = currencyRateApi.currencyRates.value.toList()
         StocksHeader(
             profile = profile,
             onNavigateTo = onNavigateTo,

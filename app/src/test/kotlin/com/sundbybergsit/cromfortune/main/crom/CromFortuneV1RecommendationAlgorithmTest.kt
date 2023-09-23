@@ -46,7 +46,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
     @Before
     fun setUp() {
-        CurrencyRateRepository.add(
+        CurrencyRateRepository.addAll(
             setOf(
                 CurrencyRate("SEK", 1.0),
                 CurrencyRate("NOK", 10.0)

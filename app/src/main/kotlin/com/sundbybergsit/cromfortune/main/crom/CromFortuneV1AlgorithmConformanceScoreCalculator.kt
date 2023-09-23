@@ -9,7 +9,7 @@ import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateApi
+import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import java.util.Currency
 
 class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceScoreCalculator() {
@@ -41,7 +41,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 .sortedBy { stockOrder -> stockOrder.dateInMillis }.toMutableList()
             val firstStockOrderForStock = stockOrdersForStock.first()
             val currencyRateInSek =
-                currencyRateApi.currencyRates.value?.currencyRates?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
+                currencyRateApi.currencyRates.value.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
             val stockOrderAggregate = StockOrderAggregate(
                 rateInSek = currencyRateInSek,
                 displayName = "FIXME",

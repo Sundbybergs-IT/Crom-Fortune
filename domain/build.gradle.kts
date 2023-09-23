@@ -35,6 +35,7 @@ lint {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation(libs.androidxAnnotation)
+    implementation(libs.kotlinxCoroutinesCore)
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)
     testImplementation(kotlin("test"))

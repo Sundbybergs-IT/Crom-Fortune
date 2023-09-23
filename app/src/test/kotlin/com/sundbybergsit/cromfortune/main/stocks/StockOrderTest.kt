@@ -22,7 +22,7 @@ class StockOrderTest {
 
     @Before
     fun setUp() {
-        CurrencyRateRepository.add(setOf(CurrencyRate("SEK", 1.0)))
+        CurrencyRateRepository.addAll(setOf(CurrencyRate("SEK", 1.0)))
         ShadowLooper.runUiThreadTasks()
     }
 
