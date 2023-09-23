@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.algorithm
+package com.sundbybergsit.cromfortune.algorithm.core
 
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
