@@ -642,7 +642,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             )
 
             assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is SellStockCommand)
+            assertTrue(recommendation.command is SellStockCommand)
             val sellStockCommand = recommendation.command as SellStockCommand
             assertTrue(sellStockCommand.commissionFee == 0.0)
             assertQuantity(7, sellStockCommand.quantity)
@@ -673,7 +673,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             )
 
             assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is BuyStockCommand)
+            assertTrue(recommendation.command is BuyStockCommand)
             val buyStockCommand = recommendation.command as BuyStockCommand
             assertTrue(buyStockCommand.commissionFee == 1.0)
             assertQuantity(2, buyStockCommand.quantity)
@@ -790,7 +790,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             )
 
             assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is SellStockCommand)
+            assertTrue(recommendation.command is SellStockCommand)
             val sellStockCommand = recommendation.command as SellStockCommand
             assertTrue(sellStockCommand.commissionFee == 0.0)
             assertQuantity(7, sellStockCommand.quantity)
