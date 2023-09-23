@@ -35,7 +35,7 @@ class DashboardViewModel : ViewModel() {
                 val repository = StockEventRepositoryImpl(context)
                 val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(recommendationAlgorithm =
                 CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
-                        currencyRateRepository = CurrencyRateRepository
+                        currencyRateApi = CurrencyRateRepository
                 )
                 _score.value = context.resources.getQuantityString(R.plurals.dashboard_croms_will_message,
                         latestScore.score, latestScore.score)

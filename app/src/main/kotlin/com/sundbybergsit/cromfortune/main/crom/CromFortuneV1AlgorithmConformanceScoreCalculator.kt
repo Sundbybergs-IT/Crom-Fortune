@@ -74,9 +74,6 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 } else if (stockEvent.stockOrder != null) {
                     stockOrderAggregate.aggregate(stockEvent)
                     val stockOrder = stockEvent.stockOrder!!
-                    val currencyRate = currencyRateApi.currencyRates?.value?.currencyRates
-                        ?.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!
-                    val currencyRateInSek = currencyRate.rateInSek
                     val recommendation = recommendationAlgorithm.getRecommendation(
                         stockPrice = StockPrice(
                             stockSymbol = stockOrder.name,
