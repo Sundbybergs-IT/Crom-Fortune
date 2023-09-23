@@ -32,7 +32,7 @@ lint {
 }
 
 dependencies {
-    implementation(projects.algorithmApi)
+    implementation(projects.algorithm.algorithmApi)
     implementation(projects.domain)
 
     implementation(libs.androidxAnnotation)
