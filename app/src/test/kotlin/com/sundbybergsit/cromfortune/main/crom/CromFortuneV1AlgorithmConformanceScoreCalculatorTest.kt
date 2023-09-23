@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.main.crom
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.algorithm.ConformanceScore
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
@@ -202,7 +203,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         assertScore(50, score)
     }
 
-    private fun assertScore(expectedValue: Int, score: com.sundbybergsit.cromfortune.algorithm.ConformanceScore) {
+    private fun assertScore(expectedValue: Int, score: ConformanceScore) {
         assertTrue("Expected score $expectedValue but was ${score.score}", score.score == expectedValue)
     }
 
@@ -248,9 +249,9 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         ): Recommendation {
             return Recommendation(
                 SellStockCommand(
-                    ApplicationProvider.getApplicationContext(), timeInMillis,
-                    Currency.getInstance("SEK"),
-                    StockPrice.SYMBOLS[0].first, 0.0, 1, 0.0
+                    timeInMillis, Currency.getInstance("SEK"),
+                    StockPrice.SYMBOLS[0].first,
+                    0.0, 1, 0.0
                 )
             )
         }

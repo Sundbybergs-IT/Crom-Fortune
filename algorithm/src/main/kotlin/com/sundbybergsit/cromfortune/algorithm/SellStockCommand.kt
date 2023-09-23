@@ -1,14 +1,17 @@
 package com.sundbybergsit.cromfortune.algorithm
 
-import android.content.Context
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
-import com.sundbybergsit.cromfortune.roundTo
-import java.util.*
+import java.util.Currency
 
-class SellStockCommand(private val context: Context, private val currentTimeInMillis: Long,
-                       val currency: Currency, val name: String, val pricePerStock: Double,
-                       val quantity: Int, val commissionFee: Double) : StockOrderCommand {
+class SellStockCommand(
+    private val currentTimeInMillis: Long,
+    val currency: Currency,
+    val name: String,
+    val pricePerStock: Double,
+    val quantity: Int,
+    val commissionFee: Double
+) : StockOrderCommand {
 
     override fun quantity(): Int = quantity
 
@@ -23,14 +26,22 @@ class SellStockCommand(private val context: Context, private val currentTimeInMi
     override fun execute(repository: StockOrderRepository) {
         if (repository.count(name) > 0) {
             val stockOrders: MutableSet<StockOrder> = repository.list(name).toMutableSet()
-            stockOrders.add(StockOrder(orderAction = "Sell", currency = currency.toString(),
+            stockOrders.add(
+                StockOrder(
+                    orderAction = "Sell", currency = currency.toString(),
                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
-                    quantity = quantity))
+                    quantity = quantity
+                )
+            )
             repository.putAll(name, stockOrders)
         } else {
-            repository.putReplacingAll(name, StockOrder(orderAction = "Sell", currency = currency.toString(),
-                                    dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
-                                    commissionFee = commissionFee, quantity = quantity))
+            repository.putReplacingAll(
+                name, StockOrder(
+                    orderAction = "Sell", currency = currency.toString(),
+                    dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
+                    commissionFee = commissionFee, quantity = quantity
+                )
+            )
         }
     }
 

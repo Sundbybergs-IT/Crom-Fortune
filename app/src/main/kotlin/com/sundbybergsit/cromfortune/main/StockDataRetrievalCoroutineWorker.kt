@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
+import com.sundbybergsit.cromfortune.algorithm.roundTo
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
@@ -18,7 +19,6 @@ import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepositoryImpl
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.roundTo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.StockV2

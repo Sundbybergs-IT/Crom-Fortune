@@ -1,33 +1,41 @@
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    id("cromfortune.kotlin.library.jacoco")
+    id("com.android.lint")
 }
-apply(from = "../buildSrc/src/build.gradle")
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
-val baseVersionName = ext.get("baseVersionName") as String
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+    reports {
+        junitXml.setDestination(file("$buildDir/test-results/testDebugUnitTest"))
+    }
+}
 
-android {
-    namespace = "com.sundbybergsit.cromfortune.algorithm"
-    compileSdk = 34
-    defaultConfig {
-        minSdk = 29
-        targetSdk = 34
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-    testOptions {
-        unitTests.isIncludeAndroidResources = true
+tasks.named("jacocoTestReport") {
+    dependsOn(tasks.named("test"))
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/jacocoTestReport/jacocoTestReport.xml"))
+        csv.required.set(false)
+        html.required.set(false)
     }
 }
 
 dependencies {
     implementation(projects.domain)
-    implementation(libs.androidxAppcompat)
-    implementation(project(mapOf("path" to ":domain")))
-    testImplementation(libs.junit)
+
+    implementation(libs.androidxAnnotation)
+
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit5Api)
+    testRuntimeOnly(libs.junit5Engine)
+    testImplementation(libs.junit5Reporting)
 }

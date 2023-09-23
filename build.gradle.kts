@@ -1,7 +1,6 @@
 buildscript {
     repositories {
         google()
-        mavenCentral()
     }
     dependencies {
         classpath(libs.pluginAndroidGradle)
@@ -9,12 +8,13 @@ buildscript {
     }
 }
 
+// https://github.com/gradle/gradle/issues/22797
 @Suppress(
     "DSL_SCOPE_VIOLATION",
     "UNRESOLVED_REFERENCE_WRONG_RECEIVER",
 )
 plugins {
-    kotlin("plugin.serialization") version libs.versions.kotlin
+    alias(libs.plugins.serialization)
     alias(libs.plugins.sonarqube)
 }
 
@@ -24,38 +24,36 @@ allprojects {
 
     val snapshotVersion = isSnapshotVersion()
 
+    group = "com.sundbybergsit.cromfortune"
+    version = "$baseVersionName${if (snapshotVersion) "-SNAPSHOT" else ""}"
+    description = "Make a fortune - With Crom Fortune!"
+
     extra.apply {
         set("baseVersionName", baseVersionName)
         set("snapshotVersion", snapshotVersion)
     }
 
-    group = "com.sundbybergsit.cromfortune"
-    version = "$baseVersionName${if (snapshotVersion) "-SNAPSHOT" else ""}"
-    description = "Make a fortune - With Crom Fortune!"
-
     repositories {
-        google()
         mavenCentral()
+        google()
     }
 
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).all {
-        kotlinOptions {
-            freeCompilerArgs = freeCompilerArgs + listOf(
-                // For creation of default methods in interfaces
-                "-Xjvm-default=all",
-                // Avoid having to stutter experimental annotations all over the codebase
-                "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
-                "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-                "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-                "-Xopt-in=androidx.compose.runtime.ExperimentalComposeApi",
-                "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi",
-                "-Xopt-in=com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi",
-                "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
-                "-Xopt-in=kotlin.ExperimentalUnsignedTypes",
-                "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-Xopt-in=kotlinx.coroutines.InternalCoroutinesApi"
-            )
+}
+
+subprojects {
+
+    sonar {
+
+        properties {
+            property("sonar.exclusions", "**/BuildConfig.class,**/R.java,**/R\$*.java,src/main/gen/**/*")
+            property("sonar.sources", "src/main,build.gradle.kts")
+            property("sonar.tests", "src/test")
+            property("sonar.coverage.exclusions", "build.gradle.kts")
+            property("sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+            property("sonar.junit.reportsPaths", "${buildDir}/test-results/")
+            property("sonar.androidLint.reportPaths", "${buildDir}/reports/lint-results-debug.xml")
         }
+
     }
 
 }

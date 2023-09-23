@@ -1,8 +1,10 @@
 package com.sundbybergsit.cromfortune.main.crom
 
 import android.content.Context
+import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
@@ -45,9 +47,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
         if (orders.isEmpty()) {
             // Dummy recommendation to mimic first buy
             return Recommendation(
-                com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
-                    context, timeInMillis, currency, stockName,
-                    currentStockPriceInStockCurrency, 1, commissionFeeInSek
+                BuyStockCommand(
+                    timeInMillis, currency, stockName, currentStockPriceInStockCurrency,
+                    1, commissionFeeInSek
                 )
             )
         }
@@ -99,9 +101,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 ((commissionFeeInSek / rateInSek) + currentStockPriceInStockCurrency * buyQuantity) / buyQuantity
             if (buyQuantity > 0 && isCurrentStockBelowLastSale(sortedOrders.last(), netStockPriceInStockCurrency)) {
                 return Recommendation(
-                    com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
-                        context, timeInMillis, currency, stockName,
-                        currentStockPriceInStockCurrency, buyQuantity, commissionFeeInSek
+                    BuyStockCommand(
+                        timeInMillis, currency, stockName, currentStockPriceInStockCurrency,
+                        buyQuantity, commissionFeeInSek
                     )
                 )
             }
@@ -138,9 +140,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 ) {
                     isOkToContinue = true
                     recommendation = Recommendation(
-                        com.sundbybergsit.cromfortune.algorithm.SellStockCommand(
-                            context, timeInMillis, currency, stockName,
-                            currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                        SellStockCommand(
+                            timeInMillis, currency, stockName, currentStockPriceInStockCurrency,
+                            tradeQuantity, commissionFeeInSek
                         )
                     )
                     tradeQuantity += 1
@@ -151,9 +153,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                     ) {
                         isOkToContinue = true
                         recommendation = Recommendation(
-                            com.sundbybergsit.cromfortune.algorithm.SellStockCommand(
-                                context, timeInMillis, currency, stockName,
-                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                            SellStockCommand(
+                                timeInMillis, currency, stockName, currentStockPriceInStockCurrency,
+                                tradeQuantity, commissionFeeInSek
                             )
                         )
                         tradeQuantity += 1
@@ -172,9 +174,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                 ) {
                     isOkToContinue = true
                     recommendation = Recommendation(
-                        com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
-                            context, timeInMillis, currency, stockName,
-                            currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                        BuyStockCommand(
+                            timeInMillis, currency, stockName, currentStockPriceInStockCurrency,
+                            tradeQuantity, commissionFeeInSek
                         )
                     )
                     tradeQuantity += 1
@@ -184,9 +186,9 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
                     ) {
                         isOkToContinue = true
                         recommendation = Recommendation(
-                            com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
-                                context, timeInMillis, currency, stockName,
-                                currentStockPriceInStockCurrency, tradeQuantity, commissionFeeInSek
+                            BuyStockCommand(
+                                timeInMillis, currency, stockName, currentStockPriceInStockCurrency,
+                                tradeQuantity, commissionFeeInSek
                             )
                         )
                         tradeQuantity += 1

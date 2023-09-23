@@ -1,8 +1,10 @@
 package com.sundbybergsit.cromfortune.main.ui.home.view
 
 import android.os.Build
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
+import com.sundbybergsit.cromfortune.algorithm.Recommendation
+import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -47,10 +49,10 @@ class OpinionatedStockOrderWrapperTest {
             com.sundbybergsit.cromfortune.domain.StockOrder(
                 "Buy", "SEK", 0L, "",
                 1.0, 1.0, 1
-            ), com.sundbybergsit.cromfortune.algorithm.Recommendation(
-            com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
-                ApplicationProvider.getApplicationContext(),
-                0L, Currency.getInstance("SEK"), "", 1.0, 1, 39.0
+            ), Recommendation(
+            BuyStockCommand(
+                0L,
+                Currency.getInstance("SEK"), "", 1.0, 1, 39.0
             )
         )
         )
@@ -66,10 +68,10 @@ class OpinionatedStockOrderWrapperTest {
             com.sundbybergsit.cromfortune.domain.StockOrder(
                 "Buy", "SEK", 0L, "",
                 1.0, 1.0, 1
-            ), com.sundbybergsit.cromfortune.algorithm.Recommendation(
-            com.sundbybergsit.cromfortune.algorithm.SellStockCommand(
-                ApplicationProvider.getApplicationContext(),
-                0L, Currency.getInstance("SEK"), "", 1.0, 1, 39.0
+            ), Recommendation(
+            SellStockCommand(
+                0L,
+                Currency.getInstance("SEK"), "", 1.0, 1, 39.0
             )
         )
         )
@@ -85,10 +87,10 @@ class OpinionatedStockOrderWrapperTest {
             com.sundbybergsit.cromfortune.domain.StockOrder(
                 "Sell", "SEK", 0L, "",
                 1.0, 1.0, 1
-            ), com.sundbybergsit.cromfortune.algorithm.Recommendation(
-            com.sundbybergsit.cromfortune.algorithm.BuyStockCommand(
-                ApplicationProvider.getApplicationContext(),
-                0L, Currency.getInstance("SEK"), "", 1.0, 1, 39.0
+            ), Recommendation(
+            BuyStockCommand(
+                0L,
+                Currency.getInstance("SEK"), "", 1.0, 1, 39.0
             )
         )
         )
@@ -104,10 +106,10 @@ class OpinionatedStockOrderWrapperTest {
             com.sundbybergsit.cromfortune.domain.StockOrder(
                 "Sell", "SEK", 0L, "",
                 1.0, 1.0, 1
-            ), com.sundbybergsit.cromfortune.algorithm.Recommendation(
-            com.sundbybergsit.cromfortune.algorithm.SellStockCommand(
-                ApplicationProvider.getApplicationContext(),
-                0L, Currency.getInstance("SEK"), "", 1.0, 1, 39.0
+            ), Recommendation(
+            SellStockCommand(
+                0L,
+                Currency.getInstance("SEK"), "", 1.0, 1, 39.0
             )
         )
         )

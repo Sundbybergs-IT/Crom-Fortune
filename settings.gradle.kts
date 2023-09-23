@@ -1,8 +1,10 @@
 rootProject.buildFileName = "build.gradle.kts"
+rootProject.name = "crom-fortune"
 
 pluginManagement {
-    plugins {
-        id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
+    includeBuild("build-logic")
+    repositories {
+        gradlePluginPortal()
     }
 }
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
@@ -12,5 +14,3 @@ include(
     ":algorithm",
     ":domain"
 )
-
-project(":domain").projectDir = file("$rootDir/domain")

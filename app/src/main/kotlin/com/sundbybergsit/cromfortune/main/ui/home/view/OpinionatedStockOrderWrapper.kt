@@ -1,10 +1,13 @@
 package com.sundbybergsit.cromfortune.main.ui.home.view
 
-internal class OpinionatedStockOrderWrapper(val stockOrder: com.sundbybergsit.cromfortune.domain.StockOrder, val recommendation: com.sundbybergsit.cromfortune.algorithm.Recommendation?) {
+import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
+import com.sundbybergsit.cromfortune.algorithm.Recommendation
+
+internal class OpinionatedStockOrderWrapper(val stockOrder: com.sundbybergsit.cromfortune.domain.StockOrder, val recommendation: Recommendation?) {
 
     fun isApprovedByAlgorithm(): Boolean {
         return recommendation != null &&
-                ((recommendation.command is com.sundbybergsit.cromfortune.algorithm.BuyStockCommand) == (stockOrder.orderAction == "Buy"))
+                ((recommendation.command is BuyStockCommand) == (stockOrder.orderAction == "Buy"))
     }
 
 }
