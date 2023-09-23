@@ -6,10 +6,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.domain.StockEvent
-import com.sundbybergsit.cromfortune.domain.StockEventRepository
+import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.SYMBOLS
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.main.stocks.StockEventRepositoryImpl
+import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +38,7 @@ object DialogHandler {
 
     fun showDeleteDialog(context: Context, stockName: String) {
         _dialogViewState.value = DialogViewState.ShowDeleteDialog(
-            stockEventRepository = StockEventRepositoryImpl(context),
+            stockEventApi = StockEventRepository(context),
             stockName = stockName
         )
     }
@@ -88,12 +88,12 @@ object DialogHandler {
         data object Dismissed : DialogViewState()
 
         data class ShowDeleteDialog(
-            val stockEventRepository: StockEventRepository,
+            val stockEventApi: StockEventApi,
             val stockName: String
         ) : DialogViewState(), StockRemoveClickListener {
 
             override fun onClickRemove(context: Context, stockSymbol: String) {
-                stockEventRepository.remove(stockSymbol)
+                stockEventApi.remove(stockSymbol)
             }
 
         }

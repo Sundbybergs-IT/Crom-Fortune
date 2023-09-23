@@ -16,7 +16,7 @@ import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.sundbybergsit.cromfortune.main.navigation.AppNavigation
-import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
         }
         val reviewManager = ReviewManagerFactory.create(this)
         appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this))
-        if (StockOrderRepositoryImpl(this).countAll() > 4) {
+        if (StockOrderRepository(this).countAll() > 4) {
             Log.i(TAG, "Time to nag about reviews! :-)")
             val request = reviewManager.requestReviewFlow()
             request.addOnCompleteListener { task ->

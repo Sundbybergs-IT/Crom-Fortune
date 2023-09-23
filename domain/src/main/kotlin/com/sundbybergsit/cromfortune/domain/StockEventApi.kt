@@ -1,6 +1,6 @@
 package com.sundbybergsit.cromfortune.domain
 
-interface StockEventRepository {
+interface StockEventApi {
 
     fun listOfStockNames(): Iterable<String>
 

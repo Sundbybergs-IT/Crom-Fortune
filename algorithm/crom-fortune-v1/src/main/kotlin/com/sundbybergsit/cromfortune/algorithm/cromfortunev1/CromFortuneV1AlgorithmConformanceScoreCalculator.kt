@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.main.crom
+package com.sundbybergsit.cromfortune.algorithm.cromfortunev1
 
 import android.util.Log
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm

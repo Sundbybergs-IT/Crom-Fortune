@@ -36,6 +36,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling")
     implementation(projects.algorithm.algorithmApi)
     implementation(projects.algorithm.algorithmCore)
+    implementation(projects.algorithm.cromFortuneV1)
     implementation(libs.kotlinxCoroutinesCore)
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)

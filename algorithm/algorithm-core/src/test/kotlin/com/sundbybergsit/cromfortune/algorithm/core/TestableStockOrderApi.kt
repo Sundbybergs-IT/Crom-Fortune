@@ -1,9 +1,9 @@
 package com.sundbybergsit.cromfortune.algorithm.core
 
 import com.sundbybergsit.cromfortune.domain.StockOrder
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockOrderApi
 
-class TestableStockOrderRepository(private val stockOrders: MutableSet<StockOrder>) : StockOrderRepository {
+class TestableStockOrderApi(private val stockOrders: MutableSet<StockOrder>) : StockOrderApi {
 
     override fun count(stockName: String): Int = stockOrders.map { stockOrder -> stockOrder.name }.size
 

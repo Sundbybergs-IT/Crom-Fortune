@@ -3,16 +3,16 @@ package com.sundbybergsit.cromfortune.main.stocks
 import android.content.Context
 import android.content.SharedPreferences
 import com.sundbybergsit.cromfortune.domain.StockSplit
-import com.sundbybergsit.cromfortune.domain.StockSplitRepository
+import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 // FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-class StockSplitRepositoryImpl(
+class StockSplitRepository(
     context: Context,
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("SPLITS", Context.MODE_PRIVATE),
-) : StockSplitRepository {
+) : StockSplitApi {
 
     override fun remove(stockSplit: StockSplit) {
         val stockSplits = list(stockSplit.name).toMutableSet()

@@ -8,14 +8,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.domain.StockEvent
-import com.sundbybergsit.cromfortune.domain.StockEventRepository
+import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.TAG
-import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1AlgorithmConformanceScoreCalculator
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.main.stocks.StockEventRepositoryImpl
+import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -32,8 +31,9 @@ class DashboardViewModel : ViewModel() {
         if (timestamp.isAfter(lastUpdated)) {
             lastUpdated = timestamp
             viewModelScope.launch {
-                val repository = StockEventRepositoryImpl(context)
-                val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator().getScore(recommendationAlgorithm =
+                val repository = StockEventRepository(context)
+                val latestScore = com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator()
+                    .getScore(recommendationAlgorithm =
                 CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
                         currencyRateApi = CurrencyRateRepository
                 )
@@ -45,7 +45,7 @@ class DashboardViewModel : ViewModel() {
         }
     }
 
-    private fun events(repository: StockEventRepository): List<StockEvent> {
+    private fun events(repository: StockEventApi): List<StockEvent> {
         val events = mutableListOf<StockEvent>()
         for (stockName in repository.listOfStockNames()) {
             for (entry in repository.list(stockName)) {

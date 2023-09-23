@@ -17,7 +17,7 @@ class SellStockCommandTest {
             quantity = 0,
             commissionFee = 0.0
         )
-        val repository = TestableStockOrderRepository(mutableSetOf())
+        val repository = TestableStockOrderApi(mutableSetOf())
 
         command.execute(repository = repository)
 
