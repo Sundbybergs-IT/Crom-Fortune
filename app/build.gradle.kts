@@ -28,30 +28,40 @@ android {
 
 dependencies {
     api(projects.domain)
+    implementation(projects.algorithm.algorithmApi)
+    implementation(projects.algorithm.algorithmCore)
+    implementation(projects.algorithm.cromFortuneV1)
+
     // Version determined by Compose BoM
     debugImplementation( "androidx.compose.ui:ui-test-manifest")
     // Version determined by Compose BoM
     implementation("androidx.compose.material3:material3")
     // Version determined by Compose BoM
     implementation("androidx.compose.ui:ui-tooling")
-    implementation(projects.algorithm.algorithmApi)
-    implementation(projects.algorithm.algorithmCore)
-    implementation(projects.algorithm.cromFortuneV1)
+    implementation(libs.bundles.compose)
+    implementation(libs.androidxComposeMaterialIconsExtended)
+
+    implementation(libs.androidxWorkRuntime)
     implementation(libs.kotlinxCoroutinesCore)
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)
+
     implementation(libs.accompanistNavigationMaterial)
+    implementation(libs.androidxNavigationFragment)
+    implementation(libs.androidxNavigationUi)
+
     implementation(libs.androidxAppcompat)
     implementation(libs.androidxCore)
     implementation(libs.androidxLifecycleRuntime)
     implementation(libs.androidxLifecycleViewmodel)
-    implementation(libs.androidxNavigationFragment)
-    implementation(libs.androidxNavigationUi)
-    implementation(libs.androidxWorkRuntime)
-    implementation(libs.bundles.compose)
+
+
+
     implementation(libs.googlePlayAppUpdate)
     implementation(libs.googlePlayReview)
+
     implementation(libs.yahooFinance)
+
     testImplementation(libs.androidxTestJunit)
     testImplementation(libs.androidxWorkTesting)
     testImplementation(libs.junit)

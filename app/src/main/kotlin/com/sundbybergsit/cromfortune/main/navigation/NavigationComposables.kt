@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.SentimentDissatisfied
+import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -650,15 +652,14 @@ internal fun StockOrderRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.padding(4.dp))
-        Text(
-            modifier = Modifier.weight(1f),
-            text =
-            (if (opinionatedStockOrder.isApprovedByAlgorithm()) {
-                "\uD83D\uDC4D"
+        Icon(
+            imageVector = (if (opinionatedStockOrder.isApprovedByAlgorithm()) {
+                Icons.Outlined.SentimentSatisfied
             } else {
-                "\uD83D\uDC4E"
+                Icons.Outlined.SentimentDissatisfied
             }),
-            style = MaterialTheme.typography.bodyMedium,
+            contentDescription = "Satisfaction",
+            tint = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 }

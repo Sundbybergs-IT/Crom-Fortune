@@ -94,15 +94,14 @@ fun RegisterSellStockAlertDialog(
                 .verticalScroll(state = scrollState)
         ) {
             val (titleRef, dateRef, stockQuantityRef, stockNameRef, stockPriceRef, stockCurrencyRef, commissionFeeRef, buttonsRef) = createRefs()
-
             Text(
                 modifier = Modifier
                     .padding(all = 16.dp)
                     .constrainAs(titleRef) {
                         top.linkTo(parent.top)
-                    }, text = stringResource(id = R.string.action_stock_sell)
+                    }, text = stringResource(id = R.string.action_stock_sell),
+                color = MaterialTheme.colorScheme.onSurface
             )
-
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(dateRef) {
                     top.linkTo(titleRef.bottom)
@@ -341,13 +340,13 @@ fun RegisterSplitStockAlertDialog(
                 .verticalScroll(state = scrollState)
         ) {
             val (titleRef, dateRef, splitSwitchRef, stockQuantityRef, stockNameRef, buttonsRef) = createRefs()
-
             Text(
                 modifier = Modifier
                     .padding(all = 16.dp)
                     .constrainAs(titleRef) {
                         top.linkTo(parent.top)
-                    }, text = stringResource(id = R.string.action_stock_add_split)
+                    }, text = stringResource(id = R.string.action_stock_add_split),
+                    color = MaterialTheme.colorScheme.onSurface
             )
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(dateRef) {
@@ -529,13 +528,13 @@ fun RegisterBuyStockAlertDialog(
                 .verticalScroll(state = scrollState)
         ) {
             val (titleRef, dateRef, stockQuantityRef, stockNameRef, stockPriceRef, stockCurrencyRef, commissionFeeRef, buttonsRef) = createRefs()
-
             Text(
                 modifier = Modifier
                     .padding(all = 16.dp)
                     .constrainAs(titleRef) {
                         top.linkTo(parent.top)
-                    }, text = stringResource(id = R.string.action_stock_buy)
+                    }, text = stringResource(id = R.string.action_stock_buy),
+                color = MaterialTheme.colorScheme.onSurface
             )
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(dateRef) {
