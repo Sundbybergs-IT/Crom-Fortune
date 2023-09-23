@@ -54,7 +54,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
-import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockPriceApi
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
@@ -75,19 +74,14 @@ import java.util.Currency
 fun Home(
     viewModel: HomeViewModel,
     pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 }),
+    stockPriceApi: StockPriceApi = StockPriceRepository,
     onNavigateTo: (String) -> Unit
 ) {
     val localContext = LocalContext.current
     val personalStocksViewState: HomeViewModel.ViewState by viewModel.personalStocksViewState
     val cromStocksViewState: HomeViewModel.ViewState by viewModel.cromStocksViewState
-    val stockPricesViewState: StockPriceRepository.ViewState? by StockPriceRepository.stockPrices
     LaunchedEffect(key1 = Unit) {
         viewModel.refreshData(localContext)
-    }
-    val stockPriceApi: StockPriceApi = object : StockPriceApi {
-        override fun getStockPrice(stockSymbol: String): StockPrice {
-            return checkNotNull(stockPricesViewState).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
-        }
     }
     var expanded by remember { mutableStateOf(false) }
     val items = stringArrayResource(id = R.array.filter_array)
@@ -163,7 +157,7 @@ fun Home(
             val view = LocalView.current
             val showFabMutableState = remember { mutableStateOf(false) }
             val showBuyDialogMutableState = remember { mutableStateOf(false) }
-            val currencyRateApi :CurrencyRateApi =CurrencyRateRepository
+            val currencyRateApi: CurrencyRateApi = CurrencyRateRepository
             if (showFabMutableState.value) {
                 FloatingActionButton(modifier = Modifier
                     .constrainAs(fabRef) {
@@ -222,7 +216,7 @@ fun Home(
                                     },
                                     onNavigateTo = onNavigateTo,
                                     readOnly = false,
-                                    currencyRateApi=currencyRateApi
+                                    currencyRateApi = currencyRateApi
                                 )
 
                                 1 -> StocksTab(
@@ -240,7 +234,7 @@ fun Home(
                                     },
                                     onNavigateTo = onNavigateTo,
                                     readOnly = true,
-                                    currencyRateApi=currencyRateApi
+                                    currencyRateApi = currencyRateApi
                                 )
                             }
                         }
