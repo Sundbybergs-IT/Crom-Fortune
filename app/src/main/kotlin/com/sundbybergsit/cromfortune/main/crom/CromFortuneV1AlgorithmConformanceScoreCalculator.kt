@@ -2,6 +2,7 @@ package com.sundbybergsit.cromfortune.main.crom
 
 import android.util.Log
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.algorithm.core.AlgorithmConformanceScoreCalculator
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.ConformanceScore
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
