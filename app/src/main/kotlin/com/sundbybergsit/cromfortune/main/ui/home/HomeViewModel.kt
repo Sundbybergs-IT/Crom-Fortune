@@ -9,20 +9,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.domain.StockEvent
-import com.sundbybergsit.cromfortune.domain.StockEventRepository
+import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.main.CromFortuneApp
 import com.sundbybergsit.cromfortune.main.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.main.stocks.StockEventRepositoryImpl
-import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepositoryImpl
+import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
+import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
-import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepositoryImpl
+import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -119,8 +119,8 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     private fun refresh(context: Context) {
-        val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
-        if (stockEventRepository.isEmpty()) {
+        val stockEventApi: StockEventApi = StockEventRepository(context)
+        if (stockEventApi.isEmpty()) {
             _cromStocksViewState.value = ViewState(items = listOf())
             _personalStocksViewState.value = ViewState(items = listOf())
         } else {
@@ -136,7 +136,7 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     fun save(context: Context, stockSplit: StockSplit) {
-        val stockSplitRepository = StockSplitRepositoryImpl(context = context)
+        val stockSplitRepository = StockSplitRepository(context = context)
         if (stockSplitRepository.list(stockSplit.name).isNotEmpty()) {
             val existingSplits = stockSplitRepository.list(stockSplit.name)
             stockSplitRepository.putAll(stockSplit.name, existingSplits.toMutableSet() + stockSplit)
@@ -147,12 +147,12 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     fun save(context: Context, stockOrder: StockOrder) {
-        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
-        if (stockOrderRepository.list(stockOrder.name).isNotEmpty()) {
-            val existingOrders = stockOrderRepository.list(stockOrder.name)
-            stockOrderRepository.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
+        val stockOrderApi: StockOrderApi = StockOrderRepository(context)
+        if (stockOrderApi.list(stockOrder.name).isNotEmpty()) {
+            val existingOrders = stockOrderApi.list(stockOrder.name)
+            stockOrderApi.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
         } else {
-            stockOrderRepository.putReplacingAll(stockOrder.name, stockOrder)
+            stockOrderApi.putReplacingAll(stockOrder.name, stockOrder)
         }
         refresh(context)
     }
@@ -164,13 +164,13 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     fun stocks(context: Context, lambda: (List<StockEvent>, Context) -> StockOrderAggregate):
         List<StockOrderAggregate> {
-        val stockEventRepository: StockEventRepository = StockEventRepositoryImpl(context)
+        val stockEventApi: StockEventApi = StockEventRepository(context)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
-        for (stockSymbol in stockEventRepository.listOfStockNames()) {
-            val stockEvents: Set<StockEvent> = stockEventRepository.list(stockSymbol)
+        for (stockSymbol in stockEventApi.listOfStockNames()) {
+            val stockEvents: Set<StockEvent> = stockEventApi.list(stockSymbol)
             if (stockEvents.isEmpty()) {
                 // Preventive cleanup, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/20
-                stockEventRepository.remove(stockSymbol)
+                stockEventApi.remove(stockSymbol)
             } else {
                 val sortedStockOrders: List<StockEvent> = stockEvents.sortedBy { event -> event.dateInMillis }
                 val stockAggregate = lambda(sortedStockOrders, context)
@@ -190,12 +190,12 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
-        return StockOrderRepositoryImpl(context).count(stockName) >= quantity
+        return StockOrderRepository(context).count(stockName) >= quantity
     }
 
     fun confirmRemove(context: Context, stockName: String) {
-        val stockOrderRepository: StockOrderRepository = StockOrderRepositoryImpl(context)
-        stockOrderRepository.remove(stockName)
+        val stockOrderApi: StockOrderApi = StockOrderRepository(context)
+        stockOrderApi.remove(stockName)
         refresh(context)
     }
 

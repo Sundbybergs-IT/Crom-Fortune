@@ -2,7 +2,7 @@ package com.sundbybergsit.cromfortune.algorithm.core
 
 import com.sundbybergsit.cromfortune.algorithm.api.StockOrderCommand
 import com.sundbybergsit.cromfortune.domain.StockOrder
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.util.roundTo
 import java.util.Currency
 
@@ -25,7 +25,7 @@ class SellStockCommand(
 
     override fun price(): Double = pricePerStock
 
-    override fun execute(repository: StockOrderRepository) {
+    override fun execute(repository: StockOrderApi) {
         if (repository.count(name) > 0) {
             val stockOrders: MutableSet<StockOrder> = repository.list(name).toMutableSet()
             stockOrders.add(

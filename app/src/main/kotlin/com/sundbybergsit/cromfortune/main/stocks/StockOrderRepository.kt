@@ -4,17 +4,17 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.sundbybergsit.cromfortune.domain.StockOrder
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.main.Taggable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 // FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
-class StockOrderRepositoryImpl(
+class StockOrderRepository(
         context: Context,
         private val sharedPreferences: SharedPreferences =
                 context.getSharedPreferences("Stocks", Context.MODE_PRIVATE),
-) : StockOrderRepository, Taggable {
+) : StockOrderApi, Taggable {
 
     override fun count(stockName: String): Int {
         val list: Set<StockOrder> = list(stockName)

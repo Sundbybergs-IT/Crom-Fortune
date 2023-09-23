@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockPriceApi
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.DialogHandler
@@ -64,7 +65,6 @@ import com.sundbybergsit.cromfortune.main.PagerStateSelectionHapticFeedbackLaunc
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
-import com.sundbybergsit.cromfortune.main.stocks.StockPriceListener
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.theme.Loss
 import com.sundbybergsit.cromfortune.main.theme.Profit
@@ -84,7 +84,7 @@ fun Home(
     LaunchedEffect(key1 = Unit) {
         viewModel.refreshData(localContext)
     }
-    val stockPriceListener: StockPriceListener = object : StockPriceListener {
+    val stockPriceApi: StockPriceApi = object : StockPriceApi {
         override fun getStockPrice(stockSymbol: String): StockPrice {
             return checkNotNull(stockPricesViewState).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }!!
         }
@@ -211,7 +211,7 @@ fun Home(
                                     profile = "personal",
                                     index = lazyItemScope,
                                     viewState = personalStocksViewState,
-                                    stockPriceListener = stockPriceListener,
+                                    stockPriceApi = stockPriceApi,
                                     onShowStock = { stockSymbol, readOnly ->
                                         DialogHandler.showStockEvents(
                                             stockSymbol = stockSymbol, stockEvents = viewModel.personalStockEvents(
@@ -229,7 +229,7 @@ fun Home(
                                     profile = "crom",
                                     index = lazyItemScope,
                                     viewState = cromStocksViewState,
-                                    stockPriceListener = stockPriceListener,
+                                    stockPriceApi = stockPriceApi,
                                     onShowStock = { stockSymbol, readOnly ->
                                         DialogHandler.showStockEvents(
                                             stockSymbol = stockSymbol, stockEvents = viewModel.cromStockEvents(
@@ -256,7 +256,7 @@ fun StocksHeader(
     profile: String,
     onNavigateTo: (String) -> Unit,
     stockOrderAggregates: List<StockOrderAggregate>,
-    stockPriceListener: StockPriceListener,
+    stockPriceApi: StockPriceApi,
     currencyRates: List<CurrencyRate>
 ) {
     var count = 0.0
@@ -264,7 +264,7 @@ fun StocksHeader(
         for (currencyRate in currencyRates) {
             if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
                 count += (stockOrderAggregate.getProfit(
-                    stockPriceListener.getStockPrice(
+                    stockPriceApi.getStockPrice(
                         stockOrderAggregate.stockSymbol
                     ).price
                 )) * currencyRate.rateInSek
@@ -362,7 +362,7 @@ private fun StocksTab(
     profile: String,
     index: Int,
     viewState: HomeViewModel.ViewState,
-    stockPriceListener: StockPriceListener,
+    stockPriceApi: StockPriceApi,
     onShowStock: (String, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
     readOnly: Boolean,
@@ -374,7 +374,7 @@ private fun StocksTab(
             profile = profile,
             onNavigateTo = onNavigateTo,
             stockOrderAggregates = viewState.items,
-            stockPriceListener = stockPriceListener,
+            stockPriceApi = stockPriceApi,
             currencyRates = currencyRates
         )
     }
@@ -402,7 +402,7 @@ private fun StocksTab(
     }
     StockOrderAggregateItem(
         item = viewState.items[index],
-        stockPriceListener = stockPriceListener,
+        stockPriceApi = stockPriceApi,
         onShowStock = onShowStock,
         readOnly = readOnly
     )
@@ -410,11 +410,11 @@ private fun StocksTab(
 
 @Composable
 private fun StockOrderAggregateItem(
-    item: StockOrderAggregate, stockPriceListener: StockPriceListener,
+    item: StockOrderAggregate, stockPriceApi: StockPriceApi,
     onShowStock: (String, Boolean) -> Unit,
     readOnly: Boolean
 ) {
-    val stockPrice = stockPriceListener.getStockPrice(item.stockSymbol)
+    val stockPrice = stockPriceApi.getStockPrice(item.stockSymbol)
     val profit = item.getProfit(stockPrice.price)
     val format: NumberFormat = NumberFormat.getCurrencyInstance()
     format.currency = item.currency

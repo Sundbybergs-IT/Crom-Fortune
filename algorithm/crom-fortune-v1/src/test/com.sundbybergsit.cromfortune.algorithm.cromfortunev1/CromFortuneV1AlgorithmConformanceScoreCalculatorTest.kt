@@ -29,7 +29,7 @@ import java.util.*
 @Config(sdk = [Config.OLDEST_SDK])
 class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
-    private lateinit var calculator: CromFortuneV1AlgorithmConformanceScoreCalculator
+    private lateinit var calculator: com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator
 
     @get:Rule
     val cromTestRule = CromTestRule()
@@ -50,7 +50,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             )
         )
         ShadowLooper.runUiThreadTasks()
-        calculator = CromFortuneV1AlgorithmConformanceScoreCalculator()
+        calculator =
+            com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator()
     }
 
     @Test

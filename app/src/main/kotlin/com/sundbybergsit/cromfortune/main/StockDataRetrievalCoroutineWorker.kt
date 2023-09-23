@@ -17,7 +17,7 @@ import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.notifications.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.main.stocks.StockEventRepositoryImpl
+import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -57,7 +57,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                     stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
                     price = quote.price.toDouble().roundTo(3)
                 )
-                val stockEvents = StockEventRepositoryImpl(context).list(stockSymbol)
+                val stockEvents = StockEventRepository(context).list(stockSymbol)
                 val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
                 if (isStockMuted) {
                     Log.i(TAG, "Skipping recommendation for stock (${stockSymbol}) as it has been muted.")

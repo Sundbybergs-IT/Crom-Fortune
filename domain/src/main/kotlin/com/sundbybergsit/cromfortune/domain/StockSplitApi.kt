@@ -1,6 +1,6 @@
 package com.sundbybergsit.cromfortune.domain
 
-interface StockSplitRepository {
+interface StockSplitApi {
 
     fun list(stockName: String): Set<StockSplit>
 

@@ -93,8 +93,8 @@ import com.sundbybergsit.cromfortune.main.contentDescription
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepositoryImpl
-import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepositoryImpl
+import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
+import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import com.sundbybergsit.cromfortune.main.ui.DayPicker
 import com.sundbybergsit.cromfortune.main.ui.RegisterBuyStockAlertDialog
 import com.sundbybergsit.cromfortune.main.ui.RegisterSellStockAlertDialog
@@ -580,7 +580,7 @@ internal fun StockOrderRow(
                 )
             }, confirmButton = {
                 TextButton(onClick = {
-                    val stockSplitRepository = StockSplitRepositoryImpl(context = context)
+                    val stockSplitRepository = StockSplitRepository(context = context)
                     val listOfSplits = stockSplitRepository.list(stockOrder.name)
                     var isStockSplit = false
                     for (split in listOfSplits) {
@@ -592,7 +592,7 @@ internal fun StockOrderRow(
                         }
                     }
                     if (!isStockSplit) {
-                        val stockOrderRepository = StockOrderRepositoryImpl(context)
+                        val stockOrderRepository = StockOrderRepository(context)
                         stockOrderRepository.remove(stockOrder)
                     }
                     showDeleteDialog.value = false

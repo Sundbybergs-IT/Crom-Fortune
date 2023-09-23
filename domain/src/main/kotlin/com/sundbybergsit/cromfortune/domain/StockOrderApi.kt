@@ -1,6 +1,6 @@
 package com.sundbybergsit.cromfortune.domain
 
-interface StockOrderRepository {
+interface StockOrderApi {
 
     fun count(stockName: String): Int
 

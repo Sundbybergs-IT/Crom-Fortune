@@ -6,9 +6,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockPriceApi
 import java.time.Instant
 
-object StockPriceRepository : StockPriceListener {
+object StockPriceRepository : StockPriceApi {
 
     private const val TAG = "StockPriceRepository"
 

@@ -1,9 +1,9 @@
 package com.sundbybergsit.cromfortune.algorithm.api
 
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import java.util.Currency
 
-interface StockOrderCommand : Command<StockOrderRepository> {
+interface StockOrderCommand : Command<StockOrderApi> {
 
     fun quantity() : Int
 
