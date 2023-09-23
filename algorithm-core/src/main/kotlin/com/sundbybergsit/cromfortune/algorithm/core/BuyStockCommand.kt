@@ -1,15 +1,13 @@
-package com.sundbybergsit.cromfortune.algorithm
+package com.sundbybergsit.cromfortune.algorithm.core
 
+import com.sundbybergsit.cromfortune.algorithm.api.StockOrderCommand
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import java.util.Currency
 
-class SellStockCommand(
-    private val currentTimeInMillis: Long,
-    val currency: Currency,
-    val name: String,
-    val pricePerStock: Double,
-    val quantity: Int,
+class BuyStockCommand(
+    private val currentTimeInMillis: Long, val currency: Currency,
+    val name: String, val pricePerStock: Double, val quantity: Int,
     val commissionFee: Double
 ) : StockOrderCommand {
 
@@ -28,16 +26,15 @@ class SellStockCommand(
             val stockOrders: MutableSet<StockOrder> = repository.list(name).toMutableSet()
             stockOrders.add(
                 StockOrder(
-                    orderAction = "Sell", currency = currency.toString(),
-                    dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
-                    quantity = quantity
+                    "Buy", currency.toString(), currentTimeInMillis,
+                    name, pricePerStock, commissionFee, quantity
                 )
             )
             repository.putAll(name, stockOrders)
         } else {
             repository.putReplacingAll(
                 name, StockOrder(
-                    orderAction = "Sell", currency = currency.toString(),
+                    orderAction = "Buy", currency = currency.toString(),
                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
                     commissionFee = commissionFee, quantity = quantity
                 )
@@ -46,7 +43,7 @@ class SellStockCommand(
     }
 
     override fun toString(): String {
-        return "Sell: $quantity of $name at price ${pricePerStock.roundTo(3)} $currency with commission fee $commissionFee SEK"
+        return "Buy: $quantity of $name at price $pricePerStock $currency with commission fee $commissionFee SEK"
     }
 
 }

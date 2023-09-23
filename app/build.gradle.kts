@@ -34,7 +34,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     // Version determined by Compose BoM
     implementation("androidx.compose.ui:ui-tooling")
-    implementation(projects.algorithm)
+    implementation(projects.algorithmApi)
+    implementation(projects.algorithmCore)
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)
     implementation(libs.accompanistNavigationMaterial)

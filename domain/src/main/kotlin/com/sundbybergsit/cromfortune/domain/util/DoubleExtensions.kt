@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.algorithm
+package com.sundbybergsit.cromfortune.domain.util
 
 import java.util.Locale
 

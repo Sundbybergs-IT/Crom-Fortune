@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.algorithm
 
+import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import org.junit.jupiter.api.Test
 import java.util.Currency
 import kotlin.test.assertEquals
