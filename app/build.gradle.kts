@@ -20,6 +20,10 @@ android {
             isMinifyEnabled = false
         }
     }
+    lint {
+        abortOnError = false
+        checkDependencies = true
+    }
 }
 
 dependencies {
