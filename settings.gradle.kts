@@ -11,6 +11,9 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(
     ":app",
-    ":algorithm",
+    ":algorithmApi",
+    ":algorithmCore",
     ":domain"
 )
+project(":algorithmApi").projectDir = file("$rootDir/algorithm-api")
+project(":algorithmCore").projectDir = file("$rootDir/algorithm-core")

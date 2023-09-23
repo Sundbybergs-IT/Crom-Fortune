@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.algorithm
+package com.sundbybergsit.cromfortune.algorithm.core
 
 import androidx.annotation.IntRange
 

@@ -4,13 +4,13 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
-import com.sundbybergsit.cromfortune.algorithm.Recommendation
-import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
-import com.sundbybergsit.cromfortune.algorithm.roundTo
+import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
+import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
+import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
+import com.sundbybergsit.cromfortune.domain.util.roundTo
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil

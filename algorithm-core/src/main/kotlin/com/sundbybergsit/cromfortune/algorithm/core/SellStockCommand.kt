@@ -1,12 +1,17 @@
-package com.sundbybergsit.cromfortune.algorithm
+package com.sundbybergsit.cromfortune.algorithm.core
 
+import com.sundbybergsit.cromfortune.algorithm.api.StockOrderCommand
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderRepository
+import com.sundbybergsit.cromfortune.domain.util.roundTo
 import java.util.Currency
 
-class BuyStockCommand(
-    private val currentTimeInMillis: Long, val currency: Currency,
-    val name: String, val pricePerStock: Double, val quantity: Int,
+class SellStockCommand(
+    private val currentTimeInMillis: Long,
+    val currency: Currency,
+    val name: String,
+    val pricePerStock: Double,
+    val quantity: Int,
     val commissionFee: Double
 ) : StockOrderCommand {
 
@@ -25,15 +30,16 @@ class BuyStockCommand(
             val stockOrders: MutableSet<StockOrder> = repository.list(name).toMutableSet()
             stockOrders.add(
                 StockOrder(
-                    "Buy", currency.toString(), currentTimeInMillis,
-                    name, pricePerStock, commissionFee, quantity
+                    orderAction = "Sell", currency = currency.toString(),
+                    dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
+                    quantity = quantity
                 )
             )
             repository.putAll(name, stockOrders)
         } else {
             repository.putReplacingAll(
                 name, StockOrder(
-                    orderAction = "Buy", currency = currency.toString(),
+                    orderAction = "Sell", currency = currency.toString(),
                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
                     commissionFee = commissionFee, quantity = quantity
                 )
@@ -42,7 +48,7 @@ class BuyStockCommand(
     }
 
     override fun toString(): String {
-        return "Buy: $quantity of $name at price $pricePerStock $currency with commission fee $commissionFee SEK"
+        return "Sell: $quantity of $name at price ${pricePerStock.roundTo(3)} $currency with commission fee $commissionFee SEK"
     }
 
 }

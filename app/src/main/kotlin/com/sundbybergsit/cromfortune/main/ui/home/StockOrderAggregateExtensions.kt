@@ -1,7 +1,7 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
-import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
-import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
+import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
+import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate

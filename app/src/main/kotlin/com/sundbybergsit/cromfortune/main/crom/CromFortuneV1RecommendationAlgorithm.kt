@@ -1,10 +1,10 @@
 package com.sundbybergsit.cromfortune.main.crom
 
 import android.content.Context
-import com.sundbybergsit.cromfortune.algorithm.BuyStockCommand
-import com.sundbybergsit.cromfortune.algorithm.Recommendation
-import com.sundbybergsit.cromfortune.algorithm.RecommendationAlgorithm
-import com.sundbybergsit.cromfortune.algorithm.SellStockCommand
+import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
+import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
+import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
