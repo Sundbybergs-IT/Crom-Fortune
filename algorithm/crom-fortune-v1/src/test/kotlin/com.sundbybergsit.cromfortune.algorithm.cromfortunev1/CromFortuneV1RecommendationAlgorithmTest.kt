@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.main.crom
+package com.sundbybergsit.cromfortune.algorithm.cromfortunev1
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
@@ -7,24 +7,21 @@ import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockOrder
-import com.sundbybergsit.cromfortune.domain.StockOrderRepository
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
-import com.sundbybergsit.cromfortune.main.CoroutineScopeTestRule
-import com.sundbybergsit.cromfortune.main.CromTestRule
-import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepositoryImpl
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.util.*
+import java.util.Currency
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 private const val DOMESTIC_STOCK_NAME = "Aktie med normal valutakurs"
 private const val FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME = "Aktie med annan valutakurs"
@@ -35,17 +32,15 @@ class CromFortuneV1RecommendationAlgorithmTest {
 
     private lateinit var algorithm: CromFortuneV1RecommendationAlgorithm
 
-    private lateinit var repository: StockOrderRepository
-
-    @get:Rule
-    val cromTestRule = CromTestRule()
+    private val currencyRateApi = StubbedCurrencyRateApi()
+    private val stockOrderApi = StubbedStockOrderApi()
 
     @get:Rule
     val coroutineScopeTestRule = CoroutineScopeTestRule()
 
     @Before
     fun setUp() {
-        CurrencyRateRepository.addAll(
+        currencyRateApi.addAll(
             setOf(
                 CurrencyRate("SEK", 1.0),
                 CurrencyRate("NOK", 10.0)
@@ -53,7 +48,6 @@ class CromFortuneV1RecommendationAlgorithmTest {
         )
         ShadowLooper.runUiThreadTasks()
         val context = ApplicationProvider.getApplicationContext() as Context
-        repository = StockOrderRepositoryImpl(context)
         algorithm = CromFortuneV1RecommendationAlgorithm(context)
     }
 
@@ -73,7 +67,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 2L, DOMESTIC_STOCK_NAME,
                 5.0, 39.0, 100000
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
             val currentPrice = 4.5
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
@@ -142,8 +136,10 @@ class CromFortuneV1RecommendationAlgorithmTest {
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
                     stockSymbol = DOMESTIC_STOCK_NAME, currency = currency, price = 86.99
-                ), 1.0, 39.0, setOf(oldOrder1.toStockEvent(), oldOrder2.toStockEvent(),
-                    oldOrder3.toStockEvent(), oldOrder4.toStockEvent(), oldOrder5.toStockEvent()),
+                ), 1.0, 39.0, setOf(
+                    oldOrder1.toStockEvent(), oldOrder2.toStockEvent(),
+                    oldOrder3.toStockEvent(), oldOrder4.toStockEvent(), oldOrder5.toStockEvent()
+                ),
                 2 * TimeUnit.MILLISECONDS.convert(
                     CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS,
                     TimeUnit.DAYS
@@ -165,7 +161,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 reverse = false, 1L, DOMESTIC_STOCK_NAME,
                 1000000
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
             val currentPrice = 100.0
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
@@ -197,7 +193,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 reverse = true, 1L, DOMESTIC_STOCK_NAME,
                 500
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
             val currentPrice = 100.0
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
@@ -222,7 +218,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 1.0, 39.0, 100000
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
             val currentPrice = 100.0
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
@@ -250,7 +246,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100000.0, 39.0, 100000
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1))
             val currentPrice = 1.0
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
@@ -282,7 +278,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
                 150.0, 39.0, 1
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2))
             val currentPrice =
                 oldOrder2.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                     .times(oldOrder2.pricePerStock)
@@ -313,7 +309,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
                 150.0, 39.0, 1
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2))
             val currentPrice =
                 oldOrder2.pricePerStock - (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                     .times(oldOrder2.pricePerStock)
@@ -353,7 +349,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 2L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 10
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
@@ -378,7 +374,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 10
             )
-            repository.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
@@ -403,7 +399,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 10
             )
-            repository.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
@@ -442,7 +438,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 2L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 10
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder1, oldOrder2, oldOrder3))
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
@@ -471,7 +467,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
                 100.0, 1000.0, 1
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
@@ -502,7 +498,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 39.0, 1
             )
-            repository.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
 
             val recommendation = algorithm.getRecommendation(
                 StockPrice(
@@ -528,7 +524,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0,
                 1.0, 1
             )
-            repository.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
 
             val recommendation = algorithm.getRecommendation(
                 StockPrice(
@@ -557,7 +553,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             "Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME, 200.0,
             1.0, 5
         )
-        repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
+        stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
 
         val recommendation = algorithm.getRecommendation(
             StockPrice(
@@ -580,7 +576,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0,
                 1.0, 1
             )
-            repository.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
             val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
@@ -608,7 +604,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME,
                 100.0, 10.0, 1
             )
-            repository.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
+            stockOrderApi.putAll(DOMESTIC_STOCK_NAME, setOf(oldOrder, oldOrder2))
             val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
@@ -632,7 +628,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME,
                 100.0, 10.0, 13
             )
-            repository.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(DOMESTIC_STOCK_NAME, oldOrder)
             val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
@@ -662,7 +658,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 10.0, 39.0, 10
             )
-            repository.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
@@ -697,7 +693,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Sell", currency.toString(), 1L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 1000.0, 39.0, 35
             )
-            repository.putAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, setOf(oldOrder, oldOrder2))
+            stockOrderApi.putAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, setOf(oldOrder, oldOrder2))
 
             val recommendation: Recommendation? = algorithm.getRecommendation(
                 StockPrice(
@@ -727,7 +723,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 39.0,
                 1
             )
-            repository.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
             val recommendation = algorithm.getRecommendation(
                 StockPrice(
                     FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, currency,
@@ -752,7 +748,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 10.0, 1.0, 1
             )
-            repository.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
             val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
@@ -778,7 +774,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 "Buy", currency.toString(), 0L, FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME,
                 10.0, 10.0, 10
             )
-            repository.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
+            stockOrderApi.putReplacingAll(FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME, oldOrder)
             val newPrice = oldOrder.pricePerStock + (CromFortuneV1RecommendationAlgorithm.NORMAL_DIFF_PERCENTAGE + 0.1)
                 .times(oldOrder.pricePerStock)
 
@@ -803,11 +799,11 @@ class CromFortuneV1RecommendationAlgorithmTest {
         }
 
     private fun assertStockPrice(expected: Double, actual: Double) {
-        assertTrue("Expected stock price to be $expected but was $actual", actual == expected)
+        assertTrue(message = "Expected stock price to be $expected but was $actual", block = { actual == expected })
     }
 
     private fun assertQuantity(expected: Int, actual: Int) {
-        assertTrue("Expected quantity $expected but was $actual", actual == expected)
+        assertTrue(message = "Expected quantity $expected but was $actual", block = { actual == expected })
     }
 
 }

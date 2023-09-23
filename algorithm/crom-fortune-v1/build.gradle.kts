@@ -20,5 +20,7 @@ dependencies {
 
     implementation(libs.kotlinxCoroutinesCore)
 
+    testImplementation(libs.androidxTestJunit)
     testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinxCoroutinesTest)
 }

@@ -16,8 +16,8 @@ class StockOrderRepository(
                 context.getSharedPreferences("Stocks", Context.MODE_PRIVATE),
 ) : StockOrderApi, Taggable {
 
-    override fun count(stockName: String): Int {
-        val list: Set<StockOrder> = list(stockName)
+    override fun count(stockSymbol: String): Int {
+        val list: Set<StockOrder> = list(stockSymbol)
         var count = 0
         for (stockOrder in list) {
             when (stockOrder.orderAction) {
@@ -47,9 +47,9 @@ class StockOrderRepository(
         return sharedPreferences.all.isEmpty()
     }
 
-    override fun list(stockName: String): Set<StockOrder> {
-        Log.i(TAG, "list([$stockName])")
-        val serializedOrders = sharedPreferences.getStringSet(stockName, emptySet()) as Set<String>
+    override fun list(stockSymbol: String): Set<StockOrder> {
+        Log.i(TAG, "list([$stockSymbol])")
+        val serializedOrders = sharedPreferences.getStringSet(stockSymbol, emptySet()) as Set<String>
         val result = mutableSetOf<StockOrder>()
         for (serializedOrder in serializedOrders) {
             val setOfStockOrders : Set<StockOrder> = Json.decodeFromString(serializedOrder)
@@ -58,22 +58,22 @@ class StockOrderRepository(
         return result
     }
 
-    override fun putAll(stockName: String, stockOrders: Set<StockOrder>) {
-        Log.i(TAG, "putAll([$stockName], [$stockOrders])")
+    override fun putAll(stockSymbol: String, stockOrders: Set<StockOrder>) {
+        Log.i(TAG, "putAll([$stockSymbol], [$stockOrders])")
         val serializedStockOrders = mutableSetOf<String>()
         // TODO: Yes, accidentally wrapped a collection too much... Must make upgrade script
         serializedStockOrders.add(Json.encodeToString(stockOrders))
-        sharedPreferences.edit().putStringSet(stockName, serializedStockOrders).apply()
+        sharedPreferences.edit().putStringSet(stockSymbol, serializedStockOrders).apply()
     }
 
-    override fun putReplacingAll(stockName: String, stockOrder: StockOrder) {
-        Log.i(TAG, "putReplacingAll([$stockName], [$stockOrder])")
-        putAll(stockName, setOf(stockOrder))
+    override fun putReplacingAll(stockSymbol: String, stockOrder: StockOrder) {
+        Log.i(TAG, "putReplacingAll([$stockSymbol], [$stockOrder])")
+        putAll(stockSymbol, setOf(stockOrder))
     }
 
-    override fun remove(stockName: String) {
-        Log.i(TAG, "remove([$stockName])")
-        sharedPreferences.edit().remove(stockName).apply()
+    override fun remove(stockSymbol: String) {
+        Log.i(TAG, "remove([$stockSymbol])")
+        sharedPreferences.edit().remove(stockSymbol).apply()
     }
 
     override fun remove(stockOrder: StockOrder) {
