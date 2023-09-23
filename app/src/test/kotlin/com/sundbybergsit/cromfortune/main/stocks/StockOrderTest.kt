@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
-import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
@@ -15,7 +14,7 @@ import org.robolectric.shadows.ShadowLooper
 import java.util.*
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.Q])
+@Config(sdk = [Config.OLDEST_SDK])
 class StockOrderTest {
 
     private val currency: Currency = Currency.getInstance("SEK")

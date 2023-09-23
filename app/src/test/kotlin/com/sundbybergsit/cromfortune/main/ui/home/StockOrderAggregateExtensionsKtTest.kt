@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
-import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.StockEvent
@@ -16,7 +15,7 @@ import org.robolectric.annotation.Config
 import java.util.Currency
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.Q])
+@Config(sdk = [Config.OLDEST_SDK])
 class StockOrderAggregateExtensionsKtTest {
 
     @Test
