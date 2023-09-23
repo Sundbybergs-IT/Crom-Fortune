@@ -6,7 +6,7 @@ import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository.View
 
 interface CurrencyRateApi {
 
-    abstract val currencyRates: State<ViewState?>
+    val currencyRates: State<ViewState?>
 
     fun add(currencyRates: Set<CurrencyRate>)
 
