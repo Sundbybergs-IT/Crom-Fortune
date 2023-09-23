@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.main.crom
+package com.sundbybergsit.cromfortune.algorithm.cromfortunev1
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -11,10 +11,6 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
-import com.sundbybergsit.cromfortune.main.CoroutineScopeTestRule
-import com.sundbybergsit.cromfortune.main.CromTestRule
-import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
-import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -23,40 +19,35 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.util.*
+import java.util.Currency
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Config.OLDEST_SDK])
 class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
-    private lateinit var calculator: com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator
+    private lateinit var calculator: CromFortuneV1AlgorithmConformanceScoreCalculator
 
-    @get:Rule
-    val cromTestRule = CromTestRule()
+    private val currencyRateApi = StubbedCurrencyRateApi()
+    private val stockPriceApi = StubbedStockPriceApi()
 
     @get:Rule
     val coroutineScopeTestRule = CoroutineScopeTestRule()
 
     @Before
     fun setUp() {
-        CurrencyRateRepository.addAll(setOf(CurrencyRate("SEK", 1.0)))
-        StockPriceRepository.put(
+        currencyRateApi.addAll(setOf(CurrencyRate("SEK", 1.0)))
+        stockPriceApi.put(
             setOf(
-                StockPrice(
-                    StockPrice.SYMBOLS[0].first,
-                    Currency.getInstance("SEK"),
-                    1.0
-                )
+                StockPrice(StockPrice.SYMBOLS[0].first, Currency.getInstance("SEK"), 1.0)
             )
         )
         ShadowLooper.runUiThreadTasks()
-        calculator =
-            com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator()
+        calculator = CromFortuneV1AlgorithmConformanceScoreCalculator()
     }
 
     @Test
     fun `getScore - when no orders - returns 100`() = runBlocking {
-        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), emptySet(), CurrencyRateRepository)
+        val score = calculator.getScore(SellRecommendationDummyAlgorithm(), emptySet(), currencyRateApi)
 
         assertScore(100, score)
     }
@@ -67,7 +58,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             calculator.getScore(
                 SellRecommendationDummyAlgorithm(),
                 setOf(newSellStockEvent(1)),
-                CurrencyRateRepository
+                currencyRateApi
             )
         }
     }
@@ -77,7 +68,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         val score = calculator.getScore(
             SellRecommendationDummyAlgorithm(),
             setOf(StockSplit(false, 1L, StockPrice.SYMBOLS[0].first, 2).toStockEvent()),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(100, score)
@@ -89,7 +80,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             calculator.getScore(
                 SellRecommendationDummyAlgorithm(),
                 setOf(newBuyStockEvent(1)),
-                CurrencyRateRepository
+                currencyRateApi
             )
 
         assertScore(100, score)
@@ -103,7 +94,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
                 newBuyStockEvent(1),
                 newBuyStockEvent(2)
             ),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(50, score)
@@ -120,7 +111,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
                 StockSplit(false, 2L, ticker, 5).toStockEvent(),
                 newBuyStockEvent(2, ticker)
             ),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(50, score)
@@ -132,11 +123,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         val score = calculator.getScore(
             CromFortuneV1RecommendationAlgorithm(context = ApplicationProvider.getApplicationContext()),
             setOf(
-                newBuyStockEvent(dateInMillis = 1, ticker =  ticker, price = 5.0),
+                newBuyStockEvent(dateInMillis = 1, ticker = ticker, price = 5.0),
                 StockSplit(false, 2L, ticker, 1000).toStockEvent(),
                 newSellStockEvent(dateInMillis = 300000000L, ticker = ticker, price = 5.0)
             ),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(100, score)
@@ -148,11 +139,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         val score = calculator.getScore(
             CromFortuneV1RecommendationAlgorithm(context = ApplicationProvider.getApplicationContext()),
             setOf(
-                newBuyStockEvent(dateInMillis = 1, ticker =  ticker, price = 5.0, quantity = 1000),
+                newBuyStockEvent(dateInMillis = 1, ticker = ticker, price = 5.0, quantity = 1000),
                 StockSplit(true, 2L, ticker, 1000).toStockEvent(),
                 newSellStockEvent(dateInMillis = 300000000L, ticker = ticker, price = 5.0, quantity = 1)
             ),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(50, score)
@@ -166,7 +157,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
                 newBuyStockEvent(1),
                 newSellStockEvent(2)
             ),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(100, score)
@@ -181,7 +172,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
                 newSellStockEvent(2),
                 newBuyStockEvent(3)
             ),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(66, score)
@@ -197,7 +188,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
                 newBuyStockEvent(3),
                 newBuyStockEvent(4)
             ),
-            CurrencyRateRepository
+            currencyRateApi
         )
 
         assertScore(50, score)

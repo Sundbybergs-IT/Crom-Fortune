@@ -21,7 +21,7 @@ class SellStockCommandTest {
 
         command.execute(repository = repository)
 
-        assertEquals(expected = 1, actual = repository.count(stockName = stockName))
+        assertEquals(expected = 1, actual = repository.count(stockSymbol = stockName))
     }
 
 }
