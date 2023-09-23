@@ -1,8 +1,8 @@
 package com.sundbybergsit.cromfortune.domain
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.util.Currency
+import kotlin.test.assertEquals
 
 class StockOrderAggregateTest {
 
@@ -27,7 +27,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(100.099, acquisitionValue, 0.0001)
+        assertEquals(expected = 100.099, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -49,7 +49,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(110.099, acquisitionValue, 0.0001)
+        assertEquals(expected = 110.099, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -79,7 +79,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(0.0, acquisitionValue, 0.0001)
+        assertEquals(expected = 0.0, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -109,7 +109,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(50.0, acquisitionValue, 0.0001)
+        assertEquals(expected = 50.0, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -155,7 +155,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(13.53080, acquisitionValue, 0.0001)
+        assertEquals(expected = 13.53080, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -290,7 +290,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(9.98288888, acquisitionValue, 0.0001)
+        assertEquals(expected = 9.98288888, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -320,7 +320,7 @@ class StockOrderAggregateTest {
 
         val quantity = stockOrderAggregate.getQuantity()
 
-        assertEquals(2, quantity)
+        assertEquals(expected = 2, actual = quantity)
     }
 
     @Test
@@ -350,7 +350,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(200.0, acquisitionValue, 0.0001)
+        assertEquals(expected = 200.0, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -388,7 +388,7 @@ class StockOrderAggregateTest {
 
         val quantity = stockOrderAggregate.getQuantity()
 
-        assertEquals(2, quantity)
+        assertEquals(expected = 2, actual = quantity)
     }
 
     @Test
@@ -426,7 +426,7 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(100.0, acquisitionValue, 0.0001)
+        assertEquals(expected = 100.0, actual = acquisitionValue, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -456,7 +456,7 @@ class StockOrderAggregateTest {
 
         val quantity = stockOrderAggregate.getQuantity()
 
-        assertEquals(1, quantity)
+        assertEquals(expected = 1, actual = quantity)
     }
 
     @Test
@@ -470,7 +470,7 @@ class StockOrderAggregateTest {
 
         val profit = stockOrderAggregate.getProfit(1.0)
 
-        assertEquals(0.0, profit, 0.000001)
+        assertEquals(expected = 0.0, actual = profit, absoluteTolerance = 0.000001)
     }
 
     @Test
@@ -492,7 +492,7 @@ class StockOrderAggregateTest {
 
         val profit = stockOrderAggregate.getProfit(0.099)
 
-        assertEquals(-110.0, profit, 0.000001)
+        assertEquals(expected = -110.0, actual = profit, 0.000001)
     }
 
     @Test
@@ -522,7 +522,7 @@ class StockOrderAggregateTest {
 
         val profit = stockOrderAggregate.getProfit(10000000.0)
 
-        assertEquals(-20.0, profit, 0.000001)
+        assertEquals(expected = -20.0, actual = profit, absoluteTolerance = 0.000001)
     }
 
     @Test
@@ -552,7 +552,7 @@ class StockOrderAggregateTest {
 
         val profit = stockOrderAggregate.getProfit(100.0)
 
-        assertEquals(100.0, profit, 0.000001)
+        assertEquals(expected = 100.0, actual = profit, absoluteTolerance = 0.000001)
     }
 
     @Test
@@ -614,7 +614,7 @@ class StockOrderAggregateTest {
 
         val profit = stockOrderAggregate.getProfit(53.90)
 
-        assertEquals(2112.62, profit, 0.000001)
+        assertEquals(expected = 2112.62, actual = profit, absoluteTolerance = 0.000001)
     }
 
 }
