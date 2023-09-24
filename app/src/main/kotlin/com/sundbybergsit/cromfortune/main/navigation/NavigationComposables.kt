@@ -161,7 +161,7 @@ internal fun AppNavigation(navController: NavHostController) {
                                     .contentDescription("Left Line"),
                             )
                             Text(
-                                hostData.visuals.message,
+                                text = hostData.visuals.message,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier
@@ -171,7 +171,7 @@ internal fun AppNavigation(navController: NavHostController) {
                                         start.linkTo(leftLineRef.end, 18.dp)
                                     }
                                     .padding(end = 18.dp)
-                                    .contentDescription("Text"),
+                                    .contentDescription("Snackbar Message"),
                             )
                         }
                     }
