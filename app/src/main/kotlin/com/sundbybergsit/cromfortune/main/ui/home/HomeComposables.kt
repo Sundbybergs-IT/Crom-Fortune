@@ -146,6 +146,7 @@ fun Home(
                 Icon(
                     imageVector = Icons.Filled.Refresh,
                     contentDescription = "Refresh",
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
             OverflowMenu(
