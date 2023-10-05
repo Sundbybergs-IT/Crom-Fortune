@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
@@ -58,6 +60,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -370,72 +373,86 @@ fun AddDialogs(
         }
 
         is DialogHandler.DialogViewState.ShowStockEvents -> {
+            val context = LocalContext.current
+            val stockEvents = dialogViewState.stockEvents
+            val opinionatedEvents: List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
+                stockEvents,
+                CromFortuneV1RecommendationAlgorithm(context)
+            )
             Dialog(onDismissRequest = { dialogHandler.dismissDialog() }) {
-                Surface {
-                    ConstraintLayout(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                    ) {
+                Surface(
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .fillMaxWidth(),
+                ) {
+                    ConstraintLayout(modifier = Modifier.padding(8.dp)) {
                         val (tableRef, buttonRef) = createRefs()
-                        val context = LocalContext.current
-                        Column(modifier = Modifier.constrainAs(tableRef) {
-                            bottom.linkTo(buttonRef.top)
-                        }) {
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = stringResource(id = R.string.generic_title_stock_orders),
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                        LazyColumn(modifier = Modifier
+                            .constrainAs(tableRef) {
+                                bottom.linkTo(buttonRef.top)
                             }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 32.dp)
-                            ) {
-                                Text(
-                                    text = dialogViewState.title,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                            .fillMaxHeight(0.8f)
+                            .fillMaxWidth()) {
+                            stickyHeader {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(color = MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Row {
+                                        Text(
+                                            text = stringResource(id = R.string.generic_title_stock_orders),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(bottom = 32.dp)
+                                    ) {
+                                        Text(
+                                            text = dialogViewState.title,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    Row(
+                                        modifier = Modifier
+                                            .background(color = MaterialTheme.colorScheme.surface)
+                                    ) {
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = stringResource(id = R.string.generic_date),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(modifier = Modifier.padding(4.dp))
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = stringResource(id = R.string.generic_title_quantity),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(modifier = Modifier.padding(4.dp))
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = stringResource(id = R.string.generic_price_per_stock),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(modifier = Modifier.padding(4.dp))
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = stringResource(id = R.string.generic_title_total_cost),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
                             }
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_date),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.padding(4.dp))
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_title_quantity),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.padding(4.dp))
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_price_per_stock),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.padding(4.dp))
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_title_total_cost),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-
-                            val opinionatedEvents: List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
-                                dialogViewState.stockEvents,
-                                CromFortuneV1RecommendationAlgorithm(context)
-                            )
-                            for (stockEvent in dialogViewState.stockEvents) {
-                                stockEvent.stockOrder?.let { nullSafeStockOrder ->
+                            items(stockEvents.size) { index ->
+                                stockEvents[index].stockOrder?.let { nullSafeStockOrder ->
                                     val opinionatedStockOrder =
                                         opinionatedEvents.single { opinionatedStockOrderWrapper -> opinionatedStockOrderWrapper.stockOrder == nullSafeStockOrder }
                                     StockOrderRow(
