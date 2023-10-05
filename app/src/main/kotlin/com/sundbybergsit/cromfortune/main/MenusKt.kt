@@ -7,11 +7,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+
+private const val MENU_SHOW_DELAY_IN_MILLIS: Int = 1500
 
 @Composable
 fun OverflowMenu(
@@ -22,11 +25,11 @@ fun OverflowMenu(
     enabled: Boolean = true,
     route: String
 ) {
-    var showMenu by remember { mutableStateOf(false) }
+    var lastShownMenu by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     IconButton(modifier = modifier, enabled = enabled, onClick = {
-        showMenu = !showMenu
-        if (showMenu) {
+        if (System.currentTimeMillis() - lastShownMenu > MENU_SHOW_DELAY_IN_MILLIS) {
+            lastShownMenu = System.currentTimeMillis()
             onNavigateTo.invoke(route)
         }
     }) {
