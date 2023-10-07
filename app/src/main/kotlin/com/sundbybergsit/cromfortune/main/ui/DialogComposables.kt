@@ -54,6 +54,77 @@ import java.util.Locale
 private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
+fun PortfolioAddAlertDialog(
+    onDismiss: () -> Unit, onSavePortfolio: (String) -> Unit
+) {
+    val portfolioNameMutableState: MutableState<TextFieldValue> =
+        remember { mutableStateOf(TextFieldValue(text = "")) }
+    val portfolioNameErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+    val portfolioNameErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
+    Dialog(onDismissRequest = onDismiss) {
+        val scrollState = rememberScrollState()
+        ConstraintLayout(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(state = scrollState)
+        ) {
+            val (titleRef, portolioNameRef, buttonsRef) = createRefs()
+            Text(
+                modifier = Modifier
+                    .padding(all = 16.dp)
+                    .constrainAs(titleRef) {
+                        top.linkTo(parent.top)
+                    }, text = stringResource(id = R.string.action_portfolio_add),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            InputValidatedOutlinedTextField(modifier = Modifier
+                .constrainAs(portolioNameRef) {
+                    top.linkTo(titleRef.bottom)
+                    start.linkTo(parent.start)
+                }
+                .background(color = MaterialTheme.colorScheme.background)
+                .fillMaxWidth(),
+                label = { Text(text = stringResource(id = R.string.generic_title_name)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                value = portfolioNameMutableState,
+                isError = portfolioNameErrorMutableState.value,
+                errorMessage = portfolioNameErrorMessageMutableState.value,
+                contentDescriptor = "Portfolio Name Input Text"
+            )
+            Row(modifier = Modifier
+                .padding(all = 16.dp)
+                .constrainAs(buttonsRef) {
+                    top.linkTo(portolioNameRef.bottom)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                }) {
+                DialogButton(text = stringResource(id = android.R.string.cancel), onClick = onDismiss)
+                DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
+                    val inputToValidate = portfolioNameMutableState.value
+                    try {
+                        when (inputToValidate.text) {
+                            "" -> {
+                                ValidatorException()
+                            }
+                            HomeViewModel.CROM_PORTFOLIO_NAME -> {
+                                ValidatorException()
+                            }
+                            HomeViewModel.DEFAULT_PORTFOLIO_NAME -> {
+                                ValidatorException()
+                            }
+                        }
+                        onSavePortfolio.invoke(inputToValidate.text)
+                        onDismiss.invoke()
+                    } catch (e: ValidatorException ) {
+                        // Shit happens
+                    }
+                })
+            }
+        }
+    }
+}
+
+@Composable
 fun RegisterSellStockAlertDialog(
     stockSymbolParam: String? = null,
     onDismiss: () -> Unit,
@@ -346,7 +417,7 @@ fun RegisterSplitStockAlertDialog(
                     .constrainAs(titleRef) {
                         top.linkTo(parent.top)
                     }, text = stringResource(id = R.string.action_stock_add_split),
-                    color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(dateRef) {

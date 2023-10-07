@@ -24,22 +24,32 @@ class CromFortuneApp : Application(), Configuration.Provider {
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
-        migrateOldData(from = "Stocks",to= HomeViewModel.DEFAULT_PORTFOLIO_NAME)
-        migrateOldData(from = "SPLITS",to= HomeViewModel.DEFAULT_PORTFOLIO_NAME + "-splits")
+        createDataIfMissing(Databases.PORTFOLIO_DB_NAME)
+        migrateOldData(fromDb = "Stocks", toDb = HomeViewModel.DEFAULT_PORTFOLIO_NAME)
+        migrateOldData(fromDb = "SPLITS", toDb = HomeViewModel.DEFAULT_PORTFOLIO_NAME + "-splits")
         retrieveDataInBackground(workManager)
     }
 
-    private fun migrateOldData(from: String, to: String) {
-        val oldPrefs = getSharedPreferences(from, Context.MODE_PRIVATE)
+    private fun createDataIfMissing(db: String) {
+        val sharedPreferences = getSharedPreferences(db, Context.MODE_PRIVATE)
+        if (sharedPreferences.all.isEmpty()) {
+            sharedPreferences.edit().putStringSet(
+                Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET, mutableSetOf(HomeViewModel.DEFAULT_PORTFOLIO_NAME, HomeViewModel.CROM_PORTFOLIO_NAME)
+            ).apply()
+        }
+    }
+
+    private fun migrateOldData(fromDb: String, toDb: String) {
+        val oldPrefs = getSharedPreferences(fromDb, Context.MODE_PRIVATE)
         if (oldPrefs.all.isNotEmpty()) {
             Log.i("CromFortuneApp", "Migrating old data...")
-            oldPrefs.copyTo(getSharedPreferences(to, Context.MODE_PRIVATE))
+            oldPrefs.copyTo(getSharedPreferences(toDb, Context.MODE_PRIVATE))
             oldPrefs.edit().clear().apply()
             Log.i("CromFortuneApp", "Done migrating.")
         }
     }
 
-    fun SharedPreferences.copyTo(dest: SharedPreferences) = with(dest.edit()) {
+    private fun SharedPreferences.copyTo(dest: SharedPreferences) = with(dest.edit()) {
         for (entry in all.entries) {
             val value = entry.value ?: continue
             val key = entry.key

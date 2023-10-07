@@ -89,6 +89,7 @@ import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BottomSheetContent
 import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
+import com.sundbybergsit.cromfortune.main.Databases
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.LeafScreen
 import com.sundbybergsit.cromfortune.main.R
@@ -102,6 +103,7 @@ import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import com.sundbybergsit.cromfortune.main.ui.DayPicker
+import com.sundbybergsit.cromfortune.main.ui.PortfolioAddAlertDialog
 import com.sundbybergsit.cromfortune.main.ui.RegisterBuyStockAlertDialog
 import com.sundbybergsit.cromfortune.main.ui.RegisterSellStockAlertDialog
 import com.sundbybergsit.cromfortune.main.ui.RegisterSplitStockAlertDialog
@@ -483,25 +485,47 @@ fun AddDialogs(
         }
 
         is DialogHandler.DialogViewState.ShowBuyStockDialog -> {
-            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
             val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(
+                    portfolioSharedPreferences = localContext.getSharedPreferences(
+                        Databases.PORTFOLIO_DB_NAME,
+                        Context.MODE_PRIVATE
+                    )
+                )
+            })
             RegisterBuyStockAlertDialog(onDismiss = {
                 dialogHandler.dismissDialog()
             }, stockSymbolParam = dialogViewState.stockSymbol) { stockOrder ->
-                homeViewModel.save(context = localContext, stockOrder = stockOrder)
+                homeViewModel.save(
+                    context = localContext,
+                    portfolioName = homeViewModel.selectedPorfolioNameFlow.value,
+                    stockOrder = stockOrder
+                )
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
             }
         }
 
         is DialogHandler.DialogViewState.ShowSellStockDialog -> {
-            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
             val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(
+                    portfolioSharedPreferences = localContext.getSharedPreferences(
+                        Databases.PORTFOLIO_DB_NAME,
+                        Context.MODE_PRIVATE
+                    )
+                )
+            })
             RegisterSellStockAlertDialog(
                 onDismiss = {
                     dialogHandler.dismissDialog()
                 }, stockSymbolParam = dialogViewState.stockSymbol,
                 onSave = { stockOrder ->
-                    homeViewModel.save(context = localContext, stockOrder = stockOrder)
+                    homeViewModel.save(
+                        context = localContext,
+                        portfolioName = homeViewModel.selectedPorfolioNameFlow.value,
+                        stockOrder = stockOrder
+                    )
                     Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT)
                         .show()
                 },
@@ -510,12 +534,35 @@ fun AddDialogs(
         }
 
         is DialogHandler.DialogViewState.ShowRegisterSplitStockDialog -> {
-            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
             val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(
+                    portfolioSharedPreferences = localContext.getSharedPreferences(
+                        Databases.PORTFOLIO_DB_NAME,
+                        Context.MODE_PRIVATE
+                    )
+                )
+            })
             RegisterSplitStockAlertDialog(
                 onDismiss = { DialogHandler.dismissDialog() }, stockSymbolParam = dialogViewState.stockSymbol
             ) { stockSplit ->
                 homeViewModel.save(context = localContext, stockSplit = stockSplit)
+                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        is DialogHandler.DialogViewState.ShowAddPortfolio -> {
+            val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(
+                    portfolioSharedPreferences = localContext.getSharedPreferences(
+                        Databases.PORTFOLIO_DB_NAME,
+                        Context.MODE_PRIVATE
+                    )
+                )
+            })
+            PortfolioAddAlertDialog(onDismiss = { DialogHandler.dismissDialog() }) { portfolioName ->
+                homeViewModel.savePortolio(portfolioName = portfolioName)
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
             }
         }
@@ -723,7 +770,15 @@ private fun NavGraphBuilder.addSettingsTopLevel(navController: NavHostController
 
 private fun NavGraphBuilder.addHome(navController: NavHostController) {
     composable(route = Screen.Home.route) {
-        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = { HomeViewModelFactory() })
+        val localContext = LocalContext.current
+        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+            HomeViewModelFactory(
+                portfolioSharedPreferences = localContext.getSharedPreferences(
+                    Databases.PORTFOLIO_DB_NAME,
+                    Context.MODE_PRIVATE
+                )
+            )
+        })
         Home(viewModel = homeViewModel, onNavigateTo = { route -> navController.navigate(route) })
     }
 }
@@ -759,7 +814,8 @@ private fun NavGraphBuilder.addSettings(navController: NavHostController) {
 private fun NavGraphBuilder.addHomeBottomSheet() {
     bottomSheet(route = LeafScreen.BottomSheetsHome.route) {
         BottomSheetContent {
-            HomeItems(onBuy = { DialogHandler.showBuyStockDialog() },
+            HomeItems(
+                onBuy = { DialogHandler.showBuyStockDialog() },
                 onSell = { DialogHandler.showSellStockDialog() },
                 onSplit = { DialogHandler.showSplitStockDialog() },
                 onAddPortfolio = { DialogHandler.showAddPortfolioDialog() },
@@ -779,8 +835,14 @@ private fun NavGraphBuilder.addHomeAllStocksBottomSheet() {
     ) { backStackEntry ->
         val arguments = checkNotNull(backStackEntry.arguments)
         val profile = checkNotNull(arguments.getString("profile"))
+        val localContext = LocalContext.current
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory()
+            HomeViewModelFactory(
+                portfolioSharedPreferences = localContext.getSharedPreferences(
+                    Databases.PORTFOLIO_DB_NAME,
+                    Context.MODE_PRIVATE
+                )
+            )
         })
         val onSortNameAscending = { homeViewModel.sortNameAscending(profile) }
         val onSortNameDescending = { homeViewModel.sortNameDescending(profile) }
@@ -825,7 +887,13 @@ private fun NavGraphBuilder.addHomeStockBottomSheet() {
         val portfolioName = checkNotNull(arguments.getString("portfolio_name"))
         val context = LocalContext.current
         val onDelete =
-            { DialogHandler.showDeleteDialog(context = context, portfolioName = portfolioName, stockName = stockSymbol) }
+            {
+                DialogHandler.showDeleteDialog(
+                    context = context,
+                    portfolioName = portfolioName,
+                    stockName = stockSymbol
+                )
+            }
         BottomSheetContent {
             BottomSheetMenuItem(
                 onClick = onDelete,
