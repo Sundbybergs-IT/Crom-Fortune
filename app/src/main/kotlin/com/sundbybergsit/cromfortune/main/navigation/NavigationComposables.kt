@@ -47,6 +47,7 @@ import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -231,7 +232,7 @@ fun AddDialogs(
     fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) },
     toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
 ) {
-    when (val dialogViewState = dialogHandler.dialogViewState.value) {
+    when (val dialogViewState = dialogHandler.dialogViewState.collectAsState().value) {
         is DialogHandler.DialogViewState.ShowDeleteDialog -> {
             val context: Context = LocalContext.current
             AlertDialog(

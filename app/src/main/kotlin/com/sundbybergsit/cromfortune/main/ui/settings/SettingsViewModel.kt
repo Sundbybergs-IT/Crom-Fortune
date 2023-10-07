@@ -1,14 +1,14 @@
 package com.sundbybergsit.cromfortune.main.ui.settings
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class SettingsViewModel : ViewModel() {
 
-    private val _todoText: MutableState<String> = mutableStateOf("")
+    private val _todoText: MutableStateFlow<String> = MutableStateFlow("")
 
-    val todoText: State<String> = _todoText
+    val todoText: StateFlow<String> = _todoText.asStateFlow()
 
 }

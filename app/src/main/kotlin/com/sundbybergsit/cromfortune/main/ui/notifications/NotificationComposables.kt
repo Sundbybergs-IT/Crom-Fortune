@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -54,6 +55,8 @@ fun Notifications(
     val formatter = SimpleDateFormat(
         "yyyy-MM-dd HH:mm", ConfigurationCompat.getLocales(context.resources.configuration)[0]
     )
+    val newNotificationsState = viewModel.newNotifications.collectAsState()
+    val oldNotificationsState = viewModel.oldNotifications.collectAsState()
     Scaffold(topBar = {
         TopAppBar(
             title = {
@@ -68,7 +71,7 @@ fun Notifications(
             ),
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back Icon")
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back Icon")
                 }
             },
             actions = {
@@ -86,11 +89,12 @@ fun Notifications(
                 pagerState = pagerState, view = view, changedState = changedPagerMutableState
             )
             val tabs = listOf(
-                stringResource(id = R.string.notifications_new_title) to viewModel.newNotifications,
-                stringResource(id = R.string.notifications_old_title) to viewModel.oldNotifications,
+                stringResource(id = R.string.notifications_new_title) to newNotificationsState,
+                stringResource(id = R.string.notifications_old_title) to oldNotificationsState,
             )
+            val tabIndexState = viewModel.selectedTabIndexMutableState.collectAsState()
             Column {
-                TabRow(viewModel.selectedTabIndexMutableState.value) {
+                TabRow(tabIndexState.value) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
                             text = { Text(text = title.first) },
@@ -101,9 +105,11 @@ fun Notifications(
                         )
                     }
                 }
-                if (tabs[viewModel.selectedTabIndexMutableState.value].second.value.items.isEmpty()) {
+                if (tabs[tabIndexState.value].second.value.items.isEmpty()) {
                     Text(
-                        modifier = Modifier.padding(top = 160.dp).fillMaxWidth(),
+                        modifier = Modifier
+                            .padding(top = 160.dp)
+                            .fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         text = stringResource(id = R.string.notifications_empty),
                         style = MaterialTheme.typography.titleLarge,
@@ -111,12 +117,11 @@ fun Notifications(
                     )
                 }
                 LazyColumn {
-                    items(tabs[viewModel.selectedTabIndexMutableState.value].second.value.items.size) { page ->
-                        when (viewModel.selectedTabIndexMutableState.value) {
+                    items(tabs[tabIndexState.value].second.value.items.size) { page ->
+                        when (tabIndexState.value) {
                             0 -> {
-                                val newNotification = viewModel.newNotifications.value.items.elementAt(page)
                                 NotificationsTab(
-                                    notification = newNotification,
+                                    notification = newNotificationsState.value.items.elementAt(page),
                                     backgroundColor = if (page % 2 == 0) {
                                         MaterialTheme.colorScheme.primaryContainer
                                     } else {
@@ -126,9 +131,8 @@ fun Notifications(
                             }
 
                             1 -> {
-                                val oldNotification = viewModel.oldNotifications.value.items.elementAt(page)
                                 NotificationsTab(
-                                    notification = oldNotification,
+                                    notification = oldNotificationsState.value.items.elementAt(page),
                                     backgroundColor = if (page % 2 == 0) {
                                         MaterialTheme.colorScheme.primaryContainer
                                     } else {

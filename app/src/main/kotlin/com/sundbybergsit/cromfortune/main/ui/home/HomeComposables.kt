@@ -39,6 +39,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,8 +82,8 @@ fun Home(
     onNavigateTo: (String) -> Unit
 ) {
     val localContext = LocalContext.current
-    val personalStocksViewState: HomeViewModel.ViewState by viewModel.personalStocksViewState
-    val cromStocksViewState: HomeViewModel.ViewState by viewModel.cromStocksViewState
+    val personalStocksViewState: HomeViewModel.ViewState by viewModel.personalStocksViewState.collectAsState()
+    val cromStocksViewState: HomeViewModel.ViewState by viewModel.cromStocksViewState.collectAsState()
     LaunchedEffect(key1 = Unit) {
         viewModel.refreshData(localContext)
     }
@@ -182,8 +183,8 @@ fun Home(
                 pagerState = pagerState, view = view, changedState = viewModel.changedPagerMutableState
             )
             val tabs = listOf(
-                stringResource(id = R.string.home_stocks_personal_title).uppercase() to viewModel.personalStocksViewState,
-                stringResource(id = R.string.home_stocks_crom_title).uppercase() to viewModel.cromStocksViewState,
+                stringResource(id = R.string.home_stocks_personal_title).uppercase() to viewModel.personalStocksViewState.collectAsState(),
+                stringResource(id = R.string.home_stocks_crom_title).uppercase() to viewModel.cromStocksViewState.collectAsState(),
             )
             showFabMutableState.value = tabs[0].second.value.items.isEmpty()
             HorizontalPager(

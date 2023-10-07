@@ -2,9 +2,6 @@ package com.sundbybergsit.cromfortune.main
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.SYMBOLS
@@ -13,6 +10,7 @@ import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object DialogHandler {
 
@@ -21,9 +19,9 @@ object DialogHandler {
     private val _snackbarFlow: MutableStateFlow<String?> = MutableStateFlow(null)
     val snackbarFlow = _snackbarFlow as StateFlow<String?>
 
-    private val _dialogViewState: MutableState<DialogViewState> = mutableStateOf(DialogViewState.Dismissed)
+    private val _dialogViewState: MutableStateFlow<DialogViewState> = MutableStateFlow(DialogViewState.Dismissed)
 
-    val dialogViewState: State<DialogViewState> = _dialogViewState
+    val dialogViewState: StateFlow<DialogViewState> = _dialogViewState.asStateFlow()
 
     fun showSnack(text: String) {
         Log.i(TAG, "showSnack(text=[${text}])")
