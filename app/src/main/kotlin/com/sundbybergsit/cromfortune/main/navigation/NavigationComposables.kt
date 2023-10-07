@@ -600,7 +600,10 @@ internal fun StockOrderRow(
                 )
             }, confirmButton = {
                 TextButton(onClick = {
-                    val stockSplitRepository = StockSplitRepository(context = context)
+                    val stockSplitRepository = StockSplitRepository(
+                        context = context,
+                        porfolioName = "SPLITS"
+                    )
                     val listOfSplits = stockSplitRepository.list(stockOrder.name)
                     var isStockSplit = false
                     for (split in listOfSplits) {
@@ -612,7 +615,10 @@ internal fun StockOrderRow(
                         }
                     }
                     if (!isStockSplit) {
-                        val stockOrderRepository = StockOrderRepository(context)
+                        val stockOrderRepository = StockOrderRepository(
+                            context,
+                            porfolioName = "Stocks"
+                        )
                         stockOrderRepository.remove(stockOrder)
                     }
                     showDeleteDialog.value = false
@@ -804,6 +810,10 @@ private fun NavGraphBuilder.addHomeStockBottomSheet() {
     bottomSheet(
         route = LeafScreen.BottomSheetsHomeStock.route,
         arguments = listOf(
+            navArgument("portfolio_name") {
+                type = NavType.StringType
+                nullable = false
+            },
             navArgument("stock_symbol") {
                 type = NavType.StringType
                 nullable = true
@@ -811,8 +821,10 @@ private fun NavGraphBuilder.addHomeStockBottomSheet() {
     ) { backStackEntry ->
         val arguments = checkNotNull(backStackEntry.arguments)
         val stockSymbol = checkNotNull(arguments.getString("stock_symbol"))
+        val portfolioName = checkNotNull(arguments.getString("portfolio_name"))
         val context = LocalContext.current
-        val onDelete = { DialogHandler.showDeleteDialog(context = context, stockName = stockSymbol) }
+        val onDelete =
+            { DialogHandler.showDeleteDialog(context = context, portfolioName = portfolioName, stockName = stockSymbol) }
         BottomSheetContent {
             BottomSheetMenuItem(
                 onClick = onDelete,

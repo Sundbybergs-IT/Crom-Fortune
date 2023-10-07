@@ -19,6 +19,7 @@ import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
+import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import yahoofinance.StockV2
@@ -57,7 +58,8 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
                     stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
                     price = quote.price.toDouble().roundTo(3)
                 )
-                val stockEvents = StockEventRepository(context).list(stockSymbol)
+                // FIXME: What should Crom do? issues/55
+                val stockEvents = StockEventRepository(context, HomeViewModel.DEFAULT_PORTFOLIO_NAME).list(stockSymbol)
                 val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
                 if (isStockMuted) {
                     Log.i(TAG, "Skipping recommendation for stock (${stockSymbol}) as it has been muted.")

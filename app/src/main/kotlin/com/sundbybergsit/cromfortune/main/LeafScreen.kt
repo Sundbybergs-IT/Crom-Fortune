@@ -10,9 +10,11 @@ sealed class LeafScreen(val route: String) {
 
     }
 
-    data object BottomSheetsHomeStock : LeafScreen("bottom-sheet/home/stock?stock_symbol={stock_symbol}") {
+    data object BottomSheetsHomeStock :
+        LeafScreen("bottom-sheet/home/stock?portfolio_name={portfolio_name}&stock_symbol={stock_symbol}") {
 
-        fun createRoute(stockSymbol: String): String = "bottom-sheet/home/stock?stock_symbol=$stockSymbol"
+        fun createRoute(portfolioName: String, stockSymbol: String): String =
+            "bottom-sheet/home/stock?portfolio_name=$portfolioName&stock_symbol=$stockSymbol"
 
     }
 

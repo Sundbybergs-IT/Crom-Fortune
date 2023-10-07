@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Currency
 
-private const val DEFAULT_PORTFOLIO_NAME = "Default"
 private const val CROM_PORTFOLIO_NAME = "Crom"
 
 class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
@@ -39,6 +38,8 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     companion object {
 
         const val TAG: String = "HomeViewModel"
+
+        const val DEFAULT_PORTFOLIO_NAME = "Default"
 
     }
 
@@ -55,6 +56,7 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     private var showAll = false
 
     val changedPagerMutableState = mutableStateOf(false)
+    private val selectedPorfolioNameFlow: MutableStateFlow<String> = MutableStateFlow(DEFAULT_PORTFOLIO_NAME)
 
     private fun getCalculatedStockOrderAggregate(sortedStockEvents: List<StockEvent>): StockOrderAggregate {
         var stockOrderAggregate: StockOrderAggregate? = null
@@ -120,41 +122,35 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
         return stockOrderAggregate!!
     }
 
-    fun selectTab(index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
+    fun selectTab(porfolioName: String, index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
+        this.selectedPorfolioNameFlow.value = porfolioName
         coroutineScope.launch {
             pagerState.scrollToPage(page = index, pageOffsetFraction = 0f)
         }
     }
 
     private fun refresh(context: Context) {
-        val stockEventApi: StockEventApi = StockEventRepository(context)
-        if (stockEventApi.isEmpty()) {
-            _portfoliosStateFlow.value =
-                mutableMapOf(
-                    Pair(DEFAULT_PORTFOLIO_NAME, ViewState(items = listOf(), readOnly = false)),
-                    Pair(CROM_PORTFOLIO_NAME, ViewState(items = listOf(), readOnly = true))
+        // FIXME: Persist portfolio names somewhere, issues/55
+        _portfoliosStateFlow.value = mutableMapOf(
+            Pair(
+                DEFAULT_PORTFOLIO_NAME, ViewState(
+                    items = stocks(context = context, lambda = { sortedStockEvents, _ ->
+                        getCalculatedStockOrderAggregate(sortedStockEvents)
+                    }), readOnly = false
                 )
-        } else {
-            _portfoliosStateFlow.value = mutableMapOf(
-                Pair(
-                    DEFAULT_PORTFOLIO_NAME, ViewState(
-                        items = stocks(context = context, lambda = { sortedStockEvents, _ ->
-                            getCalculatedStockOrderAggregate(sortedStockEvents)
-                        }), readOnly = false
-                    )
-                ), Pair(
-                    CROM_PORTFOLIO_NAME, ViewState(
-                        items = stocks(context = context, lambda = { stockEvents, context ->
-                            getCalculatedStockOrderAggregate(stockEvents, CromFortuneV1RecommendationAlgorithm(context))
-                        }), readOnly = true
-                    )
+            ), Pair(
+                CROM_PORTFOLIO_NAME, ViewState(
+                    items = stocks(context = context, lambda = { stockEvents, context ->
+                        getCalculatedStockOrderAggregate(stockEvents, CromFortuneV1RecommendationAlgorithm(context))
+                    }), readOnly = true
                 )
             )
-        }
+        )
     }
 
     fun save(context: Context, stockSplit: StockSplit) {
-        val stockSplitRepository = StockSplitRepository(context = context)
+        val stockSplitRepository =
+            StockSplitRepository(context = context, porfolioName = selectedPorfolioNameFlow.value)
         if (stockSplitRepository.list(stockSplit.name).isNotEmpty()) {
             val existingSplits = stockSplitRepository.list(stockSplit.name)
             stockSplitRepository.putAll(stockSplit.name, existingSplits.toMutableSet() + stockSplit)
@@ -165,7 +161,8 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     fun save(context: Context, stockOrder: StockOrder) {
-        val stockOrderApi: StockOrderApi = StockOrderRepository(context)
+        val stockOrderApi: StockOrderApi =
+            StockOrderRepository(context = context, porfolioName = selectedPorfolioNameFlow.value)
         if (stockOrderApi.list(stockOrder.name).isNotEmpty()) {
             val existingOrders = stockOrderApi.list(stockOrder.name)
             stockOrderApi.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
@@ -177,7 +174,7 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     fun stocks(context: Context, lambda: (List<StockEvent>, Context) -> StockOrderAggregate):
         List<StockOrderAggregate> {
-        val stockEventApi: StockEventApi = StockEventRepository(context)
+        val stockEventApi: StockEventApi = StockEventRepository(context, portfolioName = selectedPorfolioNameFlow.value)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
         for (stockSymbol in stockEventApi.listOfStockNames()) {
             val stockEvents: Set<StockEvent> = stockEventApi.list(stockSymbol)
@@ -210,11 +207,11 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
-        return StockOrderRepository(context).count(stockName) >= quantity
+        return StockOrderRepository(context, porfolioName = selectedPorfolioNameFlow.value).count(stockName) >= quantity
     }
 
     fun confirmRemove(context: Context, stockName: String) {
-        val stockOrderApi: StockOrderApi = StockOrderRepository(context)
+        val stockOrderApi: StockOrderApi = StockOrderRepository(context, porfolioName = selectedPorfolioNameFlow.value)
         stockOrderApi.remove(stockName)
         refresh(context)
     }
