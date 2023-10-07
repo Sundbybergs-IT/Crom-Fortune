@@ -16,6 +16,7 @@ import com.sundbybergsit.cromfortune.main.TAG
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
+import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -23,7 +24,7 @@ class DashboardViewModel : ViewModel() {
 
     private var lastUpdated: Instant = Instant.ofEpochMilli(0L)
 
-    private val _score : MutableState<String> = mutableStateOf("")
+    private val _score: MutableState<String> = mutableStateOf("")
 
     val score: State<String> = _score
 
@@ -32,14 +33,18 @@ class DashboardViewModel : ViewModel() {
         if (timestamp.isAfter(lastUpdated)) {
             lastUpdated = timestamp
             viewModelScope.launch {
-                val repository = StockEventRepository(context)
+                val repository =
+                    StockEventRepository(context = context, portfolioName = HomeViewModel.DEFAULT_PORTFOLIO_NAME)
                 val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator()
-                    .getScore(recommendationAlgorithm =
-                CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
+                    .getScore(
+                        recommendationAlgorithm =
+                        CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
                         currencyRateApi = CurrencyRateRepository
+                    )
+                _score.value = context.resources.getQuantityString(
+                    R.plurals.dashboard_croms_will_message,
+                    latestScore.score, latestScore.score
                 )
-                _score.value = context.resources.getQuantityString(R.plurals.dashboard_croms_will_message,
-                        latestScore.score, latestScore.score)
             }
         } else {
             Log.w(TAG, "Ignoring old data...")

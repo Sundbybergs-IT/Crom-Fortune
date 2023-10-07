@@ -76,7 +76,9 @@ import java.util.Currency
 @Composable
 fun Home(
     viewModel: HomeViewModel,
-    pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { viewModel.portfoliosStateFlow.value.size }),
+    pagerState: PagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { viewModel.portfoliosStateFlow.value.size }),
     stockPriceApi: StockPriceApi = StockPriceRepository,
     onNavigateTo: (String) -> Unit,
 ) {
@@ -199,7 +201,12 @@ fun Home(
                                     text = { Text(text = title.first) },
                                     selected = index == pagerState.currentPage,
                                     onClick = {
-                                        viewModel.selectTab(index, pagerState, coroutineScope)
+                                        viewModel.selectTab(
+                                            porfolioName = title.first,
+                                            index = index,
+                                            pagerState = pagerState,
+                                            coroutineScope = coroutineScope
+                                        )
                                     }
                                 )
                             }
@@ -210,7 +217,7 @@ fun Home(
                             val portfolioName = tabs[pagerState.currentPage].first
                             val portfolioState = portfoliosState.value[portfolioName]!!
                             StocksTab(
-                                portfolio = portfolioName,
+                                portfolioName = portfolioName,
                                 index = lazyItemScope,
                                 viewState = portfolioState,
                                 stockPriceApi = stockPriceApi,
@@ -341,7 +348,7 @@ fun StocksHeader(
 
 @Composable
 private fun StocksTab(
-    portfolio: String,
+    portfolioName: String,
     index: Int,
     viewState: HomeViewModel.ViewState,
     stockPriceApi: StockPriceApi,
@@ -354,7 +361,7 @@ private fun StocksTab(
     if (index == 0) {
         val currencyRates = currencyRatesState.value.toList()
         StocksHeader(
-            profile = portfolio,
+            profile = portfolioName,
             onNavigateTo = onNavigateTo,
             stockOrderAggregates = viewState.items,
             stockPriceApi = stockPriceApi,
@@ -379,7 +386,10 @@ private fun StocksTab(
         if (!readOnly) {
             OverflowMenu(
                 onNavigateTo = onNavigateTo,
-                route = LeafScreen.BottomSheetsHomeStock.createRoute(stockSymbol = viewState.items[index].stockSymbol)
+                route = LeafScreen.BottomSheetsHomeStock.createRoute(
+                    portfolioName = portfolioName,
+                    stockSymbol = viewState.items[index].stockSymbol
+                )
             )
         }
     }

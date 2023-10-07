@@ -34,9 +34,9 @@ object DialogHandler {
         _snackbarFlow.value = null
     }
 
-    fun showDeleteDialog(context: Context, stockName: String) {
+    fun showDeleteDialog(context: Context, portfolioName: String, stockName: String) {
         _dialogViewState.value = DialogViewState.ShowDeleteDialog(
-            stockEventApi = StockEventRepository(context),
+            stockEventApi = StockEventRepository(context = context, portfolioName = portfolioName),
             stockName = stockName
         )
     }
