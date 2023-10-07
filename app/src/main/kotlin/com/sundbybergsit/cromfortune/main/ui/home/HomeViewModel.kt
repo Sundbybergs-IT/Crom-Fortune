@@ -6,6 +6,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -30,6 +31,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Currency
 
+private const val DEFAULT_PORTFOLIO_NAME = "Default"
+private const val CROM_PORTFOLIO_NAME = "Crom"
+
 class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
 
     companion object {
@@ -38,80 +42,83 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     }
 
-    private val _cromStocksViewState: MutableStateFlow<ViewState> =
-        MutableStateFlow(ViewState(listOf()))
-    private val _personalStocksViewState: MutableStateFlow<ViewState> =
-        MutableStateFlow(ViewState(listOf()))
+    private val _portfoliosStateFlow: MutableStateFlow<MutableMap<String, ViewState>> =
+        MutableStateFlow(
+            mutableMapOf(
+                Pair(DEFAULT_PORTFOLIO_NAME, ViewState(listOf(), readOnly = false)),
+                Pair(CROM_PORTFOLIO_NAME, ViewState(listOf(), readOnly = true))
+            )
+        )
 
-    internal val cromStocksViewState: StateFlow<ViewState> = _cromStocksViewState.asStateFlow()
-    internal val personalStocksViewState: StateFlow<ViewState> = _personalStocksViewState.asStateFlow()
+    internal val portfoliosStateFlow: StateFlow<Map<String, ViewState>> = _portfoliosStateFlow.asStateFlow()
 
     private var showAll = false
 
     val changedPagerMutableState = mutableStateOf(false)
 
-    private val cromStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
-        { stockEvents, context ->
-            val sortedStockEvents = stockEvents.sortedBy { it.dateInMillis }
-            var stockOrderAggregate: StockOrderAggregate? = null
-            val cromSortedStockEvents: MutableList<StockEvent> = mutableListOf()
-            for (stockEvent in sortedStockEvents) {
-                if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
-                    // Ignore splits before first stock order
-                } else if (stockOrderAggregate == null) {
-                    val stockOrder = checkNotNull(stockEvent.stockOrder)
-                    val stockName =
-                        checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
-                    stockOrderAggregate = StockOrderAggregate(
-                        rateInSek = checkNotNull(CurrencyRateRepository.currencyRates.value)
-                            .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
-                        displayName = "$stockName (${stockOrder.name})", stockSymbol = stockOrder.name,
-                        currency = Currency.getInstance(stockOrder.currency)
-                    )
-                    cromSortedStockEvents.add(stockEvent)
-                    stockOrderAggregate.aggregate(stockEvent)
-                } else if (stockEvent.stockOrder != null) {
-                    val possibleNewStockEvent: StockEvent? =
-                        stockOrderAggregate.applyStockOrderForRecommendedEvent(
-                            eventToConsider = stockEvent,
-                            existingEvents = cromSortedStockEvents,
-                            recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm(context)
-                        )
-                    if (possibleNewStockEvent != null) {
-                        cromSortedStockEvents.add(possibleNewStockEvent)
-                        stockOrderAggregate.aggregate(possibleNewStockEvent)
-                    }
-                } else {
-                    cromSortedStockEvents.add(stockEvent)
-                    stockOrderAggregate.aggregate(stockEvent)
-                }
+    private fun getCalculatedStockOrderAggregate(sortedStockEvents: List<StockEvent>): StockOrderAggregate {
+        var stockOrderAggregate: StockOrderAggregate? = null
+        for (stockEvent in sortedStockEvents) {
+            if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
+                // Ignore splits before first stock order
+            } else if (stockOrderAggregate == null) {
+                val stockOrder = checkNotNull(stockEvent.stockOrder)
+                val stockName =
+                    StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                stockOrderAggregate = StockOrderAggregate(
+                    CurrencyRateRepository.currencyRates.value
+                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                    "$stockName (${stockOrder.name})", stockOrder.name,
+                    Currency.getInstance(stockOrder.currency)
+                )
+                stockOrderAggregate.aggregate(stockEvent)
+            } else {
+                stockOrderAggregate.aggregate(stockEvent)
             }
-            stockOrderAggregate!!
         }
+        return stockOrderAggregate!!
+    }
 
-    private val personalStockAggregate: (List<StockEvent>, Context) -> StockOrderAggregate =
-        { sortedStockEvents, _ ->
-            var stockOrderAggregate: StockOrderAggregate? = null
-            for (stockEvent in sortedStockEvents) {
-                if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
-                    // Ignore splits before first stock order
-                } else if (stockOrderAggregate == null) {
-                    val stockOrder = checkNotNull(stockEvent.stockOrder)
-                    val stockName =
-                        StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
-                    stockOrderAggregate = StockOrderAggregate(
-                        CurrencyRateRepository.currencyRates.value
-                            .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
-                        "$stockName (${stockOrder.name})", stockOrder.name,
-                        Currency.getInstance(stockOrder.currency)
+    private fun getCalculatedStockOrderAggregate(
+        stockEvents: List<StockEvent>,
+        recommendationAlgorithm: RecommendationAlgorithm,
+    ): StockOrderAggregate {
+        val sortedStockEvents = stockEvents.sortedBy { it.dateInMillis }
+        var stockOrderAggregate: StockOrderAggregate? = null
+        val cromSortedStockEvents: MutableList<StockEvent> = mutableListOf()
+        for (stockEvent in sortedStockEvents) {
+            if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
+                // Ignore splits before first stock order
+            } else if (stockOrderAggregate == null) {
+                val stockOrder = checkNotNull(stockEvent.stockOrder)
+                val stockName =
+                    checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
+                stockOrderAggregate = StockOrderAggregate(
+                    rateInSek = checkNotNull(CurrencyRateRepository.currencyRates.value)
+                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                    displayName = "$stockName (${stockOrder.name})", stockSymbol = stockOrder.name,
+                    currency = Currency.getInstance(stockOrder.currency)
+                )
+                cromSortedStockEvents.add(stockEvent)
+                stockOrderAggregate.aggregate(stockEvent)
+            } else if (stockEvent.stockOrder != null) {
+                val possibleNewStockEvent: StockEvent? =
+                    stockOrderAggregate.applyStockOrderForRecommendedEvent(
+                        eventToConsider = stockEvent,
+                        existingEvents = cromSortedStockEvents,
+                        recommendationAlgorithm = recommendationAlgorithm
                     )
-                    stockOrderAggregate.aggregate(stockEvent)
-                } else {
-                    stockOrderAggregate.aggregate(stockEvent)
+                if (possibleNewStockEvent != null) {
+                    cromSortedStockEvents.add(possibleNewStockEvent)
+                    stockOrderAggregate.aggregate(possibleNewStockEvent)
                 }
+            } else {
+                cromSortedStockEvents.add(stockEvent)
+                stockOrderAggregate.aggregate(stockEvent)
             }
-            stockOrderAggregate!!
         }
+        return stockOrderAggregate!!
+    }
 
     fun selectTab(index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
         coroutineScope.launch {
@@ -122,17 +129,27 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
     private fun refresh(context: Context) {
         val stockEventApi: StockEventApi = StockEventRepository(context)
         if (stockEventApi.isEmpty()) {
-            _cromStocksViewState.value = ViewState(items = listOf())
-            _personalStocksViewState.value = ViewState(items = listOf())
+            _portfoliosStateFlow.value =
+                mutableMapOf(
+                    Pair(DEFAULT_PORTFOLIO_NAME, ViewState(items = listOf(), readOnly = false)),
+                    Pair(CROM_PORTFOLIO_NAME, ViewState(items = listOf(), readOnly = true))
+                )
         } else {
-            _cromStocksViewState.value =
-                ViewState(
-                    items = stocks(context = context, lambda = cromStockAggregate)
+            _portfoliosStateFlow.value = mutableMapOf(
+                Pair(
+                    DEFAULT_PORTFOLIO_NAME, ViewState(
+                        items = stocks(context = context, lambda = { sortedStockEvents, _ ->
+                            getCalculatedStockOrderAggregate(sortedStockEvents)
+                        }), readOnly = false
+                    )
+                ), Pair(
+                    CROM_PORTFOLIO_NAME, ViewState(
+                        items = stocks(context = context, lambda = { stockEvents, context ->
+                            getCalculatedStockOrderAggregate(stockEvents, CromFortuneV1RecommendationAlgorithm(context))
+                        }), readOnly = true
+                    )
                 )
-            _personalStocksViewState.value =
-                ViewState(
-                    items = stocks(context = context, lambda = personalStockAggregate)
-                )
+            )
         }
     }
 
@@ -158,11 +175,6 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
         refresh(context)
     }
 
-    fun personalStockEvents(context: Context, stockSymbol: String): List<StockEvent> {
-        return stocks(context, personalStockAggregate)
-            .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
-    }
-
     fun stocks(context: Context, lambda: (List<StockEvent>, Context) -> StockOrderAggregate):
         List<StockOrderAggregate> {
         val stockEventApi: StockEventApi = StockEventRepository(context)
@@ -185,9 +197,16 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
         return stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
     }
 
-    fun cromStockEvents(context: Context, stockSymbol: String): List<StockEvent> {
-        return stocks(context, cromStockAggregate)
-            .find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
+    fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {
+        return if (portfolioName == CROM_PORTFOLIO_NAME) {
+            stocks(context) { stockEvents, context ->
+                getCalculatedStockOrderAggregate(stockEvents, CromFortuneV1RecommendationAlgorithm(context))
+            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
+        } else {
+            stocks(context) { sortedStockEvents, _ ->
+                getCalculatedStockOrderAggregate(sortedStockEvents)
+            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
+        }
     }
 
     fun hasNumberOfStocks(context: Context, stockName: String, quantity: Int): Boolean {
@@ -212,90 +231,58 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     fun showAll(context: Context) {
         showAll = true
-        if (_personalStocksViewState.value.items.isNotEmpty()) {
-            refresh(context)
-        }
+        refresh(context)
     }
 
     fun showCurrent(context: Context) {
         showAll = false
-        if (_personalStocksViewState.value.items.isNotEmpty()) {
-            refresh(context)
+        refresh(context)
+    }
+
+    fun sortNameAscending(portfolioName: String) {
+        _portfoliosStateFlow.value.let { mutableMap ->
+            val oldViewState = mutableMap[portfolioName]!!
+            val sortedPortfolio = oldViewState.items.sortedBy { item -> item.displayName }
+            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
     }
 
-    fun sortNameAscending(profile: String) {
-        when (profile) {
-            "personal" -> _personalStocksViewState.value =
-                ViewState(personalStocksViewState.value.items.sortedBy { item -> item.displayName })
-
-            "crom" -> _cromStocksViewState.value =
-                ViewState(cromStocksViewState.value.items.sortedBy { item -> item.displayName })
-
-            else -> TODO("Not yet implemented")
+    fun sortNameDescending(portfolioName: String) {
+        _portfoliosStateFlow.value.let { mutableMap ->
+            val oldViewState = mutableMap[portfolioName]!!
+            val sortedPortfolio = oldViewState.items.sortedByDescending { item -> item.displayName }
+            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
     }
 
-    fun sortNameDescending(profile: String) {
-        when (profile) {
-            "personal" -> _personalStocksViewState.value =
-                ViewState(personalStocksViewState.value.items.sortedByDescending { item -> item.displayName })
-
-            "crom" -> _cromStocksViewState.value =
-                ViewState(cromStocksViewState.value.items.sortedByDescending { item -> item.displayName })
-
-            else -> TODO("Not yet implemented")
+    fun sortProfitAscending(portfolioName: String) {
+        _portfoliosStateFlow.value.let { mutableMap ->
+            val oldViewState = mutableMap[portfolioName]!!
+            val sortedPortfolio = oldViewState.items.sortedBy { item ->
+                item.getProfit(
+                    StockPriceRepository.getStockPrice(
+                        item.stockSymbol
+                    ).price
+                )
+            }
+            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
     }
 
-    fun sortProfitAscending(profile: String) {
-        when (profile) {
-            "personal" -> _personalStocksViewState.value =
-                ViewState(personalStocksViewState.value.items.sortedBy { item ->
-                    item.getProfit(
-                        StockPriceRepository.getStockPrice(
-                            item.stockSymbol
-                        ).price
-                    )
-                })
-
-            "crom" -> _cromStocksViewState.value =
-                ViewState(cromStocksViewState.value.items.sortedBy { item ->
-                    item.getProfit(
-                        StockPriceRepository.getStockPrice(
-                            item.stockSymbol
-                        ).price
-                    )
-                })
-
-            else -> TODO("Not yet implemented")
+    fun sortProfitDescending(portfolioName: String) {
+        _portfoliosStateFlow.value.let { mutableMap ->
+            val oldViewState = mutableMap[portfolioName]!!
+            val sortedPortfolio = oldViewState.items.sortedByDescending { item ->
+                item.getProfit(
+                    StockPriceRepository.getStockPrice(
+                        item.stockSymbol
+                    ).price
+                )
+            }
+            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
     }
 
-    fun sortProfitDescending(profile: String) {
-        when (profile) {
-            "personal" -> _personalStocksViewState.value =
-                ViewState(personalStocksViewState.value.items.sortedByDescending { item ->
-                    item.getProfit(
-                        StockPriceRepository.getStockPrice(
-                            item.stockSymbol
-                        ).price
-                    )
-                })
-
-            "crom" -> _cromStocksViewState.value =
-                ViewState(cromStocksViewState.value.items.sortedByDescending { item ->
-                    item.getProfit(
-                        StockPriceRepository.getStockPrice(
-                            item.stockSymbol
-                        ).price
-                    )
-                })
-
-            else -> TODO("Not yet implemented")
-        }
-    }
-
-    internal class ViewState(val items: List<StockOrderAggregate>)
+    internal class ViewState(val items: List<StockOrderAggregate>, val readOnly: Boolean)
 
 }

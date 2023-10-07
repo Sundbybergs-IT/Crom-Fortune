@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
+import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockEvent
@@ -7,12 +8,11 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.main.StockDataRetrievalCoroutineWorker
-import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 
 fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
     eventToConsider: StockEvent,
     existingEvents: List<StockEvent>,
-    recommendationAlgorithm: CromFortuneV1RecommendationAlgorithm
+    recommendationAlgorithm: RecommendationAlgorithm
 ) : StockEvent? {
     val stockOrder = checkNotNull(eventToConsider.stockOrder)
     val recommendation = recommendationAlgorithm
