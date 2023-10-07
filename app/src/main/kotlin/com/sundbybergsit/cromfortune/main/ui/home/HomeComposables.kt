@@ -164,7 +164,6 @@ fun Home(
             val (pagerRef, fabRef) = createRefs()
             val view = LocalView.current
             val showFabMutableState = remember { mutableStateOf(false) }
-            val showBuyDialogMutableState = remember { mutableStateOf(false) }
             val currencyRateApi: CurrencyRateApi = CurrencyRateRepository
             if (showFabMutableState.value) {
                 FloatingActionButton(modifier = Modifier
@@ -172,7 +171,7 @@ fun Home(
                         end.linkTo(parent.end, 16.dp)
                         bottom.linkTo(parent.bottom, 32.dp)
                     }
-                    .padding(16.dp), onClick = { showBuyDialogMutableState.value = true }) {
+                    .padding(16.dp), onClick = { DialogHandler.showBuyStockDialog() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_add),
                         contentDescription = "Floating Action Button Icon"
