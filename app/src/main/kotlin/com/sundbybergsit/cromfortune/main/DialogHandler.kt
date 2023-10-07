@@ -82,7 +82,7 @@ object DialogHandler {
     }
 
     fun showAddPortfolioDialog() {
-        _snackbarFlow.value = "Not yet implemented"
+        _dialogViewState.value = DialogViewState.ShowAddPortfolio
     }
 
     sealed class DialogViewState {
@@ -114,6 +114,8 @@ object DialogHandler {
         data class ShowSellStockDialog(val stockSymbol: String? = null) : DialogViewState()
 
         data class ShowRegisterSplitStockDialog(val stockSymbol: String? = null) : DialogViewState()
+
+        data object ShowAddPortfolio : DialogViewState()
 
     }
 
