@@ -761,7 +761,8 @@ private fun NavGraphBuilder.addHomeBottomSheet() {
         BottomSheetContent {
             HomeItems(onBuy = { DialogHandler.showBuyStockDialog() },
                 onSell = { DialogHandler.showSellStockDialog() },
-                onSplit = { DialogHandler.showSplitStockDialog() }
+                onSplit = { DialogHandler.showSplitStockDialog() },
+                onAddPortfolio = { DialogHandler.showAddPortfolioDialog() },
             )
         }
     }
@@ -868,7 +869,7 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
 }
 
 @Composable
-private fun HomeItems(onBuy: () -> Unit, onSell: () -> Unit, onSplit: () -> Unit) {
+private fun HomeItems(onBuy: () -> Unit, onSell: () -> Unit, onSplit: () -> Unit, onAddPortfolio: () -> Unit) {
     BottomSheetMenuItem(
         onClick = onBuy,
         text = stringResource(id = R.string.action_stock_buy)
@@ -880,6 +881,10 @@ private fun HomeItems(onBuy: () -> Unit, onSell: () -> Unit, onSplit: () -> Unit
     BottomSheetMenuItem(
         onClick = onSplit,
         text = stringResource(id = R.string.action_stock_add_split)
+    )
+    BottomSheetMenuItem(
+        onClick = onAddPortfolio,
+        text = stringResource(id = R.string.action_portfolio_add)
     )
 }
 

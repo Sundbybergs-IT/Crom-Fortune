@@ -81,6 +81,10 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowRegisterSplitStockDialog(stockSymbol = stockSymbol)
     }
 
+    fun showAddPortfolioDialog() {
+        _snackbarFlow.value = "Not yet implemented"
+    }
+
     sealed class DialogViewState {
 
         data object Dismissed : DialogViewState()
