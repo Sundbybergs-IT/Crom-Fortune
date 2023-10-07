@@ -1,15 +1,14 @@
 package com.sundbybergsit.cromfortune.main.ui.notifications
 
 import androidx.annotation.StringRes
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationsRepository
 import com.sundbybergsit.cromfortune.main.R
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -17,13 +16,13 @@ import java.time.ZoneId
 
 class NotificationsViewModel(private val notificationsRepository: NotificationsRepository) : ViewModel() {
 
-    private val _selectedTabIndexMutableState : MutableState<Int> = mutableIntStateOf(0)
-    val selectedTabIndexMutableState : State<Int> = _selectedTabIndexMutableState
+    private val _selectedTabIndexMutableState : MutableStateFlow<Int> = MutableStateFlow(0)
+    val selectedTabIndexMutableState : StateFlow<Int> = _selectedTabIndexMutableState.asStateFlow()
 
-    private val _newNotifications: MutableState<NotificationsViewState> = mutableStateOf(NotificationsViewState(R.string.generic_error_empty, listOf()))
-    val newNotifications: State<NotificationsViewState> = _newNotifications
-    private val _oldNotifications: MutableState<NotificationsViewState> = mutableStateOf(NotificationsViewState(R.string.generic_error_empty, listOf()))
-    val oldNotifications: State<NotificationsViewState> = _oldNotifications
+    private val _newNotifications: MutableStateFlow<NotificationsViewState> = MutableStateFlow(NotificationsViewState(R.string.generic_error_empty, listOf()))
+    val newNotifications: StateFlow<NotificationsViewState> = _newNotifications.asStateFlow()
+    private val _oldNotifications: MutableStateFlow<NotificationsViewState> = MutableStateFlow(NotificationsViewState(R.string.generic_error_empty, listOf()))
+    val oldNotifications: StateFlow<NotificationsViewState> = _oldNotifications.asStateFlow()
 
     init {
         viewModelScope.launch {

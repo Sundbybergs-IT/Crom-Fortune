@@ -3,8 +3,6 @@ package com.sundbybergsit.cromfortune.main.ui.home
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +24,9 @@ import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Currency
 
@@ -37,13 +38,13 @@ class HomeViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.
 
     }
 
-    private val _cromStocksViewState: MutableState<ViewState> =
-        mutableStateOf(ViewState(listOf()))
-    private val _personalStocksViewState: MutableState<ViewState> =
-        mutableStateOf(ViewState(listOf()))
+    private val _cromStocksViewState: MutableStateFlow<ViewState> =
+        MutableStateFlow(ViewState(listOf()))
+    private val _personalStocksViewState: MutableStateFlow<ViewState> =
+        MutableStateFlow(ViewState(listOf()))
 
-    internal val cromStocksViewState: State<ViewState> = _cromStocksViewState
-    internal val personalStocksViewState: State<ViewState> = _personalStocksViewState
+    internal val cromStocksViewState: StateFlow<ViewState> = _cromStocksViewState.asStateFlow()
+    internal val personalStocksViewState: StateFlow<ViewState> = _personalStocksViewState.asStateFlow()
 
     private var showAll = false
 
