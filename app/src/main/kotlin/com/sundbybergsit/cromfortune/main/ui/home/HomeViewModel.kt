@@ -210,7 +210,7 @@ class HomeViewModel(
 
     fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {
         return if (portfolioName == PortfolioRepository.CROM_PORTFOLIO_NAME) {
-            stocks(context = context, portfolioName = portfolioName) { sortedStockEvents ->
+            stocks(context = context, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME) { sortedStockEvents ->
                 getCalculatedStockOrderAggregate(sortedStockEvents, CromFortuneV1RecommendationAlgorithm(context))
             }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
         } else {
