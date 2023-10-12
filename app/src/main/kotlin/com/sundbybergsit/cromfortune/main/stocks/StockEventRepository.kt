@@ -11,8 +11,9 @@ import com.sundbybergsit.cromfortune.main.Taggable
 
 class StockEventRepository(
     context: Context,
-    private val stockOrderApi: StockOrderApi = StockOrderRepository(context),
-    private val stockSplitApi: StockSplitApi = StockSplitRepository(context)
+    portfolioName : String,
+    private val stockOrderApi: StockOrderApi = StockOrderRepository(context, porfolioName = portfolioName),
+    private val stockSplitApi: StockSplitApi = StockSplitRepository(context, porfolioName = portfolioName)
 ) : StockEventApi, Taggable {
 
     override fun listOfStockNames(): Iterable<String> {

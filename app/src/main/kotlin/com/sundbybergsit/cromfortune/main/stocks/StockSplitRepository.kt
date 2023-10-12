@@ -10,8 +10,9 @@ import kotlinx.serialization.json.Json
 // FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
 class StockSplitRepository(
     context: Context,
+    porfolioName: String,
     private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("SPLITS", Context.MODE_PRIVATE),
+        context.getSharedPreferences("$porfolioName-splits", Context.MODE_PRIVATE),
 ) : StockSplitApi {
 
     override fun remove(stockSplit: StockSplit) {

@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                AppNavigation(navController = rememberNavController())
+                AppNavigation(navController = rememberNavController(), portfolioRepository = PortfolioRepository)
             }
         }
 
@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
         }
         val reviewManager = ReviewManagerFactory.create(this)
         appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this))
-        if (StockOrderRepository(this).countAll() > 4) {
+        if (StockOrderRepository(this, porfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME).countAll() > 4) {
             Log.i(TAG, "Time to nag about reviews! :-)")
             val request = reviewManager.requestReviewFlow()
             request.addOnCompleteListener { task ->

@@ -16,8 +16,6 @@ class AndroidLibraryComposeConventionPlugin : Plugin<Project> {
             dependencies {
                 "implementation"(libraries.findBundle("compose").get())
                 // Version determined by Compose BoM
-                "implementation"("androidx.compose.runtime:runtime-livedata")
-                // Version determined by Compose BoM
                 "implementation"("androidx.compose.material3:material3")
                 // Version determined by Compose BoM
                 "implementation"("androidx.compose.ui:ui-tooling")

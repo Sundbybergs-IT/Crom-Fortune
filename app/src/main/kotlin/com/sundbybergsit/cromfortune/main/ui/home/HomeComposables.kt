@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,13 +76,14 @@ import java.util.Currency
 @Composable
 fun Home(
     viewModel: HomeViewModel,
-    pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 }),
+    pagerState: PagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { viewModel.portfoliosStateFlow.value.size }),
     stockPriceApi: StockPriceApi = StockPriceRepository,
-    onNavigateTo: (String) -> Unit
+    onNavigateTo: (String) -> Unit,
 ) {
     val localContext = LocalContext.current
-    val personalStocksViewState: HomeViewModel.ViewState by viewModel.personalStocksViewState.collectAsState()
-    val cromStocksViewState: HomeViewModel.ViewState by viewModel.cromStocksViewState.collectAsState()
+    val portfoliosState = viewModel.portfoliosStateFlow.collectAsState()
     LaunchedEffect(key1 = Unit) {
         viewModel.refreshData(localContext)
     }
@@ -128,8 +128,8 @@ fun Home(
                             expanded = false
                             if (selectedIndex == 0) {
                                 viewModel.showCurrent(localContext)
-                            } else if (selectedIndex == 1) {
-                                viewModel.showAll(localContext)
+                            } else {
+                                viewModel.showAll(context = localContext)
                             }
                         },
                             text = {
@@ -164,7 +164,6 @@ fun Home(
             val (pagerRef, fabRef) = createRefs()
             val view = LocalView.current
             val showFabMutableState = remember { mutableStateOf(false) }
-            val showBuyDialogMutableState = remember { mutableStateOf(false) }
             val currencyRateApi: CurrencyRateApi = CurrencyRateRepository
             if (showFabMutableState.value) {
                 FloatingActionButton(modifier = Modifier
@@ -172,21 +171,23 @@ fun Home(
                         end.linkTo(parent.end, 16.dp)
                         bottom.linkTo(parent.bottom, 32.dp)
                     }
-                    .padding(16.dp), onClick = { showBuyDialogMutableState.value = true }) {
+                    .padding(16.dp), onClick = { DialogHandler.showBuyStockDialog() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_add),
                         contentDescription = "Floating Action Button Icon"
                     )
                 }
             }
+            val changedPagerMutableState = viewModel.changedPagerMutableStateFlow.collectAsState()
             PagerStateSelectionHapticFeedbackLaunchedEffect(
-                pagerState = pagerState, view = view, changedState = viewModel.changedPagerMutableState
+                pagerState = pagerState, view = view, changedState = changedPagerMutableState
             )
-            val tabs = listOf(
-                stringResource(id = R.string.home_stocks_personal_title).uppercase() to viewModel.personalStocksViewState.collectAsState(),
-                stringResource(id = R.string.home_stocks_crom_title).uppercase() to viewModel.cromStocksViewState.collectAsState(),
-            )
-            showFabMutableState.value = tabs[0].second.value.items.isEmpty()
+            val mutableTabs: MutableList<Pair<String, HomeViewModel.ViewState>> = mutableListOf()
+            for (entry in portfoliosState.value.entries) {
+                mutableTabs.add(entry.key to entry.value)
+            }
+            val tabs: List<Pair<String, HomeViewModel.ViewState>> = mutableTabs.toList()
+            showFabMutableState.value = tabs[0].second.items.isEmpty()
             HorizontalPager(
                 modifier = Modifier.constrainAs(pagerRef) {},
                 state = pagerState
@@ -200,51 +201,39 @@ fun Home(
                                     text = { Text(text = title.first) },
                                     selected = index == pagerState.currentPage,
                                     onClick = {
-                                        viewModel.selectTab(index, pagerState, coroutineScope)
+                                        viewModel.selectTab(
+                                            portfolioName = title.first,
+                                            index = index,
+                                            pagerState = pagerState,
+                                            coroutineScope = coroutineScope
+                                        )
                                     }
                                 )
                             }
                         }
                     }
                     LazyColumn {
-                        items(count = tabs[pagerState.currentPage].second.value.items.size) { lazyItemScope ->
-                            when (pagerState.currentPage) {
-                                0 -> StocksTab(
-                                    profile = "personal",
-                                    index = lazyItemScope,
-                                    viewState = personalStocksViewState,
-                                    stockPriceApi = stockPriceApi,
-                                    onShowStock = { stockSymbol, readOnly ->
-                                        DialogHandler.showStockEvents(
-                                            stockSymbol = stockSymbol, stockEvents = viewModel.personalStockEvents(
-                                                context = localContext,
-                                                stockSymbol = stockSymbol
-                                            ), readOnly = readOnly
-                                        )
-                                    },
-                                    onNavigateTo = onNavigateTo,
-                                    readOnly = false,
-                                    currencyRateApi = currencyRateApi
-                                )
-
-                                1 -> StocksTab(
-                                    profile = "crom",
-                                    index = lazyItemScope,
-                                    viewState = cromStocksViewState,
-                                    stockPriceApi = stockPriceApi,
-                                    onShowStock = { stockSymbol, readOnly ->
-                                        DialogHandler.showStockEvents(
-                                            stockSymbol = stockSymbol, stockEvents = viewModel.cromStockEvents(
-                                                context = localContext,
-                                                stockSymbol = stockSymbol
-                                            ), readOnly = readOnly
-                                        )
-                                    },
-                                    onNavigateTo = onNavigateTo,
-                                    readOnly = true,
-                                    currencyRateApi = currencyRateApi
-                                )
-                            }
+                        items(count = tabs[pagerState.currentPage].second.items.size) { lazyItemScope ->
+                            val portfolioName = tabs[pagerState.currentPage].first
+                            val portfolioState = portfoliosState.value[portfolioName]!!
+                            StocksTab(
+                                portfolioName = portfolioName,
+                                index = lazyItemScope,
+                                viewState = portfolioState,
+                                stockPriceApi = stockPriceApi,
+                                onShowStock = { stockSymbol, readOnly ->
+                                    DialogHandler.showStockEvents(
+                                        stockSymbol = stockSymbol, stockEvents = viewModel.portfolioStockEvents(
+                                            portfolioName = portfolioName,
+                                            context = localContext,
+                                            stockSymbol = stockSymbol
+                                        ), readOnly = readOnly
+                                    )
+                                },
+                                onNavigateTo = onNavigateTo,
+                                readOnly = portfolioState.readOnly,
+                                currencyRateApi = currencyRateApi
+                            )
                         }
                     }
                 }
@@ -357,11 +346,9 @@ fun StocksHeader(
     }
 }
 
-/// FIXME: Move calculation to view model
-@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 private fun StocksTab(
-    profile: String,
+    portfolioName: String,
     index: Int,
     viewState: HomeViewModel.ViewState,
     stockPriceApi: StockPriceApi,
@@ -370,10 +357,11 @@ private fun StocksTab(
     readOnly: Boolean,
     currencyRateApi: CurrencyRateApi
 ) {
+    val currencyRatesState = currencyRateApi.currencyRates.collectAsState()
     if (index == 0) {
-        val currencyRates = currencyRateApi.currencyRates.value.toList()
+        val currencyRates = currencyRatesState.value.toList()
         StocksHeader(
-            profile = profile,
+            profile = portfolioName,
             onNavigateTo = onNavigateTo,
             stockOrderAggregates = viewState.items,
             stockPriceApi = stockPriceApi,
@@ -398,7 +386,10 @@ private fun StocksTab(
         if (!readOnly) {
             OverflowMenu(
                 onNavigateTo = onNavigateTo,
-                route = LeafScreen.BottomSheetsHomeStock.createRoute(stockSymbol = viewState.items[index].stockSymbol)
+                route = LeafScreen.BottomSheetsHomeStock.createRoute(
+                    portfolioName = portfolioName,
+                    stockSymbol = viewState.items[index].stockSymbol
+                )
             )
         }
     }

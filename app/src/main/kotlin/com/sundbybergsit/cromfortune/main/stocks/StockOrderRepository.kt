@@ -11,9 +11,10 @@ import kotlinx.serialization.json.Json
 
 // FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
 class StockOrderRepository(
-        context: Context,
-        private val sharedPreferences: SharedPreferences =
-                context.getSharedPreferences("Stocks", Context.MODE_PRIVATE),
+    context: Context,
+    porfolioName: String,
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences(porfolioName, Context.MODE_PRIVATE),
 ) : StockOrderApi, Taggable {
 
     override fun count(stockSymbol: String): Int {
