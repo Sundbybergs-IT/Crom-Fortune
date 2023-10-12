@@ -87,7 +87,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
         Configuration.Builder()
             .setExecutor(Executors.newSingleThreadExecutor())
             .setMinimumLoggingLevel(Log.INFO)
-            .setWorkerFactory(StockRetrievalWorkerFactory(PortfolioRepository))
+            .setWorkerFactory(StockRetrievalWorkerFactory())
             .build()
 
 }

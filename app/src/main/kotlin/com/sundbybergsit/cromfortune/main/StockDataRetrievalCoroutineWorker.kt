@@ -30,9 +30,8 @@ import java.time.LocalTime
 import java.util.Currency
 import kotlin.math.roundToInt
 
-open class StockDataRetrievalCoroutineWorker(
+class StockDataRetrievalCoroutineWorker(
     private val context: Context,
-    private val portfolioRepository: PortfolioRepository,
     workerParameters: WorkerParameters
 ) :
     CoroutineWorker(context, workerParameters) {
@@ -172,7 +171,7 @@ open class StockDataRetrievalCoroutineWorker(
                             Log.i(TAG, "Initial retrieval of data.")
                             refreshFromYahoo(
                                 context = context,
-                                portfolioRepository = portfolioRepository,
+                                portfolioRepository = PortfolioRepository,
                                 onFinished = { })
                         }
 
@@ -183,7 +182,7 @@ open class StockDataRetrievalCoroutineWorker(
                             Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
                             refreshFromYahoo(
                                 context = context,
-                                portfolioRepository = portfolioRepository,
+                                portfolioRepository = PortfolioRepository,
                                 onFinished = { })
                         }
 
