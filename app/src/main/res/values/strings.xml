@@ -3,6 +3,7 @@
     <string name="action_close">Close</string>
     <string name="action_configure_stock_retrieval_intervals">Stock retrieval time intervals</string>
     <string name="action_delete">Delete</string>
+    <string name="action_portfolio_add">Add portfolio</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_stock_buy">Register stock purchase</string>>
     <string name="action_stock_add_split">Register stock split</string>>
@@ -77,8 +78,8 @@
     <string name="home_title">Home</string>
 
     <string name="notification_channel_name">Crom Fortune Events</string>
-    <string name="notification_recommendation_body_buy">You are recommended to buy %1$d of %2$s at %3$s %4$s (commission fee %5$d SEK)</string>
-    <string name="notification_recommendation_body_sell">You are recommended to sell %1$d of %2$s at %3$s %4$s (commission fee %5$d SEK)</string>
+    <string name="notification_recommendation_body_buy">%1$s is recommended to buy %2$d of %3$s at %4$s %5$s (commission fee %6$d SEK)</string>
+    <string name="notification_recommendation_body_sell">%1$s is recommended to sell %2$d of %3$s at %4$s %5$s (commission fee %6$d SEK)</string>
     <string name="notification_recommendation_title">Recommendation</string>
     <string name="notifications_old_title">Old Notifications</string>
     <string name="notifications_new_title">Current Notifications</string>

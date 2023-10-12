@@ -34,9 +34,9 @@ object DialogHandler {
         _snackbarFlow.value = null
     }
 
-    fun showDeleteDialog(context: Context, stockName: String) {
+    fun showDeleteDialog(context: Context, portfolioName: String, stockName: String) {
         _dialogViewState.value = DialogViewState.ShowDeleteDialog(
-            stockEventApi = StockEventRepository(context),
+            stockEventApi = StockEventRepository(context = context, portfolioName = portfolioName),
             stockName = stockName
         )
     }
@@ -81,6 +81,10 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowRegisterSplitStockDialog(stockSymbol = stockSymbol)
     }
 
+    fun showAddPortfolioDialog() {
+        _dialogViewState.value = DialogViewState.ShowAddPortfolio
+    }
+
     sealed class DialogViewState {
 
         data object Dismissed : DialogViewState()
@@ -110,6 +114,8 @@ object DialogHandler {
         data class ShowSellStockDialog(val stockSymbol: String? = null) : DialogViewState()
 
         data class ShowRegisterSplitStockDialog(val stockSymbol: String? = null) : DialogViewState()
+
+        data object ShowAddPortfolio : DialogViewState()
 
     }
 
