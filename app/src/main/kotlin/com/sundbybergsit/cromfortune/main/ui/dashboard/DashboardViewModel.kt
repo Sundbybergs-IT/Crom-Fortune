@@ -2,9 +2,6 @@ package com.sundbybergsit.cromfortune.main.ui.dashboard
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1AlgorithmConformanceScoreCalculator
@@ -17,6 +14,8 @@ import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgori
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -24,9 +23,9 @@ class DashboardViewModel : ViewModel() {
 
     private var lastUpdated: Instant = Instant.ofEpochMilli(0L)
 
-    private val _score: MutableState<String> = mutableStateOf("")
+    private val _scoreStateFlow: MutableStateFlow<String> = MutableStateFlow("")
 
-    val score: State<String> = _score
+    val scoreStateFlow: StateFlow<String> = _scoreStateFlow
 
     fun refresh(context: Context, timestamp: Instant, stockPrices: Set<StockPrice>) {
         Log.i(TAG, "refresh(${stockPrices})")
@@ -41,7 +40,7 @@ class DashboardViewModel : ViewModel() {
                         CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
                         currencyRateApi = CurrencyRateRepository
                     )
-                _score.value = context.resources.getQuantityString(
+                _scoreStateFlow.value = context.resources.getQuantityString(
                     R.plurals.dashboard_croms_will_message,
                     latestScore.score, latestScore.score
                 )

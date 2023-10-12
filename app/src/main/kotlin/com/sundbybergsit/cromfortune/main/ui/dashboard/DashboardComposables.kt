@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -46,13 +47,14 @@ import com.sundbybergsit.cromfortune.main.theme.Profit
 
 @Composable
 fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
-    val viewState: StockPriceRepository.ViewState? by StockPriceRepository.stockPrices
+    val viewState: StockPriceRepository.ViewState by StockPriceRepository.stockPricesStateFlow.collectAsState()
     RefreshFromViewStateLaunchedEffect(viewState = viewState, viewModel = viewModel)
     val infiniteTransition = rememberInfiniteTransition(label = "Infinite Transition")
     val currentRotationMutableState = remember { mutableFloatStateOf(0f) }
     val currentRotation by currentRotationMutableState
     val rotation = remember { Animatable(currentRotation) }
     val durationInMs = 6000
+    val scoreState = viewModel.scoreStateFlow.collectAsState()
     AnimateRotationLaunchedEffect(
         rotation = rotation,
         currentRotationMutableState = currentRotationMutableState,
@@ -149,7 +151,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                     .constrainAs(scoreRef) {
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
-                    }, text = viewModel.score.value,
+                    }, text = scoreState.value,
                 style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface
             )
         }

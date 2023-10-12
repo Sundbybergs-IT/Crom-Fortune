@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
@@ -47,14 +46,14 @@ class HomeViewModel(
     }
 
     private val _portfoliosStateFlow: MutableStateFlow<MutableMap<String, ViewState>> = MutableStateFlow(mutableMapOf())
-
     internal val portfoliosStateFlow: StateFlow<Map<String, ViewState>> = _portfoliosStateFlow.asStateFlow()
 
     private var showAll = false
 
-    val changedPagerMutableState = mutableStateOf(false)
-    private val _selectedPorfolioNameFlow: MutableStateFlow<String> = MutableStateFlow(DEFAULT_PORTFOLIO_NAME)
-    val selectedPorfolioNameFlow: StateFlow<String> = _selectedPorfolioNameFlow.asStateFlow()
+    val changedPagerMutableStateFlow : MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    private val _selectedPorfolioNameStateFlow: MutableStateFlow<String> = MutableStateFlow(DEFAULT_PORTFOLIO_NAME)
+    val selectedPorfolioNameStateFlow: StateFlow<String> = _selectedPorfolioNameStateFlow.asStateFlow()
 
     init {
         val allPortfolioNames =
@@ -132,7 +131,7 @@ class HomeViewModel(
     }
 
     fun selectTab(porfolioName: String, index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
-        this._selectedPorfolioNameFlow.value = porfolioName
+        this._selectedPorfolioNameStateFlow.value = porfolioName
         coroutineScope.launch {
             pagerState.scrollToPage(page = index, pageOffsetFraction = 0f)
         }
@@ -149,7 +148,7 @@ class HomeViewModel(
             }
             Log.d(TAG, "Adding $portfolioName portfolio")
             portfolioViewStates[portfolioName] = ViewState(
-                items = stocks(context = context, portfolioName = portfolioName, lambda = { sortedStockEvents, _ ->
+                items = stocks(context = context, portfolioName = portfolioName, lambda = { sortedStockEvents ->
                     getCalculatedStockOrderAggregate(sortedStockEvents)
                 }), readOnly = false
             )
@@ -159,7 +158,7 @@ class HomeViewModel(
                     items = stocks(
                         context = context,
                         portfolioName = DEFAULT_PORTFOLIO_NAME,
-                        lambda = { stockEvents, context ->
+                        lambda = { stockEvents ->
                             getCalculatedStockOrderAggregate(stockEvents, CromFortuneV1RecommendationAlgorithm(context))
                         }), readOnly = true
                 )
@@ -171,7 +170,7 @@ class HomeViewModel(
     fun save(context: Context, stockSplit: StockSplit) {
         Log.i(TAG, "save(stockSplit=[$stockSplit])")
         val stockSplitRepository =
-            StockSplitRepository(context = context, porfolioName = selectedPorfolioNameFlow.value)
+            StockSplitRepository(context = context, porfolioName = selectedPorfolioNameStateFlow.value)
         if (stockSplitRepository.list(stockSplit.name).isNotEmpty()) {
             val existingSplits = stockSplitRepository.list(stockSplit.name)
             stockSplitRepository.putAll(stockSplit.name, existingSplits.toMutableSet() + stockSplit)
@@ -194,7 +193,7 @@ class HomeViewModel(
         refresh(context)
     }
 
-    fun stocks(context: Context, portfolioName: String, lambda: (List<StockEvent>, Context) -> StockOrderAggregate):
+    fun stocks(context: Context, portfolioName: String, lambda: (List<StockEvent>) -> StockOrderAggregate):
         List<StockOrderAggregate> {
         val stockEventApi: StockEventApi = StockEventRepository(context, portfolioName = portfolioName)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
@@ -205,7 +204,7 @@ class HomeViewModel(
                 stockEventApi.remove(stockSymbol)
             } else {
                 val sortedStockOrders: List<StockEvent> = stockEvents.sortedBy { event -> event.dateInMillis }
-                val stockAggregate = lambda(sortedStockOrders, context)
+                val stockAggregate = lambda(sortedStockOrders)
                 if (!showAll && stockAggregate.getQuantity() == 0) {
                     Log.i(TAG, "Hiding this stock because of the filter option.")
                 } else {
@@ -218,11 +217,11 @@ class HomeViewModel(
 
     fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {
         return if (portfolioName == CROM_PORTFOLIO_NAME) {
-            stocks(context = context, portfolioName = portfolioName) { sortedStockEvents, _ ->
+            stocks(context = context, portfolioName = portfolioName) { sortedStockEvents ->
                 getCalculatedStockOrderAggregate(sortedStockEvents, CromFortuneV1RecommendationAlgorithm(context))
             }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
         } else {
-            stocks(context = context, portfolioName = portfolioName) { sortedStockEvents, _ ->
+            stocks(context = context, portfolioName = portfolioName) { sortedStockEvents ->
                 getCalculatedStockOrderAggregate(sortedStockEvents)
             }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
         }
@@ -233,7 +232,7 @@ class HomeViewModel(
     }
 
     fun confirmRemove(context: Context, stockName: String) {
-        val stockOrderApi: StockOrderApi = StockOrderRepository(context, porfolioName = selectedPorfolioNameFlow.value)
+        val stockOrderApi: StockOrderApi = StockOrderRepository(context, porfolioName = selectedPorfolioNameStateFlow.value)
         stockOrderApi.remove(stockName)
         refresh(context)
     }
