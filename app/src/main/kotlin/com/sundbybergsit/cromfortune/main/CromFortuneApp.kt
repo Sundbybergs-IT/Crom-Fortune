@@ -79,7 +79,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
     override fun getWorkManagerConfiguration(): Configuration =
         Configuration.Builder()
             .setExecutor(Executors.newSingleThreadExecutor())
-            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .setMinimumLoggingLevel(Log.INFO)
             .setWorkerFactory(StockRetrievalWorkerFactory())
             .build()
 
