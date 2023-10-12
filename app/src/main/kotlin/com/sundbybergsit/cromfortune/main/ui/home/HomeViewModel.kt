@@ -301,7 +301,7 @@ class HomeViewModel(
         }
     }
 
-    fun savePortolio(portfolioName: String) {
+    fun savePortfolio(context: Context, portfolioName: String) {
         Log.i(TAG, "Save new portfolio: $portfolioName")
         val portfolioNames =
             portfolioSharedPreferences.getStringSet(Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET, emptySet())!!
@@ -309,6 +309,7 @@ class HomeViewModel(
         portfolioNames.add(portfolioName)
         portfolioSharedPreferences.edit()
             .putStringSet(Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET, portfolioNames.toSet()).apply()
+        refresh(context)
     }
 
     internal class ViewState(val items: List<StockOrderAggregate>, val readOnly: Boolean)
