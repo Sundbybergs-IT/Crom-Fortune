@@ -5,7 +5,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 
-class StockRetrievalWorkerFactory(private val portfolioRepository: PortfolioRepository) : WorkerFactory() {
+class StockRetrievalWorkerFactory : WorkerFactory() {
 
     override fun createWorker(
         appContext: Context,
@@ -14,7 +14,6 @@ class StockRetrievalWorkerFactory(private val portfolioRepository: PortfolioRepo
     ): ListenableWorker {
         return StockDataRetrievalCoroutineWorker(
             context = appContext,
-            portfolioRepository = portfolioRepository,
             workerParameters = workerParameters
         )
     }
