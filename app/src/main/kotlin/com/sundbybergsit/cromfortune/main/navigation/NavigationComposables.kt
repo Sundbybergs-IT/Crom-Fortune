@@ -562,7 +562,7 @@ fun AddDialogs(
                 )
             })
             PortfolioAddAlertDialog(onDismiss = { DialogHandler.dismissDialog() }) { portfolioName ->
-                homeViewModel.savePortolio(portfolioName = portfolioName)
+                homeViewModel.savePortfolio(context = localContext, portfolioName = portfolioName)
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
             }
         }
