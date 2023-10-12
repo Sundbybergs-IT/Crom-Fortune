@@ -18,7 +18,6 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.sundbybergsit.cromfortune.main.navigation.AppNavigation
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.theme.AppTheme
-import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -34,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                AppNavigation(navController = rememberNavController())
+                AppNavigation(navController = rememberNavController(), portfolioRepository = PortfolioRepository)
             }
         }
 
@@ -52,7 +51,7 @@ class MainActivity : ComponentActivity() {
         }
         val reviewManager = ReviewManagerFactory.create(this)
         appUpdateManager.registerListener(UpdateInstallStateUpdatedListener(this))
-        if (StockOrderRepository(this, porfolioName = HomeViewModel.DEFAULT_PORTFOLIO_NAME).countAll() > 4) {
+        if (StockOrderRepository(this, porfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME).countAll() > 4) {
             Log.i(TAG, "Time to nag about reviews! :-)")
             val request = reviewManager.requestReviewFlow()
             request.addOnCompleteListener { task ->

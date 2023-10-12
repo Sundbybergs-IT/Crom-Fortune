@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.input.TextFieldValue
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import java.text.SimpleDateFormat
@@ -11,15 +12,16 @@ import java.util.Locale
 
 fun TextFieldValue.validateStockQuantity(
     context: Context,
+    homeViewModel: HomeViewModel,
+    portfolioRepository: PortfolioRepository,
     errorMutableState: MutableState<Boolean>,
     errorMessageMutableState: MutableState<String>,
-    stockName: String,
-    homeViewModel: HomeViewModel
+    stockName: String
 ) {
     when {
         !homeViewModel.hasNumberOfStocks(
             context = context,
-            portfolioName = homeViewModel.selectedPorfolioNameStateFlow.value,
+            portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.value,
             stockName = stockName,
             quantity = text.toInt()
         ) -> {

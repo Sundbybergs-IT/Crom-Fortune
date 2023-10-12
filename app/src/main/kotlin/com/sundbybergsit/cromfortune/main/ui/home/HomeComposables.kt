@@ -202,7 +202,7 @@ fun Home(
                                     selected = index == pagerState.currentPage,
                                     onClick = {
                                         viewModel.selectTab(
-                                            porfolioName = title.first,
+                                            portfolioName = title.first,
                                             index = index,
                                             pagerState = pagerState,
                                             coroutineScope = coroutineScope
