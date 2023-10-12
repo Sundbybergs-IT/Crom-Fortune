@@ -178,8 +178,9 @@ fun Home(
                     )
                 }
             }
+            val changedPagerMutableState = viewModel.changedPagerMutableStateFlow.collectAsState()
             PagerStateSelectionHapticFeedbackLaunchedEffect(
-                pagerState = pagerState, view = view, changedState = viewModel.changedPagerMutableState
+                pagerState = pagerState, view = view, changedState = changedPagerMutableState
             )
             val mutableTabs: MutableList<Pair<String, HomeViewModel.ViewState>> = mutableListOf()
             for (entry in portfoliosState.value.entries) {

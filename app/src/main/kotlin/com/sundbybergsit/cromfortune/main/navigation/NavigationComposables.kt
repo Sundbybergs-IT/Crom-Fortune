@@ -499,7 +499,7 @@ fun AddDialogs(
             }, stockSymbolParam = dialogViewState.stockSymbol) { stockOrder ->
                 homeViewModel.save(
                     context = localContext,
-                    portfolioName = homeViewModel.selectedPorfolioNameFlow.value,
+                    portfolioName = homeViewModel.selectedPorfolioNameStateFlow.value,
                     stockOrder = stockOrder
                 )
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
@@ -523,7 +523,7 @@ fun AddDialogs(
                 onSave = { stockOrder ->
                     homeViewModel.save(
                         context = localContext,
-                        portfolioName = homeViewModel.selectedPorfolioNameFlow.value,
+                        portfolioName = homeViewModel.selectedPorfolioNameStateFlow.value,
                         stockOrder = stockOrder
                     )
                     Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT)

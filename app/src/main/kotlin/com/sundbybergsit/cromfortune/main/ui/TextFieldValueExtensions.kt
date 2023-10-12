@@ -19,7 +19,7 @@ fun TextFieldValue.validateStockQuantity(
     when {
         !homeViewModel.hasNumberOfStocks(
             context = context,
-            portfolioName = homeViewModel.selectedPorfolioNameFlow.value,
+            portfolioName = homeViewModel.selectedPorfolioNameStateFlow.value,
             stockName = stockName,
             quantity = text.toInt()
         ) -> {

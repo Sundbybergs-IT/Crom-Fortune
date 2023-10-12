@@ -180,7 +180,7 @@ open class StockDataRetrievalCoroutineWorker(val context: Context, workerParamet
     }
 
     private fun isRefreshRequired(): Boolean {
-        return StockPriceRepository.stockPrices.value == null
+        return StockPriceRepository.stockPricesStateFlow.value.stockPrices.isEmpty()
     }
 
 }
