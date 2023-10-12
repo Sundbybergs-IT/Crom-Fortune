@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.work.*
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
-import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -25,8 +24,14 @@ class CromFortuneApp : Application(), Configuration.Provider {
         StockMuteSettingsRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
         createDataIfMissing(Databases.PORTFOLIO_DB_NAME)
-        migrateOldData(fromDb = "Stocks", toDb = HomeViewModel.DEFAULT_PORTFOLIO_NAME)
-        migrateOldData(fromDb = "SPLITS", toDb = HomeViewModel.DEFAULT_PORTFOLIO_NAME + "-splits")
+        migrateOldData(fromDb = "Stocks", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
+        migrateOldData(fromDb = "SPLITS", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME + "-splits")
+        PortfolioRepository.init(
+            getSharedPreferences(
+                Databases.PORTFOLIO_DB_NAME,
+                Context.MODE_PRIVATE
+            )
+        )
         retrieveDataInBackground(workManager)
     }
 
@@ -34,7 +39,8 @@ class CromFortuneApp : Application(), Configuration.Provider {
         val sharedPreferences = getSharedPreferences(db, Context.MODE_PRIVATE)
         if (sharedPreferences.all.isEmpty()) {
             sharedPreferences.edit().putStringSet(
-                Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET, mutableSetOf(HomeViewModel.DEFAULT_PORTFOLIO_NAME, HomeViewModel.CROM_PORTFOLIO_NAME)
+                Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET,
+                mutableSetOf(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, PortfolioRepository.CROM_PORTFOLIO_NAME)
             ).apply()
         }
     }
@@ -80,7 +86,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
         Configuration.Builder()
             .setExecutor(Executors.newSingleThreadExecutor())
             .setMinimumLoggingLevel(Log.INFO)
-            .setWorkerFactory(StockRetrievalWorkerFactory())
+            .setWorkerFactory(StockRetrievalWorkerFactory(PortfolioRepository))
             .build()
 
 }

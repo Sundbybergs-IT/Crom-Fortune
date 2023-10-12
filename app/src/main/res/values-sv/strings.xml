@@ -77,8 +77,8 @@
     <string name="home_title">Hem</string>
 
     <string name="notification_channel_name">Crom Fortune-händelser</string>
-    <string name="notification_recommendation_body_buy">Du rekommenderas att köpa %1$d av %2$s till %3$s %4$s (courtage %5$d SEK)</string>
-    <string name="notification_recommendation_body_sell">Du rekommenderas att sälja %1$d av %2$s till %3$s %4$s (courtage %5$d SEK)</string>
+    <string name="notification_recommendation_body_buy">%1$s rekommenderas att köpa %2$d av %3$s till %4$s %5$s (courtage %6$d SEK)</string>
+    <string name="notification_recommendation_body_sell">%1$s rekommenderas att sälja %2$d av %3$s till %4$s %5$s (courtage %6$d SEK)</string>
     <string name="notification_recommendation_title">Rekommendation</string>
     <string name="notifications_empty">Det finns inga notifieringar</string>
     <string name="notifications_title">Notifieringar</string>

@@ -8,12 +8,12 @@ import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1Algori
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.TAG
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
-import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -33,7 +33,7 @@ class DashboardViewModel : ViewModel() {
             lastUpdated = timestamp
             viewModelScope.launch {
                 val repository =
-                    StockEventRepository(context = context, portfolioName = HomeViewModel.DEFAULT_PORTFOLIO_NAME)
+                    StockEventRepository(context = context, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
                 val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator()
                     .getScore(
                         recommendationAlgorithm =

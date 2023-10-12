@@ -43,6 +43,7 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.main.LoadValueFromParameterLaunchedEffect
+import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.contentDescription
 import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
@@ -103,19 +104,14 @@ fun PortfolioAddAlertDialog(
                     val inputToValidate = portfolioNameMutableState.value
                     try {
                         when (inputToValidate.text) {
-                            "" -> {
-                                ValidatorException()
-                            }
-                            HomeViewModel.CROM_PORTFOLIO_NAME -> {
-                                ValidatorException()
-                            }
-                            HomeViewModel.DEFAULT_PORTFOLIO_NAME -> {
-                                ValidatorException()
-                            }
+                            "" -> ValidatorException()
+                            PortfolioRepository.CROM_PORTFOLIO_NAME -> ValidatorException()
+                            PortfolioRepository.DEFAULT_PORTFOLIO_NAME -> ValidatorException()
+                            // FIXME: Should also check for already used names
                         }
                         onSavePortfolio.invoke(inputToValidate.text)
                         onDismiss.invoke()
-                    } catch (e: ValidatorException ) {
+                    } catch (e: ValidatorException) {
                         // Shit happens
                     }
                 })
@@ -129,7 +125,8 @@ fun RegisterSellStockAlertDialog(
     stockSymbolParam: String? = null,
     onDismiss: () -> Unit,
     onSave: (StockOrder) -> Unit,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    portfolioRepository : PortfolioRepository,
 ) {
     val myCalendar = Calendar.getInstance()
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
@@ -329,6 +326,7 @@ fun RegisterSellStockAlertDialog(
                             errorMutableState = stockQuantityErrorMutableState,
                             errorMessageMutableState = stockQuantityErrorMessageMutableState,
                             stockName = stockSymbol,
+                            portfolioRepository = portfolioRepository,
                             homeViewModel = homeViewModel
                         )
                         priceMutableState.value.validateDouble(

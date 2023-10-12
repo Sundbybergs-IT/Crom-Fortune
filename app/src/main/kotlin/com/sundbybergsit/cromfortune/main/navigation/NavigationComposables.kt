@@ -89,9 +89,9 @@ import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BottomSheetContent
 import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
-import com.sundbybergsit.cromfortune.main.Databases
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.LeafScreen
+import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.ShowSnackbarLaunchedEffect
 import com.sundbybergsit.cromfortune.main.UpdateTimePickerLaunchedEffect
@@ -130,10 +130,10 @@ import java.util.Locale
 private const val DATE_FORMAT = "MM/dd/yyyy"
 
 @Composable
-internal fun AppNavigation(navController: NavHostController) {
+internal fun AppNavigation(navController: NavHostController, portfolioRepository: PortfolioRepository) {
     val bottomSheetNavigator = rememberBottomSheetNavigator()
     navController.navigatorProvider += bottomSheetNavigator
-    AddDialogs(dialogHandler = DialogHandler)
+    AddDialogs(dialogHandler = DialogHandler, portfolioRepository = portfolioRepository)
     ModalBottomSheetLayout(bottomSheetNavigator = bottomSheetNavigator) {
         val snackbarHostState = remember { SnackbarHostState() }
         val view = LocalView.current
@@ -217,10 +217,10 @@ internal fun AppNavigation(navController: NavHostController) {
                     popEnterTransition = { defaultCromPopEnterTransition() },
                     popExitTransition = { defaultCromPopExitTransition() },
                 ) {
-                    addHomeTopLevel(navController = navController)
-                    addDashboardTopLevel(navController = navController)
-                    addNotificationsTopLevel(navController = navController)
-                    addSettingsTopLevel(navController = navController)
+                    addHomeTopLevel(navController = navController, portfolioRepository = portfolioRepository)
+                    addDashboardTopLevel(navController = navController, portfolioRepository = portfolioRepository)
+                    addNotificationsTopLevel(navController = navController, portfolioRepository = portfolioRepository)
+                    addSettingsTopLevel(navController = navController, portfolioRepository = portfolioRepository)
                 }
             }
         }
@@ -230,6 +230,7 @@ internal fun AppNavigation(navController: NavHostController) {
 @Composable
 fun AddDialogs(
     dialogHandler: DialogHandler,
+    portfolioRepository: PortfolioRepository,
     selectedDaysMutableState: MutableState<Set<DayOfWeek>> = remember { mutableStateOf(setOf()) },
     fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) },
     toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
@@ -487,19 +488,14 @@ fun AddDialogs(
         is DialogHandler.DialogViewState.ShowBuyStockDialog -> {
             val localContext = LocalContext.current
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-                HomeViewModelFactory(
-                    portfolioSharedPreferences = localContext.getSharedPreferences(
-                        Databases.PORTFOLIO_DB_NAME,
-                        Context.MODE_PRIVATE
-                    )
-                )
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
             RegisterBuyStockAlertDialog(onDismiss = {
                 dialogHandler.dismissDialog()
             }, stockSymbolParam = dialogViewState.stockSymbol) { stockOrder ->
                 homeViewModel.save(
                     context = localContext,
-                    portfolioName = homeViewModel.selectedPorfolioNameStateFlow.value,
+                    portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.value,
                     stockOrder = stockOrder
                 )
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
@@ -509,12 +505,7 @@ fun AddDialogs(
         is DialogHandler.DialogViewState.ShowSellStockDialog -> {
             val localContext = LocalContext.current
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-                HomeViewModelFactory(
-                    portfolioSharedPreferences = localContext.getSharedPreferences(
-                        Databases.PORTFOLIO_DB_NAME,
-                        Context.MODE_PRIVATE
-                    )
-                )
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
             RegisterSellStockAlertDialog(
                 onDismiss = {
@@ -523,25 +514,21 @@ fun AddDialogs(
                 onSave = { stockOrder ->
                     homeViewModel.save(
                         context = localContext,
-                        portfolioName = homeViewModel.selectedPorfolioNameStateFlow.value,
+                        portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.value,
                         stockOrder = stockOrder
                     )
                     Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT)
                         .show()
                 },
-                homeViewModel = homeViewModel
+                homeViewModel = homeViewModel,
+                portfolioRepository = portfolioRepository,
             )
         }
 
         is DialogHandler.DialogViewState.ShowRegisterSplitStockDialog -> {
             val localContext = LocalContext.current
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-                HomeViewModelFactory(
-                    portfolioSharedPreferences = localContext.getSharedPreferences(
-                        Databases.PORTFOLIO_DB_NAME,
-                        Context.MODE_PRIVATE
-                    )
-                )
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
             RegisterSplitStockAlertDialog(
                 onDismiss = { DialogHandler.dismissDialog() }, stockSymbolParam = dialogViewState.stockSymbol
@@ -554,12 +541,7 @@ fun AddDialogs(
         is DialogHandler.DialogViewState.ShowAddPortfolio -> {
             val localContext = LocalContext.current
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-                HomeViewModelFactory(
-                    portfolioSharedPreferences = localContext.getSharedPreferences(
-                        Databases.PORTFOLIO_DB_NAME,
-                        Context.MODE_PRIVATE
-                    )
-                )
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
             PortfolioAddAlertDialog(onDismiss = { DialogHandler.dismissDialog() }) { portfolioName ->
                 homeViewModel.savePortfolio(context = localContext, portfolioName = portfolioName)
@@ -735,49 +717,55 @@ internal fun StockOrderRow(
     }
 }
 
-private fun NavGraphBuilder.addHomeTopLevel(navController: NavHostController) {
-    addHome(navController = navController)
+private fun NavGraphBuilder.addHomeTopLevel(
+    navController: NavHostController,
+    portfolioRepository: PortfolioRepository
+) {
+    addHome(navController = navController, portfolioRepository = portfolioRepository)
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
-    addHomeBottomSheet()
-    addHomeAllStocksBottomSheet()
+    addHomeBottomSheet(portfolioRepository = portfolioRepository)
+    addHomeAllStocksBottomSheet(portfolioRepository = portfolioRepository)
     addHomeStockBottomSheet()
 }
 
-private fun NavGraphBuilder.addDashboardTopLevel(navController: NavHostController) {
-    addHome(navController = navController)
+private fun NavGraphBuilder.addDashboardTopLevel(
+    navController: NavHostController,
+    portfolioRepository: PortfolioRepository
+) {
+    addHome(navController = navController, portfolioRepository = portfolioRepository)
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
 }
 
-private fun NavGraphBuilder.addNotificationsTopLevel(navController: NavHostController) {
-    addHome(navController = navController)
+private fun NavGraphBuilder.addNotificationsTopLevel(
+    navController: NavHostController,
+    portfolioRepository: PortfolioRepository
+) {
+    addHome(navController = navController, portfolioRepository = portfolioRepository)
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
     addNotificationsBottomSheet()
 }
 
-private fun NavGraphBuilder.addSettingsTopLevel(navController: NavHostController) {
-    addHome(navController = navController)
+private fun NavGraphBuilder.addSettingsTopLevel(
+    navController: NavHostController,
+    portfolioRepository: PortfolioRepository
+) {
+    addHome(navController = navController, portfolioRepository = portfolioRepository)
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
     addSettingsBottomSheet()
 }
 
-private fun NavGraphBuilder.addHome(navController: NavHostController) {
+private fun NavGraphBuilder.addHome(navController: NavHostController, portfolioRepository: PortfolioRepository) {
     composable(route = Screen.Home.route) {
-        val localContext = LocalContext.current
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory(
-                portfolioSharedPreferences = localContext.getSharedPreferences(
-                    Databases.PORTFOLIO_DB_NAME,
-                    Context.MODE_PRIVATE
-                )
-            )
+            HomeViewModelFactory(portfolioRepository = portfolioRepository)
         })
         Home(viewModel = homeViewModel, onNavigateTo = { route -> navController.navigate(route) })
     }
@@ -811,19 +799,14 @@ private fun NavGraphBuilder.addSettings(navController: NavHostController) {
     }
 }
 
-private fun NavGraphBuilder.addHomeBottomSheet() {
+private fun NavGraphBuilder.addHomeBottomSheet(portfolioRepository: PortfolioRepository) {
     bottomSheet(route = LeafScreen.BottomSheetsHome.route) {
-        val context = LocalContext.current
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory(
-                portfolioSharedPreferences = context.getSharedPreferences(
-                    Databases.PORTFOLIO_DB_NAME,
-                    Context.MODE_PRIVATE
-                )
-            )
+            HomeViewModelFactory(portfolioRepository = portfolioRepository)
         })
         BottomSheetContent {
             HomeItems(
+                portfolioRepository = portfolioRepository,
                 homeViewModel = homeViewModel,
                 onBuy = { DialogHandler.showBuyStockDialog() },
                 onSell = { DialogHandler.showSellStockDialog() },
@@ -834,7 +817,7 @@ private fun NavGraphBuilder.addHomeBottomSheet() {
     }
 }
 
-private fun NavGraphBuilder.addHomeAllStocksBottomSheet() {
+private fun NavGraphBuilder.addHomeAllStocksBottomSheet(portfolioRepository: PortfolioRepository) {
     bottomSheet(
         route = LeafScreen.BottomSheetsHomeAllStocks.route,
         arguments = listOf(
@@ -845,14 +828,8 @@ private fun NavGraphBuilder.addHomeAllStocksBottomSheet() {
     ) { backStackEntry ->
         val arguments = checkNotNull(backStackEntry.arguments)
         val profile = checkNotNull(arguments.getString("profile"))
-        val localContext = LocalContext.current
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory(
-                portfolioSharedPreferences = localContext.getSharedPreferences(
-                    Databases.PORTFOLIO_DB_NAME,
-                    Context.MODE_PRIVATE
-                )
-            )
+            HomeViewModelFactory(portfolioRepository = portfolioRepository)
         })
         val onSortNameAscending = { homeViewModel.sortNameAscending(profile) }
         val onSortNameDescending = { homeViewModel.sortNameDescending(profile) }
@@ -948,6 +925,7 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
 
 @Composable
 private fun HomeItems(
+    portfolioRepository: PortfolioRepository,
     onBuy: () -> Unit,
     onSell: () -> Unit,
     onSplit: () -> Unit,
@@ -955,7 +933,7 @@ private fun HomeItems(
     homeViewModel: HomeViewModel
 ) {
     val portfoliosState = homeViewModel.portfoliosStateFlow.collectAsState()
-    val currentPortfolioNameState = homeViewModel.selectedPorfolioNameStateFlow.collectAsState()
+    val currentPortfolioNameState = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState()
     BottomSheetMenuItem(
         onClick = onBuy,
         text = stringResource(id = R.string.action_stock_buy),
