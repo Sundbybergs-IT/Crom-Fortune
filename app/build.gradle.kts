@@ -55,8 +55,6 @@ dependencies {
     implementation(libs.androidxLifecycleRuntime)
     implementation(libs.androidxLifecycleViewmodel)
 
-
-
     implementation(libs.googlePlayAppUpdate)
     implementation(libs.googlePlayReview)
 
