@@ -87,24 +87,27 @@ fun TextFieldValue.validateDate(
     errorMutableState: MutableState<Boolean>,
     errorMessageMutableState: MutableState<String>, pattern: String
 ) {
-    when {
-        text.isEmpty() -> {
-            errorMutableState.value = true
-            errorMessageMutableState.value = context.getString(R.string.generic_error_empty)
-            throw ValidatorException()
-        }
+    if (text.isEmpty()) {
+        errorMutableState.value = true
+        errorMessageMutableState.value = context.getString(R.string.generic_error_empty)
+        throw ValidatorException()
+    }
 
-        SimpleDateFormat(pattern, Locale.getDefault()).parse(text) == null -> {
+    try {
+        val date = SimpleDateFormat(pattern, Locale.getDefault()).parse(text)
+        if (date == null) {
             errorMutableState.value = true
             errorMessageMutableState.value = context.getString(R.string.generic_error_invalid_date)
-            throw ValidatorException()
+            throw IllegalStateException()
         }
-
-        else -> {
-            errorMutableState.value = false
-            errorMessageMutableState.value = ""
-        }
+    } catch (e: Exception) {
+        errorMutableState.value = true
+        errorMessageMutableState.value = context.getString(R.string.generic_error_invalid_date)
+        throw ValidatorException()
     }
+
+    errorMutableState.value = false
+    errorMessageMutableState.value = ""
 }
 
 fun TextFieldValue.validateDouble(
