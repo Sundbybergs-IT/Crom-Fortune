@@ -813,8 +813,18 @@ private fun NavGraphBuilder.addSettings(navController: NavHostController) {
 
 private fun NavGraphBuilder.addHomeBottomSheet() {
     bottomSheet(route = LeafScreen.BottomSheetsHome.route) {
+        val context = LocalContext.current
+        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+            HomeViewModelFactory(
+                portfolioSharedPreferences = context.getSharedPreferences(
+                    Databases.PORTFOLIO_DB_NAME,
+                    Context.MODE_PRIVATE
+                )
+            )
+        })
         BottomSheetContent {
             HomeItems(
+                homeViewModel = homeViewModel,
                 onBuy = { DialogHandler.showBuyStockDialog() },
                 onSell = { DialogHandler.showSellStockDialog() },
                 onSplit = { DialogHandler.showSplitStockDialog() },
@@ -937,18 +947,29 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
 }
 
 @Composable
-private fun HomeItems(onBuy: () -> Unit, onSell: () -> Unit, onSplit: () -> Unit, onAddPortfolio: () -> Unit) {
+private fun HomeItems(
+    onBuy: () -> Unit,
+    onSell: () -> Unit,
+    onSplit: () -> Unit,
+    onAddPortfolio: () -> Unit,
+    homeViewModel: HomeViewModel
+) {
+    val portfoliosState = homeViewModel.portfoliosStateFlow.collectAsState()
+    val currentPortfolioNameState = homeViewModel.selectedPorfolioNameStateFlow.collectAsState()
     BottomSheetMenuItem(
         onClick = onBuy,
-        text = stringResource(id = R.string.action_stock_buy)
+        text = stringResource(id = R.string.action_stock_buy),
+        enabled = portfoliosState.value[currentPortfolioNameState.value]?.readOnly == false
     )
     BottomSheetMenuItem(
         onClick = onSell,
-        text = stringResource(id = R.string.action_stock_sell)
+        text = stringResource(id = R.string.action_stock_sell),
+        enabled = portfoliosState.value[currentPortfolioNameState.value]?.readOnly == false
     )
     BottomSheetMenuItem(
         onClick = onSplit,
-        text = stringResource(id = R.string.action_stock_add_split)
+        text = stringResource(id = R.string.action_stock_add_split),
+        enabled = portfoliosState.value[currentPortfolioNameState.value]?.readOnly == false
     )
     BottomSheetMenuItem(
         onClick = onAddPortfolio,
