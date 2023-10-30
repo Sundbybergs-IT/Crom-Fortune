@@ -221,7 +221,7 @@ class HomeViewModel(
     }
 
     fun hasNumberOfStocks(context: Context, portfolioName: String, stockName: String, quantity: Int): Boolean {
-        return StockOrderRepository(context, portfolioName = portfolioName).count(stockName) >= quantity
+        return StockEventRepository(context, portfolioName = portfolioName).countCurrent(stockName) >= quantity
     }
 
     fun confirmRemove(context: Context, stockName: String) {
