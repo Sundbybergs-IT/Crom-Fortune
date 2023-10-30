@@ -646,7 +646,7 @@ internal fun StockOrderRow(
                     if (!isStockSplit) {
                         val stockOrderRepository = StockOrderRepository(
                             context,
-                            porfolioName = "Stocks"
+                            portfolioName = "Stocks"
                         )
                         stockOrderRepository.remove(stockOrder)
                     }
