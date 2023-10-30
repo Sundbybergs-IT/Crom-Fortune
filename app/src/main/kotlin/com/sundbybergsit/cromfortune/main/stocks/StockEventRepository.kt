@@ -12,7 +12,7 @@ import com.sundbybergsit.cromfortune.main.Taggable
 class StockEventRepository(
     context: Context,
     portfolioName : String,
-    private val stockOrderApi: StockOrderApi = StockOrderRepository(context, porfolioName = portfolioName),
+    private val stockOrderApi: StockOrderApi = StockOrderRepository(context, portfolioName = portfolioName),
     private val stockSplitApi: StockSplitApi = StockSplitRepository(context, porfolioName = portfolioName)
 ) : StockEventApi, Taggable {
 

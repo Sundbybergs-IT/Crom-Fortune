@@ -176,7 +176,7 @@ class HomeViewModel(
     fun save(context: Context, portfolioName: String, stockOrder: StockOrder) {
         Log.i(TAG, "save(portfolioName=[$portfolioName], stockOrder=[$stockOrder])")
         val stockOrderApi: StockOrderApi =
-            StockOrderRepository(context = context, porfolioName = portfolioName)
+            StockOrderRepository(context = context, portfolioName = portfolioName)
         if (stockOrderApi.list(stockOrder.name).isNotEmpty()) {
             val existingOrders = stockOrderApi.list(stockOrder.name)
             stockOrderApi.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
@@ -221,12 +221,12 @@ class HomeViewModel(
     }
 
     fun hasNumberOfStocks(context: Context, portfolioName: String, stockName: String, quantity: Int): Boolean {
-        return StockOrderRepository(context, porfolioName = portfolioName).count(stockName) >= quantity
+        return StockOrderRepository(context, portfolioName = portfolioName).count(stockName) >= quantity
     }
 
     fun confirmRemove(context: Context, stockName: String) {
         val currentPortfolio = PortfolioRepository.selectedPortfolioNameStateFlow.value
-        val stockOrderApi: StockOrderApi = StockOrderRepository(context, porfolioName = currentPortfolio)
+        val stockOrderApi: StockOrderApi = StockOrderRepository(context, portfolioName = currentPortfolio)
         stockOrderApi.remove(stockName)
         refresh(context)
     }
