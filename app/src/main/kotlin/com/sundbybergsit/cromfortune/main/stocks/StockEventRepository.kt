@@ -11,10 +11,32 @@ import com.sundbybergsit.cromfortune.main.Taggable
 
 class StockEventRepository(
     context: Context,
-    portfolioName : String,
+    portfolioName: String,
     private val stockOrderApi: StockOrderApi = StockOrderRepository(context, portfolioName = portfolioName),
     private val stockSplitApi: StockSplitApi = StockSplitRepository(context, porfolioName = portfolioName)
 ) : StockEventApi, Taggable {
+
+    override fun countCurrent(stockSymbol: String): Int {
+        val stockEvents = list(stockSymbol).toMutableList().sortedBy { event -> event.dateInMillis }
+        var count = 0
+        for (event in stockEvents) {
+            event.stockOrder?.let {
+                when (it.orderAction) {
+                    "Buy" -> count += it.quantity
+                    "Sell" -> count -= it.quantity
+                    else -> error("Illegal order action: [${it.orderAction}]")
+                }
+            }
+            event.stockSplit?.let {
+                if (it.reverse) {
+                    count /= it.quantity
+                } else {
+                    count *= it.quantity
+                }
+            }
+        }
+        return count
+    }
 
     override fun listOfStockNames(): Iterable<String> {
         return stockOrderApi.listOfStockNames()
