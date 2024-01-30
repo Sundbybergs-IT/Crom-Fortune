@@ -11,6 +11,7 @@ data class StockPrice(val stockSymbol: String, val currency: Currency, val price
             Triple("AC.TO", "Air Canada", "CAD"),
             Triple("ACST", "Acasti Pharma Inc.", "USD"),
             Triple("ANOT.ST", "Anoto Group AB (publ)", "SEK"),
+            Triple("AIR.PA", "Airbus SE", "EUR"),
             Triple("ASAB.ST", "Advanced Soltech Sweden AB (publ)", "SEK"),
             Triple("ASSA-B.ST", "ASSA ABLOY AB (publ)", "SEK"),
             Triple("AZELIO.ST", "Azelio AB (publ)", "SEK"),
