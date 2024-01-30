@@ -6,7 +6,12 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.work.*
+import androidx.work.Configuration
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import java.time.Instant
@@ -15,10 +20,18 @@ import java.util.concurrent.TimeUnit
 
 class CromFortuneApp : Application(), Configuration.Provider {
 
+    override val workManagerConfiguration: Configuration =
+        Configuration.Builder()
+            .setExecutor(Executors.newSingleThreadExecutor())
+            .setMinimumLoggingLevel(Log.INFO)
+            .setWorkerFactory(StockRetrievalWorkerFactory())
+            .build()
+
     var lastRefreshed: Instant = Instant.ofEpochMilli(0L)
 
     override fun onCreate() {
         super.onCreate()
+        System.setProperty("yahoofinance.connection.timeout", "60000")
         System.setProperty("http.agent", "");
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
@@ -82,12 +95,5 @@ class CromFortuneApp : Application(), Configuration.Provider {
             stockRetrievalWorkRequest
         )
     }
-
-    override fun getWorkManagerConfiguration(): Configuration =
-        Configuration.Builder()
-            .setExecutor(Executors.newSingleThreadExecutor())
-            .setMinimumLoggingLevel(Log.INFO)
-            .setWorkerFactory(StockRetrievalWorkerFactory())
-            .build()
 
 }

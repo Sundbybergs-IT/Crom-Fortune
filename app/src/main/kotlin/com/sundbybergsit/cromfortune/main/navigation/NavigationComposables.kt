@@ -85,7 +85,9 @@ import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BottomSheetContent
 import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
@@ -510,7 +512,8 @@ fun AddDialogs(
             RegisterSellStockAlertDialog(
                 onDismiss = {
                     dialogHandler.dismissDialog()
-                }, stockSymbolParam = dialogViewState.stockSymbol,
+                },
+                stockSymbolParam = dialogViewState.stockSymbol,
                 onSave = { stockOrder ->
                     homeViewModel.save(
                         context = localContext,
@@ -629,26 +632,25 @@ internal fun StockOrderRow(
                 )
             }, confirmButton = {
                 TextButton(onClick = {
-                    val stockSplitRepository = StockSplitRepository(
+                    val stockSplitApi: StockSplitApi = StockSplitRepository(
                         context = context,
-                        porfolioName = "SPLITS"
+                        porfolioName = PortfolioRepository.selectedPortfolioNameStateFlow.value
                     )
-                    val listOfSplits = stockSplitRepository.list(stockOrder.name)
+                    val listOfSplits = stockSplitApi.list(stockOrder.name)
                     var isStockSplit = false
                     for (split in listOfSplits) {
                         if (split.dateInMillis == stockOrder.dateInMillis) {
                             Log.i("DeleteStockOrderDialogFragment", "Assuming stock split... Removing.")
                             // Assume that this entry is a fake stock order and really is a split
-                            stockSplitRepository.remove(split)
+                            stockSplitApi.remove(split)
                             isStockSplit = true
                         }
                     }
                     if (!isStockSplit) {
-                        val stockOrderRepository = StockOrderRepository(
-                            context,
-                            portfolioName = "Stocks"
-                        )
-                        stockOrderRepository.remove(stockOrder)
+                        val currentPortfolio = PortfolioRepository.selectedPortfolioNameStateFlow.value
+                        val stockOrderApi: StockOrderApi =
+                            StockOrderRepository(context, portfolioName = currentPortfolio)
+                        stockOrderApi.remove(stockOrder)
                     }
                     showDeleteDialog.value = false
                 }) {
