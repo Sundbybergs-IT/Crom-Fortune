@@ -6,7 +6,12 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.work.*
+import androidx.work.Configuration
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import java.time.Instant
@@ -19,6 +24,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        System.setProperty("yahoofinance.connection.timeout", "60000")
         System.setProperty("http.agent", "");
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
