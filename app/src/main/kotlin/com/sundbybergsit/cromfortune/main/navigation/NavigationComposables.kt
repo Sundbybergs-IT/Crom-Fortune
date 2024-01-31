@@ -237,6 +237,7 @@ fun AddDialogs(
     fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) },
     toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
 ) {
+    val portfolioNameState = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState()
     when (val dialogViewState = dialogHandler.dialogViewState.collectAsState().value) {
         is DialogHandler.DialogViewState.ShowDeleteDialog -> {
             val context: Context = LocalContext.current
@@ -492,12 +493,12 @@ fun AddDialogs(
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
-            RegisterBuyStockAlertDialog(onDismiss = {
+            RegisterBuyStockAlertDialog(portfolioNameState = portfolioNameState, onDismiss = {
                 dialogHandler.dismissDialog()
             }, stockSymbolParam = dialogViewState.stockSymbol) { stockOrder ->
                 homeViewModel.save(
                     context = localContext,
-                    portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.value,
+                    portfolioName = portfolioNameState.value,
                     stockOrder = stockOrder
                 )
                 Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
@@ -510,6 +511,7 @@ fun AddDialogs(
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
             RegisterSellStockAlertDialog(
+                portfolioNameState = portfolioNameState,
                 onDismiss = {
                     dialogHandler.dismissDialog()
                 },
@@ -517,7 +519,7 @@ fun AddDialogs(
                 onSave = { stockOrder ->
                     homeViewModel.save(
                         context = localContext,
-                        portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.value,
+                        portfolioName = portfolioNameState.value,
                         stockOrder = stockOrder
                     )
                     Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT)
@@ -534,6 +536,7 @@ fun AddDialogs(
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
             RegisterSplitStockAlertDialog(
+                portfolioNameState = portfolioNameState,
                 onDismiss = { DialogHandler.dismissDialog() }, stockSymbolParam = dialogViewState.stockSymbol
             ) { stockSplit ->
                 homeViewModel.save(context = localContext, stockSplit = stockSplit)
