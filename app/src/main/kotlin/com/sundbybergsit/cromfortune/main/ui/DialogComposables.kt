@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -122,11 +123,12 @@ fun PortfolioAddAlertDialog(
 
 @Composable
 fun RegisterSellStockAlertDialog(
+    portfolioNameState: State<String>,
     stockSymbolParam: String? = null,
     onDismiss: () -> Unit,
     onSave: (StockOrder) -> Unit,
     homeViewModel: HomeViewModel,
-    portfolioRepository : PortfolioRepository,
+    portfolioRepository: PortfolioRepository,
 ) {
     val myCalendar = Calendar.getInstance()
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
@@ -162,14 +164,22 @@ fun RegisterSellStockAlertDialog(
                 .verticalScroll(state = scrollState)
         ) {
             val (titleRef, dateRef, stockQuantityRef, stockNameRef, stockPriceRef, stockCurrencyRef, commissionFeeRef, buttonsRef) = createRefs()
-            Text(
-                modifier = Modifier
-                    .padding(all = 16.dp)
-                    .constrainAs(titleRef) {
-                        top.linkTo(parent.top)
-                    }, text = stringResource(id = R.string.action_stock_sell),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(modifier = Modifier
+                .padding(all = 16.dp)
+                .constrainAs(titleRef) {
+                    top.linkTo(parent.top)
+                }) {
+                Text(
+                    text = stringResource(id = R.string.action_stock_sell),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = stringResource(R.string.generic_portfolio_x, portfolioNameState.value),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(dateRef) {
                     top.linkTo(titleRef.bottom)
@@ -366,6 +376,7 @@ fun RegisterSellStockAlertDialog(
 
 @Composable
 fun RegisterSplitStockAlertDialog(
+    portfolioNameState: State<String>,
     stockSymbolParam: String? = null,
     onDismiss: () -> Unit,
     onSave: (StockSplit) -> Unit
@@ -409,14 +420,22 @@ fun RegisterSplitStockAlertDialog(
                 .verticalScroll(state = scrollState)
         ) {
             val (titleRef, dateRef, splitSwitchRef, stockQuantityRef, stockNameRef, buttonsRef) = createRefs()
-            Text(
-                modifier = Modifier
-                    .padding(all = 16.dp)
-                    .constrainAs(titleRef) {
-                        top.linkTo(parent.top)
-                    }, text = stringResource(id = R.string.action_stock_add_split),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(modifier = Modifier
+                .padding(all = 16.dp)
+                .constrainAs(titleRef) {
+                    top.linkTo(parent.top)
+                }) {
+                Text(
+                    text = stringResource(id = R.string.action_stock_add_split),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = stringResource(R.string.generic_portfolio_x, portfolioNameState.value),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(dateRef) {
                     top.linkTo(titleRef.bottom)
@@ -556,6 +575,7 @@ fun RegisterSplitStockAlertDialog(
 
 @Composable
 fun RegisterBuyStockAlertDialog(
+    portfolioNameState: State<String>,
     stockSymbolParam: String? = null,
     onDismiss: () -> Unit,
     onSave: (StockOrder) -> Unit
@@ -597,14 +617,22 @@ fun RegisterBuyStockAlertDialog(
                 .verticalScroll(state = scrollState)
         ) {
             val (titleRef, dateRef, stockQuantityRef, stockNameRef, stockPriceRef, stockCurrencyRef, commissionFeeRef, buttonsRef) = createRefs()
-            Text(
-                modifier = Modifier
-                    .padding(all = 16.dp)
-                    .constrainAs(titleRef) {
-                        top.linkTo(parent.top)
-                    }, text = stringResource(id = R.string.action_stock_buy),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(modifier = Modifier
+                .padding(all = 16.dp)
+                .constrainAs(titleRef) {
+                    top.linkTo(parent.top)
+                }) {
+                Text(
+                    text = stringResource(id = R.string.action_stock_buy),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = stringResource(R.string.generic_portfolio_x, portfolioNameState.value),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(dateRef) {
                     top.linkTo(titleRef.bottom)
