@@ -409,9 +409,11 @@ private fun StockOrderAggregateItem(
 ) {
     val stockPrice = stockPriceApi.getStockPrice(item.stockSymbol)
     val profit = item.getProfit(stockPrice.price)
-    val format: NumberFormat = NumberFormat.getCurrencyInstance()
-    format.currency = item.currency
-    format.maximumFractionDigits = 2
+    val percentageFormat: NumberFormat = NumberFormat.getPercentInstance()
+    val currencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
+    currencyFormat.currency = item.currency
+    currencyFormat.maximumFractionDigits = 2
+    val growth = profit / (item.getAcquisitionValue() * item.getQuantity())
     Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol, readOnly) }) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -432,7 +434,7 @@ private fun StockOrderAggregateItem(
                         .width(IntrinsicSize.Max)
                 ) {
                     Text(
-                        text = format.format(item.getAcquisitionValue()),
+                        text = currencyFormat.format(item.getAcquisitionValue()),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -443,7 +445,7 @@ private fun StockOrderAggregateItem(
                         .width(IntrinsicSize.Max)
                 ) {
                     Text(
-                        text = format.format(stockPrice.price),
+                        text = currencyFormat.format(stockPrice.price),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold
@@ -454,15 +456,26 @@ private fun StockOrderAggregateItem(
                         .weight(1f)
                         .width(IntrinsicSize.Max)
                 ) {
-                    Text(
-                        text = format.format(profit),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = when (profit.compareTo(0)) {
-                            1 -> Profit
-                            -1 -> Loss
-                            else -> MaterialTheme.colorScheme.onSurface
-                        }
-                    )
+                    Column {
+                        Text(
+                            text = currencyFormat.format(profit),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = when (profit.compareTo(0)) {
+                                1 -> Profit
+                                -1 -> Loss
+                                else -> MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                        Text(
+                            text = percentageFormat.format(growth),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = when (profit.compareTo(0)) {
+                                1 -> Profit
+                                -1 -> Loss
+                                else -> MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                    }
                 }
             }
             if (!readOnly) {
