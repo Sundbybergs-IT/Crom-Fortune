@@ -255,7 +255,7 @@ class HomeViewModel(
 
     fun sortNameAscending(portfolioName: String) {
         _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = mutableMap[portfolioName]!!
+            val oldViewState = checkNotNull(mutableMap[portfolioName])
             val sortedPortfolio = oldViewState.items.sortedBy { item -> item.displayName }
             mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
@@ -263,7 +263,7 @@ class HomeViewModel(
 
     fun sortNameDescending(portfolioName: String) {
         _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = mutableMap[portfolioName]!!
+            val oldViewState = checkNotNull(mutableMap[portfolioName])
             val sortedPortfolio = oldViewState.items.sortedByDescending { item -> item.displayName }
             mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
@@ -271,13 +271,12 @@ class HomeViewModel(
 
     fun sortProfitAscending(portfolioName: String) {
         _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = mutableMap[portfolioName]!!
+            val oldViewState = checkNotNull(mutableMap[portfolioName])
             val sortedPortfolio = oldViewState.items.sortedBy { item ->
-                item.getProfit(
-                    StockPriceRepository.getStockPrice(
-                        item.stockSymbol
-                    ).price
-                )
+                val stockPrice = StockPriceRepository.getStockPrice(item.stockSymbol)
+                stockPrice?.let { nullSafeStockPrice ->
+                    item.getProfit(nullSafeStockPrice.price)
+                }
             }
             mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
@@ -285,13 +284,12 @@ class HomeViewModel(
 
     fun sortProfitDescending(portfolioName: String) {
         _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = mutableMap[portfolioName]!!
+            val oldViewState = checkNotNull(mutableMap[portfolioName])
             val sortedPortfolio = oldViewState.items.sortedByDescending { item ->
-                item.getProfit(
-                    StockPriceRepository.getStockPrice(
-                        item.stockSymbol
-                    ).price
-                )
+                val stockPrice = StockPriceRepository.getStockPrice(item.stockSymbol)
+                stockPrice?.let { nullSafeStockPrice ->
+                    item.getProfit(nullSafeStockPrice.price)
+                }
             }
             mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }

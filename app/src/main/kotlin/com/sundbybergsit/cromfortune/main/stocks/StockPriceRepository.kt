@@ -22,9 +22,8 @@ object StockPriceRepository : StockPriceApi {
         _stockPricesStateFlow.value = ViewState(Instant.now(), stockPrice)
     }
 
-    override fun getStockPrice(stockSymbol: String): StockPrice {
-        return checkNotNull(checkNotNull(stockPricesStateFlow.value).stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol })
-    }
+    override fun getStockPrice(stockSymbol: String): StockPrice? =
+        stockPricesStateFlow.value.stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }
 
     @VisibleForTesting
     fun clear() {

@@ -9,8 +9,8 @@ class StubbedStockPriceApi(private val stockPrices: MutableSet<StockPrice> = mut
         stockPrices.addAll(stockPrice)
     }
 
-    override fun getStockPrice(stockSymbol: String): StockPrice {
-        return checkNotNull(stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol })
+    override fun getStockPrice(stockSymbol: String): StockPrice? {
+        return stockPrices.find { stockPrice -> stockPrice.stockSymbol == stockSymbol }
     }
 
 }

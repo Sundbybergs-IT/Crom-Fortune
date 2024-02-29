@@ -254,11 +254,12 @@ fun StocksHeader(
     for (stockOrderAggregate in stockOrderAggregates) {
         for (currencyRate in currencyRates) {
             if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
-                count += (stockOrderAggregate.getProfit(
-                    stockPriceApi.getStockPrice(
-                        stockOrderAggregate.stockSymbol
-                    ).price
-                )) * currencyRate.rateInSek
+                val stockPrice = stockPriceApi.getStockPrice(stockOrderAggregate.stockSymbol)
+                stockPrice?.let { nullSafeStockPrice ->
+                    count += (stockOrderAggregate.getProfit(
+                        nullSafeStockPrice.price
+                    )) * currencyRate.rateInSek
+                }
                 break
             }
         }
@@ -408,130 +409,132 @@ private fun StockOrderAggregateItem(
     readOnly: Boolean
 ) {
     val stockPrice = stockPriceApi.getStockPrice(item.stockSymbol)
-    val profit = item.getProfit(stockPrice.price)
-    val percentageFormat: NumberFormat = NumberFormat.getPercentInstance()
-    val currencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
-    currencyFormat.currency = item.currency
-    currencyFormat.maximumFractionDigits = 2
-    val growth = profit / (item.getAcquisitionValue() * item.getQuantity())
-    Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol, readOnly) }) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .width(IntrinsicSize.Max)
-                ) {
-                    Text(
-                        text = item.getQuantity().toString(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .width(IntrinsicSize.Max)
-                ) {
-                    Text(
-                        text = currencyFormat.format(item.getAcquisitionValue()),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .width(IntrinsicSize.Max)
-                ) {
-                    Text(
-                        text = currencyFormat.format(stockPrice.price),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .width(IntrinsicSize.Max)
-                ) {
-                    Column {
+    stockPrice?.let { nullSafeStockPrice ->
+        val profit = item.getProfit(nullSafeStockPrice.price)
+        val percentageFormat: NumberFormat = NumberFormat.getPercentInstance()
+        val currencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
+        currencyFormat.currency = item.currency
+        currencyFormat.maximumFractionDigits = 2
+        val growth = profit / (item.getAcquisitionValue() * item.getQuantity())
+        Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol, readOnly) }) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .width(IntrinsicSize.Max)
+                    ) {
                         Text(
-                            text = currencyFormat.format(profit),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = when (profit.compareTo(0)) {
-                                1 -> Profit
-                                -1 -> Loss
-                                else -> MaterialTheme.colorScheme.onSurface
-                            }
+                            text = item.getQuantity().toString(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
                         )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .width(IntrinsicSize.Max)
+                    ) {
                         Text(
-                            text = percentageFormat.format(growth),
+                            text = currencyFormat.format(item.getAcquisitionValue()),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .width(IntrinsicSize.Max)
+                    ) {
+                        Text(
+                            text = currencyFormat.format(stockPrice.price),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
-                            color = when (profit.compareTo(0)) {
-                                1 -> Profit
-                                -1 -> Loss
-                                else -> MaterialTheme.colorScheme.onSurface
-                            }
+                            fontWeight = FontWeight.Bold
                         )
                     }
-                }
-            }
-            if (!readOnly) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 16.dp), horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = {
-                            DialogHandler.showBuyStockDialog(stockSymbol = item.stockSymbol)
-                        }, colors = ButtonDefaults.textButtonColors(
-                            backgroundColor = colorResource(
-                                id = (android.R.color.holo_green_dark)
-                            )
-                        )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .width(IntrinsicSize.Max)
                     ) {
-                        Text(text = stringResource(id = R.string.action_stock_buy_short))
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    TextButton(
-                        onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.stockSymbol) },
-                        colors = ButtonDefaults.textButtonColors(
-                            backgroundColor = colorResource(
-                                id = (android.R.color.holo_red_dark)
+                        Column {
+                            Text(
+                                text = currencyFormat.format(profit),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = when (profit.compareTo(0)) {
+                                    1 -> Profit
+                                    -1 -> Loss
+                                    else -> MaterialTheme.colorScheme.onSurface
+                                }
                             )
-                        )
-                    ) {
-                        Text(text = stringResource(id = R.string.action_stock_sell_short))
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    if (StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
-                            .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.stockSymbol && stockMuteSettings.muted } != null
-                    ) {
-                        IconButton(onClick = {
-                            StockMuteSettingsRepository.unmute(item.stockSymbol)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.NotificationsOff,
-                                contentDescription = "Muted stock",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = {
-                            StockMuteSettingsRepository.mute(item.stockSymbol)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.NotificationsActive,
-                                contentDescription = "Unmuted stock",
-                                tint = MaterialTheme.colorScheme.onSurface,
+                            Text(
+                                text = percentageFormat.format(growth),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = when (profit.compareTo(0)) {
+                                    1 -> Profit
+                                    -1 -> Loss
+                                    else -> MaterialTheme.colorScheme.onSurface
+                                }
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
+                }
+                if (!readOnly) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 16.dp), horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                DialogHandler.showBuyStockDialog(stockSymbol = item.stockSymbol)
+                            }, colors = ButtonDefaults.textButtonColors(
+                                backgroundColor = colorResource(
+                                    id = (android.R.color.holo_green_dark)
+                                )
+                            )
+                        ) {
+                            Text(text = stringResource(id = R.string.action_stock_buy_short))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        TextButton(
+                            onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.stockSymbol) },
+                            colors = ButtonDefaults.textButtonColors(
+                                backgroundColor = colorResource(
+                                    id = (android.R.color.holo_red_dark)
+                                )
+                            )
+                        ) {
+                            Text(text = stringResource(id = R.string.action_stock_sell_short))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        if (StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
+                                .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.stockSymbol && stockMuteSettings.muted } != null
+                        ) {
+                            IconButton(onClick = {
+                                StockMuteSettingsRepository.unmute(item.stockSymbol)
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.NotificationsOff,
+                                    contentDescription = "Muted stock",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = {
+                                StockMuteSettingsRepository.mute(item.stockSymbol)
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.NotificationsActive,
+                                    contentDescription = "Unmuted stock",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                    }
                 }
             }
         }
