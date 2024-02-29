@@ -52,41 +52,45 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
             for (triple in StockPrice.SYMBOLS.iterator()) {
                 val stockSymbol = triple.first
                 val stockV2 =
-                    stocks[stockSymbol] ?: throw IllegalStateException("Cannot find stock symbol: $stockSymbol")
-                val quote = stockV2.getQuote(true)
-                val currency = triple.third
-                val stockPrice = StockPrice(
-                    stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
-                    price = quote.price.toDouble().roundTo(3)
-                )
-                val allPortfolioNamesState = portfolioRepository.portfolioNamesStateFlow.value
-                for (portfolioName in allPortfolioNamesState.filterNot { name -> name == PortfolioRepository.CROM_PORTFOLIO_NAME }) {
-                    val stockEvents = StockEventRepository(context, portfolioName).list(stockSymbol)
-                    val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
-                    if (isStockMuted) {
-                        Log.i(
-                            TAG,
-                            "Skipping recommendation for portfolio [${portfolioName}] for stock [${stockSymbol}] as it has been muted."
-                        )
-                    } else if (stockEvents.isNotEmpty()) {
-                        val recommendation = CromFortuneV1RecommendationAlgorithm(context)
-                            .getRecommendation(
-                                stockPrice = stockPrice,
-                                currencyRateInSek = currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
-                                commissionFee = COMMISSION_FEE,
-                                stockEvents = stockEvents,
-                                timeInMillis = System.currentTimeMillis()
+                    stocks[stockSymbol]
+                if (stockV2 == null) {
+                    Log.e(TAG, "Skipping $stockSymbol as it cannot be found in the Yahoo API.")
+                } else {
+                    val quote = stockV2.getQuote(true)
+                    val currency = triple.third
+                    val stockPrice = StockPrice(
+                        stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
+                        price = quote.price.toDouble().roundTo(3)
+                    )
+                    val allPortfolioNamesState = portfolioRepository.portfolioNamesStateFlow.value
+                    for (portfolioName in allPortfolioNamesState.filterNot { name -> name == PortfolioRepository.CROM_PORTFOLIO_NAME }) {
+                        val stockEvents = StockEventRepository(context, portfolioName).list(stockSymbol)
+                        val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
+                        if (isStockMuted) {
+                            Log.i(
+                                TAG,
+                                "Skipping recommendation for portfolio [${portfolioName}] for stock [${stockSymbol}] as it has been muted."
                             )
-                        if (recommendation != null) {
-                            notifyRecommendation(
-                                context = context,
-                                portfolioName = portfolioName,
-                                recommendation = recommendation
-                            )
+                        } else if (stockEvents.isNotEmpty()) {
+                            val recommendation = CromFortuneV1RecommendationAlgorithm(context)
+                                .getRecommendation(
+                                    stockPrice = stockPrice,
+                                    currencyRateInSek = currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
+                                    commissionFee = COMMISSION_FEE,
+                                    stockEvents = stockEvents,
+                                    timeInMillis = System.currentTimeMillis()
+                                )
+                            if (recommendation != null) {
+                                notifyRecommendation(
+                                    context = context,
+                                    portfolioName = portfolioName,
+                                    recommendation = recommendation
+                                )
+                            }
                         }
                     }
+                    stockPrices.add(stockPrice)
                 }
-                stockPrices.add(stockPrice)
             }
             (context.applicationContext as CromFortuneApp).lastRefreshed = Instant.now()
             StockPriceRepository.put(stockPrices)
