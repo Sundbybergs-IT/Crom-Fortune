@@ -5,6 +5,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_portfolio_add">Add portfolio</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_restart">Restart</string>
     <string name="action_stock_buy">Register stock purchase</string>>
     <string name="action_stock_add_split">Register stock split</string>>
     <string name="action_stock_buy_short">B</string>>

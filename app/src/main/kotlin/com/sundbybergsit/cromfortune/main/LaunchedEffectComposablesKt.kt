@@ -10,6 +10,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -135,11 +136,18 @@ internal fun ShowSnackbarLaunchedEffect(
         coroutineScope.launch {
             dialogHandler.snackbarFlow
                 .collect { snackbar ->
-                    if (!snackbar.isNullOrEmpty()) {
+                    val message = snackbar?.first
+                    val actionPair = snackbar?.second
+                    if (message?.isNotEmpty() == true) {
                         view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                         dialogHandler.acknowledgeSnack()
                         snackbarHostState.currentSnackbarData?.dismiss()
-                        snackbarHostState.showSnackbar(snackbar)
+                        snackbarHostState.showSnackbar(message = message, actionLabel = actionPair?.first)
+                            .let { result ->
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    actionPair?.second?.invoke()
+                                }
+                            }
                     }
                 }
         }

@@ -5,6 +5,7 @@
     <string name="action_delete">Radera</string>
     <string name="action_portfolio_add">Lägg till portfölj</string>
     <string name="action_refresh">Uppdatera</string>
+    <string name="action_restart">Starta om</string>
     <string name="action_stock_add_split">Registrera aktiesplit</string>>
     <string name="action_stock_buy">Registrera aktieköp</string>>
     <string name="action_stock_buy_short">K</string>>

@@ -16,16 +16,16 @@ object DialogHandler {
 
     private const val TAG = "DialogHandler"
 
-    private val _snackbarFlow: MutableStateFlow<String?> = MutableStateFlow(null)
-    val snackbarFlow = _snackbarFlow as StateFlow<String?>
+    private val _snackbarFlow: MutableStateFlow<Pair<String, Pair<String, () -> Unit>?>?> = MutableStateFlow(null)
+    val snackbarFlow = _snackbarFlow as StateFlow<Pair<String, Pair<String, () -> Unit>?>?>
 
     private val _dialogViewState: MutableStateFlow<DialogViewState> = MutableStateFlow(DialogViewState.Dismissed)
 
     val dialogViewState: StateFlow<DialogViewState> = _dialogViewState.asStateFlow()
 
-    fun showSnack(text: String) {
+    fun showSnack(text: String, action: Pair<String,() -> Unit>? = null) {
         Log.i(TAG, "showSnack(text=[${text}])")
-        _snackbarFlow.value = text
+        _snackbarFlow.value = Pair(text, action)
     }
 
     @JvmStatic

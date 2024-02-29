@@ -94,9 +94,16 @@ class MainActivity : ComponentActivity() {
 
         /* Displays the snackbar notification and call to action. */
         private fun popupSnackbarForCompleteUpdate() {
-            DialogHandler.showSnack(activity.getString(R.string.generic_update_completed))
+            DialogHandler.showSnack(
+                text = activity.getString(R.string.generic_update_completed),
+                action = Pair(activity.getString(R.string.action_restart)) {
+                    val appUpdateManager = AppUpdateManagerFactory.create(activity)
+                    appUpdateManager.completeUpdate()
+                }
+            )
         }
 
     }
 
 }
+
