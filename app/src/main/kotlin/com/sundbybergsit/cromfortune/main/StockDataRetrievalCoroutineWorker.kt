@@ -30,10 +30,7 @@ import java.time.LocalTime
 import java.util.Currency
 import kotlin.math.roundToInt
 
-class StockDataRetrievalCoroutineWorker(
-    private val context: Context,
-    workerParameters: WorkerParameters
-) :
+class StockDataRetrievalCoroutineWorker(private val context: Context, workerParameters: WorkerParameters) :
     CoroutineWorker(context, workerParameters) {
 
     companion object {
