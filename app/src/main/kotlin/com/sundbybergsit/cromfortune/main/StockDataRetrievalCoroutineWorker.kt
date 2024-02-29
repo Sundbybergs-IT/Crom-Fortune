@@ -54,7 +54,9 @@ class StockDataRetrievalCoroutineWorker(
             val stockPrices = mutableSetOf<StockPrice>()
             for (triple in StockPrice.SYMBOLS.iterator()) {
                 val stockSymbol = triple.first
-                val quote = (stocks[stockSymbol] ?: error("")).getQuote(true)
+                val stockV2 =
+                    stocks[stockSymbol] ?: throw IllegalStateException("Cannot find stock symbol: $stockSymbol")
+                val quote = stockV2.getQuote(true)
                 val currency = triple.third
                 val stockPrice = StockPrice(
                     stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
