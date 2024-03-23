@@ -19,7 +19,7 @@ class SellStockCommandTest {
         )
         val repository = TestableStockOrderApi(mutableSetOf())
 
-        command.execute(repository = repository)
+        command.execute(item = repository)
 
         assertEquals(expected = 1, actual = repository.count(stockSymbol = stockName))
     }

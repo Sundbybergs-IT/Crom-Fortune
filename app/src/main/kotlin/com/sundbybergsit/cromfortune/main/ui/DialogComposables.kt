@@ -350,7 +350,8 @@ fun RegisterSellStockAlertDialog(
                             errorMessageMutableState = commissionFeeErrorMessageMutableState
                         )
                         val dateAsString = dateMutableState.value.text
-                        val inputDate = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+                        val inputDate =
+                            checkNotNull(SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString))
 
                         val currency = Currency.getInstance(currencyMutableState.value.text)
                         // TODO: Convert commission fee (in SEK) to selected currency

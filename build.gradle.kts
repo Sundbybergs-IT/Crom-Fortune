@@ -46,8 +46,6 @@ subprojects {
 
         properties {
             property("sonar.exclusions", "**/BuildConfig.class,**/R.java,**/R\$*.java,src/main/gen/**/*")
-            property("sonar.sources", "src/main,build.gradle.kts")
-            property("sonar.tests", "src/test")
             property("sonar.coverage.exclusions", "build.gradle.kts")
             property("sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
             property("sonar.junit.reportsPaths", "${buildDir}/test-results/")

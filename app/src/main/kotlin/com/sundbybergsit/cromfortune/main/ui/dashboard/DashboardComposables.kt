@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -88,16 +88,12 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
     )
     val stonkTopMargin: Dp by animateDpAsState(
         targetValue =
-        if (currentRotation > 60f && currentRotation <= 170f) {
-            400.dp
-        } else if (currentRotation > 170f && currentRotation <= 200f) {
-            300.dp
-        } else if (currentRotation > 200f && currentRotation <= 250f) {
-            200.dp
-        } else if (currentRotation > 250f && currentRotation < 270f) {
-            100.dp
-        }  else {
-            0.dp
+        when {
+            currentRotation > 60f && currentRotation <= 170f -> 400.dp
+            currentRotation > 170f && currentRotation <= 200f -> 300.dp
+            currentRotation > 200f && currentRotation <= 250f -> 200.dp
+            currentRotation > 250f && currentRotation < 270f -> 100.dp
+            else -> 0.dp
         },
         label = "Stonk Top Margin"
     )
@@ -112,7 +108,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
             ),
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back Icon")
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back Icon")
                 }
             }
         )
@@ -142,7 +138,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                         end.linkTo(parent.end)
                     }
                     .rotate(rotation.value)
-                    .size(128.dp), imageVector = Icons.Default.TrendingUp,
+                    .size(128.dp), imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                 tint = color, contentDescription = "Profit or Loss"
             )
             Text(

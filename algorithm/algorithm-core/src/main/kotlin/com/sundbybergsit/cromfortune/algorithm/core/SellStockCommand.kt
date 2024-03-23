@@ -25,9 +25,9 @@ class SellStockCommand(
 
     override fun price(): Double = pricePerStock
 
-    override fun execute(repository: StockOrderApi) {
-        if (repository.count(name) > 0) {
-            val stockOrders: MutableSet<StockOrder> = repository.list(name).toMutableSet()
+    override fun execute(item: StockOrderApi) {
+        if (item.count(name) > 0) {
+            val stockOrders: MutableSet<StockOrder> = item.list(name).toMutableSet()
             stockOrders.add(
                 StockOrder(
                     orderAction = "Sell", currency = currency.toString(),
@@ -35,9 +35,9 @@ class SellStockCommand(
                     quantity = quantity
                 )
             )
-            repository.putAll(name, stockOrders)
+            item.putAll(name, stockOrders)
         } else {
-            repository.putReplacingAll(
+            item.putReplacingAll(
                 name, StockOrder(
                     orderAction = "Sell", currency = currency.toString(),
                     dateInMillis = currentTimeInMillis, name = name, pricePerStock = pricePerStock,
