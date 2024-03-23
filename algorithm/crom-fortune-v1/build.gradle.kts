@@ -15,6 +15,12 @@ android {
     }
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 dependencies {
     implementation(projects.domain)
     implementation(projects.algorithm.algorithmApi)
