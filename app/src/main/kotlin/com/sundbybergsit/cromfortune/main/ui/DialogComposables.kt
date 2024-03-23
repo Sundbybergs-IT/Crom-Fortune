@@ -1,11 +1,13 @@
 package com.sundbybergsit.cromfortune.main.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,13 +15,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Switch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -49,8 +56,10 @@ import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.contentDescription
 import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.Calendar
 import java.util.Currency
+import java.util.Date
 import java.util.Locale
 
 private const val DATE_FORMAT = "MM/dd/yyyy"
@@ -70,7 +79,7 @@ fun PortfolioAddAlertDialog(
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(state = scrollState)
         ) {
-            val (titleRef, portolioNameRef, buttonsRef) = createRefs()
+            val (titleRef, portfolioNameRef, buttonsRef) = createRefs()
             Text(
                 modifier = Modifier
                     .padding(all = 16.dp)
@@ -80,7 +89,7 @@ fun PortfolioAddAlertDialog(
                 color = MaterialTheme.colorScheme.onSurface
             )
             InputValidatedOutlinedTextField(modifier = Modifier
-                .constrainAs(portolioNameRef) {
+                .constrainAs(portfolioNameRef) {
                     top.linkTo(titleRef.bottom)
                     start.linkTo(parent.start)
                 }
@@ -96,7 +105,7 @@ fun PortfolioAddAlertDialog(
             Row(modifier = Modifier
                 .padding(all = 16.dp)
                 .constrainAs(buttonsRef) {
-                    top.linkTo(portolioNameRef.bottom)
+                    top.linkTo(portfolioNameRef.bottom)
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
                 }) {
@@ -130,6 +139,8 @@ fun RegisterSellStockAlertDialog(
     homeViewModel: HomeViewModel,
     portfolioRepository: PortfolioRepository,
 ) {
+    val datePickerState: DatePickerState = rememberDatePickerState()
+    val showDatePicker: MutableState<Boolean> = remember { mutableStateOf(false) }
     val myCalendar = Calendar.getInstance()
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
     val dateMutableState: MutableState<TextFieldValue> = remember {
@@ -156,6 +167,15 @@ fun RegisterSellStockAlertDialog(
         stockNameMutableState = stockNameMutableState,
         stockCurrencyMutableState = currencyMutableState
     )
+    val onDismissDateDialog: () -> Unit = { showDatePicker.value = false }
+    if (showDatePicker.value) {
+        DateSelectionDialog(
+            onDismiss = onDismissDateDialog,
+            datePickerState = datePickerState,
+            dateMutableState = dateMutableState,
+            simpleDateFormat = sdf
+        )
+    }
     Dialog(onDismissRequest = onDismiss) {
         val scrollState = rememberScrollState()
         ConstraintLayout(
@@ -180,19 +200,15 @@ fun RegisterSellStockAlertDialog(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            InputValidatedOutlinedTextField(modifier = Modifier
+            TextButton(modifier = Modifier
                 .constrainAs(dateRef) {
                     top.linkTo(titleRef.bottom)
                     start.linkTo(parent.start)
                 }
-                .background(color = MaterialTheme.colorScheme.background)
-                .fillMaxWidth(),
-                label = { Text(text = stringResource(id = R.string.home_add_stock_date_label)) },
-                value = dateMutableState,
-                isError = dateErrorMutableState.value,
-                errorMessage = dateErrorMessageMutableState.value,
-                contentDescriptor = "Date Input Text"
-            )
+                .padding(horizontal = 28.dp),
+                onClick = { showDatePicker.value = true }) {
+                Text(text = dateMutableState.value.text)
+            }
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(stockQuantityRef) {
                     top.linkTo(dateRef.bottom)
@@ -382,6 +398,8 @@ fun RegisterSplitStockAlertDialog(
     onDismiss: () -> Unit,
     onSave: (StockSplit) -> Unit
 ) {
+    val datePickerState: DatePickerState = rememberDatePickerState()
+    val showDatePicker: MutableState<Boolean> = remember { mutableStateOf(false) }
     val horizontalPadding = 28.dp
     val myCalendar = Calendar.getInstance()
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
@@ -413,6 +431,15 @@ fun RegisterSplitStockAlertDialog(
         stockNameMutableState = stockNameMutableState,
         stockCurrencyMutableState = currencyMutableState
     )
+    val onDismissDateDialog: () -> Unit = { showDatePicker.value = false }
+    if (showDatePicker.value) {
+        DateSelectionDialog(
+            onDismiss = onDismissDateDialog,
+            datePickerState = datePickerState,
+            dateMutableState = dateMutableState,
+            simpleDateFormat = sdf
+        )
+    }
     Dialog(onDismissRequest = onDismiss) {
         val scrollState = rememberScrollState()
         ConstraintLayout(
@@ -437,20 +464,15 @@ fun RegisterSplitStockAlertDialog(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            InputValidatedOutlinedTextField(modifier = Modifier
+            TextButton(modifier = Modifier
                 .constrainAs(dateRef) {
                     top.linkTo(titleRef.bottom)
                     start.linkTo(parent.start)
                 }
-                .background(color = MaterialTheme.colorScheme.background)
-                .fillMaxWidth(),
-                horizontalPadding = horizontalPadding,
-                label = { Text(text = stringResource(id = R.string.home_add_stock_date_label)) },
-                value = dateMutableState,
-                isError = dateErrorMutableState.value,
-                errorMessage = dateErrorMessageMutableState.value,
-                contentDescriptor = "Date Input Text"
-            )
+                .padding(horizontal = 28.dp),
+                onClick = { showDatePicker.value = true }) {
+                Text(text = dateMutableState.value.text)
+            }
             Row(modifier = Modifier
                 .constrainAs(splitSwitchRef) {
                     top.linkTo(dateRef.bottom)
@@ -556,7 +578,8 @@ fun RegisterSplitStockAlertDialog(
                         val stockSymbol =
                             stockNameMutableState.value.text.substringAfterLast('(').substringBeforeLast(')')
                         val dateAsString = dateMutableState.value.text
-                        val inputDate = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
+                        val inputDate =
+                            checkNotNull(SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString))
                         val stockSplit = StockSplit(
                             reverseSplitMutableState.value,
                             inputDate.time,
@@ -579,8 +602,10 @@ fun RegisterBuyStockAlertDialog(
     portfolioNameState: State<String>,
     stockSymbolParam: String? = null,
     onDismiss: () -> Unit,
-    onSave: (StockOrder) -> Unit
+    onSave: (StockOrder) -> Unit,
 ) {
+    val datePickerState: DatePickerState = rememberDatePickerState()
+    val showDatePicker: MutableState<Boolean> = remember { mutableStateOf(false) }
     val myCalendar = Calendar.getInstance()
     val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
     val dateMutableState: MutableState<TextFieldValue> = remember {
@@ -610,6 +635,15 @@ fun RegisterBuyStockAlertDialog(
         stockNameMutableState = stockNameMutableState,
         stockCurrencyMutableState = currencyMutableState
     )
+    val onDismissDateDialog: () -> Unit = { showDatePicker.value = false }
+    if (showDatePicker.value) {
+        DateSelectionDialog(
+            onDismiss = onDismissDateDialog,
+            datePickerState = datePickerState,
+            dateMutableState = dateMutableState,
+            simpleDateFormat = sdf
+        )
+    }
     Dialog(onDismissRequest = onDismiss) {
         val scrollState = rememberScrollState()
         ConstraintLayout(
@@ -634,19 +668,15 @@ fun RegisterBuyStockAlertDialog(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            InputValidatedOutlinedTextField(modifier = Modifier
+            TextButton(modifier = Modifier
                 .constrainAs(dateRef) {
                     top.linkTo(titleRef.bottom)
                     start.linkTo(parent.start)
                 }
-                .background(color = MaterialTheme.colorScheme.background)
-                .fillMaxWidth(),
-                label = { Text(text = stringResource(id = R.string.home_add_stock_date_label)) },
-                value = dateMutableState,
-                isError = dateErrorMutableState.value,
-                errorMessage = dateErrorMessageMutableState.value,
-                contentDescriptor = "Date Input Text"
-            )
+                .padding(horizontal = 28.dp),
+                onClick = { showDatePicker.value = true }) {
+                Text(text = dateMutableState.value.text)
+            }
             InputValidatedOutlinedTextField(modifier = Modifier
                 .constrainAs(stockQuantityRef) {
                     top.linkTo(dateRef.bottom)
@@ -793,8 +823,8 @@ fun RegisterBuyStockAlertDialog(
                             errorMessageMutableState = commissionFeeErrorMessageMutableState
                         )
                         val dateAsString = dateMutableState.value.text
-                        val inputDate = SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString)
-
+                        val inputDate =
+                            checkNotNull(SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).parse(dateAsString))
                         val currency = Currency.getInstance(currencyMutableState.value.text)
                         // TODO: Convert commission fee (in SEK) to selected currency
                         val stockOrder = StockOrder(
@@ -812,6 +842,54 @@ fun RegisterBuyStockAlertDialog(
                         // Shit happens ...
                     }
                 })
+            }
+        }
+    }
+}
+
+@Composable
+private fun DateSelectionDialog(
+    onDismiss: () -> Unit,
+    datePickerState: DatePickerState,
+    dateMutableState: MutableState<TextFieldValue>,
+    simpleDateFormat: SimpleDateFormat
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                DatePicker(state = datePickerState)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(text = stringResource(id = android.R.string.cancel))
+                    }
+                    TextButton(onClick = {
+                        onDismiss()
+                        datePickerState.selectedDateMillis?.let { nullSafeSelectedDateMillis ->
+                            dateMutableState.value =
+                                TextFieldValue(
+                                    simpleDateFormat.format(
+                                        Date.from(
+                                            Instant.ofEpochMilli(
+                                                nullSafeSelectedDateMillis
+                                            )
+                                        )
+                                    )
+                                )
+                        }
+                    }) {
+                        Text(text = stringResource(id = android.R.string.ok))
+                    }
+                }
             }
         }
     }
