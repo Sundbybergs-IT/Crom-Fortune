@@ -24,7 +24,11 @@ object DialogHandler {
     val dialogViewState: StateFlow<DialogViewState> = _dialogViewState.asStateFlow()
 
     fun showSnack(text: String, action: Pair<String,() -> Unit>? = null) {
-        Log.i(TAG, "showSnack(text=[${text}])")
+        if (action == null) {
+            Log.i(TAG, "showSnack(text=[${text}])")
+        } else {
+            Log.i(TAG, "showSnack(text=[${text}], action=[${action.first}, ${action.second}])")
+        }
         _snackbarFlow.value = Pair(text, action)
     }
 
