@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "587817290398",
+    "project_id": "crom-fortune-4e1fc",
+    "storage_bucket": "crom-fortune-4e1fc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:587817290398:android:c0325a5fd8f14e3825898f",
+        "android_client_info": {
+          "package_name": "com.sundbybergsit.cromfortune"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBak_RdVg2J4q3j8bhBs_SQV-jqWg8b8I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

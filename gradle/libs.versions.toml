@@ -19,8 +19,11 @@ androidx-test-junit = "1.1.5"
 androidx-test-monitor = "1.6.1"
 androidx-test-runner = "1.5.2"
 androidx-work = "2.10.0-alpha02"
+firebase-bom = "32.7.1"
+firebase-crashlytics-plugin = "2.9.9"
 google-play-appupdate = "2.1.0"
 google-play-review = "2.0.1"
+google-services-plugin = "4.4.1"
 junit = "4.13.2"
 junit-reporting = "1.10.2"
 junit5 = "5.10.2"
@@ -60,6 +63,7 @@ androidxTestRunner = { module = "androidx.test:runner", version.ref = "androidx-
 androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
+firebaseBom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 googlePlayAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-play-appupdate" }
 googlePlayAppUpdateKtx = { module = "com.google.android.play:app-update-ktx", version.ref = "google-play-appupdate" }
 googlePlayReview = { module = "com.google.android.play:review-ktx", version.ref = "google-play-review" }
@@ -72,6 +76,8 @@ kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-tes
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 pluginAndroidGradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
+pluginFirebaseCrashlyticsGradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebase-crashlytics-plugin" }
+pluginGoogleServices = { module = "com.google.gms:google-services", version.ref = "google-services-plugin" }
 pluginKotlinGradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 yahooFinance = { module = "com.yahoofinance-api:YahooFinanceAPI", version.ref = "yahooFinance" }

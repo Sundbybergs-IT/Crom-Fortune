@@ -4,6 +4,8 @@ buildscript {
     }
     dependencies {
         classpath(libs.pluginAndroidGradle)
+        classpath(libs.pluginFirebaseCrashlyticsGradle)
+        classpath(libs.pluginGoogleServices)
         classpath(libs.pluginKotlinGradle)
     }
 }

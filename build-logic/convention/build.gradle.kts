@@ -20,6 +20,7 @@ tasks.withType<KotlinCompile>().configureEach {
 
 dependencies {
     compileOnly(libs.pluginAndroidGradle)
+    compileOnly(libs.pluginFirebaseCrashlyticsGradle)
     compileOnly(libs.pluginKotlinGradle)
 }
 
@@ -36,6 +37,10 @@ gradlePlugin {
         register("androidApplicationJacoco") {
             id = "cromfortune.android.application.jacoco"
             implementationClass = "AndroidApplicationJacocoConventionPlugin"
+        }
+        register("androidFirebase") {
+            id = "cromfortune.android.application.firebase"
+            implementationClass = "AndroidApplicationFirebaseConventionPlugin"
         }
         register("androidLibraryCompose") {
             id = "cromfortune.android.library.compose"

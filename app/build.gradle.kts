@@ -1,6 +1,7 @@
 plugins {
     id("cromfortune.android.application")
     id("cromfortune.android.application.compose")
+    id("cromfortune.android.application.firebase")
     id("cromfortune.android.application.jacoco")
     id("kotlinx-serialization")
 }
@@ -11,7 +12,7 @@ android {
     namespace = "com.sundbybergsit.cromfortune.main"
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 129
+        versionCode = 131
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
