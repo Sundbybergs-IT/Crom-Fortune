@@ -7,7 +7,12 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -51,7 +56,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -82,6 +86,8 @@ import androidx.navigation.plusAssign
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -141,7 +147,6 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
         val view = LocalView.current
         ShowSnackbarLaunchedEffect(
             dialogHandler = DialogHandler,
-            coroutineScope = rememberCoroutineScope(),
             snackbarHostState = snackbarHostState,
             view = view
         )
@@ -210,6 +215,7 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
                 )
             }
         ) { innerPadding ->
+            val context = LocalContext.current
             Box(Modifier.padding(innerPadding)) {
                 NavHost(
                     navController = navController,
@@ -219,10 +225,11 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
                     popEnterTransition = { defaultCromPopEnterTransition() },
                     popExitTransition = { defaultCromPopExitTransition() },
                 ) {
-                    addHomeTopLevel(navController = navController, portfolioRepository = portfolioRepository)
-                    addDashboardTopLevel(navController = navController, portfolioRepository = portfolioRepository)
-                    addNotificationsTopLevel(navController = navController, portfolioRepository = portfolioRepository)
-                    addSettingsTopLevel(navController = navController, portfolioRepository = portfolioRepository)
+                    val appUpdateManager = AppUpdateManagerFactory.create(context)
+                    addHomeTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
+                    addDashboardTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
+                    addNotificationsTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
+                    addSettingsTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
                 }
             }
         }
@@ -724,9 +731,10 @@ internal fun StockOrderRow(
 
 private fun NavGraphBuilder.addHomeTopLevel(
     navController: NavHostController,
-    portfolioRepository: PortfolioRepository
+    portfolioRepository: PortfolioRepository,
+    appUpdateManager: AppUpdateManager
 ) {
-    addHome(navController = navController, portfolioRepository = portfolioRepository)
+    addHome(navController = navController, portfolioRepository = portfolioRepository,appUpdateManager=appUpdateManager)
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
@@ -737,9 +745,14 @@ private fun NavGraphBuilder.addHomeTopLevel(
 
 private fun NavGraphBuilder.addDashboardTopLevel(
     navController: NavHostController,
-    portfolioRepository: PortfolioRepository
+    portfolioRepository: PortfolioRepository,
+    appUpdateManager: AppUpdateManager
 ) {
-    addHome(navController = navController, portfolioRepository = portfolioRepository)
+    addHome(
+        navController = navController,
+        portfolioRepository = portfolioRepository,
+        appUpdateManager = appUpdateManager
+    )
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
@@ -747,9 +760,14 @@ private fun NavGraphBuilder.addDashboardTopLevel(
 
 private fun NavGraphBuilder.addNotificationsTopLevel(
     navController: NavHostController,
-    portfolioRepository: PortfolioRepository
+    portfolioRepository: PortfolioRepository,
+    appUpdateManager: AppUpdateManager
 ) {
-    addHome(navController = navController, portfolioRepository = portfolioRepository)
+    addHome(
+        navController = navController,
+        portfolioRepository = portfolioRepository,
+        appUpdateManager = appUpdateManager
+    )
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
@@ -758,21 +776,30 @@ private fun NavGraphBuilder.addNotificationsTopLevel(
 
 private fun NavGraphBuilder.addSettingsTopLevel(
     navController: NavHostController,
-    portfolioRepository: PortfolioRepository
+    portfolioRepository: PortfolioRepository,
+    appUpdateManager: AppUpdateManager
 ) {
-    addHome(navController = navController, portfolioRepository = portfolioRepository)
+    addHome(
+        navController = navController,
+        portfolioRepository = portfolioRepository,
+        appUpdateManager = appUpdateManager
+    )
     addDashboard(navController = navController)
     addNotifications(navController = navController)
     addSettings(navController = navController)
     addSettingsBottomSheet()
 }
 
-private fun NavGraphBuilder.addHome(navController: NavHostController, portfolioRepository: PortfolioRepository) {
+private fun NavGraphBuilder.addHome(
+    navController: NavHostController,
+    portfolioRepository: PortfolioRepository,
+    appUpdateManager: AppUpdateManager
+) {
     composable(route = Screen.Home.route) {
         val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
             HomeViewModelFactory(portfolioRepository = portfolioRepository)
         })
-        Home(viewModel = homeViewModel, onNavigateTo = { route -> navController.navigate(route) })
+        Home(viewModel = homeViewModel, onNavigateTo = { route -> navController.navigate(route) }, appUpdateManager=appUpdateManager)
     }
 }
 

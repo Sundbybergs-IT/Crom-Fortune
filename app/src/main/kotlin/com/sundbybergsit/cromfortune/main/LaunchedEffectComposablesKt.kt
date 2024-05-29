@@ -17,13 +17,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.ui.dashboard.DashboardViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
@@ -128,26 +128,24 @@ internal fun PagerStateSelectionHapticFeedbackLaunchedEffect(
 @Composable
 internal fun ShowSnackbarLaunchedEffect(
     dialogHandler: DialogHandler,
-    coroutineScope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
     view: View
 ) {
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(key1 = "ShowSnackbarLaunchedEffect") {
         coroutineScope.launch {
             dialogHandler.snackbarFlow
                 .collect { snackbar ->
                     val message = snackbar?.first
                     val actionPair = snackbar?.second
-                    if (message?.isNotEmpty() == true) {
+                    if (!message.isNullOrEmpty()) {
                         view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                         dialogHandler.acknowledgeSnack()
                         snackbarHostState.currentSnackbarData?.dismiss()
-                        snackbarHostState.showSnackbar(message = message, actionLabel = actionPair?.first)
-                            .let { result ->
-                                if (result == SnackbarResult.ActionPerformed) {
-                                    actionPair?.second?.invoke()
-                                }
-                            }
+                        val result = snackbarHostState.showSnackbar(message = message, actionLabel = actionPair?.first)
+                        if (result == SnackbarResult.ActionPerformed) {
+                            actionPair?.second?.invoke()
+                        }
                     }
                 }
         }

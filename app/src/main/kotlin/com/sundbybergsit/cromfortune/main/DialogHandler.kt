@@ -16,14 +16,15 @@ object DialogHandler {
 
     private const val TAG = "DialogHandler"
 
-    private val _snackbarFlow: MutableStateFlow<Pair<String, Pair<String, () -> Unit>?>?> = MutableStateFlow(null)
-    val snackbarFlow = _snackbarFlow as StateFlow<Pair<String, Pair<String, () -> Unit>?>?>
+    private val _snackbarFlow: MutableStateFlow<Pair<String, Pair<String, suspend () -> Unit>?>?> =
+        MutableStateFlow(null)
+    val snackbarFlow = _snackbarFlow as StateFlow<Pair<String, Pair<String, suspend () -> Unit>?>?>
 
     private val _dialogViewState: MutableStateFlow<DialogViewState> = MutableStateFlow(DialogViewState.Dismissed)
 
     val dialogViewState: StateFlow<DialogViewState> = _dialogViewState.asStateFlow()
 
-    fun showSnack(text: String, action: Pair<String,() -> Unit>? = null) {
+    fun showSnack(text: String, action: Pair<String, suspend () -> Unit>? = null) {
         if (action == null) {
             Log.i(TAG, "showSnack(text=[${text}])")
         } else {
@@ -110,6 +111,7 @@ object DialogHandler {
         }
 
         data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
+
         data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>, val readOnly: Boolean) :
             DialogViewState()
 

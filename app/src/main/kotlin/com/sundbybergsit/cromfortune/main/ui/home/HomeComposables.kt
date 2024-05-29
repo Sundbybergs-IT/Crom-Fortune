@@ -56,10 +56,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.ktx.AppUpdateResult
+import com.google.android.play.core.ktx.requestCompleteUpdate
+import com.google.android.play.core.ktx.requestUpdateFlow
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPriceApi
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
+import com.sundbybergsit.cromfortune.main.BuildConfig
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.LeafScreen
 import com.sundbybergsit.cromfortune.main.OverflowMenu
@@ -81,9 +87,30 @@ fun Home(
         pageCount = { viewModel.portfoliosStateFlow.value.size }),
     stockPriceApi: StockPriceApi = StockPriceRepository,
     onNavigateTo: (String) -> Unit,
+    appUpdateManager: AppUpdateManager,
 ) {
     val localContext = LocalContext.current
     val portfoliosState = viewModel.portfoliosStateFlow.collectAsState()
+    if (!BuildConfig.DEBUG) {
+        val requestUpdateFlow = appUpdateManager.requestUpdateFlow()
+        val appUpdateResultState = requestUpdateFlow.collectAsState(initial = AppUpdateResult.NotAvailable)
+        val updateResult = appUpdateResultState.value
+        LaunchedEffect(key1 = updateResult) {
+            if (updateResult is AppUpdateResult.Downloaded) {
+                DialogHandler.showSnack(
+                    text = localContext.getString(R.string.generic_update_completed),
+                    action = Pair(localContext.getString(R.string.action_restart)) {
+                        updateResult.completeUpdate()
+                    }
+                )
+            } else if (updateResult is AppUpdateResult.Available && updateResult.updateInfo.isUpdateTypeAllowed(
+                    AppUpdateType.IMMEDIATE
+                )
+            ) {
+                appUpdateManager.requestCompleteUpdate()
+            }
+        }
+    }
     LaunchedEffect(key1 = Unit) {
         viewModel.refreshData(localContext)
     }
