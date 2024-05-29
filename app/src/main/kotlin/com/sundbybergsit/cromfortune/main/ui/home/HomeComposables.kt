@@ -104,7 +104,7 @@ fun Home(
                     }
                 )
             } else if (updateResult is AppUpdateResult.Available && updateResult.updateInfo.isUpdateTypeAllowed(
-                    AppUpdateType.IMMEDIATE
+                    AppUpdateType.FLEXIBLE
                 )
             ) {
                 appUpdateManager.requestCompleteUpdate()
