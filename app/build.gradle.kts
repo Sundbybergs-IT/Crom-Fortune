@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidxLifecycleViewmodel)
 
     implementation(libs.googlePlayAppUpdate)
+    implementation(libs.googlePlayAppUpdateKtx)
     implementation(libs.googlePlayReview)
 
     implementation(libs.yahooFinance)

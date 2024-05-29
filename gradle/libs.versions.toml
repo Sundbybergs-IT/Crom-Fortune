@@ -3,31 +3,31 @@
 compileSdk = "34"
 # @keep
 minSdk = "31"
-accompanist = "0.32.0"
-android-gradle-plugin = "8.3.1"
-androidx-activity-compose = "1.8.2"
-androidx-annotation = "1.7.1"
+accompanist = "0.34.0"
+android-gradle-plugin = "8.4.1"
+androidx-activity-compose = "1.9.0"
+androidx-annotation = "1.8.0"
 androidx-appcompat = "1.6.1"
-androidx-compose-bom = "2024.03.00"
-androidx-compose-compiler = "1.5.11"
+androidx-compose-bom = "2024.05.00"
+androidx-compose-compiler = "1.5.14"
 androidx-constraintlayout-compose = "1.1.0-alpha13"
-androidx-core = "1.12.0"
-androidx-lifecycle = "2.7.0"
+androidx-core = "1.13.1"
+androidx-lifecycle = "2.8.0"
 androidx-localbroadcastmanager = "1.1.0"
 androidx-navigation = "2.7.7"
 androidx-test-junit = "1.1.5"
 androidx-test-monitor = "1.6.1"
 androidx-test-runner = "1.5.2"
-androidx-work = "2.10.0-alpha01"
+androidx-work = "2.10.0-alpha02"
 google-play-appupdate = "2.1.0"
 google-play-review = "2.0.1"
 junit = "4.13.2"
-junit-reporting = "1.10.1"
-junit5 = "5.10.1"
-kotlin = "1.9.23"
-kotlinx-coroutines = "1.7.3"
-kotlinx-serialization = "1.6.0"
-robolectric = "4.11.1"
+junit-reporting = "1.10.2"
+junit5 = "5.10.2"
+kotlin = "1.9.24"
+kotlinx-coroutines = "1.8.1"
+kotlinx-serialization = "1.6.3"
+robolectric = "4.12.2"
 sonarqube = "4.4.1.3373"
 yahooFinance = "3.17.0"
 
@@ -61,6 +61,7 @@ androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref =
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
 googlePlayAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-play-appupdate" }
+googlePlayAppUpdateKtx = { module = "com.google.android.play:app-update-ktx", version.ref = "google-play-appupdate" }
 googlePlayReview = { module = "com.google.android.play:review-ktx", version.ref = "google-play-review" }
 junit = { module = "junit:junit", version.ref = "junit" }
 junit5Api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
