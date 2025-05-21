@@ -4,6 +4,7 @@ plugins {
     id("cromfortune.android.application.firebase")
     id("cromfortune.android.application.jacoco")
     id("kotlinx-serialization")
+    alias(libs.plugins.compose.compiler)
 }
 
 val baseVersionName = ext.get("baseVersionName") as String

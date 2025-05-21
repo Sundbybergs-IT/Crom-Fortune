@@ -16,6 +16,7 @@ buildscript {
     "UNRESOLVED_REFERENCE_WRONG_RECEIVER",
 )
 plugins {
+    alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.serialization)
     alias(libs.plugins.sonarqube)
 }

@@ -4,7 +4,7 @@ compileSdk = "35"
 # @keep
 minSdk = "31"
 accompanist = "0.34.0"
-android-gradle-plugin = "8.6.1"
+android-gradle-plugin = "8.10.0"
 androidx-activity-compose = "1.10.1"
 androidx-annotation = "1.9.1"
 androidx-appcompat = "1.7.0"
@@ -27,7 +27,7 @@ google-services-plugin = "4.4.2"
 junit = "4.13.2"
 junit-reporting = "1.10.3"
 junit5 = "5.10.3"
-kotlin = "1.9.24"
+kotlin = "2.1.0"
 kotlinx-coroutines = "1.8.1"
 kotlinx-serialization = "1.7.3"
 robolectric = "4.12.2"
@@ -84,5 +84,6 @@ compose = ["accompanistNavigationMaterial", "accompanistPager", "accompanistNavi
     "androidxNavigationCompose"]
 
 [plugins]
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
