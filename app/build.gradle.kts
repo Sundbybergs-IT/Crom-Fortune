@@ -12,7 +12,7 @@ android {
     namespace = "com.sundbybergsit.cromfortune.main"
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 131
+        versionCode = 132
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,12 +33,10 @@ dependencies {
     implementation(projects.algorithm.algorithmCore)
     implementation(projects.algorithm.cromFortuneV1)
 
-    // Version determined by Compose BoM
-    debugImplementation( "androidx.compose.ui:ui-test-manifest")
-    // Version determined by Compose BoM
-    implementation("androidx.compose.material3:material3")
-    // Version determined by Compose BoM
-    implementation("androidx.compose.ui:ui-tooling")
+    platform(libs.composeBom)
+    debugImplementation( libs.uiTestManifest)
+    implementation(libs.material3)
+    implementation(libs.uiTooling)
     implementation(libs.bundles.compose)
     implementation(libs.androidxComposeMaterialIconsExtended)
 
