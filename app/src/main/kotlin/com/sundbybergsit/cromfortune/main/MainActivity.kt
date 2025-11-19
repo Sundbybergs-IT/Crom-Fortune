@@ -16,7 +16,7 @@ import com.sundbybergsit.cromfortune.main.navigation.AppNavigation
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.theme.AppTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), Taggable {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,4 +70,3 @@ class MainActivity : ComponentActivity() {
     }
 
 }
-
