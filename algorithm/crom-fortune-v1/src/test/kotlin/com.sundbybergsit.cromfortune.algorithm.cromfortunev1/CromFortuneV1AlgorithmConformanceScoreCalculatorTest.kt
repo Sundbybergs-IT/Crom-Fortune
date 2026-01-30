@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.algorithm.cromfortunev1
 
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
@@ -121,7 +120,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     fun `getScore - when 2 out of 2 correct decisions with split that should affect - returns 100`() = runBlocking {
         val ticker = StockPrice.SYMBOLS[0].first
         val score = calculator.getScore(
-            CromFortuneV1RecommendationAlgorithm(context = ApplicationProvider.getApplicationContext()),
+            CromFortuneV1RecommendationAlgorithm(),
             setOf(
                 newBuyStockEvent(dateInMillis = 1, ticker = ticker, price = 5.0),
                 StockSplit(false, 2L, ticker, 1000).toStockEvent(),
@@ -137,7 +136,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     fun `getScore - when 1 out of 2 correct decisions with split that should affect - returns 50`() = runBlocking {
         val ticker = StockPrice.SYMBOLS[0].first
         val score = calculator.getScore(
-            CromFortuneV1RecommendationAlgorithm(context = ApplicationProvider.getApplicationContext()),
+            CromFortuneV1RecommendationAlgorithm(),
             setOf(
                 newBuyStockEvent(dateInMillis = 1, ticker = ticker, price = 5.0, quantity = 1000),
                 StockSplit(true, 2L, ticker, 1000).toStockEvent(),

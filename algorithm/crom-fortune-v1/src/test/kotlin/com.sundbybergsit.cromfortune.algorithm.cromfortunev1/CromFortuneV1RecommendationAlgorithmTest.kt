@@ -1,7 +1,5 @@
 package com.sundbybergsit.cromfortune.algorithm.cromfortunev1
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
@@ -19,6 +17,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.Currency
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -47,8 +46,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             )
         )
         ShadowLooper.runUiThreadTasks()
-        val context = ApplicationProvider.getApplicationContext() as Context
-        algorithm = CromFortuneV1RecommendationAlgorithm(context)
+        algorithm = CromFortuneV1RecommendationAlgorithm()
     }
 
     @Test
@@ -108,7 +106,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 )
             )
 
-            assertNull(recommendation)
+            assertNotNull(recommendation)
+            assertTrue(recommendation!!.command is BuyStockCommand)
         }
 
     @Test
@@ -207,7 +206,8 @@ class CromFortuneV1RecommendationAlgorithmTest {
                 )
             )
 
-            assertNull(recommendation)
+            assertNotNull(recommendation)
+            assertTrue(recommendation!!.command is BuyStockCommand)
         }
 
     @Test
@@ -261,7 +261,7 @@ class CromFortuneV1RecommendationAlgorithmTest {
             )
 
             assertNotNull(recommendation)
-            assertTrue(recommendation!!.command is BuyStockCommand)
+            assertTrue(recommendation.command is BuyStockCommand)
             val buyStockCommand = recommendation.command as BuyStockCommand
             assertTrue(buyStockCommand.quantity * buyStockCommand.pricePerStock <= CromFortuneV1RecommendationAlgorithm.MAX_PURCHASE_ORDER_IN_SEK)
         }
@@ -792,10 +792,10 @@ class CromFortuneV1RecommendationAlgorithmTest {
             assertNotNull(recommendation)
             assertTrue(recommendation.command is SellStockCommand)
             val sellStockCommand = recommendation.command as SellStockCommand
-            assertTrue(sellStockCommand.commissionFee == 0.0)
+            assertEquals(sellStockCommand.commissionFee, 0.0)
             assertQuantity(7, sellStockCommand.quantity)
             assertStockPrice(13.0, sellStockCommand.pricePerStock)
-            assertTrue(sellStockCommand.currency == currency)
+            assertEquals(sellStockCommand.currency, currency)
         }
 
     private fun assertStockPrice(expected: Double, actual: Double) {

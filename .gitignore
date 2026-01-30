@@ -8,3 +8,15 @@ local.properties
 **/*.iml
 
 build
+app/release/
+.kotlin/sessions/kotlin-compiler-9930075400043584830.salive
+lib/kotlin-reflect-sources.jar
+lib/kotlin-reflect.jar
+lib/kotlin-stdlib-jdk7-sources.jar
+lib/kotlin-stdlib-jdk7.jar
+lib/kotlin-stdlib-jdk8-sources.jar
+lib/kotlin-stdlib-jdk8.jar
+lib/kotlin-stdlib-sources.jar
+lib/kotlin-stdlib.jar
+lib/kotlin-test-sources.jar
+lib/kotlin-test.jar
