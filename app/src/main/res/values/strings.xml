@@ -6,11 +6,11 @@
     <string name="action_portfolio_add">Add portfolio</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_restart">Restart</string>
-    <string name="action_stock_buy">Register stock purchase</string>>
-    <string name="action_stock_add_split">Register stock split</string>>
-    <string name="action_stock_buy_short">B</string>>
-    <string name="action_stock_sell">Register stock sale</string>>
-    <string name="action_stock_sell_short">S</string>>
+    <string name="action_stock_buy">Register stock purchase</string>
+    <string name="action_stock_add_split">Register stock split</string>
+    <string name="action_stock_buy_short">B</string>
+    <string name="action_stock_sell">Register stock sale</string>
+    <string name="action_stock_sell_short">S</string>
     <string name="action_stocks_supported">Supported stocks</string>
 
     <string name="app_name">Crom Fortune</string>
@@ -32,6 +32,7 @@
     <string name="generic_error_invalid_stock_symbol">Enter a valid stock symbol.</string>
     <string name="generic_error_invalid_time_interval">Invalid time interval.</string>
     <string name="generic_error_invalid_quantity">Enter a valid quantity.</string>
+    <string name="generic_error_network">Network error. Please check your connection.</string>
     <string name="generic_error_not_supported">This feature is not yet supported.</string>
     <string name="generic_hint">Select</string>
     <string name="generic_price_per_stock">Price per stock</string>

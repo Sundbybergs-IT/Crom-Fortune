@@ -14,7 +14,9 @@ import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.main.CromFortuneApp
+import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
+import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
@@ -233,13 +235,18 @@ class HomeViewModel(
 
     fun refreshData(context: Context, onFinished: () -> Unit = {}) {
         viewModelScope.launch(ioDispatcher) {
-            StockDataRetrievalCoroutineWorker.refreshFromYahoo(
-                context,
-                portfolioRepository = portfolioRepository, onFinished = {
-                    refresh(context)
-                    onFinished.invoke()
-                })
-            Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
+            try {
+                StockDataRetrievalCoroutineWorker.refreshFromYahoo(
+                    context,
+                    portfolioRepository = portfolioRepository, onFinished = {
+                        refresh(context)
+                        onFinished.invoke()
+                    })
+                Log.i(TAG, "Last refreshed: " + (context.applicationContext as CromFortuneApp).lastRefreshed)
+            } catch (e: Exception) {
+                Log.e(TAG, "refreshData failed", e)
+                DialogHandler.showSnack(context.getString(R.string.generic_error_network))
+            }
         }
     }
 
