@@ -73,7 +73,8 @@ class HomeViewModel(
                     StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                 stockOrderAggregate = StockOrderAggregate(
                     CurrencyRateRepository.currencyRates.value
-                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }?.rateInSek
+                        ?: 1.0,
                     "$stockName (${stockOrder.name})", stockOrder.name,
                     Currency.getInstance(stockOrder.currency)
                 )
@@ -100,8 +101,9 @@ class HomeViewModel(
                 val stockName =
                     checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
                 stockOrderAggregate = StockOrderAggregate(
-                    rateInSek = checkNotNull(CurrencyRateRepository.currencyRates.value)
-                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }!!.rateInSek,
+                    rateInSek = CurrencyRateRepository.currencyRates.value
+                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }?.rateInSek
+                        ?: 1.0,
                     displayName = "$stockName (${stockOrder.name})", stockSymbol = stockOrder.name,
                     currency = Currency.getInstance(stockOrder.currency)
                 )
@@ -235,6 +237,7 @@ class HomeViewModel(
 
     fun refreshData(context: Context, onFinished: () -> Unit = {}) {
         viewModelScope.launch(ioDispatcher) {
+            refresh(context)
             try {
                 StockDataRetrievalCoroutineWorker.refreshFromYahoo(
                     context,

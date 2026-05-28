@@ -13,13 +13,14 @@ android {
     namespace = "com.sundbybergsit.cromfortune.main"
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 135
+        versionCode = 136
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            buildFeatures.buildConfig = true
         }
     }
     lint {
