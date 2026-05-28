@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -117,7 +118,10 @@ fun Home(
     var expanded by remember { mutableStateOf(false) }
     val items = stringArrayResource(id = R.array.filter_array)
     var selectedIndex by remember { mutableIntStateOf(0) }
-    Scaffold(topBar = {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
         TopAppBar(title = {
             Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.titleMedium)
         }, colors = TopAppBarDefaults.topAppBarColors(
@@ -190,59 +194,44 @@ fun Home(
         ) {
             val (pagerRef, fabRef) = createRefs()
             val view = LocalView.current
-            val showFabMutableState = remember { mutableStateOf(false) }
             val currencyRateApi: CurrencyRateApi = CurrencyRateRepository
-            if (showFabMutableState.value) {
-                FloatingActionButton(modifier = Modifier
-                    .constrainAs(fabRef) {
-                        end.linkTo(parent.end, 16.dp)
-                        bottom.linkTo(parent.bottom, 32.dp)
-                    }
-                    .padding(16.dp), onClick = { DialogHandler.showBuyStockDialog() }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_add),
-                        contentDescription = "Floating Action Button Icon"
-                    )
-                }
-            }
             val changedPagerMutableState = viewModel.changedPagerMutableStateFlow.collectAsState()
             PagerStateSelectionHapticFeedbackLaunchedEffect(
                 pagerState = pagerState, view = view, changedState = changedPagerMutableState
             )
-            val mutableTabs: MutableList<Pair<String, HomeViewModel.ViewState>> = mutableListOf()
-            for (entry in portfoliosState.value.entries) {
-                mutableTabs.add(entry.key to entry.value)
-            }
-            val tabs: List<Pair<String, HomeViewModel.ViewState>> = mutableTabs.toList()
-            showFabMutableState.value = tabs[0].second.items.isEmpty()
+            val tabs: List<Pair<String, HomeViewModel.ViewState>> = portfoliosState.value.toList()
+            val showFab = tabs.getOrNull(0)?.second?.items?.isEmpty() ?: false
             HorizontalPager(
-                modifier = Modifier.constrainAs(pagerRef) {},
+                modifier = Modifier.constrainAs(pagerRef) {
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }.fillMaxSize(),
                 state = pagerState
-            ) {
-                Column {
-                    TabRow(pagerState.currentPage) {
+            ) { page ->
+                Column(modifier = Modifier.fillMaxSize()) {
+                    TabRow(page) {
                         val coroutineScope = rememberCoroutineScope()
                         tabs.forEachIndexed { index, title ->
-                            Column {
-                                Tab(
-                                    text = { Text(text = title.first) },
-                                    selected = index == pagerState.currentPage,
-                                    onClick = {
-                                        viewModel.selectTab(
-                                            portfolioName = title.first,
-                                            index = index,
-                                            pagerState = pagerState,
-                                            coroutineScope = coroutineScope
-                                        )
-                                    }
-                                )
-                            }
+                            Tab(
+                                text = { Text(text = title.first) },
+                                selected = index == page,
+                                onClick = {
+                                    viewModel.selectTab(
+                                        portfolioName = title.first,
+                                        index = index,
+                                        pagerState = pagerState,
+                                        coroutineScope = coroutineScope
+                                    )
+                                }
+                            )
                         }
                     }
-                    LazyColumn {
-                        items(count = tabs[pagerState.currentPage].second.items.size) { lazyItemScope ->
-                            val portfolioName = tabs[pagerState.currentPage].first
-                            val portfolioState = portfoliosState.value[portfolioName]!!
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(count = tabs[page].second.items.size) { lazyItemScope ->
+                            val portfolioName = tabs[page].first
+                            val portfolioState = tabs[page].second
                             StocksTab(
                                 portfolioName = portfolioName,
                                 index = lazyItemScope,
@@ -263,6 +252,19 @@ fun Home(
                             )
                         }
                     }
+                }
+            }
+            if (showFab) {
+                FloatingActionButton(modifier = Modifier
+                    .constrainAs(fabRef) {
+                        end.linkTo(parent.end, 16.dp)
+                        bottom.linkTo(parent.bottom, 32.dp)
+                    }
+                    .padding(16.dp), onClick = { DialogHandler.showBuyStockDialog() }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        contentDescription = "Floating Action Button Icon"
+                    )
                 }
             }
         }

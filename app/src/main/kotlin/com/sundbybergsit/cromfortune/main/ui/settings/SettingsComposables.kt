@@ -1,6 +1,7 @@
 package com.sundbybergsit.cromfortune.main.ui.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -24,7 +25,10 @@ import com.sundbybergsit.cromfortune.main.R
 
 @Composable
 fun Settings(viewModel: SettingsViewModel, onBack: () -> Unit, onNavigateTo: (String) -> Unit) {
-    Scaffold(topBar = {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
         TopAppBar(
             title = {
                 Text(text = stringResource(id = R.string.settings_title), style = MaterialTheme.typography.titleMedium)

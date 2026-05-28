@@ -43,8 +43,9 @@ public class CrumbManagerV2 {
         redirectableRequest.setConnectTimeout(YahooFinance.CONNECTION_TIMEOUT);
         redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
 
-
-        URLConnection connection = redirectableRequest.openConnection();
+        Map<String, String> requestProperties = new HashMap<>();
+        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+        URLConnection connection = redirectableRequest.openConnection(requestProperties);
 
         for(String headerKey : connection.getHeaderFields().keySet()) {
             if("Set-Cookie".equalsIgnoreCase(headerKey)) {
@@ -159,6 +160,7 @@ public class CrumbManagerV2 {
 
         Map<String, String> requestProperties = new HashMap<String, String>();
         requestProperties.put("Cookie", cookie);
+        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
 
         URLConnection crumbConnection = redirectableCrumbRequest.openConnection(requestProperties);
         InputStreamReader is = new InputStreamReader(crumbConnection.getInputStream());

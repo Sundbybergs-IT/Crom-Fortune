@@ -10,6 +10,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -97,7 +98,10 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
         },
         label = "Stonk Top Margin"
     )
-    Scaffold(topBar = {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
         TopAppBar(
             title = {
                 Text(text = stringResource(id = R.string.dashboard_title), style = MaterialTheme.typography.titleMedium)

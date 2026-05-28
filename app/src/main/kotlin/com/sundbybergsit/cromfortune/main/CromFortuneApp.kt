@@ -14,6 +14,9 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
+import java.net.CookieHandler
+import java.net.CookieManager
+import java.net.CookiePolicy
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -31,8 +34,37 @@ class CromFortuneApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        CookieHandler.setDefault(object : CookieManager(null, CookiePolicy.ACCEPT_ALL) {
+            override fun put(uri: java.net.URI, responseHeaders: Map<String, List<String>>) {
+                responseHeaders.forEach { (key, value) ->
+                    if (key != null && (key.equals("Set-Cookie", ignoreCase = true) ||
+                                key.equals("Set-Cookie2", ignoreCase = true))
+                    ) {
+                        value.forEach { cookieStr ->
+                            try {
+                                java.net.HttpCookie.parse(cookieStr).forEach { cookie ->
+                                    cookieStore.add(uri, cookie)
+                                }
+                            } catch (e: IllegalArgumentException) {
+                                val fixed = cookieStr
+                                    .replace(Regex("(?i)(Expires|Max-Age|Domain|Path)=DELETE;?"), "")
+                                    .replace(Regex("(?i)Path=;"), "Path=/;")
+                                    .trim()
+                                try {
+                                    java.net.HttpCookie.parse(fixed).forEach { cookie ->
+                                        cookieStore.add(uri, cookie)
+                                    }
+                                } catch (e2: IllegalArgumentException) {
+                                    Log.w("CromFortuneApp", "Skipping invalid cookie: $cookieStr")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
         System.setProperty("yahoofinance.connection.timeout", "60000")
-        System.setProperty("http.agent", "");
+        System.setProperty("http.agent", "")
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)

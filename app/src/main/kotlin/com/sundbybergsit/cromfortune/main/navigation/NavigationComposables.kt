@@ -19,13 +19,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
@@ -40,6 +40,9 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -151,6 +154,8 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
             view = view
         )
         Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState) { hostData ->
                     Snackbar {
@@ -216,7 +221,11 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
             }
         ) { innerPadding ->
             val context = LocalContext.current
-            Box(Modifier.padding(innerPadding)) {
+            Box(
+                modifier = Modifier
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+                    .fillMaxSize()
+            ) {
                 NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,
@@ -1060,11 +1069,11 @@ internal fun BottomNavigation(
     onNavigationSelected: (Screen) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    androidx.compose.material.BottomNavigation(
+    NavigationBar(
         modifier = modifier.contentDescription("Bottom Navigation"),
-        backgroundColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surface,
         contentColor = contentColorFor(MaterialTheme.colorScheme.surface),
-        elevation = 8.dp,
+        tonalElevation = 8.dp,
     ) {
         // This is needed to "listen" to the back stack entry changing, even if android studio think its unused it doesnt work without it.
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -1074,20 +1083,23 @@ internal fun BottomNavigation(
 
         bottomNavigationItems.forEach { item ->
             val isSelected = selectedRoute == item.screen.route
-            BottomNavigationItem(
+            NavigationBarItem(
                 icon = { NavigationItemIcon(item = item, selected = isSelected) },
                 label = {
                     Text(
-                        text = stringResource(item.labelResId), color = if (isSelected) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
+                        text = stringResource(item.labelResId),
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
                 selected = isSelected,
                 onClick = { onNavigationSelected(item.screen) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             )
         }
     }

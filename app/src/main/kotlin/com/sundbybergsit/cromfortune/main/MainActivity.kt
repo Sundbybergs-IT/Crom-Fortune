@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.compose.rememberNavController
@@ -19,6 +20,7 @@ import com.sundbybergsit.cromfortune.main.theme.AppTheme
 class MainActivity : ComponentActivity(), Taggable {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Log.v(TAG, String.format("onCreate(savedInstanceState=[%s])", savedInstanceState))
 

@@ -60,7 +60,7 @@ public abstract class QuotesRequestV2<T> {
         String cookie = System.getProperty("yahoofinance.cookie");
         String crumb = System.getProperty("yahoofinance.crumb");
 
-        if (cookie == null || crumb.isEmpty()) {
+        if (cookie == null || crumb == null || crumb.isEmpty()) {
             cookie = getCookie();
             crumb = getCrumb(cookie);
             System.setProperty("yahoofinance.crumb", crumb);
@@ -73,7 +73,6 @@ public abstract class QuotesRequestV2<T> {
         Map<String, String> params = new LinkedHashMap<>();
         params.put("symbols", this.symbols);
         params.put("crumb", crumb);
-        params.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
 
         String url = YahooFinance.QUOTES_QUERY1V7_BASE_URL + "?" + Utils.getURLParameters(params);
 
@@ -84,7 +83,10 @@ public abstract class QuotesRequestV2<T> {
         RedirectableRequest redirectableRequest = new RedirectableRequest(request, 5);
         redirectableRequest.setConnectTimeout(YahooFinance.CONNECTION_TIMEOUT);
         redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
-        URLConnection connection = redirectableRequest.openConnection();
+        Map<String, String> requestProperties = new HashMap<>();
+        requestProperties.put("Cookie", cookie);
+        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+        URLConnection connection = redirectableRequest.openConnection(requestProperties);
 
         InputStreamReader is = new InputStreamReader(connection.getInputStream());
         JsonNode node = objectMapper.readTree(is);
@@ -106,7 +108,7 @@ public abstract class QuotesRequestV2<T> {
         redirectableRequest.setConnectTimeout(YahooFinance.CONNECTION_TIMEOUT);
         redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
         Map<String, String> requestProperties = new HashMap<>();
-        requestProperties.put("set-cookie", cookie);
+        requestProperties.put("Cookie", cookie);
         requestProperties.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.2 Safari/605.1.15");
         URLConnection preConnection = redirectableRequest.openConnection(requestProperties);
 
@@ -141,7 +143,9 @@ public abstract class QuotesRequestV2<T> {
         RedirectableRequest redirectableRequest = new RedirectableRequest(preRequest, 5);
         redirectableRequest.setConnectTimeout(YahooFinance.CONNECTION_TIMEOUT);
         redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
-        URLConnection preConnection = redirectableRequest.openConnection();
+        Map<String, String> requestProperties = new HashMap<>();
+        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+        URLConnection preConnection = redirectableRequest.openConnection(requestProperties);
         Map<String, List<String>> headerFields = preConnection.getHeaderFields();
         return Objects.requireNonNull(headerFields.get("Set-Cookie")).get(0);
     }
