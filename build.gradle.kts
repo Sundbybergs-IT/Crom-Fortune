@@ -10,18 +10,13 @@ buildscript {
     }
 }
 
-// https://github.com/gradle/gradle/issues/22797
-@Suppress(
-    "DSL_SCOPE_VIOLATION",
-    "UNRESOLVED_REFERENCE_WRONG_RECEIVER",
-)
 plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.serialization)
     alias(libs.plugins.sonarqube)
 }
 
-val baseVersionName = "0.9.1"
+val baseVersionName = "0.9.2"
 
 allprojects {
 
