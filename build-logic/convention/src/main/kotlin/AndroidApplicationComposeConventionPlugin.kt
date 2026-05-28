@@ -1,5 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
-import com.sundbybergsit.cromfortune.boilerplate.configureAndroidCompose
+import com.sundbybergsit.cromfortune.boilerplate.configureAndroidComposeApp
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.getByType
@@ -10,7 +10,7 @@ class AndroidApplicationComposeConventionPlugin : Plugin<Project> {
         with(target) {
             pluginManager.apply("com.android.application")
             val extension = extensions.getByType<ApplicationExtension>()
-            configureAndroidCompose(extension)
+            configureAndroidComposeApp(extension)
         }
     }
 

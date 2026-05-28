@@ -13,7 +13,7 @@ object CurrencyRateRepository : CurrencyRateApi {
 
     @VisibleForTesting
     @Suppress("ObjectPropertyName")
-    val _currencyRates: MutableStateFlow<Set<CurrencyRate>> = MutableStateFlow(setOf())
+    val _currencyRates: MutableStateFlow<Set<CurrencyRate>> = MutableStateFlow(setOf(CurrencyRate("SEK", 1.0)))
 
     override val currencyRates: StateFlow<Set<CurrencyRate>> = _currencyRates
 

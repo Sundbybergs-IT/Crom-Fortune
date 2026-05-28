@@ -1,7 +1,7 @@
 package com.sundbybergsit.cromfortune.boilerplate
 
-import com.android.build.api.dsl.CommonExtension
-import org.gradle.api.JavaVersion
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -10,14 +10,42 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val Project.libraries
     get(): VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension<*, *, *, *, *, *>) {
-    commonExtension.apply {
+internal fun Project.configureKotlinAndroidApp(appExtension: ApplicationExtension) {
+    appExtension.apply {
+        compileSdk = libraries.findVersion("compileSdk").get().toString().toInt()
+
+        defaultConfig {
+            minSdk = libraries.findVersion("minSdk").get().toString().toInt()
+        }
+
+        kotlinExtension.jvmToolchain(jdkVersion = 21)
+
+        testOptions {
+            unitTests.isIncludeAndroidResources = true
+            unitTests.isReturnDefaultValues = true
+            unitTests.all { test ->
+                test.testLogging {
+                    events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED))
+                    showCauses = true
+                    showExceptions = true
+                    exceptionFormat = TestExceptionFormat.FULL
+                }
+            }
+        }
+    }
+
+    configureKotlin()
+}
+
+internal fun Project.configureKotlinAndroidLibrary(libraryExtension: LibraryExtension) {
+    libraryExtension.apply {
         compileSdk = libraries.findVersion("compileSdk").get().toString().toInt()
 
         defaultConfig {
@@ -46,13 +74,13 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension<*, 
 private fun Project.configureKotlin() {
     // Use withType to workaround https://youtrack.jetbrains.com/issue/KT-55947
     tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_21.toString()
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
             // Treat all Kotlin warnings as errors (disabled by default)
             // Override by setting warningsAsErrors=true in your ~/.gradle/gradle.properties
             val warningsAsErrors: String? by project
-            allWarningsAsErrors = warningsAsErrors.toBoolean()
-            freeCompilerArgs = freeCompilerArgs + listOf(
+            allWarningsAsErrors.set(warningsAsErrors.toBoolean())
+            freeCompilerArgs.addAll(
                 // For creation of default methods in interfaces
                 "-Xjvm-default=all",
                 // Avoid having to stutter experimental annotations all over the codebase

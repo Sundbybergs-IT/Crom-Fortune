@@ -1,5 +1,5 @@
-import com.android.build.gradle.LibraryExtension
-import com.sundbybergsit.cromfortune.boilerplate.configureKotlinAndroid
+import com.android.build.api.dsl.LibraryExtension
+import com.sundbybergsit.cromfortune.boilerplate.configureKotlinAndroidLibrary
 import com.sundbybergsit.cromfortune.boilerplate.libraries
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -13,11 +13,10 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         with(target) {
             with(pluginManager) {
                 apply("com.android.library")
-                apply("org.jetbrains.kotlin.android")
             }
             extensions.configure<LibraryExtension> {
-                configureKotlinAndroid(this)
-                defaultConfig.targetSdk = libraries.findVersion("compileSdk").get().toString().toInt()
+                configureKotlinAndroidLibrary(this)
+                testOptions.targetSdk = libraries.findVersion("compileSdk").get().toString().toInt()
             }
             dependencies {
                 // Version determined by Kotlin plugin

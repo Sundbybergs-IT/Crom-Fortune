@@ -1,5 +1,5 @@
-import com.android.build.gradle.LibraryExtension
-import com.sundbybergsit.cromfortune.boilerplate.configureAndroidCompose
+import com.android.build.api.dsl.LibraryExtension
+import com.sundbybergsit.cromfortune.boilerplate.configureAndroidComposeLibrary
 import com.sundbybergsit.cromfortune.boilerplate.libraries
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -12,7 +12,7 @@ class AndroidLibraryComposeConventionPlugin : Plugin<Project> {
         with(target) {
             pluginManager.apply("com.android.library")
             val extension = extensions.getByType<LibraryExtension>()
-            configureAndroidCompose(extension)
+            configureAndroidComposeLibrary(extension)
             dependencies {
                 "implementation"(libraries.findBundle("compose").get())
                 // Version determined by Compose BoM

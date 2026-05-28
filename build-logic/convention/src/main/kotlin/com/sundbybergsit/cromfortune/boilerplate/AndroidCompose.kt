@@ -1,26 +1,18 @@
 package com.sundbybergsit.cromfortune.boilerplate
 
-import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.io.File
 
-/**
- * Configure Compose-specific options
- */
-internal fun Project.configureAndroidCompose(
-    commonExtension: CommonExtension<*, *, *, *, *, *>,
+internal fun Project.configureAndroidComposeApp(
+    applicationExtension: ApplicationExtension,
 ) {
-    commonExtension.apply {
+    applicationExtension.apply {
         buildFeatures {
             compose = true
         }
 
-        composeOptions {
-            kotlinCompilerExtensionVersion = libraries.findVersion("androidx.compose.compiler").get().toString()
-        }
         dependencies {
             val bom = libraries.findLibrary("composeBom").get()
             add("implementation", platform(bom))
@@ -28,33 +20,23 @@ internal fun Project.configureAndroidCompose(
         }
     }
 
-    tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions {
-            freeCompilerArgs = freeCompilerArgs + buildComposeMetricsParameters()
-        }
-    }
+    pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 }
 
-private fun Project.buildComposeMetricsParameters(): List<String> {
-    val metricParameters = mutableListOf<String>()
-    val enableMetricsProvider = project.providers.gradleProperty("enableComposeCompilerMetrics")
-    val enableMetrics = (enableMetricsProvider.orNull == "true")
-    if (enableMetrics) {
-        val metricsFolder = File(project.layout.buildDirectory.toString(), "compose-metrics")
-        metricParameters.add("-P")
-        metricParameters.add(
-            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=" + metricsFolder.absolutePath
-        )
+internal fun Project.configureAndroidComposeLibrary(
+    libraryExtension: LibraryExtension,
+) {
+    libraryExtension.apply {
+        buildFeatures {
+            compose = true
+        }
+
+        dependencies {
+            val bom = libraries.findLibrary("composeBom").get()
+            add("implementation", platform(bom))
+            add("androidTestImplementation", platform(bom))
+        }
     }
 
-    val enableReportsProvider = project.providers.gradleProperty("enableComposeCompilerReports")
-    val enableReports = (enableReportsProvider.orNull == "true")
-    if (enableReports) {
-        val reportsFolder = File(project.layout.buildDirectory.toString(), "compose-reports")
-        metricParameters.add("-P")
-        metricParameters.add(
-            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" + reportsFolder.absolutePath
-        )
-    }
-    return metricParameters.toList()
+    pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 }

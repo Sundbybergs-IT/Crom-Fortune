@@ -13,7 +13,7 @@ kotlin {
 tasks.named<Test>("test") {
     useJUnitPlatform()
     reports {
-        junitXml.setDestination(file("$buildDir/test-results/testDebugUnitTest"))
+        junitXml.outputLocation.set(layout.buildDirectory.dir("test-results/testDebugUnitTest"))
     }
 }
 tasks.named("jacocoTestReport") {

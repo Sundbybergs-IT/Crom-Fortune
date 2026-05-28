@@ -19,9 +19,9 @@ class AndroidApplicationFirebaseConventionPlugin : Plugin<Project> {
                 val bom = libraries.findLibrary("firebaseBom").get()
                 add("implementation", platform(bom))
                 // Version determined by Firebase BoM
-                "implementation"("com.google.firebase:firebase-analytics-ktx")
+                "implementation"("com.google.firebase:firebase-analytics")
                 // Version determined by Firebase BoM
-                "implementation"("com.google.firebase:firebase-crashlytics-ktx")
+                "implementation"("com.google.firebase:firebase-crashlytics")
             }
 
             extensions.configure<ApplicationExtension> {

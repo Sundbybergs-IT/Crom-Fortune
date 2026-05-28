@@ -1,5 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
-import com.sundbybergsit.cromfortune.boilerplate.configureKotlinAndroid
+import com.sundbybergsit.cromfortune.boilerplate.configureKotlinAndroidApp
 import com.sundbybergsit.cromfortune.boilerplate.libraries
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -13,11 +13,10 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
         with(target) {
             with(pluginManager) {
                 apply("com.android.application")
-                apply("org.jetbrains.kotlin.android")
             }
 
             extensions.configure<ApplicationExtension> {
-                configureKotlinAndroid(this)
+                configureKotlinAndroidApp(this)
                 defaultConfig.targetSdk = libraries.findVersion("compileSdk").get().toString().toInt()
             }
             dependencies {
