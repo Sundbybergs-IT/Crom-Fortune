@@ -68,9 +68,9 @@ class CromFortuneApp : Application(), Configuration.Provider {
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
-        createDataIfMissing(Databases.PORTFOLIO_DB_NAME)
         migrateOldData(fromDb = "Stocks", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
         migrateOldData(fromDb = "SPLITS", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME + "-splits")
+        createDataIfMissing(Databases.PORTFOLIO_DB_NAME)
         PortfolioRepository.init(
             getSharedPreferences(
                 Databases.PORTFOLIO_DB_NAME,
