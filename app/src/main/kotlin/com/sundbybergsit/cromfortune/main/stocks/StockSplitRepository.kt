@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 // FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
@@ -31,13 +30,8 @@ class StockSplitRepository(
 
     override fun list(stockName: String): Set<StockSplit> {
         val serializedStockSplits = sharedPreferences.getString(stockName, null)
-        val result = mutableSetOf<StockSplit>()
         return if (serializedStockSplits != null) {
-            val setOfStockSplits: Set<StockSplit> = Json.decodeFromString(serializedStockSplits)
-            for (serializedStockSplit in serializedStockSplits) {
-                result.addAll(setOfStockSplits)
-            }
-            result
+            Json.decodeFromString(serializedStockSplits)
         } else {
             setOf()
         }

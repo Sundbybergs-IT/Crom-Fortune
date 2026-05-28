@@ -6,7 +6,6 @@ import android.util.Log
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.main.Taggable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 // FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
@@ -50,11 +49,15 @@ class StockOrderRepository(
 
     override fun list(stockSymbol: String): Set<StockOrder> {
         Log.i(TAG, "list([$stockSymbol])")
-        val serializedOrders = sharedPreferences.getStringSet(stockSymbol, emptySet()) as Set<String>
+        val serializedOrders = sharedPreferences.getStringSet(stockSymbol, emptySet()) ?: emptySet()
         val result = mutableSetOf<StockOrder>()
         for (serializedOrder in serializedOrders) {
-            val setOfStockOrders : Set<StockOrder> = Json.decodeFromString(serializedOrder)
-            result.addAll(setOfStockOrders)
+            try {
+                val setOfStockOrders: Set<StockOrder> = Json.decodeFromString(serializedOrder)
+                result.addAll(setOfStockOrders)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to decode $serializedOrder", e)
+            }
         }
         return result
     }
