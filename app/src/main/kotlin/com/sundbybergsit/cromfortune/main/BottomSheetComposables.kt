@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.main
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.DropdownMenuItem
@@ -19,6 +20,7 @@ fun BottomSheetContent(content: @Composable () -> Unit) {
         modifier = Modifier
             .wrapContentSize()
             .background(color = MaterialTheme.colorScheme.surface)
+            .navigationBarsPadding()
             .padding(8.dp)
     ) {
         content.invoke()
