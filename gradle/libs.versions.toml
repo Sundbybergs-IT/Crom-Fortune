@@ -42,6 +42,7 @@ androidxAppcompat = { module = "androidx.appcompat:appcompat", version.ref = "an
 androidxComposeCompiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose-compiler" }
 androidxComposeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended" }
 androidxComposeMaterialMaterial = { module = "androidx.compose.material:material" }
+androidxComposeUiTestJunit = { module = "androidx.compose.ui:ui-test-junit4" }
 androidxConstraintlayoutCompose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "androidx-constraintlayout-compose" }
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }

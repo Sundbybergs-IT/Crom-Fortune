@@ -65,6 +65,7 @@ dependencies {
 
     implementation(libs.yahooFinance)
 
+    testImplementation(libs.androidxComposeUiTestJunit)
     testImplementation(libs.androidxTestJunit)
     testImplementation(libs.androidxWorkTesting)
     testImplementation(libs.junit)

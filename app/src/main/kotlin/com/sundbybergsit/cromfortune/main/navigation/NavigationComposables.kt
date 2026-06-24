@@ -286,10 +286,22 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                     HomeViewModelFactory(portfolioRepository = portfolioRepository)
                 })
-                val onSortNameAscending = { homeViewModel.sortNameAscending(key.profile) }
-                val onSortNameDescending = { homeViewModel.sortNameDescending(key.profile) }
-                val onSortProfitAscending = { homeViewModel.sortProfitAscending(key.profile) }
-                val onSortProfitDescending = { homeViewModel.sortProfitDescending(key.profile) }
+                val onSortNameAscending = {
+                    homeViewModel.sortNameAscending(key.profile)
+                    onBack()
+                }
+                val onSortNameDescending = {
+                    homeViewModel.sortNameDescending(key.profile)
+                    onBack()
+                }
+                val onSortProfitAscending = {
+                    homeViewModel.sortProfitAscending(key.profile)
+                    onBack()
+                }
+                val onSortProfitDescending = {
+                    homeViewModel.sortProfitDescending(key.profile)
+                    onBack()
+                }
                 BottomSheetContent {
                     BottomSheetMenuItem(
                         onClick = onSortNameAscending,
@@ -362,15 +374,17 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            val lastKey = currentBackStack.last()
+            val visibleBackStack =
+                if (lastKey.isBottomSheet()) currentBackStack.dropLast(1) else currentBackStack
+
             NavDisplay(
-                backStack = currentBackStack,
+                backStack = visibleBackStack,
                 onBack = onBack,
                 entryProvider = entryProvider
             )
 
-            // Handle Bottom Sheets as Overlays
-            val lastKey = currentBackStack.last()
-            if (lastKey::class.simpleName?.startsWith("BottomSheets") == true) {
+            if (lastKey.isBottomSheet()) {
                 ModalBottomSheet(onDismissRequest = onBack) {
                     entryProvider(lastKey).Content()
                 }
@@ -378,6 +392,8 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
         }
     }
 }
+
+private fun androidxNavKey.isBottomSheet(): Boolean = this::class.simpleName?.startsWith("BottomSheets") == true
 
 private fun String.toNavKey(): NavKey {
     return when {
@@ -1015,8 +1031,8 @@ internal sealed class NavigationItem(
 
     class ImageVectorIcon(
         screenKey: NavKey,
-        @param:StringRes labelResId: Int,
-        @param:StringRes contentDescriptionResId: Int,
+        labelResId: Int,
+        contentDescriptionResId: Int,
         val iconImageVector: ImageVector,
         val selectedImageVector: ImageVector? = null,
     ) : NavigationItem(screenKey, labelResId, contentDescriptionResId)
