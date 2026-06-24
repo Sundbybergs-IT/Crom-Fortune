@@ -264,44 +264,53 @@ class HomeViewModel(
     }
 
     fun sortNameAscending(portfolioName: String) {
-        _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = checkNotNull(mutableMap[portfolioName])
-            val sortedPortfolio = oldViewState.items.sortedBy { item -> item.displayName }
-            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
+        updatePortfolioState(portfolioName) { oldViewState ->
+            oldViewState.items.sortedBy { item -> item.displayName }
         }
     }
 
     fun sortNameDescending(portfolioName: String) {
-        _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = checkNotNull(mutableMap[portfolioName])
-            val sortedPortfolio = oldViewState.items.sortedByDescending { item -> item.displayName }
-            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
+        updatePortfolioState(portfolioName) { oldViewState ->
+            oldViewState.items.sortedByDescending { item -> item.displayName }
         }
     }
 
     fun sortProfitAscending(portfolioName: String) {
-        _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = checkNotNull(mutableMap[portfolioName])
-            val sortedPortfolio = oldViewState.items.sortedBy { item ->
+        updatePortfolioState(portfolioName) { oldViewState ->
+            oldViewState.items.sortedBy { item ->
                 val stockPrice = StockPriceRepository.getStockPrice(item.stockSymbol)
                 stockPrice?.let { nullSafeStockPrice ->
                     item.getProfit(nullSafeStockPrice.price)
                 }
             }
-            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
         }
     }
 
     fun sortProfitDescending(portfolioName: String) {
-        _portfoliosStateFlow.value.let { mutableMap ->
-            val oldViewState = checkNotNull(mutableMap[portfolioName])
-            val sortedPortfolio = oldViewState.items.sortedByDescending { item ->
+        updatePortfolioState(portfolioName) { oldViewState ->
+            oldViewState.items.sortedByDescending { item ->
                 val stockPrice = StockPriceRepository.getStockPrice(item.stockSymbol)
                 stockPrice?.let { nullSafeStockPrice ->
                     item.getProfit(nullSafeStockPrice.price)
                 }
             }
-            mutableMap.replace(portfolioName, ViewState(sortedPortfolio, oldViewState.readOnly))
+        }
+    }
+
+    private fun updatePortfolioState(
+        portfolioName: String,
+        updateItems: (ViewState) -> List<StockOrderAggregate>
+    ) {
+        val currentState = _portfoliosStateFlow.value
+        val oldViewState = checkNotNull(currentState[portfolioName])
+        _portfoliosStateFlow.value = currentState.toMutableMap().apply {
+            put(
+                portfolioName,
+                ViewState(
+                    items = updateItems(oldViewState),
+                    readOnly = oldViewState.readOnly
+                )
+            )
         }
     }
 
