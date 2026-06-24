@@ -3,7 +3,6 @@ package com.sundbybergsit.cromfortune.main.navigation
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.StringRes
@@ -20,10 +19,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -73,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.core.net.toUri
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -155,7 +158,9 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
         )
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+            ),
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState) { hostData ->
                     Snackbar {
@@ -223,7 +228,7 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
             val context = LocalContext.current
             Box(
                 modifier = Modifier
-                    .padding(bottom = innerPadding.calculateBottomPadding())
+                    .padding(innerPadding)
                     .fillMaxSize()
             ) {
                 NavHost(
@@ -249,146 +254,19 @@ internal fun AppNavigation(navController: NavHostController, portfolioRepository
 fun AddDialogs(
     dialogHandler: DialogHandler,
     portfolioRepository: PortfolioRepository,
-    selectedDaysMutableState: MutableState<Set<DayOfWeek>> = remember { mutableStateOf(setOf()) },
-    fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) },
-    toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
 ) {
     val portfolioNameState = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState()
     when (val dialogViewState = dialogHandler.dialogViewState.collectAsState().value) {
         is DialogHandler.DialogViewState.ShowDeleteDialog -> {
-            val context: Context = LocalContext.current
-            AlertDialog(
-                modifier = Modifier,
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.generic_dialog_title_are_you_sure),
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                },
-                text = {
-                    Text(
-                        text = stringResource(id = R.string.home_delete_all_stock_orders, dialogViewState.stockName),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                },
-                onDismissRequest = { dialogHandler.dismissDialog() },
-                confirmButton = {
-                    TextButton(onClick = {
-                        dialogViewState.onClickRemove(context = context, stockSymbol = dialogViewState.stockName)
-                        dialogHandler.dismissDialog()
-                    }) {
-                        Text(stringResource(id = R.string.action_delete))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        dialogHandler.dismissDialog()
-                    }) {
-                        Text(stringResource(id = R.string.action_close))
-                    }
-                }
-            )
+            DeleteDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
         }
 
         is DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog -> {
-            val settingsViewState by dialogViewState.stockRetrievalSettings.timeInterval
-            UpdateTimePickerLaunchedEffect(
-                settingsViewState, dialogViewState, selectedDaysMutableState,
-                fromTimePickerState, toTimePickerState
-            )
-            val context = LocalContext.current
-            if (fromTimePickerState.value != null && toTimePickerState.value != null) {
-                AlertDialog(
-                    modifier = Modifier,
-                    title = {
-                        Text(
-                            text = stringResource(id = R.string.settings_dialog_time_intervals_title),
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    },
-                    text = {
-                        Column {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = stringResource(id = R.string.generic_time_start_label),
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            fromTimePickerState.value?.let { nullSafeTimePickerState ->
-                                TimeInput(state = nullSafeTimePickerState)
-                            }
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = stringResource(id = R.string.generic_time_end_label),
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            toTimePickerState.value?.let { nullSafeTimePickerState ->
-                                TimeInput(state = nullSafeTimePickerState)
-                            }
-                            DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
-                                if (selectedDaysMutableState.value.contains(day)) {
-                                    selectedDaysMutableState.value = selectedDaysMutableState.value - day
-                                } else {
-                                    selectedDaysMutableState.value = selectedDaysMutableState.value + day
-                                }
-                            })
-                        }
-                    },
-                    onDismissRequest = { dialogHandler.dismissDialog() },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
-                            val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
-                            dialogViewState.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
-                                nullSafeFromTimePickerState.minute,
-                                nullSafeToTimePickerState.hour,
-                                nullSafeToTimePickerState.minute,
-                                selectedDaysMutableState.value.map { materialWeekday ->
-                                    DayOfWeek.valueOf(
-                                        materialWeekday.name
-                                    )
-                                })
-                            dialogHandler.dismissDialog()
-                            dialogHandler.showSnack(context.getString(R.string.generic_saved))
-                        }) {
-                            Text(stringResource(id = android.R.string.ok))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = {
-                            dialogHandler.dismissDialog()
-                        }) {
-                            Text(stringResource(id = android.R.string.cancel))
-                        }
-                    }
-                )
-            }
+            StockRetrievalTimeIntervalsDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
         }
 
         is DialogHandler.DialogViewState.ShowSupportedStocksDialog -> {
-            AlertDialog(
-                modifier = Modifier,
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.action_stocks_supported),
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                },
-                text = {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = dialogViewState.text,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                },
-                onDismissRequest = { dialogHandler.dismissDialog() },
-                confirmButton = {
-                    TextButton(onClick = {
-                        dialogHandler.dismissDialog()
-                    }) {
-                        Text(stringResource(id = android.R.string.ok))
-                    }
-                }
-            )
+            SupportedStocksDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
         }
 
         DialogHandler.DialogViewState.Dismissed -> {
@@ -396,116 +274,12 @@ fun AddDialogs(
         }
 
         is DialogHandler.DialogViewState.ShowStockEvents -> {
-            val context = LocalContext.current
-            val stockEvents = dialogViewState.stockEvents
-            val opinionatedEvents: List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
-                stockEvents,
-                CromFortuneV1RecommendationAlgorithm(context)
-            )
-            Dialog(onDismissRequest = { dialogHandler.dismissDialog() }) {
-                Surface(
-                    modifier = Modifier
-                        .padding(vertical = 16.dp)
-                        .fillMaxWidth(),
-                ) {
-                    ConstraintLayout(modifier = Modifier.padding(8.dp)) {
-                        val (tableRef, buttonRef) = createRefs()
-                        LazyColumn(modifier = Modifier
-                            .constrainAs(tableRef) {
-                                bottom.linkTo(buttonRef.top)
-                            }
-                            .fillMaxHeight(0.8f)
-                            .fillMaxWidth()) {
-                            stickyHeader {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(color = MaterialTheme.colorScheme.surface)
-                                ) {
-                                    Row {
-                                        Text(
-                                            text = stringResource(id = R.string.generic_title_stock_orders),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(bottom = 32.dp)
-                                    ) {
-                                        Text(
-                                            text = dialogViewState.title,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                    Row(
-                                        modifier = Modifier
-                                            .background(color = MaterialTheme.colorScheme.surface)
-                                    ) {
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = stringResource(id = R.string.generic_date),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        Spacer(modifier = Modifier.padding(4.dp))
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = stringResource(id = R.string.generic_title_quantity),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        Spacer(modifier = Modifier.padding(4.dp))
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = stringResource(id = R.string.generic_price_per_stock),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        Spacer(modifier = Modifier.padding(4.dp))
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = stringResource(id = R.string.generic_title_total_cost),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
-                                }
-                            }
-                            items(stockEvents.size) { index ->
-                                stockEvents[index].stockOrder?.let { nullSafeStockOrder ->
-                                    val opinionatedStockOrder =
-                                        opinionatedEvents.single { opinionatedStockOrderWrapper -> opinionatedStockOrderWrapper.stockOrder == nullSafeStockOrder }
-                                    StockOrderRow(
-                                        stockOrder = nullSafeStockOrder,
-                                        opinionatedStockOrder = opinionatedStockOrder,
-                                        readOnly = dialogViewState.readOnly
-                                    )
-                                }
-                            }
-                        }
-                        TextButton(
-                            modifier = Modifier
-                                .padding(top = 8.dp)
-                                .constrainAs(buttonRef) {
-                                    end.linkTo(parent.end)
-                                    bottom.linkTo(parent.bottom)
-                                },
-                            onClick = {
-                                dialogHandler.dismissDialog()
-                            }
-                        ) {
-                            Text(stringResource(id = R.string.action_close).uppercase())
-                        }
-                    }
-                }
-            }
+            StockEventsDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
         }
 
         is DialogHandler.DialogViewState.ShowBuyStockDialog -> {
             val localContext = LocalContext.current
+            val savedText = stringResource(id = R.string.generic_saved)
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
@@ -517,12 +291,13 @@ fun AddDialogs(
                     portfolioName = portfolioNameState.value,
                     stockOrder = stockOrder
                 )
-                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+                Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT).show()
             }
         }
 
         is DialogHandler.DialogViewState.ShowSellStockDialog -> {
             val localContext = LocalContext.current
+            val savedText = stringResource(id = R.string.generic_saved)
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
@@ -538,7 +313,7 @@ fun AddDialogs(
                         portfolioName = portfolioNameState.value,
                         stockOrder = stockOrder
                     )
-                    Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT)
+                    Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT)
                         .show()
                 },
                 homeViewModel = homeViewModel,
@@ -548,6 +323,7 @@ fun AddDialogs(
 
         is DialogHandler.DialogViewState.ShowRegisterSplitStockDialog -> {
             val localContext = LocalContext.current
+            val savedText = stringResource(id = R.string.generic_saved)
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
@@ -556,18 +332,276 @@ fun AddDialogs(
                 onDismiss = { DialogHandler.dismissDialog() }, stockSymbolParam = dialogViewState.stockSymbol
             ) { stockSplit ->
                 homeViewModel.save(context = localContext, stockSplit = stockSplit)
-                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+                Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT).show()
             }
         }
 
         is DialogHandler.DialogViewState.ShowAddPortfolio -> {
             val localContext = LocalContext.current
+            val savedText = stringResource(id = R.string.generic_saved)
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
             PortfolioAddAlertDialog(onDismiss = { DialogHandler.dismissDialog() }) { portfolioName ->
                 homeViewModel.savePortfolio(context = localContext, portfolioName = portfolioName)
-                Toast.makeText(localContext, localContext.getText(R.string.generic_saved), Toast.LENGTH_SHORT).show()
+                Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+}
+
+@Composable
+private fun DeleteDialog(
+    state: DialogHandler.DialogViewState.ShowDeleteDialog,
+    onDismiss: () -> Unit
+) {
+    val context: Context = LocalContext.current
+    AlertDialog(
+        modifier = Modifier,
+        title = {
+            Text(
+                text = stringResource(id = R.string.generic_dialog_title_are_you_sure),
+                style = MaterialTheme.typography.titleSmall
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(id = R.string.home_delete_all_stock_orders, state.stockName),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                state.onClickRemove(context = context, stockSymbol = state.stockName)
+                onDismiss()
+            }) {
+                Text(stringResource(id = R.string.action_delete))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.action_close))
+            }
+        }
+    )
+}
+
+@Composable
+private fun StockRetrievalTimeIntervalsDialog(
+    state: DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog,
+    onDismiss: () -> Unit
+) {
+    val selectedDaysMutableState: MutableState<Set<DayOfWeek>> = remember { mutableStateOf(setOf()) }
+    val fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
+    val toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
+    val settingsViewState by state.stockRetrievalSettings.timeInterval
+    UpdateTimePickerLaunchedEffect(
+        settingsViewState, state, selectedDaysMutableState,
+        fromTimePickerState, toTimePickerState
+    )
+    val context = LocalContext.current
+    val savedText = stringResource(id = R.string.generic_saved)
+    if (fromTimePickerState.value != null && toTimePickerState.value != null) {
+        AlertDialog(
+            modifier = Modifier,
+            title = {
+                Text(
+                    text = stringResource(id = R.string.settings_dialog_time_intervals_title),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(id = R.string.generic_time_start_label),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    fromTimePickerState.value?.let { nullSafeTimePickerState ->
+                        TimeInput(state = nullSafeTimePickerState)
+                    }
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(id = R.string.generic_time_end_label),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    toTimePickerState.value?.let { nullSafeTimePickerState ->
+                        TimeInput(state = nullSafeTimePickerState)
+                    }
+                    DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
+                        if (selectedDaysMutableState.value.contains(day)) {
+                            selectedDaysMutableState.value -= day
+                        } else {
+                            selectedDaysMutableState.value += day
+                        }
+                    })
+                }
+            },
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(onClick = {
+                    val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
+                    val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
+                    state.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
+                        nullSafeFromTimePickerState.minute,
+                        nullSafeToTimePickerState.hour,
+                        nullSafeToTimePickerState.minute,
+                        selectedDaysMutableState.value.map { materialWeekday ->
+                            DayOfWeek.valueOf(
+                                materialWeekday.name
+                            )
+                        })
+                    onDismiss()
+                    DialogHandler.showSnack(savedText)
+                }) {
+                    Text(stringResource(id = android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(id = android.R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun SupportedStocksDialog(
+    state: DialogHandler.DialogViewState.ShowSupportedStocksDialog,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        modifier = Modifier,
+        title = {
+            Text(
+                text = stringResource(id = R.string.action_stocks_supported),
+                style = MaterialTheme.typography.titleSmall
+            )
+        },
+        text = {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = state.text,
+                style = MaterialTheme.typography.titleSmall
+            )
+        },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = android.R.string.ok))
+            }
+        }
+    )
+}
+
+@Composable
+private fun StockEventsDialog(
+    state: DialogHandler.DialogViewState.ShowStockEvents,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val stockEvents = state.stockEvents
+    val opinionatedEvents: List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
+        stockEvents,
+        CromFortuneV1RecommendationAlgorithm(context)
+    )
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .fillMaxWidth(),
+        ) {
+            ConstraintLayout(modifier = Modifier.padding(8.dp)) {
+                val (tableRef, buttonRef) = createRefs()
+                LazyColumn(modifier = Modifier
+                    .constrainAs(tableRef) {
+                        bottom.linkTo(buttonRef.top)
+                    }
+                    .fillMaxHeight(0.8f)
+                    .fillMaxWidth()) {
+                    stickyHeader {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = MaterialTheme.colorScheme.surface)
+                        ) {
+                            Row {
+                                Text(
+                                    text = stringResource(id = R.string.generic_title_stock_orders),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .padding(bottom = 32.dp)
+                            ) {
+                                Text(
+                                    text = state.title,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .background(color = MaterialTheme.colorScheme.surface)
+                            ) {
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_date),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Spacer(modifier = Modifier.padding(4.dp))
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_title_quantity),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Spacer(modifier = Modifier.padding(4.dp))
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_price_per_stock),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Spacer(modifier = Modifier.padding(4.dp))
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.generic_title_total_cost),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                    items(stockEvents.size) { index ->
+                        stockEvents[index].stockOrder?.let { nullSafeStockOrder ->
+                            val opinionatedStockOrder =
+                                opinionatedEvents.single { opinionatedStockOrderWrapper -> opinionatedStockOrderWrapper.stockOrder == nullSafeStockOrder }
+                            StockOrderRow(
+                                stockOrder = nullSafeStockOrder,
+                                opinionatedStockOrder = opinionatedStockOrder,
+                                readOnly = state.readOnly
+                            )
+                        }
+                    }
+                }
+                TextButton(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .constrainAs(buttonRef) {
+                            end.linkTo(parent.end)
+                            bottom.linkTo(parent.bottom)
+                        },
+                    onClick = onDismiss
+                ) {
+                    Text(stringResource(id = R.string.action_close).uppercase())
+                }
             }
         }
     }
@@ -955,7 +989,7 @@ private fun NavGraphBuilder.addSettingsBottomSheet() {
                 onShowTodo = {
                     val browserIntent = Intent(
                         Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/Sundbybergs-IT/Crom-Fortune/issues")
+                        "https://github.com/Sundbybergs-IT/Crom-Fortune/issues".toUri()
                     )
                     context.startActivity(browserIntent)
                 }
@@ -1074,6 +1108,9 @@ internal fun BottomNavigation(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = contentColorFor(MaterialTheme.colorScheme.surface),
         tonalElevation = 8.dp,
+        windowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+        ),
     ) {
         // This is needed to "listen" to the back stack entry changing, even if android studio think its unused it doesnt work without it.
         val navBackStackEntry by navController.currentBackStackEntryAsState()
