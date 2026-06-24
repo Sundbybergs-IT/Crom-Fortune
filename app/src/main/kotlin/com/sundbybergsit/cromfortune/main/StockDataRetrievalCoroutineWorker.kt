@@ -24,6 +24,7 @@ import kotlinx.coroutines.coroutineScope
 import yahoofinance.StockV2
 import yahoofinance.get
 import yahoofinance.getFxHax
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -39,6 +40,7 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
         const val COMMISSION_FEE = 39.0
 
         fun refreshFromYahoo(context: Context, portfolioRepository: PortfolioRepository, onFinished: () -> Unit) {
+            val notificationsAllowed = isWithinNotificationWindow(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
@@ -81,11 +83,19 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
                                     timeInMillis = System.currentTimeMillis()
                                 )
                             if (recommendation != null) {
-                                notifyRecommendation(
-                                    context = context,
-                                    portfolioName = portfolioName,
-                                    recommendation = recommendation
-                                )
+                                if (notificationsAllowed) {
+                                    notifyRecommendation(
+                                        context = context,
+                                        portfolioName = portfolioName,
+                                        recommendation = recommendation
+                                    )
+                                } else {
+                                    Log.i(
+                                        TAG,
+                                        "Skipping recommendation notification for portfolio [$portfolioName] " +
+                                            "for stock [$stockSymbol] outside configured time interval."
+                                    )
+                                }
                             }
                         }
                     }
@@ -156,6 +166,22 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
         }
 
         private fun getRateInSek(currency: String) = getFxHax("${currency}SEK=X").price.toDouble()
+
+        internal fun isWithinNotificationWindow(
+            context: Context,
+            currentDayOfWeek: DayOfWeek = LocalDate.now().dayOfWeek,
+            currentTime: LocalTime = LocalTime.now()
+        ): Boolean {
+            val timeInterval = StockRetrievalSettings(context).timeInterval.value
+            val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
+            val toTime = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
+            return timeInterval.weekDays.isWithinConfiguredTimeInterval(
+                currentDayOfWeek = currentDayOfWeek,
+                currentTime = currentTime,
+                fromTime = fromTime,
+                toTime = toTime
+            )
+        }
 
     }
 
