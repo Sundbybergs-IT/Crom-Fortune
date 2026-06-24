@@ -228,13 +228,6 @@ class HomeViewModel(
         return StockEventRepository(context, portfolioName = portfolioName).countCurrent(stockName) >= quantity
     }
 
-    fun confirmRemove(context: Context, stockName: String) {
-        val currentPortfolio = PortfolioRepository.selectedPortfolioNameStateFlow.value
-        val stockOrderApi: StockOrderApi = StockOrderRepository(context, portfolioName = currentPortfolio)
-        stockOrderApi.remove(stockName)
-        refresh(context)
-    }
-
     fun refreshData(context: Context, onFinished: () -> Unit = {}) {
         viewModelScope.launch(ioDispatcher) {
             refresh(context)
