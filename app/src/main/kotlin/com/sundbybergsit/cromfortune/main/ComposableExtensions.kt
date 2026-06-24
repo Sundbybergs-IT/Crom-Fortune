@@ -19,7 +19,7 @@ inline fun <reified VM : ViewModel> activityBoundViewModel(
     return activity.viewModels(extrasProducer = null, factoryProducer = factoryProducer)
 }
 
-private tailrec fun Context.findComponentActivity(): ComponentActivity {
+tailrec fun Context.findComponentActivity(): ComponentActivity {
     return when (this) {
         is ComponentActivity -> this
         is ContextWrapper -> baseContext.findComponentActivity()
