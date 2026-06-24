@@ -6,12 +6,7 @@ import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -40,8 +35,10 @@ import androidx.compose.material.icons.outlined.SentimentDissatisfied
 import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -61,6 +58,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -76,23 +75,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.net.toUri
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.navArgument
-import androidx.navigation.plusAssign
-import com.google.accompanist.navigation.material.ModalBottomSheetLayout
-import com.google.accompanist.navigation.material.bottomSheet
-import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
-import com.google.android.play.core.appupdate.AppUpdateManager
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.StockEvent
@@ -104,7 +89,6 @@ import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BottomSheetContent
 import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
 import com.sundbybergsit.cromfortune.main.DialogHandler
-import com.sundbybergsit.cromfortune.main.LeafScreen
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.ShowSnackbarLaunchedEffect
@@ -140,113 +124,296 @@ import java.time.DayOfWeek
 import java.util.Currency
 import java.util.Date
 import java.util.Locale
+import androidx.navigation3.runtime.NavKey as androidxNavKey
 
 private const val DATE_FORMAT = "MM/dd/yyyy"
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AppNavigation(navController: NavHostController, portfolioRepository: PortfolioRepository) {
-    val bottomSheetNavigator = rememberBottomSheetNavigator()
-    navController.navigatorProvider += bottomSheetNavigator
-    AddDialogs(dialogHandler = DialogHandler, portfolioRepository = portfolioRepository)
-    ModalBottomSheetLayout(bottomSheetNavigator = bottomSheetNavigator) {
-        val snackbarHostState = remember { SnackbarHostState() }
-        val view = LocalView.current
-        ShowSnackbarLaunchedEffect(
-            dialogHandler = DialogHandler,
-            snackbarHostState = snackbarHostState,
-            view = view
+internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
+    val context = LocalContext.current
+    val appUpdateManager = remember { AppUpdateManagerFactory.create(context) }
+
+    val homeBackStack = rememberNavBackStack(Home)
+    val dashboardBackStack = rememberNavBackStack(Dashboard)
+    val notificationsBackStack = rememberNavBackStack(Notifications)
+    val settingsBackStack = rememberNavBackStack(Settings)
+
+    val backStacks = remember {
+        mapOf(
+            Home to homeBackStack as MutableList<androidxNavKey>,
+            Dashboard to dashboardBackStack as MutableList<androidxNavKey>,
+            Notifications to notificationsBackStack as MutableList<androidxNavKey>,
+            Settings to settingsBackStack as MutableList<androidxNavKey>
         )
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            contentWindowInsets = WindowInsets.safeDrawing.only(
-                WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
-            ),
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState) { hostData ->
-                    Snackbar {
-                        val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
-                        val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
-                        ConstraintLayout(
+    }
+
+    var currentTabRoute by rememberSaveable { mutableStateOf(Home.toRoute()) }
+    val currentTab = currentTabRoute.toNavKey()
+    val currentBackStack = backStacks[currentTab]!!
+
+    val onNavigate: (NavKey) -> Unit = { key ->
+        currentBackStack.add(key)
+    }
+
+    val onBack: () -> Unit = {
+        if (currentBackStack.size > 1) {
+            currentBackStack.removeAt(currentBackStack.size - 1)
+        }
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val view = LocalView.current
+    ShowSnackbarLaunchedEffect(
+        dialogHandler = DialogHandler,
+        snackbarHostState = snackbarHostState,
+        view = view
+    )
+
+    AddDialogs(dialogHandler = DialogHandler, portfolioRepository = portfolioRepository)
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+        ),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { hostData ->
+                Snackbar {
+                    val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
+                    val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
+                    ConstraintLayout(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(backgroundColor),
+                    ) {
+                        val (textRef, leftLineRef) = createRefs()
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .background(backgroundColor),
-                        ) {
-                            val (textRef, leftLineRef) = createRefs()
-                            Box(
-                                modifier = Modifier
-                                    .width(4.dp)
-                                    .background(lineColor)
-                                    .constrainAs(leftLineRef) {
-                                        top.linkTo(parent.top)
-                                        bottom.linkTo(parent.bottom)
-                                        height = Dimension.fillToConstraints
-                                    }
-                                    .contentDescription("Left Line"),
-                            )
-                            Text(
-                                text = hostData.visuals.message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier
-                                    .constrainAs(textRef) {
-                                        top.linkTo(parent.top)
-                                        bottom.linkTo(parent.bottom)
-                                        start.linkTo(leftLineRef.end, 18.dp)
-                                    }
-                                    .padding(end = 18.dp)
-                                    .contentDescription("Snackbar Message"),
-                            )
-                        }
+                                .width(4.dp)
+                                .background(lineColor)
+                                .constrainAs(leftLineRef) {
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                    height = Dimension.fillToConstraints
+                                }
+                                .contentDescription("Left Line"),
+                        )
+                        Text(
+                            text = hostData.visuals.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .constrainAs(textRef) {
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                    start.linkTo(leftLineRef.end, 18.dp)
+                                }
+                                .padding(end = 18.dp)
+                                .contentDescription("Snackbar Message"),
+                        )
                     }
                 }
-            },
-            bottomBar = {
-                BottomNavigation(
-                    onNavigationSelected = { selected ->
-                        if (navController.getLastRootRoute(bottomNavigationItems) == selected.route && navController.currentDestination?.route != selected.route) {
-                            navController.navigate(selected.route) {
-                                popUpTo(selected.route)
-                                launchSingleTop = true
-                            }
-                        } else {
-                            navController.navigate(selected.route) {
-                                navController.graph.findStartDestination().route?.let {
-                                    popUpTo(it) {
-                                        saveState = true
-                                    }
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+            }
+        },
+        bottomBar = {
+            BottomNavigation(
+                currentTab = currentTab,
+                onNavigationSelected = { selectedTab ->
+                    if (currentTab == selectedTab) {
+                        if (currentBackStack.size > 1) {
+                            currentBackStack.retainAll(listOf(currentBackStack.first()))
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    navController = navController
+                    } else {
+                        currentTabRoute = selectedTab.toRoute()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    ) { innerPadding ->
+        val entryProvider = entryProvider<androidxNavKey> {
+            entry<Home> {
+                val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                    HomeViewModelFactory(portfolioRepository = portfolioRepository)
+                })
+                Home(
+                    viewModel = homeViewModel,
+                    onNavigateTo = { route -> onNavigate(route.toNavKey()) },
+                    appUpdateManager = appUpdateManager
                 )
             }
-        ) { innerPadding ->
-            val context = LocalContext.current
-            Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-            ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = Screen.Home.route,
-                    enterTransition = { defaultCromEnterTransition(initialState, targetState) },
-                    exitTransition = { defaultCromExitTransition(initialState, targetState) },
-                    popEnterTransition = { defaultCromPopEnterTransition() },
-                    popExitTransition = { defaultCromPopExitTransition() },
-                ) {
-                    val appUpdateManager = AppUpdateManagerFactory.create(context)
-                    addHomeTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
-                    addDashboardTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
-                    addNotificationsTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
-                    addSettingsTopLevel(navController = navController, portfolioRepository = portfolioRepository, appUpdateManager=appUpdateManager)
+
+            entry<Dashboard> {
+                val dashboardViewModel: DashboardViewModel by activityBoundViewModel(factoryProducer = { DashboardViewModelFactory() })
+                Dashboard(viewModel = dashboardViewModel, onBack = onBack)
+            }
+
+            entry<Notifications> {
+                val localContext = LocalContext.current
+                val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
+                    NotificationsViewModelFactory(context = localContext)
+                })
+                Notifications(
+                    viewModel = notificationsViewModel,
+                    onBack = onBack,
+                    onNavigateTo = { route -> onNavigate(route.toNavKey()) })
+            }
+
+            entry<Settings> {
+                val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = { SettingsViewModelFactory() })
+                Settings(viewModel = settingsViewModel, onBack = onBack,
+                    onNavigateTo = { route -> onNavigate(route.toNavKey()) })
+            }
+
+            entry<BottomSheetsHome> {
+                val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                    HomeViewModelFactory(portfolioRepository = portfolioRepository)
+                })
+                BottomSheetContent {
+                    HomeItems(
+                        portfolioRepository = portfolioRepository,
+                        homeViewModel = homeViewModel,
+                        onBuy = { DialogHandler.showBuyStockDialog() },
+                        onSell = { DialogHandler.showSellStockDialog() },
+                        onSplit = { DialogHandler.showSplitStockDialog() },
+                        onAddPortfolio = { DialogHandler.showAddPortfolioDialog() },
+                    )
+                }
+            }
+
+            entry<BottomSheetsHomeAllStocks> { key ->
+                val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                    HomeViewModelFactory(portfolioRepository = portfolioRepository)
+                })
+                val onSortNameAscending = { homeViewModel.sortNameAscending(key.profile) }
+                val onSortNameDescending = { homeViewModel.sortNameDescending(key.profile) }
+                val onSortProfitAscending = { homeViewModel.sortProfitAscending(key.profile) }
+                val onSortProfitDescending = { homeViewModel.sortProfitDescending(key.profile) }
+                BottomSheetContent {
+                    BottomSheetMenuItem(
+                        onClick = onSortNameAscending,
+                        text = stringResource(id = R.string.home_sort_alphabetical_down)
+                    )
+                    BottomSheetMenuItem(
+                        onClick = onSortNameDescending,
+                        text = stringResource(id = R.string.home_sort_alphabetical_up)
+                    )
+                    BottomSheetMenuItem(
+                        onClick = onSortProfitAscending,
+                        text = stringResource(id = R.string.home_sort_profit_down)
+                    )
+                    BottomSheetMenuItem(
+                        onClick = onSortProfitDescending,
+                        text = stringResource(id = R.string.home_sort_profit_up)
+                    )
+                }
+            }
+
+            entry<BottomSheetsHomeStock> { key ->
+                val localContext = LocalContext.current
+                val onDelete = {
+                    DialogHandler.showDeleteDialog(
+                        context = localContext,
+                        portfolioName = key.portfolioName,
+                        stockName = key.stockSymbol
+                    )
+                }
+                BottomSheetContent {
+                    BottomSheetMenuItem(
+                        onClick = onDelete,
+                        text = stringResource(id = R.string.action_delete)
+                    )
+                }
+            }
+
+            entry<BottomSheetsNotifications> {
+                val localContext = LocalContext.current
+                val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
+                    NotificationsViewModelFactory(context = localContext)
+                })
+                BottomSheetContent {
+                    NotificationsItems(onClear = { notificationsViewModel.clearNotifications() })
+                }
+            }
+
+            entry<BottomSheetsSettings> {
+                val localContext = LocalContext.current
+                BottomSheetContent {
+                    SettingsItems(
+                        onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
+                        onShowStockRetrievalTimeIntervals = {
+                            DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))
+                        },
+                        onShowTodo = {
+                            val browserIntent = Intent(
+                                Intent.ACTION_VIEW,
+                                "https://github.com/Sundbybergs-IT/Crom-Fortune/issues".toUri()
+                            )
+                            localContext.startActivity(browserIntent)
+                        }
+                    )
                 }
             }
         }
+
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            NavDisplay(
+                backStack = currentBackStack,
+                onBack = onBack,
+                entryProvider = entryProvider
+            )
+
+            // Handle Bottom Sheets as Overlays
+            val lastKey = currentBackStack.last()
+            if (lastKey::class.simpleName?.startsWith("BottomSheets") == true) {
+                ModalBottomSheet(onDismissRequest = onBack) {
+                    entryProvider(lastKey).Content()
+                }
+            }
+        }
+    }
+}
+
+private fun String.toNavKey(): NavKey {
+    return when {
+        this == "home" -> Home
+        this == "dashboard" -> Dashboard
+        this == "notifications" -> Notifications
+        this == "settings" -> Settings
+        this == "bottom-sheet/home" -> BottomSheetsHome
+        this.startsWith("bottom-sheet/home/stocks") -> {
+            val profile = this.substringAfter("profile=", "default")
+            BottomSheetsHomeAllStocks(profile)
+        }
+
+        this.startsWith("bottom-sheet/home/stock") -> {
+            val portfolioName = this.substringAfter("portfolio_name=").substringBefore("&")
+            val stockSymbol = this.substringAfter("stock_symbol=")
+            BottomSheetsHomeStock(portfolioName, stockSymbol)
+        }
+
+        this == "bottom-sheet/notifications" -> BottomSheetsNotifications
+        this == "bottom-sheet/settings" -> BottomSheetsSettings
+        else -> throw IllegalArgumentException("Unknown route: $this")
+    }
+}
+
+private fun NavKey.toRoute(): String {
+    return when (this) {
+        Home -> "home"
+        Dashboard -> "dashboard"
+        Notifications -> "notifications"
+        Settings -> "settings"
+        BottomSheetsHome -> "bottom-sheet/home"
+        is BottomSheetsHomeAllStocks -> "bottom-sheet/home/stocks?profile=$profile"
+        is BottomSheetsHomeStock -> "bottom-sheet/home/stock?portfolio_name=$portfolioName&stock_symbol=$stockSymbol"
+        BottomSheetsNotifications -> "bottom-sheet/notifications"
+        BottomSheetsSettings -> "bottom-sheet/settings"
     }
 }
 
@@ -400,7 +567,6 @@ private fun StockRetrievalTimeIntervalsDialog(
         settingsViewState, state, selectedDaysMutableState,
         fromTimePickerState, toTimePickerState
     )
-    val context = LocalContext.current
     val savedText = stringResource(id = R.string.generic_saved)
     if (fromTimePickerState.value != null && toTimePickerState.value != null) {
         AlertDialog(
@@ -489,7 +655,9 @@ private fun SupportedStocksDialog(
         },
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = {
+                onDismiss()
+            }) {
                 Text(stringResource(id = android.R.string.ok))
             }
         }
@@ -772,230 +940,146 @@ internal fun StockOrderRow(
     }
 }
 
-private fun NavGraphBuilder.addHomeTopLevel(
-    navController: NavHostController,
-    portfolioRepository: PortfolioRepository,
-    appUpdateManager: AppUpdateManager
+@Composable
+internal fun BottomNavigation(
+    currentTab: NavKey,
+    onNavigationSelected: (NavKey) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    addHome(navController = navController, portfolioRepository = portfolioRepository,appUpdateManager=appUpdateManager)
-    addDashboard(navController = navController)
-    addNotifications(navController = navController)
-    addSettings(navController = navController)
-    addHomeBottomSheet(portfolioRepository = portfolioRepository)
-    addHomeAllStocksBottomSheet(portfolioRepository = portfolioRepository)
-    addHomeStockBottomSheet()
-}
-
-private fun NavGraphBuilder.addDashboardTopLevel(
-    navController: NavHostController,
-    portfolioRepository: PortfolioRepository,
-    appUpdateManager: AppUpdateManager
-) {
-    addHome(
-        navController = navController,
-        portfolioRepository = portfolioRepository,
-        appUpdateManager = appUpdateManager
-    )
-    addDashboard(navController = navController)
-    addNotifications(navController = navController)
-    addSettings(navController = navController)
-}
-
-private fun NavGraphBuilder.addNotificationsTopLevel(
-    navController: NavHostController,
-    portfolioRepository: PortfolioRepository,
-    appUpdateManager: AppUpdateManager
-) {
-    addHome(
-        navController = navController,
-        portfolioRepository = portfolioRepository,
-        appUpdateManager = appUpdateManager
-    )
-    addDashboard(navController = navController)
-    addNotifications(navController = navController)
-    addSettings(navController = navController)
-    addNotificationsBottomSheet()
-}
-
-private fun NavGraphBuilder.addSettingsTopLevel(
-    navController: NavHostController,
-    portfolioRepository: PortfolioRepository,
-    appUpdateManager: AppUpdateManager
-) {
-    addHome(
-        navController = navController,
-        portfolioRepository = portfolioRepository,
-        appUpdateManager = appUpdateManager
-    )
-    addDashboard(navController = navController)
-    addNotifications(navController = navController)
-    addSettings(navController = navController)
-    addSettingsBottomSheet()
-}
-
-private fun NavGraphBuilder.addHome(
-    navController: NavHostController,
-    portfolioRepository: PortfolioRepository,
-    appUpdateManager: AppUpdateManager
-) {
-    composable(route = Screen.Home.route) {
-        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory(portfolioRepository = portfolioRepository)
-        })
-        Home(viewModel = homeViewModel, onNavigateTo = { route -> navController.navigate(route) }, appUpdateManager=appUpdateManager)
-    }
-}
-
-private fun NavGraphBuilder.addDashboard(navController: NavHostController) {
-    composable(route = Screen.Dashboard.route) {
-        val dashboardViewModel: DashboardViewModel by activityBoundViewModel(factoryProducer = { DashboardViewModelFactory() })
-        Dashboard(viewModel = dashboardViewModel, onBack = { navController.popBackStack() })
-    }
-}
-
-private fun NavGraphBuilder.addNotifications(navController: NavHostController) {
-    composable(route = Screen.Notifications.route) {
-        val context = LocalContext.current
-        val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
-            NotificationsViewModelFactory(context = context)
-        })
-        Notifications(
-            viewModel = notificationsViewModel,
-            onBack = { navController.popBackStack() },
-            onNavigateTo = { route -> navController.navigate(route) })
-    }
-}
-
-private fun NavGraphBuilder.addSettings(navController: NavHostController) {
-    composable(route = Screen.Settings.route) {
-        val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = { SettingsViewModelFactory() })
-        Settings(viewModel = settingsViewModel, onBack = { navController.popBackStack() },
-            onNavigateTo = { route -> navController.navigate(route) })
-    }
-}
-
-private fun NavGraphBuilder.addHomeBottomSheet(portfolioRepository: PortfolioRepository) {
-    bottomSheet(route = LeafScreen.BottomSheetsHome.route) {
-        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory(portfolioRepository = portfolioRepository)
-        })
-        BottomSheetContent {
-            HomeItems(
-                portfolioRepository = portfolioRepository,
-                homeViewModel = homeViewModel,
-                onBuy = { DialogHandler.showBuyStockDialog() },
-                onSell = { DialogHandler.showSellStockDialog() },
-                onSplit = { DialogHandler.showSplitStockDialog() },
-                onAddPortfolio = { DialogHandler.showAddPortfolioDialog() },
-            )
-        }
-    }
-}
-
-private fun NavGraphBuilder.addHomeAllStocksBottomSheet(portfolioRepository: PortfolioRepository) {
-    bottomSheet(
-        route = LeafScreen.BottomSheetsHomeAllStocks.route,
-        arguments = listOf(
-            navArgument("profile") {
-                type = NavType.StringType
-                nullable = false
-            }),
-    ) { backStackEntry ->
-        val arguments = checkNotNull(backStackEntry.arguments)
-        val profile = checkNotNull(arguments.getString("profile"))
-        val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-            HomeViewModelFactory(portfolioRepository = portfolioRepository)
-        })
-        val onSortNameAscending = { homeViewModel.sortNameAscending(profile) }
-        val onSortNameDescending = { homeViewModel.sortNameDescending(profile) }
-        val onSortProfitAscending = { homeViewModel.sortProfitAscending(profile) }
-        val onSortProfitDescending = { homeViewModel.sortProfitDescending(profile) }
-        BottomSheetContent {
-            BottomSheetMenuItem(
-                onClick = onSortNameAscending,
-                text = stringResource(id = R.string.home_sort_alphabetical_down)
-            )
-            BottomSheetMenuItem(
-                onClick = onSortNameDescending,
-                text = stringResource(id = R.string.home_sort_alphabetical_up)
-            )
-            BottomSheetMenuItem(
-                onClick = onSortProfitAscending,
-                text = stringResource(id = R.string.home_sort_profit_down)
-            )
-            BottomSheetMenuItem(
-                onClick = onSortProfitDescending,
-                text = stringResource(id = R.string.home_sort_profit_up)
-            )
-        }
-    }
-}
-
-private fun NavGraphBuilder.addHomeStockBottomSheet() {
-    bottomSheet(
-        route = LeafScreen.BottomSheetsHomeStock.route,
-        arguments = listOf(
-            navArgument("portfolio_name") {
-                type = NavType.StringType
-                nullable = false
-            },
-            navArgument("stock_symbol") {
-                type = NavType.StringType
-                nullable = true
-            }),
-    ) { backStackEntry ->
-        val arguments = checkNotNull(backStackEntry.arguments)
-        val stockSymbol = checkNotNull(arguments.getString("stock_symbol"))
-        val portfolioName = checkNotNull(arguments.getString("portfolio_name"))
-        val context = LocalContext.current
-        val onDelete =
-            {
-                DialogHandler.showDeleteDialog(
-                    context = context,
-                    portfolioName = portfolioName,
-                    stockName = stockSymbol
-                )
-            }
-        BottomSheetContent {
-            BottomSheetMenuItem(
-                onClick = onDelete,
-                text = stringResource(id = R.string.action_delete)
-            )
-        }
-    }
-}
-
-private fun NavGraphBuilder.addNotificationsBottomSheet() {
-    bottomSheet(route = LeafScreen.BottomSheetsNotifications.route) {
-        val context = LocalContext.current
-        val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
-            NotificationsViewModelFactory(context = context)
-        })
-        BottomSheetContent {
-            NotificationsItems(onClear = { notificationsViewModel.clearNotifications() })
-        }
-    }
-}
-
-private fun NavGraphBuilder.addSettingsBottomSheet() {
-    bottomSheet(route = LeafScreen.BottomSheetsSettings.route) {
-        val context = LocalContext.current
-        BottomSheetContent {
-            SettingsItems(
-                onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
-                onShowStockRetrievalTimeIntervals = {
-                    DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(context))
-                },
-                onShowTodo = {
-                    val browserIntent = Intent(
-                        Intent.ACTION_VIEW,
-                        "https://github.com/Sundbybergs-IT/Crom-Fortune/issues".toUri()
+    NavigationBar(
+        modifier = modifier.contentDescription("Bottom Navigation"),
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = contentColorFor(MaterialTheme.colorScheme.surface),
+        tonalElevation = 8.dp,
+        windowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+        ),
+    ) {
+        bottomNavigationItems.forEach { item ->
+            val isSelected = currentTab == item.screenKey
+            NavigationBarItem(
+                icon = { NavigationItemIcon(item = item, selected = isSelected) },
+                label = {
+                    Text(
+                        text = stringResource(item.labelResId),
+                        style = MaterialTheme.typography.labelSmall
                     )
-                    context.startActivity(browserIntent)
-                }
+                },
+                selected = isSelected,
+                onClick = { onNavigationSelected(item.screenKey) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             )
         }
     }
+}
+
+@Composable
+private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
+    val painter = when (item) {
+        is NavigationItem.ImageVectorIcon -> rememberVectorPainter(item.iconImageVector)
+    }
+    val selectedPainter =  item.selectedImageVector?.let { rememberVectorPainter(it) }
+
+    if (selectedPainter != null) {
+        Crossfade(targetState = selected, label = "Navigation Crossfade") {
+            Icon(
+                tint = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                painter = if (it) selectedPainter else painter,
+                contentDescription = stringResource(item.contentDescriptionResId),
+            )
+        }
+    } else {
+        Icon(
+            tint = MaterialTheme.colorScheme.primary,
+            painter = painter,
+            contentDescription = stringResource(item.contentDescriptionResId),
+        )
+    }
+}
+
+internal sealed class NavigationItem(
+    val screenKey: NavKey,
+    @param:StringRes val labelResId: Int,
+    @param:StringRes val contentDescriptionResId: Int,
+) {
+
+    class ImageVectorIcon(
+        screenKey: NavKey,
+        @param:StringRes labelResId: Int,
+        @param:StringRes contentDescriptionResId: Int,
+        val iconImageVector: ImageVector,
+        val selectedImageVector: ImageVector? = null,
+    ) : NavigationItem(screenKey, labelResId, contentDescriptionResId)
+
+}
+
+private val bottomNavigationItems = listOf(
+    NavigationItem.ImageVectorIcon(
+        screenKey = Home,
+        labelResId = R.string.home_title,
+        contentDescriptionResId = R.string.home_title,
+        iconImageVector = Icons.Outlined.Home,
+        selectedImageVector = Icons.Filled.Home
+    ),
+    NavigationItem.ImageVectorIcon(
+        screenKey = Dashboard,
+        labelResId = R.string.dashboard_title,
+        contentDescriptionResId = R.string.dashboard_title,
+        iconImageVector = Icons.Outlined.Dashboard,
+        selectedImageVector = Icons.Filled.Dashboard
+    ),
+    NavigationItem.ImageVectorIcon(
+        screenKey = Notifications,
+        labelResId = R.string.notifications_title,
+        contentDescriptionResId = R.string.notifications_title,
+        iconImageVector = Icons.Outlined.Notifications,
+        selectedImageVector = Icons.Filled.Notifications
+    ),
+    NavigationItem.ImageVectorIcon(
+        screenKey = Settings,
+        labelResId = R.string.settings_title,
+        contentDescriptionResId = R.string.settings_title,
+        iconImageVector = Icons.Outlined.Settings,
+        selectedImageVector = Icons.Filled.Settings
+    )
+)
+
+@Composable
+private fun NotificationsItems(onClear: () -> Unit) {
+    BottomSheetMenuItem(
+        onClick = onClear,
+        text = stringResource(id = R.string.action_clear)
+    )
+}
+
+@Composable
+private fun SettingsItems(
+    onShowSupportedStocks: () -> Unit,
+    onShowStockRetrievalTimeIntervals: () -> Unit,
+    onShowTodo: () -> Unit,
+) {
+    BottomSheetMenuItem(
+        onClick = onShowStockRetrievalTimeIntervals,
+        text = stringResource(id = R.string.action_configure_stock_retrieval_intervals)
+    )
+    BottomSheetMenuItem(
+        onClick = onShowSupportedStocks,
+        text = stringResource(id = R.string.action_stocks_supported)
+    )
+    BottomSheetMenuItem(
+        onClick = onShowTodo,
+        text = stringResource(id = R.string.generic_to_do)
+    )
 }
 
 @Composable
@@ -1029,192 +1113,3 @@ private fun HomeItems(
         text = stringResource(id = R.string.action_portfolio_add)
     )
 }
-
-@Composable
-private fun NotificationsItems(onClear: () -> Unit) {
-    BottomSheetMenuItem(
-        onClick = onClear,
-        text = stringResource(id = R.string.action_clear)
-    )
-}
-
-@Composable
-private fun SettingsItems(
-    onShowSupportedStocks: () -> Unit,
-    onShowStockRetrievalTimeIntervals: () -> Unit,
-    onShowTodo: () -> Unit,
-) {
-    BottomSheetMenuItem(
-        onClick = onShowStockRetrievalTimeIntervals,
-        text = stringResource(id = R.string.action_configure_stock_retrieval_intervals)
-    )
-    BottomSheetMenuItem(
-        onClick = onShowSupportedStocks,
-        text = stringResource(id = R.string.action_stocks_supported)
-    )
-    BottomSheetMenuItem(
-        onClick = onShowTodo,
-        text = stringResource(id = R.string.generic_to_do)
-    )
-}
-
-private fun AnimatedContentTransitionScope<*>.defaultCromEnterTransition(
-    initial: NavBackStackEntry,
-    target: NavBackStackEntry,
-): EnterTransition {
-    val initialNavGraph = initial.destination.hostNavGraph
-    val targetNavGraph = target.destination.hostNavGraph
-    // If we're crossing nav graphs (bottom navigation graphs), we crossfade
-    if (initialNavGraph.id != targetNavGraph.id) {
-        return fadeIn()
-    }
-    // Otherwise we're in the same nav graph, we can imply a direction
-    return fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
-}
-
-private fun AnimatedContentTransitionScope<*>.defaultCromExitTransition(
-    initial: NavBackStackEntry,
-    target: NavBackStackEntry,
-): ExitTransition {
-    val initialNavGraph = initial.destination.hostNavGraph
-    val targetNavGraph = target.destination.hostNavGraph
-    // If we're crossing nav graphs (bottom navigation graphs), we crossfade
-    if (initialNavGraph.id != targetNavGraph.id) {
-        return fadeOut()
-    }
-    // Otherwise we're in the same nav graph, we can imply a direction
-    return fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start)
-}
-
-private val NavDestination.hostNavGraph: NavGraph
-    get() = hierarchy.first { it is NavGraph } as NavGraph
-
-private fun AnimatedContentTransitionScope<*>.defaultCromPopEnterTransition(): EnterTransition {
-    return fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End)
-}
-
-private fun AnimatedContentTransitionScope<*>.defaultCromPopExitTransition(): ExitTransition {
-    return fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
-}
-
-@Composable
-internal fun BottomNavigation(
-    navController: NavHostController,
-    onNavigationSelected: (Screen) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    NavigationBar(
-        modifier = modifier.contentDescription("Bottom Navigation"),
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = contentColorFor(MaterialTheme.colorScheme.surface),
-        tonalElevation = 8.dp,
-        windowInsets = WindowInsets.safeDrawing.only(
-            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
-        ),
-    ) {
-        // This is needed to "listen" to the back stack entry changing, even if android studio think its unused it doesnt work without it.
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        @Suppress("UNUSED_VARIABLE") val currentDestination = navBackStackEntry?.destination
-
-        val selectedRoute = navController.getLastRootRoute(bottomNavigationItems)
-
-        bottomNavigationItems.forEach { item ->
-            val isSelected = selectedRoute == item.screen.route
-            NavigationBarItem(
-                icon = { NavigationItemIcon(item = item, selected = isSelected) },
-                label = {
-                    Text(
-                        text = stringResource(item.labelResId),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                },
-                selected = isSelected,
-                onClick = { onNavigationSelected(item.screen) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun NavigationItemIcon(item: NavigationItem, selected: Boolean) {
-    val painter = when (item) {
-        is NavigationItem.ImageVectorIcon -> rememberVectorPainter(item.iconImageVector)
-    }
-    val selectedPainter = when (item) {
-        is NavigationItem.ImageVectorIcon -> item.selectedImageVector?.let { rememberVectorPainter(it) }
-    }
-
-    if (selectedPainter != null) {
-        Crossfade(targetState = selected, label = "Navigation Crossfade") {
-            Icon(
-                tint = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-                painter = if (it) selectedPainter else painter,
-                contentDescription = stringResource(item.contentDescriptionResId),
-            )
-        }
-    } else {
-        Icon(
-            tint = MaterialTheme.colorScheme.primary,
-            painter = painter,
-            contentDescription = stringResource(item.contentDescriptionResId),
-        )
-    }
-}
-
-internal sealed class NavigationItem(
-    val screen: Screen,
-    @StringRes val labelResId: Int,
-    @StringRes val contentDescriptionResId: Int,
-) {
-
-    class ImageVectorIcon(
-        screen: Screen,
-        @StringRes labelResId: Int,
-        @StringRes contentDescriptionResId: Int,
-        val iconImageVector: ImageVector,
-        val selectedImageVector: ImageVector? = null,
-    ) : NavigationItem(screen, labelResId, contentDescriptionResId)
-
-}
-
-private val bottomNavigationItems = listOf(
-    NavigationItem.ImageVectorIcon(
-        screen = Screen.Home,
-        labelResId = R.string.home_title,
-        contentDescriptionResId = R.string.home_title,
-        iconImageVector = Icons.Outlined.Home,
-        selectedImageVector = Icons.Filled.Home
-    ),
-    NavigationItem.ImageVectorIcon(
-        screen = Screen.Dashboard,
-        labelResId = R.string.dashboard_title,
-        contentDescriptionResId = R.string.dashboard_title,
-        iconImageVector = Icons.Outlined.Dashboard,
-        selectedImageVector = Icons.Filled.Dashboard
-    ),
-    NavigationItem.ImageVectorIcon(
-        screen = Screen.Notifications,
-        labelResId = R.string.notifications_title,
-        contentDescriptionResId = R.string.notifications_title,
-        iconImageVector = Icons.Outlined.Notifications,
-        selectedImageVector = Icons.Filled.Notifications
-    ),
-    NavigationItem.ImageVectorIcon(
-        screen = Screen.Settings,
-        labelResId = R.string.settings_title,
-        contentDescriptionResId = R.string.settings_title,
-        iconImageVector = Icons.Outlined.Settings,
-        selectedImageVector = Icons.Filled.Settings
-    )
-)

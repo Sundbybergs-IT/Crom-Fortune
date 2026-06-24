@@ -13,7 +13,7 @@ android {
     namespace = "com.sundbybergsit.cromfortune.main"
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 137
+        versionCode = 138
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,6 +50,9 @@ dependencies {
     implementation(libs.accompanistNavigationMaterial)
     implementation(libs.androidxNavigationFragment)
     implementation(libs.androidxNavigationUi)
+    implementation(libs.androidxNavigation3Runtime)
+    implementation(libs.androidxNavigation3Ui)
+    implementation(libs.androidxLifecycleViewmodelNavigation3)
 
     implementation(libs.androidxAppcompat)
     implementation(libs.androidxCore)

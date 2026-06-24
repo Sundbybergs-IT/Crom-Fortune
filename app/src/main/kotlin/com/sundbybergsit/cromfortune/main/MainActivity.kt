@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
@@ -26,7 +25,7 @@ class MainActivity : ComponentActivity(), Taggable {
 
         setContent {
             AppTheme {
-                AppNavigation(navController = rememberNavController(), portfolioRepository = PortfolioRepository)
+                AppNavigation(portfolioRepository = PortfolioRepository)
             }
         }
         val appUpdateManager = AppUpdateManagerFactory.create(this)
