@@ -19,7 +19,14 @@ object CurrencyRateRepository : CurrencyRateApi {
 
     override fun addAll(currencyRates: Set<CurrencyRate>) {
         Log.v(TAG, "addAll(${currencyRates})")
-        _currencyRates.value = this.currencyRates.value + currencyRates
+        val mergedByCurrencyCode = linkedMapOf<String, CurrencyRate>()
+        for (currencyRate in this.currencyRates.value) {
+            mergedByCurrencyCode[currencyRate.iso4217CurrencySymbol] = currencyRate
+        }
+        for (currencyRate in currencyRates) {
+            mergedByCurrencyCode[currencyRate.iso4217CurrencySymbol] = currencyRate
+        }
+        _currencyRates.value = mergedByCurrencyCode.values.toSet()
     }
 
     @VisibleForTesting

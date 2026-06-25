@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -65,6 +66,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.ktx.AppUpdateResult
 import com.google.android.play.core.ktx.requestCompleteUpdate
 import com.google.android.play.core.ktx.requestUpdateFlow
+import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPriceApi
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
@@ -93,6 +95,7 @@ fun Home(
     onNavigateTo: (String) -> Unit,
     appUpdateManager: AppUpdateManager,
 ) {
+    val tag = "Home"
     val localContext = LocalContext.current
     val portfoliosState = viewModel.portfoliosStateFlow.collectAsState()
     if (!BuildConfig.DEBUG) {
@@ -244,13 +247,15 @@ fun Home(
                                 index = lazyItemScope,
                                 viewState = portfolioState,
                                 stockPriceApi = stockPriceApi,
-                                onShowStock = { stockSymbol, readOnly ->
+                                onShowStock = { stockSymbol, stockEvents, readOnly ->
+                                    Log.d(
+                                        tag,
+                                        "Opening stock events from rendered row for [$stockSymbol], events=${stockEvents.size}, readOnly=$readOnly"
+                                    )
                                     DialogHandler.showStockEvents(
-                                        stockSymbol = stockSymbol, stockEvents = viewModel.portfolioStockEvents(
-                                            portfolioName = portfolioName,
-                                            context = localContext,
-                                            stockSymbol = stockSymbol
-                                        ), readOnly = readOnly
+                                        stockSymbol = stockSymbol,
+                                        stockEvents = stockEvents,
+                                        readOnly = readOnly
                                     )
                                 },
                                 onNavigateTo = onNavigateTo,
@@ -389,7 +394,7 @@ private fun StocksTab(
     index: Int,
     viewState: HomeViewModel.ViewState,
     stockPriceApi: StockPriceApi,
-    onShowStock: (String, Boolean) -> Unit,
+    onShowStock: (String, List<StockEvent>, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
     readOnly: Boolean,
     currencyRateApi: CurrencyRateApi
@@ -441,7 +446,7 @@ private fun StocksTab(
 @Composable
 private fun StockOrderAggregateItem(
     item: StockOrderAggregate, stockPriceApi: StockPriceApi,
-    onShowStock: (String, Boolean) -> Unit,
+    onShowStock: (String, List<StockEvent>, Boolean) -> Unit,
     readOnly: Boolean
 ) {
     val stockPrice = stockPriceApi.getStockPrice(item.stockSymbol)
@@ -452,7 +457,7 @@ private fun StockOrderAggregateItem(
         currencyFormat.currency = item.currency
         currencyFormat.maximumFractionDigits = 2
         val growth = profit / (item.getAcquisitionValue() * item.getQuantity())
-        Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol, readOnly) }) {
+        Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol, item.events.toList(), readOnly) }) {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Box(

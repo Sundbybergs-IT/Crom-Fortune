@@ -691,6 +691,13 @@ private fun StockEventsDialog(
         stockEvents,
         CromFortuneV1RecommendationAlgorithm(context)
     )
+    val stockOrderEvents = stockEvents.mapNotNull { it.stockOrder }
+    if (stockOrderEvents.size != opinionatedEvents.size) {
+        Log.e(
+            "StockEventsDialog",
+            "Mismatch between stock orders (${stockOrderEvents.size}) and opinionated events (${opinionatedEvents.size})"
+        )
+    }
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
@@ -763,12 +770,17 @@ private fun StockEventsDialog(
                             }
                         }
                     }
-                    items(stockEvents.size) { index ->
-                        stockEvents[index].stockOrder?.let { nullSafeStockOrder ->
-                            val opinionatedStockOrder =
-                                opinionatedEvents.single { opinionatedStockOrderWrapper -> opinionatedStockOrderWrapper.stockOrder == nullSafeStockOrder }
+                    items(stockOrderEvents.size) { index ->
+                        val stockOrder = stockOrderEvents[index]
+                        val opinionatedStockOrder = opinionatedEvents.getOrNull(index)
+                        if (opinionatedStockOrder == null) {
+                            Log.e(
+                                "StockEventsDialog",
+                                "Missing opinionated event for stockOrder index=$index, stock=${stockOrder.name}, date=${stockOrder.dateInMillis}"
+                            )
+                        } else {
                             StockOrderRow(
-                                stockOrder = nullSafeStockOrder,
+                                stockOrder = stockOrder,
                                 opinionatedStockOrder = opinionatedStockOrder,
                                 readOnly = state.readOnly
                             )
@@ -854,6 +866,17 @@ internal fun StockOrderRow(
         }
     )
     val context = LocalContext.current
+    val matchingCurrencyRates = currencyRateApi.currencyRates.value
+        .filter { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }
+    if (matchingCurrencyRates.size > 1) {
+        Log.e(
+            "StockOrderRow",
+            "Multiple currency rates found for ${stockOrder.currency}: $matchingCurrencyRates"
+        )
+    } else if (matchingCurrencyRates.isEmpty()) {
+        Log.e("StockOrderRow", "No currency rate found for ${stockOrder.currency}, defaulting to 1.0")
+    }
+    val rateInSek = matchingCurrencyRates.lastOrNull()?.rateInSek ?: 1.0
     val stockEventDate = sdf.format(Date(stockOrder.dateInMillis))
     if (showDeleteDialog.value) {
         AlertDialog(onDismissRequest = { showDeleteDialog.value = false },
@@ -935,10 +958,7 @@ internal fun StockOrderRow(
         Text(
             modifier = Modifier.weight(1f),
             text = nf.format(
-                stockOrder.getTotalCost(
-                    currencyRateApi.currencyRates.value
-                        .single { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }.rateInSek
-                )
+                stockOrder.getTotalCost(rateInSek)
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
