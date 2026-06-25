@@ -44,7 +44,7 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
             val notificationsAllowed = isWithinNotificationWindow(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
-            for (currency in CURRENCIES) {
+            for (currency in CURRENCIES.filterNot { it == "SEK" }) {
                 currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
             }
             CurrencyRateRepository.addAll(currencyRates)
