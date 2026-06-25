@@ -69,6 +69,7 @@ class HomeViewModel(
                 // Ignore splits before first stock order
             } else if (stockOrderAggregate == null) {
                 val stockOrder = checkNotNull(stockEvent.stockOrder)
+                Log.d(TAG, "Creating aggregate for [${stockOrder.name}] with ${sortedStockEvents.size} event(s)")
                 val stockName =
                     StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
                 stockOrderAggregate = StockOrderAggregate(
@@ -98,6 +99,7 @@ class HomeViewModel(
                 // Ignore splits before first stock order
             } else if (stockOrderAggregate == null) {
                 val stockOrder = checkNotNull(stockEvent.stockOrder)
+                Log.d(TAG, "Creating Crom aggregate for [${stockOrder.name}] with ${sortedStockEvents.size} event(s)")
                 val stockName =
                     checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
                 stockOrderAggregate = StockOrderAggregate(
@@ -213,14 +215,27 @@ class HomeViewModel(
     }
 
     fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {
+        Log.d(TAG, "portfolioStockEvents(portfolio=[$portfolioName], stockSymbol=[$stockSymbol])")
         return if (portfolioName == PortfolioRepository.CROM_PORTFOLIO_NAME) {
-            stocks(context = context, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME) { sortedStockEvents ->
+            val aggregate = stocks(context = context, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME) { sortedStockEvents ->
                 getCalculatedStockOrderAggregate(sortedStockEvents, CromFortuneV1RecommendationAlgorithm(context))
-            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
+            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }
+            if (aggregate == null) {
+                Log.e(TAG, "No aggregate found for [$stockSymbol] in Crom portfolio during click lookup")
+                emptyList()
+            } else {
+                aggregate.events.toList()
+            }
         } else {
-            stocks(context = context, portfolioName = portfolioName) { sortedStockEvents ->
+            val aggregate = stocks(context = context, portfolioName = portfolioName) { sortedStockEvents ->
                 getCalculatedStockOrderAggregate(sortedStockEvents)
-            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }!!.events.toList()
+            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }
+            if (aggregate == null) {
+                Log.e(TAG, "No aggregate found for [$stockSymbol] in portfolio [$portfolioName] during click lookup")
+                emptyList()
+            } else {
+                aggregate.events.toList()
+            }
         }
     }
 

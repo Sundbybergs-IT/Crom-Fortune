@@ -69,6 +69,7 @@ object DialogHandler {
     }
 
     fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>, readOnly: Boolean) {
+        Log.d(TAG, "showStockEvents(stockSymbol=[$stockSymbol], events=${stockEvents.size}, readOnly=$readOnly)")
         _dialogViewState.value = DialogViewState.ShowStockEvents(
             title = "${
                 SYMBOLS.single { triple ->
