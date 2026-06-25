@@ -8,6 +8,7 @@ import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.CURRENCIES
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.domain.util.roundTo
@@ -43,7 +44,7 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
             val notificationsAllowed = isWithinNotificationWindow(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
-            for (currency in arrayOf("CAD", "EUR", "NOK", "USD")) {
+            for (currency in CURRENCIES) {
                 currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
             }
             CurrencyRateRepository.addAll(currencyRates)
