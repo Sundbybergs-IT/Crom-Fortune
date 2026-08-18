@@ -29,7 +29,7 @@ kotlin = "2.3.21"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
 robolectric = "4.16.1"
-sonarqube = "7.3.0.8198"
+sonarqube = "7.3.1.8318"
 yahooFinance = "3.17.0"
 
 [libraries]

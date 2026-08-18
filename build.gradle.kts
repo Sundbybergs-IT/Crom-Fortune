@@ -43,14 +43,8 @@ subprojects {
     sonar {
 
         properties {
-            property("sonar.sources", "src/main/java,src/main/kotlin")
-            property("sonar.tests", "src/test/java,src/test/kotlin")
-            property("sonar.exclusions", "**/BuildConfig.class,**/R.java,**/R\$*.java,src/main/gen/**/*")
-            property("sonar.coverage.exclusions", "build.gradle.kts")
-            property("sonar.java.binaries", "build/classes/kotlin/main,build/intermediates/javac/debug/classes,build/tmp/kotlin-classes/debug")
-            property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-            property("sonar.junit.reportPaths", "build/test-results/testDebugUnitTest")
-            property("sonar.androidLint.reportPaths", "build/reports/lint-results-debug.xml")
+            val buildDir = layout.buildDirectory.get().asFile
+            property("sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
         }
 
     }
@@ -70,7 +64,7 @@ sonar {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.projectName", "Crom Fortune :: Android")
         property("sonar.sourceEncoding", "UTF-8")
-        property("sonar.coverage.exclusions", "**/build.gradle.kts,")
+        property("sonar.coverage.exclusions", "**/build.gradle.kts,**/R.class,**/R\$*.class,**/BuildConfig.*,**/Manifest*.*,**/BR.class,**/DataBinderMapperImpl.class,**/DataBindingInfo.class,**/databinding/*Binding.class")
         property("sonar.qualitygate.wait", "true")
     }
 

@@ -90,9 +90,8 @@ internal fun Project.configureJacoco() {
 
         executionData.setFrom(fileTree(layout.buildDirectory) {
             include(
-                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-                "jacoco/*.exec",
-                "outputs/code_coverage/debugAndroidTest/connected/*.ec"
+                "**/*.exec",
+                "**/*.ec"
             )
         })
     }
