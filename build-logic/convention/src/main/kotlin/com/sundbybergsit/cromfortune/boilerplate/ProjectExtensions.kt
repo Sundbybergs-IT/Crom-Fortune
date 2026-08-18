@@ -72,6 +72,7 @@ internal fun Project.configureKotlinAndroidLibrary(libraryExtension: LibraryExte
 }
 
 internal fun Project.configureKotlin() {
+    kotlinExtension.jvmToolchain(jdkVersion = 21)
     // Use withType to workaround https://youtrack.jetbrains.com/issue/KT-55947
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
