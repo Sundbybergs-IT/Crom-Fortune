@@ -45,9 +45,9 @@ subprojects {
         properties {
             property("sonar.exclusions", "**/BuildConfig.class,**/R.java,**/R\$*.java,src/main/gen/**/*")
             property("sonar.coverage.exclusions", "build.gradle.kts")
-            property("sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-            property("sonar.junit.reportsPaths", "${buildDir}/test-results/")
-            property("sonar.androidLint.reportPaths", "${buildDir}/reports/lint-results-debug.xml")
+            property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get().asFile.path}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+            property("sonar.junit.reportsPaths", "${layout.buildDirectory.get().asFile.path}/test-results/testDebugUnitTest/")
+            property("sonar.androidLint.reportPaths", "${layout.buildDirectory.get().asFile.path}/reports/lint-results-debug.xml")
         }
 
     }

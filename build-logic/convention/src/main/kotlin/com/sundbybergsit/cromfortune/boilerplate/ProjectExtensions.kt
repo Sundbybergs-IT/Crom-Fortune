@@ -71,7 +71,7 @@ internal fun Project.configureKotlinAndroidLibrary(libraryExtension: LibraryExte
     configureKotlin()
 }
 
-private fun Project.configureKotlin() {
+internal fun Project.configureKotlin() {
     // Use withType to workaround https://youtrack.jetbrains.com/issue/KT-55947
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {

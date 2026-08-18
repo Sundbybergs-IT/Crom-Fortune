@@ -3,27 +3,10 @@ plugins {
     id("com.android.lint")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 tasks.named<Test>("test") {
     useJUnitPlatform()
     reports {
         junitXml.outputLocation.set(layout.buildDirectory.dir("test-results/testDebugUnitTest"))
-    }
-}
-tasks.named("jacocoTestReport") {
-    dependsOn(tasks.named("test"))
-}
-tasks.jacocoTestReport {
-    reports {
-        xml.required.set(true)
-        xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/jacocoTestReport/jacocoTestReport.xml"))
-        csv.required.set(false)
-        html.required.set(false)
     }
 }
 
@@ -35,10 +18,8 @@ lint {
 dependencies {
     implementation(projects.algorithm.algorithmApi)
     implementation(projects.domain)
-
     implementation(libs.androidxAnnotation)
-
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation(libs.kotlinStdlib)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.junit5Api)
