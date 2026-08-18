@@ -6,7 +6,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.main.R
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -18,12 +17,7 @@ import kotlin.test.assertTrue
 @Config(sdk = [Config.OLDEST_SDK])
 class TextFieldValueExtensionsKtTest {
 
-    private lateinit var context: Context
-
-    @Before
-    fun setUp() {
-        context = ApplicationProvider.getApplicationContext()
-    }
+    private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test(expected = ValidatorException::class)
     fun `validateDate - invalid date - throws ValidatorException`() {
@@ -47,7 +41,7 @@ class TextFieldValueExtensionsKtTest {
                 errorMessageMutableState = errorMessageMutableState,
                 pattern = "MM/dd/yyyy"
             )
-        } catch (e: ValidatorException) {
+        } catch (_: ValidatorException) {
             // Expected
         }
 

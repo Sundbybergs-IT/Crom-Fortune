@@ -2,7 +2,7 @@ package com.sundbybergsit.cromfortune.main.ui.home
 
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -33,7 +33,7 @@ class HomeComposablesKtTest {
     val coroutineScopeTestRule = CoroutineScopeTestRule()
 
     @get:Rule
-    val composeTestRule: createComposeRule = createComposeRule()
+    val composeTestRule = createComposeRule()
 
     private lateinit var context: Context
     private lateinit var viewModel: HomeViewModel
@@ -67,14 +67,14 @@ class HomeComposablesKtTest {
 
         val teslaTopBefore = nodeTop(TESLA_NAME)
         val intelTopBefore = nodeTop(INTEL_NAME)
-        assertTrue(teslaTopBefore < intelTopBefore)
+        assertTrue(intelTopBefore < teslaTopBefore)
 
-        viewModel.sortNameAscending(TEST_PORTFOLIO_NAME)
+        viewModel.sortNameDescending(TEST_PORTFOLIO_NAME)
         composeTestRule.waitForIdle()
 
         val teslaTopAfter = nodeTop(TESLA_NAME)
         val intelTopAfter = nodeTop(INTEL_NAME)
-        assertTrue(intelTopAfter < teslaTopAfter)
+        assertTrue(teslaTopAfter < intelTopAfter)
     }
 
     @Test
@@ -96,7 +96,7 @@ class HomeComposablesKtTest {
 
         val teslaTopBefore = nodeTop(TESLA_NAME)
         val intelTopBefore = nodeTop(INTEL_NAME)
-        assertTrue(teslaTopBefore < intelTopBefore)
+        assertTrue(intelTopBefore < teslaTopBefore)
 
         viewModel.sortProfitDescending(TEST_PORTFOLIO_NAME)
         composeTestRule.waitForIdle()

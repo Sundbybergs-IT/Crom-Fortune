@@ -7,7 +7,6 @@ import androidx.work.ListenableWorker
 import androidx.work.testing.TestListenableWorkerBuilder
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,15 +16,10 @@ import org.robolectric.annotation.Config
 @Config(sdk = [Config.OLDEST_SDK])
 class StockDataRetrievalCoroutineWorkerTest {
 
-    private lateinit var context: Context
+    private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     @get:Rule
     val cromTestRule = CromTestRule()
-
-    @Before
-    fun setUp() {
-        context = ApplicationProvider.getApplicationContext()
-    }
 
     @Test
     fun `doWork - always - works`() {

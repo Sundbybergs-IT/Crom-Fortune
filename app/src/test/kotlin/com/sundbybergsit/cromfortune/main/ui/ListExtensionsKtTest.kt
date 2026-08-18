@@ -1,12 +1,9 @@
 package com.sundbybergsit.cromfortune.main.ui
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.main.isWithinConfiguredTimeInterval
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -16,13 +13,6 @@ import java.time.LocalTime
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Config.OLDEST_SDK])
 class ListExtensionsKtTest {
-
-    private lateinit var context: Context
-
-    @Before
-    fun setUp() {
-        context = ApplicationProvider.getApplicationContext()
-    }
 
     @Test
     fun `isWithinConfiguredTimeInterval - when correct day and time - returns true`() {
