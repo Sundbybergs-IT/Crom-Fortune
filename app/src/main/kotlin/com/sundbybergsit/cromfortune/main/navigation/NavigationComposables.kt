@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
@@ -66,6 +68,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -123,7 +126,6 @@ import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.util.Currency
 import java.util.Date
-import java.util.Locale
 import androidx.navigation3.runtime.NavKey as androidxNavKey
 
 private const val DATE_FORMAT = "MM/dd/yyyy"
@@ -663,11 +665,13 @@ private fun SupportedStocksDialog(
             )
         },
         text = {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = state.text,
-                style = MaterialTheme.typography.titleSmall
-            )
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = state.text,
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
         },
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -849,7 +853,7 @@ internal fun StockOrderRow(
     currencyRateApi: CurrencyRateApi = CurrencyRateRepository,
     readOnly: Boolean
 ) {
-    val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+    val sdf = SimpleDateFormat(DATE_FORMAT, LocalLocale.current.platformLocale)
     val nf: NumberFormat = NumberFormat.getCurrencyInstance()
     if (stockOrder.pricePerStock < 1) {
         nf.maximumFractionDigits = 3
