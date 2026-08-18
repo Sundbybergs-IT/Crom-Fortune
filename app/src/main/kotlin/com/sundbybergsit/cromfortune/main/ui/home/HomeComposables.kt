@@ -35,9 +35,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -102,11 +102,13 @@ fun Home(
         val requestUpdateFlow = appUpdateManager.requestUpdateFlow()
         val appUpdateResultState = requestUpdateFlow.collectAsState(initial = AppUpdateResult.NotAvailable)
         val updateResult = appUpdateResultState.value
+        val updateCompletedString = stringResource(R.string.generic_update_completed)
+        val actionRestartString = stringResource(R.string.action_restart)
         LaunchedEffect(key1 = updateResult) {
             if (updateResult is AppUpdateResult.Downloaded) {
                 DialogHandler.showSnack(
-                    text = localContext.getString(R.string.generic_update_completed),
-                    action = Pair(localContext.getString(R.string.action_restart)) {
+                    text = updateCompletedString,
+                    action = Pair(actionRestartString) {
                         updateResult.completeUpdate()
                     }
                 )
@@ -128,75 +130,78 @@ fun Home(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-        TopAppBar(title = {
-            Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.titleMedium)
-        }, colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-            windowInsets = WindowInsets.safeDrawing.only(
-                WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-            ),
-            actions = {
-            Box(
-                modifier = Modifier
-                    .width(164.dp)
-                    .padding(16.dp)
-                    .clickable(onClick = { expanded = true }),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = items[selectedIndex], modifier = Modifier.padding(16.dp))
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Dropdown arrow",
-                        modifier = Modifier.padding(end = 16.dp)
-                    )
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items.forEachIndexed { index, label ->
-                        DropdownMenuItem(onClick = {
-                            selectedIndex = index
-                            expanded = false
-                            if (selectedIndex == 0) {
-                                viewModel.showCurrent(localContext)
-                            } else {
-                                viewModel.showAll(context = localContext)
+            TopAppBar(
+                title = {
+                    Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.titleMedium)
+                }, colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                windowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                ),
+                actions = {
+                    Box(
+                        modifier = Modifier
+                            .width(164.dp)
+                            .padding(16.dp)
+                            .clickable(onClick = { expanded = true }),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = items[selectedIndex], modifier = Modifier.padding(16.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Dropdown arrow",
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items.forEachIndexed { index, label ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        selectedIndex = index
+                                        expanded = false
+                                        if (selectedIndex == 0) {
+                                            viewModel.showCurrent(localContext)
+                                        } else {
+                                            viewModel.showAll(context = localContext)
+                                        }
+                                    },
+                                    text = {
+                                        Text(text = label)
+                                    }
+                                )
                             }
-                        },
-                            text = {
-                                Text(text = label)
-                            }
+                        }
+                    }
+                    val message = stringResource(R.string.home_information_data_refreshed)
+                    IconButton(onClick = {
+                        viewModel.refreshData(
+                            context = localContext,
+                            onFinished = { DialogHandler.showSnack(message) })
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = "Refresh",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                }
-            }
-            IconButton(onClick = {
-                viewModel.refreshData(
-                    context = localContext,
-                    onFinished = { DialogHandler.showSnack(localContext.getString(R.string.home_information_data_refreshed)) })
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.Refresh,
-                    contentDescription = "Refresh",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            OverflowMenu(
-                onNavigateTo = onNavigateTo, contentDescription = "Home Menu",
-                route = LeafScreen.BottomSheetsHome.route
-            )
-        })
-    }) { paddingValues ->
+                    OverflowMenu(
+                        onNavigateTo = onNavigateTo, contentDescription = "Home Menu",
+                        route = LeafScreen.BottomSheetsHome.route
+                    )
+                })
+        }) { paddingValues ->
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxSize()
@@ -212,16 +217,18 @@ fun Home(
             val tabs: List<Pair<String, HomeViewModel.ViewState>> = portfoliosState.value.toList()
             val showFab = tabs.getOrNull(0)?.second?.items?.isEmpty() ?: false
             HorizontalPager(
-                modifier = Modifier.constrainAs(pagerRef) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }.fillMaxSize(),
+                modifier = Modifier
+                    .constrainAs(pagerRef) {
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+                    .fillMaxSize(),
                 state = pagerState
             ) { page ->
                 Column(modifier = Modifier.fillMaxSize()) {
-                    TabRow(page) {
+                    SecondaryTabRow(page) {
                         val coroutineScope = rememberCoroutineScope()
                         tabs.forEachIndexed { index, title ->
                             Tab(
@@ -267,12 +274,13 @@ fun Home(
                 }
             }
             if (showFab) {
-                FloatingActionButton(modifier = Modifier
-                    .constrainAs(fabRef) {
-                        end.linkTo(parent.end, 16.dp)
-                        bottom.linkTo(parent.bottom, 32.dp)
-                    }
-                    .padding(16.dp), onClick = { DialogHandler.showBuyStockDialog() }) {
+                FloatingActionButton(
+                    modifier = Modifier
+                        .constrainAs(fabRef) {
+                            end.linkTo(parent.end, 16.dp)
+                            bottom.linkTo(parent.bottom, 32.dp)
+                        }
+                        .padding(16.dp), onClick = { DialogHandler.showBuyStockDialog() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_add),
                         contentDescription = "Floating Action Button Icon"
@@ -457,7 +465,13 @@ private fun StockOrderAggregateItem(
         currencyFormat.currency = item.currency
         currencyFormat.maximumFractionDigits = 2
         val growth = profit / (item.getAcquisitionValue() * item.getQuantity())
-        Surface(modifier = Modifier.clickable { onShowStock.invoke(item.stockSymbol, item.events.toList(), readOnly) }) {
+        Surface(modifier = Modifier.clickable {
+            onShowStock.invoke(
+                item.stockSymbol,
+                item.events.toList(),
+                readOnly
+            )
+        }) {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Box(
