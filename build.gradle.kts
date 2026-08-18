@@ -44,7 +44,11 @@ subprojects {
 
         properties {
             val buildDir = layout.buildDirectory.get().asFile
+            property("sonar.sources", "src/main/kotlin,src/main/java")
+            property("sonar.tests", "src/test/kotlin,src/test/java")
+            property("sonar.java.binaries", "${buildDir}/classes/kotlin/main,${buildDir}/intermediates/javac/debug/classes,${buildDir}/tmp/kotlin-classes/debug,${buildDir}/intermediates/kotlin-classes/debug")
             property("sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+            property("sonar.junit.reportPaths", "${buildDir}/test-results/testDebugUnitTest,${buildDir}/test-results/test")
         }
 
     }
@@ -66,6 +70,7 @@ sonar {
         property("sonar.sourceEncoding", "UTF-8")
         property("sonar.coverage.exclusions", "**/build.gradle.kts,**/R.class,**/R\$*.class,**/BuildConfig.*,**/Manifest*.*,**/BR.class,**/DataBinderMapperImpl.class,**/DataBindingInfo.class,**/databinding/*Binding.class")
         property("sonar.qualitygate.wait", "true")
+        property("sonar.java.coveragePlugin", "jacoco")
     }
 
 }
