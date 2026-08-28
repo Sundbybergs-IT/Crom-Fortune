@@ -45,7 +45,7 @@ public class StockV2 {
     }
 
     private void update() throws IOException {
-        if(YahooFinance.QUOTES_QUERY1V7_ENABLED.equalsIgnoreCase("true")) {
+        if("true".equalsIgnoreCase(YahooFinance.QUOTES_QUERY1V7_ENABLED)) {
             StockQuotesQuery1V7RequestV2 request = new StockQuotesQuery1V7RequestV2(this.symbol);
             StockV2 stock = request.getSingleResult();
             if (stock != null) {
@@ -318,7 +318,7 @@ public class StockV2 {
      * @see                 #getHistory()
      */
     public List<HistoricalQuote> getHistory(Calendar from, Calendar to, Interval interval) throws IOException {
-        if(YahooFinance.HISTQUOTES2_ENABLED.equalsIgnoreCase("true")) {
+        if("true".equalsIgnoreCase(YahooFinance.HISTQUOTES2_ENABLED)) {
             HistQuotes2Request hist = new HistQuotes2Request(this.symbol, from, to, interval);
             this.setHistory(hist.getResult());
         } else {
@@ -391,7 +391,7 @@ public class StockV2 {
      * @see                 #getDividendHistory()
      */
     public List<HistoricalDividend> getDividendHistory(Calendar from, Calendar to) throws IOException {
-        if(YahooFinance.HISTQUOTES2_ENABLED.equalsIgnoreCase("true")) {
+        if("true".equalsIgnoreCase(YahooFinance.HISTQUOTES2_ENABLED)) {
             HistDividendsRequest histDiv = new HistDividendsRequest(this.symbol, from, to);
             this.setDividendHistory(histDiv.getResult());
         } else {
@@ -464,7 +464,7 @@ public class StockV2 {
      * @see                 #getSplitHistory()
      */
     public List<HistoricalSplit> getSplitHistory(Calendar from, Calendar to) throws IOException {
-        if(YahooFinance.HISTQUOTES2_ENABLED.equalsIgnoreCase("true")) {
+        if("true".equalsIgnoreCase(YahooFinance.HISTQUOTES2_ENABLED)) {
             HistSplitsRequest histSplit = new HistSplitsRequest(this.symbol, from, to);
             this.setSplitHistory(histSplit.getResult());
         } else {

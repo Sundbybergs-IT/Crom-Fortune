@@ -6,11 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -18,7 +15,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import yahoofinance.Utils;
 import yahoofinance.YahooFinance;
@@ -57,16 +53,8 @@ public abstract class QuotesRequestV2<T> {
      * @throws IOException when there's a connection problem or the request is incorrect
      */
     public List<T> getResult() throws IOException {
-        String cookie = System.getProperty("yahoofinance.cookie");
-        String crumb = System.getProperty("yahoofinance.crumb");
-
-        if (cookie == null || crumb == null || crumb.isEmpty()) {
-            cookie = getCookie();
-            crumb = getCrumb(cookie);
-            System.setProperty("yahoofinance.crumb", crumb);
-            System.setProperty("yahoofinance.cookie", cookie);
-            CrumbManagerV2.refresh();
-        }
+        String cookie = CrumbManagerV2.getCookie();
+        String crumb = CrumbManagerV2.getCrumb();
 
         List<T> result = new ArrayList<>();
 
@@ -100,54 +88,6 @@ public abstract class QuotesRequestV2<T> {
         }
 
         return result;
-    }
-
-    private String getCrumb(String cookie) throws IOException {
-        URL preRequest = new URL("https://query1.finance.yahoo.com/v1/test/getcrumb");
-        RedirectableRequest redirectableRequest = new RedirectableRequest(preRequest, 5);
-        redirectableRequest.setConnectTimeout(YahooFinance.CONNECTION_TIMEOUT);
-        redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
-        Map<String, String> requestProperties = new HashMap<>();
-        requestProperties.put("Cookie", cookie);
-        requestProperties.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.2 Safari/605.1.15");
-        URLConnection preConnection = redirectableRequest.openConnection(requestProperties);
-
-        // Cast to HttpURLConnection to access additional methods
-        if (preConnection instanceof HttpURLConnection) {
-            HttpURLConnection httpConnection = (HttpURLConnection) preConnection;
-
-            // Get the input stream to read the response body
-            InputStream inputStream = httpConnection.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-            // Read the response body line by line
-            String line;
-            StringBuilder responseBody = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                responseBody.append(line);
-            }
-
-            // Close the resources
-            reader.close();
-            inputStream.close();
-
-            // Print the response body
-            return responseBody.toString();
-        } else {
-            throw new IllegalStateException("Cannot retrieve crumb!");
-        }
-    }
-
-    private static String getCookie() throws IOException {
-        URL preRequest = new URL("https://fc.yahoo.com");
-        RedirectableRequest redirectableRequest = new RedirectableRequest(preRequest, 5);
-        redirectableRequest.setConnectTimeout(YahooFinance.CONNECTION_TIMEOUT);
-        redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
-        Map<String, String> requestProperties = new HashMap<>();
-        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
-        URLConnection preConnection = redirectableRequest.openConnection(requestProperties);
-        Map<String, List<String>> headerFields = preConnection.getHeaderFields();
-        return Objects.requireNonNull(headerFields.get("Set-Cookie")).get(0);
     }
 
 }

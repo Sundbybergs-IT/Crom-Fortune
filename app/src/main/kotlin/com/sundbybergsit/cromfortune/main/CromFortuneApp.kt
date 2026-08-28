@@ -55,7 +55,17 @@ class CromFortuneApp : Application(), Configuration.Provider {
                                         cookieStore.add(uri, cookie)
                                     }
                                 } catch (e2: IllegalArgumentException) {
-                                    Log.w("CromFortuneApp", "Skipping invalid cookie: $cookieStr")
+                                    // Final fallback: try to extract just the B cookie manually if present
+                                    val bCookieMatch = Regex("B=([^;]+)").find(cookieStr)
+                                    if (bCookieMatch != null) {
+                                        val bCookie = java.net.HttpCookie("B", bCookieMatch.groupValues[1])
+                                        bCookie.domain = ".yahoo.com"
+                                        bCookie.path = "/"
+                                        bCookie.secure = true
+                                        cookieStore.add(uri, bCookie)
+                                    } else {
+                                        Log.w("CromFortuneApp", "Skipping invalid cookie: $cookieStr")
+                                    }
                                 }
                             }
                         }
@@ -64,6 +74,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
             }
         })
         System.setProperty("yahoofinance.connection.timeout", "60000")
+        System.setProperty("yahoofinance.scrapeurl.histquotes2", "https://fc.yahoo.com")
         System.setProperty("http.agent", "")
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)

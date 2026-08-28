@@ -7,8 +7,8 @@ import yahoofinance.quotes.query1v7.FxQuotesQuery1V7RequestV2
 import yahoofinance.quotes.query1v7.StockQuotesQuery1V7RequestV2
 import java.io.IOException
 
-fun getFxHax(symbol: String): FxQuote {
-    return if (YahooFinance.QUOTES_QUERY1V7_ENABLED.equals("true", ignoreCase = true)) {
+fun getFxHax(symbol: String): FxQuote? {
+    return if ("true".equals(YahooFinance.QUOTES_QUERY1V7_ENABLED, ignoreCase = true)) {
         val request = FxQuotesQuery1V7RequestV2(symbol)
         request.singleResult
     } else {
@@ -22,7 +22,7 @@ fun get(symbols: Array<String>): Map<String, StockV2> {
     val query = Utils.join(symbols, ",")
     val includeHistorical = false
     val result: MutableMap<String, StockV2> = HashMap()
-    if (YahooFinance.QUOTES_QUERY1V7_ENABLED.equals("true", ignoreCase = true)) {
+    if ("true".equals(YahooFinance.QUOTES_QUERY1V7_ENABLED, ignoreCase = true)) {
         val request = StockQuotesQuery1V7RequestV2(query)
         val stocks = request.result
         for (stock in stocks) {

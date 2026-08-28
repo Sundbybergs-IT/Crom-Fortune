@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.CookieHandler;
@@ -47,23 +48,34 @@ public class CrumbManagerV2 {
         requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
         URLConnection connection = redirectableRequest.openConnection(requestProperties);
 
-        for(String headerKey : connection.getHeaderFields().keySet()) {
-            if("Set-Cookie".equalsIgnoreCase(headerKey)) {
-                for(String cookieField : connection.getHeaderFields().get(headerKey)) {
-                    for(String cookieValue : cookieField.split(";")) {
-                        if(cookieValue.matches("B=.*")) {
-                            cookie = cookieValue;
-                            log.debug("Set cookie from http request: {}", cookie);
-                            return;
-                        }
-                    }
-                }
+        // Trigger connection
+        connection.getHeaderFields();
+
+        CookieStore cookieJar =  ((CookieManager) CookieHandler.getDefault()).getCookieStore();
+        for(HttpCookie hcookie : cookieJar.getCookies()) {
+            if("B".equalsIgnoreCase(hcookie.getName())) {
+                updateCookieFromStore(cookieJar);
+                return;
             }
         }
 
         //  If cookie is not set, we should consent to activate cookie
-        InputStreamReader is = new InputStreamReader(connection.getInputStream());
-        BufferedReader br = new BufferedReader(is);
+        InputStreamReader isReader;
+        try {
+            isReader = new InputStreamReader(connection.getInputStream());
+        } catch (IOException e) {
+            if (connection instanceof HttpURLConnection) {
+                InputStream errorStream = ((HttpURLConnection) connection).getErrorStream();
+                if (errorStream != null) {
+                    isReader = new InputStreamReader(errorStream);
+                } else {
+                    throw e;
+                }
+            } else {
+                throw e;
+            }
+        }
+        BufferedReader br = new BufferedReader(isReader);
         String line;
         Pattern patternPostForm = Pattern.compile("action=\"/consent\"");
         Pattern patternInput = Pattern.compile("(<input type=\"hidden\" name=\")(.*?)(\" value=\")(.*?)(\">)");
@@ -132,21 +144,32 @@ public class CrumbManagerV2 {
             connectionOath.getResponseCode();
         }
 
-        // Then Set the cookie with the cookieJar
-        CookieStore cookieJar =  ((CookieManager) CookieHandler.getDefault()).getCookieStore();
+        updateCookieFromStore(cookieJar);
+        if (cookie == null || cookie.isEmpty()) {
+            log.debug("Failed to set cookie from http request. Historical quote requests will most likely fail.");
+        }
+    }
+
+    private static void updateCookieFromStore(CookieStore cookieJar) {
         List<HttpCookie> cookies = cookieJar.getCookies();
+        StringBuilder sb = new StringBuilder();
         for (HttpCookie hcookie: cookies) {
-            if(hcookie.toString().matches("B=.*")) {
-                cookie = hcookie.toString();
-                log.debug("Set cookie from http request: {}", cookie);
-                return;
+            if (hcookie.getDomain() != null && hcookie.getDomain().contains("yahoo.com")) {
+                if (sb.length() > 0) {
+                    sb.append("; ");
+                }
+                sb.append(hcookie.getName()).append("=").append(hcookie.getValue());
             }
         }
-
-        log.debug("Failed to set cookie from http request. Historical quote requests will most likely fail.");
+        if (sb.length() > 0) {
+            cookie = sb.toString();
+            System.setProperty("yahoofinance.cookie", cookie);
+            log.debug("Set cookie from cookie store: {}", cookie);
+        }
     }
 
     private static void setCrumb() throws IOException {
+        // ... (rest of setCrumb unchanged)
         if(System.getProperty("yahoofinance.crumb") != null && !System.getProperty("yahoofinance.crumb") .isEmpty()) {
             crumb = System.getProperty("yahoofinance.crumb") ;
             log.debug("Set crumb from system property: {}", crumb);
@@ -163,20 +186,90 @@ public class CrumbManagerV2 {
         requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
 
         URLConnection crumbConnection = redirectableCrumbRequest.openConnection(requestProperties);
-        InputStreamReader is = new InputStreamReader(crumbConnection.getInputStream());
-        BufferedReader br = new BufferedReader(is);
-        String crumbResult = br.readLine();
+        InputStreamReader isReader;
+        try {
+            isReader = new InputStreamReader(crumbConnection.getInputStream());
+        } catch (IOException e) {
+            if (crumbConnection instanceof HttpURLConnection) {
+                InputStream errorStream = ((HttpURLConnection) crumbConnection).getErrorStream();
+                if (errorStream != null) {
+                    isReader = new InputStreamReader(errorStream);
+                } else {
+                    log.warn("Failed to get crumb, trying fallback scrape...");
+                    scrapeCrumbFallback();
+                    return;
+                }
+            } else {
+                throw e;
+            }
+        }
+        BufferedReader br = new BufferedReader(isReader);
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = br.readLine()) != null) {
+            sb.append(line);
+        }
+        String crumbResult = sb.toString();
 
-        if(crumbResult != null && !crumbResult.isEmpty()) {
+        if(crumbResult != null && !crumbResult.isEmpty() && !crumbResult.contains("<html") && !crumbResult.contains("{\"finance\"")) {
             crumb = crumbResult.trim();
+            System.setProperty("yahoofinance.crumb", crumb);
             log.debug("Set crumb from http request: {}", crumb);
+        } else if (crumbResult != null && (crumbResult.contains("<html") || crumbResult.contains("{\"finance\""))) {
+            if (crumbResult.contains("{\"finance\"")) {
+                log.warn("Crumb request returned JSON error: {}. Trying fallback scrape...", crumbResult);
+            }
+            extractCrumbFromHtml(crumbResult);
         } else {
-            log.debug("Failed to set crumb from http request. Historical quote requests will most likely fail.");
+            log.debug("Failed to set crumb from http request. Trying fallback scrape...");
+            scrapeCrumbFallback();
         }
 
     }
 
+    private static void scrapeCrumbFallback() throws IOException {
+        URL scrapeUrl = new URL("https://finance.yahoo.com/quote/AAPL");
+        RedirectableRequest redirectableRequest = new RedirectableRequest(scrapeUrl, 5);
+        redirectableRequest.setConnectTimeout(YahooFinance.CONNECTION_TIMEOUT);
+        redirectableRequest.setReadTimeout(YahooFinance.CONNECTION_TIMEOUT);
+
+        Map<String, String> requestProperties = new HashMap<>();
+        requestProperties.put("Cookie", cookie);
+        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+        URLConnection connection = redirectableRequest.openConnection(requestProperties);
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = br.readLine()) != null) {
+            sb.append(line);
+        }
+        extractCrumbFromHtml(sb.toString());
+    }
+
+    private static void extractCrumbFromHtml(String html) {
+        if (html == null || html.isEmpty()) {
+            return;
+        }
+        Pattern pattern = Pattern.compile("\"crumb\":\"([^\"]+)\"");
+        Matcher matcher = pattern.matcher(html);
+        if (matcher.find()) {
+            String foundCrumb = matcher.group(1);
+            if (foundCrumb != null) {
+                crumb = foundCrumb.replace("\\u002F", "/");
+                System.setProperty("yahoofinance.crumb", crumb);
+                log.debug("Set crumb from HTML scrape: {}", crumb);
+            }
+        } else {
+            log.debug("Failed to extract crumb from HTML.");
+        }
+    }
+
     public static void refresh() throws IOException {
+        cookie = "";
+        crumb = "";
+        System.clearProperty("yahoofinance.cookie");
+        System.clearProperty("yahoofinance.crumb");
         setCookie();
         setCrumb();
     }
@@ -188,7 +281,13 @@ public class CrumbManagerV2 {
         return crumb;
     }
 
-    public static String getCookie() throws IOException {
+    public static synchronized String getCookie() throws IOException {
+        CookieStore cookieJar =  ((CookieManager) CookieHandler.getDefault()).getCookieStore();
+        List<HttpCookie> cookies = cookieJar.getCookies();
+        if (cookies.isEmpty() && (cookie == null || cookie.isEmpty())) {
+            refresh();
+        }
+        updateCookieFromStore(cookieJar);
         if(cookie == null || cookie.isEmpty()) {
             refresh();
         }

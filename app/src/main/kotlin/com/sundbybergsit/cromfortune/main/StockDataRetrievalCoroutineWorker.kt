@@ -60,6 +60,10 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
                     Log.e(TAG, "Skipping $stockSymbol as it cannot be found in the Yahoo API.")
                 } else {
                     val quote = stockV2.getQuote(true)
+                    if (quote?.price == null) {
+                        Log.e(TAG, "Skipping $stockSymbol as it has no price in the Yahoo API.")
+                        continue
+                    }
                     val currency = triple.third
                     val stockPrice = StockPrice(
                         stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
@@ -166,7 +170,7 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
             )
         }
 
-        private fun getRateInSek(currency: String) = getFxHax("${currency}SEK=X").price.toDouble()
+        private fun getRateInSek(currency: String) = getFxHax("${currency}SEK=X")?.price?.toDouble() ?: 1.0
 
         internal fun isWithinNotificationWindow(
             context: Context,

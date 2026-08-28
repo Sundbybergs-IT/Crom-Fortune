@@ -13,7 +13,7 @@ android {
     namespace = "com.sundbybergsit.cromfortune.main"
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 141
+        versionCode = 142
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
