@@ -7,7 +7,7 @@ import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.main.StockDataRetrievalCoroutineWorker
+import com.sundbybergsit.cromfortune.main.AssetDataRetrievalCoroutineWorker
 
 fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
     eventToConsider: StockEvent,
@@ -21,7 +21,7 @@ fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
                 stockOrder.name,
                 this.currency, stockOrder.pricePerStock
             ),
-            this.rateInSek, StockDataRetrievalCoroutineWorker.COMMISSION_FEE,
+            this.rateInSek, AssetDataRetrievalCoroutineWorker.COMMISSION_FEE,
             existingEvents.toSet(),
             eventToConsider.dateInMillis
         )
@@ -30,7 +30,7 @@ fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
             val buyOrder = StockOrder(
                 "Buy", this.currency.toString(),
                 eventToConsider.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                AssetDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
             )
             return StockEvent(buyOrder, null, eventToConsider.dateInMillis)
         }
@@ -38,7 +38,7 @@ fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
             val sellOrder = StockOrder(
                 "Sell", this.currency.toString(),
                 eventToConsider.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                StockDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                AssetDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
             )
             return StockEvent(sellOrder, null, eventToConsider.dateInMillis)
         }

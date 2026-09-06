@@ -38,11 +38,9 @@ class StockOrderRepository(
         return count
     }
 
-    override fun countAll(): Int {
-        return listOfStockNames().count()
-    }
+    override fun countAll(): Int = listOfAssetNames().count()
 
-    override fun listOfStockNames(): Iterable<String> {
+    override fun listOfAssetNames(): Iterable<String> {
         return sharedPreferences.all.keys.mapNotNull { key ->
             when {
                 key.startsWith("stock:") -> AssetCatalog.findById(key)?.symbol ?: key.removePrefix("stock:")
@@ -52,9 +50,7 @@ class StockOrderRepository(
         }
     }
 
-    override fun isEmpty(): Boolean {
-        return listOfStockNames().none()
-    }
+    override fun isEmpty(): Boolean = listOfAssetNames().none()
 
     override fun list(stockSymbol: String): Set<StockOrder> {
         Log.i(TAG, "list([$stockSymbol])")

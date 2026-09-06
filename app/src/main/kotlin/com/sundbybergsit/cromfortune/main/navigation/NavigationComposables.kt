@@ -357,6 +357,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 BottomSheetContent {
                     SettingsItems(
                         onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
+                        onShowSupportedCryptocurrencies = { DialogHandler.showSupportedCryptocurrenciesDialog() },
                         onShowStockRetrievalTimeIntervals = {
                             DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))
                         },
@@ -453,6 +454,10 @@ fun AddDialogs(
 
         is DialogHandler.DialogViewState.ShowSupportedStocksDialog -> {
             SupportedStocksDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
+        }
+
+        is DialogHandler.DialogViewState.ShowSupportedCryptocurrenciesDialog -> {
+            SupportedCryptocurrenciesDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
         }
 
         DialogHandler.DialogViewState.Dismissed -> {
@@ -681,6 +686,37 @@ private fun SupportedStocksDialog(
             TextButton(onClick = {
                 onDismiss()
             }) {
+                Text(stringResource(id = android.R.string.ok))
+            }
+        }
+    )
+}
+
+@Composable
+private fun SupportedCryptocurrenciesDialog(
+    state: DialogHandler.DialogViewState.ShowSupportedCryptocurrenciesDialog,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        modifier = Modifier,
+        title = {
+            Text(
+                text = stringResource(id = R.string.action_cryptocurrencies_supported),
+                style = MaterialTheme.typography.titleSmall
+            )
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = state.text,
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+        },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
                 Text(stringResource(id = android.R.string.ok))
             }
         }
@@ -1146,6 +1182,7 @@ private fun NotificationsItems(onClear: () -> Unit) {
 @Composable
 private fun SettingsItems(
     onShowSupportedStocks: () -> Unit,
+    onShowSupportedCryptocurrencies: () -> Unit,
     onShowStockRetrievalTimeIntervals: () -> Unit,
     onShowTodo: () -> Unit,
 ) {
@@ -1156,6 +1193,10 @@ private fun SettingsItems(
     BottomSheetMenuItem(
         onClick = onShowSupportedStocks,
         text = stringResource(id = R.string.action_stocks_supported)
+    )
+    BottomSheetMenuItem(
+        onClick = onShowSupportedCryptocurrencies,
+        text = stringResource(id = R.string.action_cryptocurrencies_supported)
     )
     BottomSheetMenuItem(
         onClick = onShowTodo,
@@ -1176,12 +1217,12 @@ private fun HomeItems(
     val currentPortfolioNameState = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState()
     BottomSheetMenuItem(
         onClick = onBuy,
-        text = stringResource(id = R.string.action_stock_buy),
+        text = stringResource(id = R.string.action_asset_buy),
         enabled = portfoliosState.value[currentPortfolioNameState.value]?.readOnly == false
     )
     BottomSheetMenuItem(
         onClick = onSell,
-        text = stringResource(id = R.string.action_stock_sell),
+        text = stringResource(id = R.string.action_asset_sell),
         enabled = portfoliosState.value[currentPortfolioNameState.value]?.readOnly == false
     )
     BottomSheetMenuItem(

@@ -3,7 +3,7 @@ package com.sundbybergsit.cromfortune.main.ui
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.input.TextFieldValue
-import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
@@ -147,7 +147,7 @@ fun TextFieldValue.validateStockName(
             throw ValidatorException()
         }
 
-        !StockPrice.SYMBOLS.map { pair -> "${pair.second} (${pair.first})" }
+        !AssetCatalog.stocks.map { asset -> "${asset.displayName} (${asset.symbol})" }
             .toMutableList().contains(text) -> {
             errorMutableState.value = true
             errorMessageMutableState.value = context.getString(R.string.generic_error_invalid_stock_symbol)

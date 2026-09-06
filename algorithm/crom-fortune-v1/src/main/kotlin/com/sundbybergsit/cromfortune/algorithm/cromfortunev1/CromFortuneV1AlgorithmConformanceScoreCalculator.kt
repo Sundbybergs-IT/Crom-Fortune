@@ -36,11 +36,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
 
         for (stockName in stockNames) {
             var firstItemAdded = false
-            val stockOrdersForStock: MutableList<StockOrder> = stockEvents
+            val stockOrdersForAsset: MutableList<StockOrder> = stockEvents
                 .filter { stockEvent -> stockEvent.stockOrder != null && stockEvent.stockOrder!!.name == stockName }
                 .map { stockEvent -> stockEvent.stockOrder!! }
                 .sortedBy { stockOrder -> stockOrder.dateInMillis }.toMutableList()
-            val firstStockOrderForStock = stockOrdersForStock.first()
+            val firstStockOrderForStock = stockOrdersForAsset.first()
             val currencyRateInSek =
                 currencyRateApi.currencyRates.value.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
             val stockOrderAggregate = StockOrderAggregate(

@@ -15,13 +15,12 @@ import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
-import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
+import com.sundbybergsit.cromfortune.main.AssetDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.main.CromFortuneApp
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
-import com.sundbybergsit.cromfortune.main.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.stocks.AssetEventRepository
@@ -77,8 +76,7 @@ class HomeViewModel(
             } else if (stockOrderAggregate == null) {
                 val stockOrder = checkNotNull(stockEvent.stockOrder)
                 Log.d(TAG, "Creating aggregate for [${stockOrder.name}] with ${sortedStockEvents.size} event(s)")
-                val stockName =
-                    StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }!!.second
+                val stockName = AssetCatalog.findById(stockOrder.assetId)?.displayName ?: stockOrder.name
                 stockOrderAggregate = StockOrderAggregate(
                     CurrencyRateRepository.currencyRates.value
                         .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }?.rateInSek
@@ -107,8 +105,7 @@ class HomeViewModel(
             } else if (stockOrderAggregate == null) {
                 val stockOrder = checkNotNull(stockEvent.stockOrder)
                 Log.d(TAG, "Creating Crom aggregate for [${stockOrder.name}] with ${sortedStockEvents.size} event(s)")
-                val stockName =
-                    checkNotNull(StockPrice.SYMBOLS.find { pair -> pair.first == stockOrder.name }).second
+                val stockName = AssetCatalog.findById(stockOrder.assetId)?.displayName ?: stockOrder.name
                 stockOrderAggregate = StockOrderAggregate(
                     rateInSek = CurrencyRateRepository.currencyRates.value
                         .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }?.rateInSek
@@ -293,7 +290,7 @@ class HomeViewModel(
         viewModelScope.launch(ioDispatcher) {
             refresh(context)
             try {
-                StockDataRetrievalCoroutineWorker.refreshFromYahoo(
+                AssetDataRetrievalCoroutineWorker.refreshFromYahoo(
                     context,
                     portfolioRepository = portfolioRepository, onFinished = {
                         refresh(context)

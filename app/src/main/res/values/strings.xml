@@ -1,16 +1,17 @@
 <resources>
+    <string name="action_asset_buy_short">B</string>
+    <string name="action_asset_sell">Register asset sale</string>
+    <string name="action_asset_sell_short">S</string>
     <string name="action_clear">Clear</string>
     <string name="action_close">Close</string>
     <string name="action_configure_stock_retrieval_intervals">Stock retrieval time intervals</string>
+    <string name="action_cryptocurrencies_supported">Supported cryptocurrencies</string>
     <string name="action_delete">Delete</string>
     <string name="action_portfolio_add">Add portfolio</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_restart">Restart</string>
-    <string name="action_stock_buy">Register stock purchase</string>
+    <string name="action_asset_buy">Register asset purchase</string>
     <string name="action_stock_add_split">Register stock split</string>
-    <string name="action_stock_buy_short">B</string>
-    <string name="action_stock_sell">Register stock sale</string>
-    <string name="action_stock_sell_short">S</string>
     <string name="action_stocks_supported">Supported stocks</string>
 
     <string name="app_name">Crom Fortune</string>

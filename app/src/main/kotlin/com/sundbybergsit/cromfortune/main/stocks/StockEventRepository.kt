@@ -39,7 +39,7 @@ class StockEventRepository(
     }
 
     override fun listOfStockNames(): Iterable<String> {
-        return stockOrderApi.listOfStockNames()
+        return stockOrderApi.listOfAssetNames()
     }
 
     override fun isEmpty(): Boolean {

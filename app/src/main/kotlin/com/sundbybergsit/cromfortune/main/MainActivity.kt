@@ -13,7 +13,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.sundbybergsit.cromfortune.main.navigation.AppNavigation
-import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
+import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
 import com.sundbybergsit.cromfortune.main.theme.AppTheme
 
 class MainActivity : ComponentActivity(), Taggable {
@@ -50,7 +50,9 @@ class MainActivity : ComponentActivity(), Taggable {
             }
         }
         val reviewManager = ReviewManagerFactory.create(this)
-        if (StockOrderRepository(this, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME).countAll() > 4) {
+        if (AssetTransactionRepository(this, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
+                .assetIds().size > 4
+        ) {
             Log.i(TAG, "Time to nag about reviews! :-)")
             val request = reviewManager.requestReviewFlow()
             request.addOnCompleteListener { task ->

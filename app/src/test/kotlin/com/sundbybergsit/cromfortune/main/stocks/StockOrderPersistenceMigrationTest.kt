@@ -85,4 +85,94 @@ class StockOrderPersistenceMigrationTest {
 
         assertEquals(setOf("MSFT", "stock:MSFT"), source.all.keys)
     }
+
+    @Test
+    fun `failed backup is retried without changing source`() {
+        val stores = migrationStoresWithLegacyOrder()
+        stores.getValue("portfolio-v1-backup").failNextWrite = true
+        val original = stores.getValue("portfolio").all
+
+        StockOrderPersistenceMigration.migrateToLatest(listOf("portfolio"), stores::getValue)
+
+        assertEquals(original, stores.getValue("portfolio").all)
+        assertTrue(stores.getValue("DataMigrations").all.isEmpty())
+
+        StockOrderPersistenceMigration.migrateToLatest(listOf("portfolio"), stores::getValue)
+
+        assertEquals(setOf("stock:MSFT"), stores.getValue("portfolio").all.keys)
+        assertTrue(stores.getValue("portfolio-v1-backup").all.isNotEmpty())
+        assertTrue(stores.getValue("portfolio-v2-backup").all.isNotEmpty())
+    }
+
+    @Test
+    fun `successful backup recovers when source rewrite fails`() {
+        val stores = migrationStoresWithLegacyOrder()
+        stores.getValue("portfolio").failNextWrite = true
+        val original = stores.getValue("portfolio").all
+
+        StockOrderPersistenceMigration.migrateToLatest(listOf("portfolio"), stores::getValue)
+
+        assertEquals(original, stores.getValue("portfolio").all)
+        assertEquals(original, stores.getValue("portfolio-v1-backup").all)
+        assertEquals(0, stores.getValue("DataMigrations").getInt("stock-orders:portfolio", 0))
+
+        StockOrderPersistenceMigration.migrateToLatest(listOf("portfolio"), stores::getValue)
+
+        assertEquals(setOf("stock:MSFT"), stores.getValue("portfolio").all.keys)
+        assertEquals(original, stores.getValue("portfolio-v1-backup").all)
+    }
+
+    @Test
+    fun `failed migration marker is retried idempotently`() {
+        val stores = migrationStoresWithLegacyOrder()
+        stores.getValue("DataMigrations").failNextWrite = true
+
+        StockOrderPersistenceMigration.migrateToLatest(listOf("portfolio"), stores::getValue)
+        val afterFailedMarker = stores.getValue("portfolio").all
+
+        assertEquals(setOf("MSFT"), afterFailedMarker.keys)
+        assertEquals(0, stores.getValue("DataMigrations").getInt("stock-orders:portfolio", 0))
+
+        StockOrderPersistenceMigration.migrateToLatest(listOf("portfolio"), stores::getValue)
+
+        assertEquals(setOf("stock:MSFT"), stores.getValue("portfolio").all.keys)
+        assertEquals(2, stores.getValue("DataMigrations").getInt("stock-orders:portfolio", 0))
+        assertEquals(3, stores.getValue("DataMigrations").getInt("asset-transactions:portfolio", 0))
+    }
+
+    private fun migrationStoresWithLegacyOrder(): MutableMap<String, FakeMigrationStore> {
+        val legacyJson =
+            """[{"orderAction":"Buy","currency":"USD","dateInMillis":1,"name":"MSFT","pricePerStock":100.0,"quantity":3}]"""
+        return mutableMapOf(
+            "portfolio" to FakeMigrationStore(mutableMapOf("MSFT" to setOf(legacyJson))),
+            "portfolio-v1-backup" to FakeMigrationStore(),
+            "portfolio-v2-backup" to FakeMigrationStore(),
+            "DataMigrations" to FakeMigrationStore()
+        )
+    }
+}
+
+private class FakeMigrationStore(
+    private val values: MutableMap<String, Any> = mutableMapOf()
+) : MigrationStore {
+    var failNextWrite = false
+    override val all: Map<String, *> get() = values.toMap()
+
+    override fun getInt(key: String, defaultValue: Int): Int = values[key] as? Int ?: defaultValue
+
+    override fun putInt(key: String, value: Int): Boolean = write { values[key] = value }
+
+    override fun replaceAll(values: Map<String, Set<String>>): Boolean = write {
+        this.values.clear()
+        this.values.putAll(values)
+    }
+
+    private fun write(update: () -> Unit): Boolean {
+        if (failNextWrite) {
+            failNextWrite = false
+            return false
+        }
+        update()
+        return true
+    }
 }

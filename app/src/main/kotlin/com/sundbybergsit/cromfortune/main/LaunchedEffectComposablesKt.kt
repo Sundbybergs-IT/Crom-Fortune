@@ -20,7 +20,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
-import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.ui.dashboard.DashboardViewModel
@@ -75,10 +75,10 @@ internal fun LoadValueFromParameterLaunchedEffect(
     stockCurrencyMutableState: MutableState<TextFieldValue>,
 ) {
     LaunchedEffect(stockSymbol) {
-        val triple = StockPrice.SYMBOLS.find { triple -> triple.first == stockSymbol }
-        triple?.let { nullSafeTriple ->
-            stockNameMutableState.value = TextFieldValue("${nullSafeTriple.second} (${nullSafeTriple.first})")
-            stockCurrencyMutableState.value = TextFieldValue(nullSafeTriple.third)
+        val asset = AssetCatalog.stocks.find { asset -> asset.symbol == stockSymbol }
+        asset?.let {
+            stockNameMutableState.value = TextFieldValue("${it.displayName} (${it.symbol})")
+            stockCurrencyMutableState.value = TextFieldValue(it.quoteCurrency.currencyCode)
         }
     }
 }

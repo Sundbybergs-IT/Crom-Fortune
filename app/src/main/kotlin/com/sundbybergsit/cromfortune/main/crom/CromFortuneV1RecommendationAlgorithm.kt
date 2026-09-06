@@ -40,7 +40,9 @@ class CromFortuneV1RecommendationAlgorithm : RecommendationAlgorithm() {
     }
 
     private fun getRecommendation(
-        stockName: String, currency: Currency, rateInSek: Double,
+        stockName: String,
+        currency: Currency,
+        rateInSek: Double,
         stockEvents: Set<StockEvent>,
         currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
         timeInMillis: Long,

@@ -69,7 +69,7 @@ class StockEventRepositoryTest {
             TODO("Not yet implemented")
         }
 
-        override fun listOfStockNames(): Iterable<String> {
+        override fun listOfAssetNames(): Iterable<String> {
             TODO("Not yet implemented")
         }
 

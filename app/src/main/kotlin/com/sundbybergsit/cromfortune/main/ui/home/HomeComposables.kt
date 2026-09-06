@@ -560,7 +560,7 @@ private fun StockOrderAggregateItem(
                                 )
                             )
                         ) {
-                            Text(text = stringResource(id = R.string.action_stock_buy_short))
+                            Text(text = stringResource(id = R.string.action_asset_buy_short))
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         TextButton(
@@ -571,7 +571,7 @@ private fun StockOrderAggregateItem(
                                 )
                             )
                         ) {
-                            Text(text = stringResource(id = R.string.action_stock_sell_short))
+                            Text(text = stringResource(id = R.string.action_asset_sell_short))
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         if (item.assetType == AssetType.STOCK && StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value

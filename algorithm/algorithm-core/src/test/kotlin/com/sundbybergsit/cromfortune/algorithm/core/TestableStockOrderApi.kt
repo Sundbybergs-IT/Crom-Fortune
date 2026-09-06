@@ -9,7 +9,7 @@ class TestableStockOrderApi(private val stockOrders: MutableSet<StockOrder>) : S
 
     override fun countAll(): Int = stockOrders.size
 
-    override fun listOfStockNames(): Iterable<String> = stockOrders.map { stockOrder -> stockOrder.name }
+    override fun listOfAssetNames(): Iterable<String> = stockOrders.map { stockOrder -> stockOrder.name }
 
     override fun isEmpty(): Boolean  = stockOrders.isEmpty()
 

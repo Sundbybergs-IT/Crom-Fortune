@@ -21,7 +21,7 @@ import java.util.Currency
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Config.OLDEST_SDK])
-class StockDataRetrievalCoroutineWorkerTest {
+class AssetDataRetrievalCoroutineWorkerTest {
 
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
@@ -31,7 +31,7 @@ class StockDataRetrievalCoroutineWorkerTest {
     @Test
     fun `doWork - when market data retrieval succeeds - returns success`() {
         val client = FakeMarketDataClient()
-        val worker = TestListenableWorkerBuilder<StockDataRetrievalCoroutineWorker>(context)
+        val worker = TestListenableWorkerBuilder<AssetDataRetrievalCoroutineWorker>(context)
             .setWorkerFactory(StockRetrievalWorkerFactory(client))
             .build()
         runBlocking {
@@ -58,7 +58,7 @@ class StockDataRetrievalCoroutineWorkerTest {
         }.toSet()
         StockPriceRepository.putAssetPrices(previousPrices)
         val client = FakeMarketDataClient(failure = IllegalStateException("Market data unavailable"))
-        val worker = TestListenableWorkerBuilder<StockDataRetrievalCoroutineWorker>(context)
+        val worker = TestListenableWorkerBuilder<AssetDataRetrievalCoroutineWorker>(context)
             .setWorkerFactory(StockRetrievalWorkerFactory(client))
             .build()
 
@@ -74,7 +74,7 @@ class StockDataRetrievalCoroutineWorkerTest {
     fun `doWork - when one quote is missing - stores the remaining prices`() {
         val missingAsset = AssetCatalog.cryptocurrencies.first()
         val client = FakeMarketDataClient(missingAssetId = missingAsset.id)
-        val worker = TestListenableWorkerBuilder<StockDataRetrievalCoroutineWorker>(context)
+        val worker = TestListenableWorkerBuilder<AssetDataRetrievalCoroutineWorker>(context)
             .setWorkerFactory(StockRetrievalWorkerFactory(client))
             .build()
 

@@ -135,7 +135,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
 
     private fun retrieveDataInBackground(workManager: WorkManager) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-        val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<StockDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
+        val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<AssetDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
             .setConstraints(constraints).build()
         workManager.cancelAllWork()
         workManager.enqueueUniquePeriodicWork(

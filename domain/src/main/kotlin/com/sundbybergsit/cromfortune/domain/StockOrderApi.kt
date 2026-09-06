@@ -6,7 +6,7 @@ interface StockOrderApi {
 
     fun countAll(): Int
 
-    fun listOfStockNames(): Iterable<String>
+    fun listOfAssetNames(): Iterable<String>
 
     fun isEmpty(): Boolean
 

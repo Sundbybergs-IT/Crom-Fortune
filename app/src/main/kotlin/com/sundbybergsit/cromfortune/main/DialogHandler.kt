@@ -6,7 +6,6 @@ import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
-import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.SYMBOLS
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.AssetEventRepository
 import com.sundbybergsit.cromfortune.main.ui.home.PortfolioItem
@@ -59,12 +58,15 @@ object DialogHandler {
     }
 
     fun showSupportedStocksDialog() {
-        val allStocks = SYMBOLS
-        var message = ""
-        for (stock in allStocks) {
-            message += "$stock, "
-        }
-        _dialogViewState.value = DialogViewState.ShowSupportedStocksDialog(text = message)
+        _dialogViewState.value = DialogViewState.ShowSupportedStocksDialog(
+            text = AssetCatalog.stocks.joinToString { asset -> "${asset.displayName} (${asset.symbol})" }
+        )
+    }
+
+    fun showSupportedCryptocurrenciesDialog() {
+        _dialogViewState.value = DialogViewState.ShowSupportedCryptocurrenciesDialog(
+            text = AssetCatalog.cryptocurrencies.joinToString { asset -> "${asset.displayName} (${asset.symbol})" }
+        )
     }
 
     fun showBuyStockDialog(stockSymbol: String? = null) {
@@ -75,9 +77,7 @@ object DialogHandler {
         Log.d(TAG, "showStockEvents(stockSymbol=[$stockSymbol], events=${stockEvents.size}, readOnly=$readOnly)")
         _dialogViewState.value = DialogViewState.ShowStockEvents(
             title = "${
-                SYMBOLS.single { triple ->
-                    triple.first == stockSymbol
-                }.second
+                AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.displayName ?: stockSymbol
             } ($stockSymbol)", stockEvents = stockEvents, readOnly = readOnly
         )
     }
@@ -129,6 +129,8 @@ object DialogHandler {
         }
 
         data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
+
+        data class ShowSupportedCryptocurrenciesDialog(val text: String) : DialogViewState()
 
         data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>, val readOnly: Boolean) :
             DialogViewState()

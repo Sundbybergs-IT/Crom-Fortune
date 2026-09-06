@@ -8,7 +8,9 @@ import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.TradableAsset
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.domain.util.roundTo
@@ -26,7 +28,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.math.roundToInt
 
-class StockDataRetrievalCoroutineWorker(
+class AssetDataRetrievalCoroutineWorker(
     private val context: Context,
     workerParameters: WorkerParameters,
     private val marketDataClient: MarketDataClient = YahooMarketDataClient
@@ -42,21 +44,22 @@ class StockDataRetrievalCoroutineWorker(
             context: Context,
             portfolioRepository: PortfolioRepository,
             onFinished: () -> Unit,
-            marketDataClient: MarketDataClient = YahooMarketDataClient
+            marketDataClient: MarketDataClient = YahooMarketDataClient,
+            assets: Collection<TradableAsset> = AssetCatalog.assets
         ) {
             val notificationsAllowed = isWithinNotificationWindow(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
-            val quoteCurrencies = AssetCatalog.assets.map { asset -> asset.quoteCurrency }.distinct()
+            val quoteCurrencies = assets.map { asset -> asset.quoteCurrency }.distinct()
             for (currency in quoteCurrencies.filterNot { it.currencyCode == "SEK" }) {
                 currencyRates.add(CurrencyRate(currency.currencyCode, marketDataClient.getRateInSek(currency)))
             }
             CurrencyRateRepository.addAll(currencyRates)
-            val marketDataResult = marketDataClient.getPrices(AssetCatalog.assets)
+            val marketDataResult = marketDataClient.getPrices(assets)
             marketDataResult.failures.forEach { (assetId, reason) ->
                 Log.w(TAG, "Price refresh failed for [$assetId]: $reason")
             }
-            for (asset in AssetCatalog.stocks) {
+            for (asset in assets.filter { asset -> asset.type == AssetType.STOCK }) {
                 val assetPrice = marketDataResult.prices[asset.id]
                 if (assetPrice == null) {
                     Log.e(TAG, "Skipping ${asset.symbol} as it cannot be found in the market-data API.")
@@ -106,7 +109,7 @@ class StockDataRetrievalCoroutineWorker(
             (context.applicationContext as CromFortuneApp).lastRefreshed = Instant.now()
             StockPriceRepository.updateAssetPrices(
                 assetPrices = marketDataResult.prices.values,
-                requestedAssetIds = AssetCatalog.assets.mapTo(mutableSetOf()) { asset -> asset.id }
+                requestedAssetIds = assets.mapTo(mutableSetOf()) { asset -> asset.id }
             )
             onFinished()
         }
@@ -185,44 +188,33 @@ class StockDataRetrievalCoroutineWorker(
             )
         }
 
+        internal fun assetsToRefresh(
+            context: Context,
+            hasPersistedPrices: Boolean,
+            currentDayOfWeek: DayOfWeek = LocalDate.now().dayOfWeek,
+            currentTime: LocalTime = LocalTime.now()
+        ): List<TradableAsset> = if (
+            !hasPersistedPrices || isWithinNotificationWindow(context, currentDayOfWeek, currentTime)
+        ) {
+            AssetCatalog.assets
+        } else {
+            AssetCatalog.cryptocurrencies
+        }
+
     }
 
     override suspend fun doWork(): Result {
         Log.i(TAG, "doWork()")
         return try {
-            val timeInterval = StockRetrievalSettings(context).timeInterval.value
-            val currentTime = LocalTime.now()
-            val currentDayOfWeek = LocalDate.now().dayOfWeek
-            val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
-            val toTime = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
-            when {
-                isRefreshRequired() -> {
-                    Log.i(TAG, "Initial retrieval of data.")
-                    refreshFromYahoo(
-                        context = context,
-                        portfolioRepository = PortfolioRepository,
-                        onFinished = { },
-                        marketDataClient = marketDataClient
-                    )
-                }
-
-                timeInterval.weekDays.isWithinConfiguredTimeInterval(
-                    currentDayOfWeek, currentTime,
-                    fromTime, toTime
-                ) -> {
-                    Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
-                    refreshFromYahoo(
-                        context = context,
-                        portfolioRepository = PortfolioRepository,
-                        onFinished = { },
-                        marketDataClient = marketDataClient
-                    )
-                }
-
-                else -> {
-                    Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
-                }
-            }
+            val assets = assetsToRefresh(context, hasPersistedPrices = !isRefreshRequired())
+            Log.i(TAG, "Retrieving ${assets.size} asset prices; cryptocurrencies are refreshed 24/7.")
+            refreshFromYahoo(
+                context = context,
+                portfolioRepository = PortfolioRepository,
+                onFinished = { },
+                marketDataClient = marketDataClient,
+                assets = assets
+            )
             Result.success()
         } catch (error: Throwable) {
             Result.failure()

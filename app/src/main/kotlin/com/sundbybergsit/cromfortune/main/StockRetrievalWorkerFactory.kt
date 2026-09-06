@@ -14,7 +14,7 @@ class StockRetrievalWorkerFactory(
         workerClassName: String,
         workerParameters: WorkerParameters,
     ): ListenableWorker {
-        return StockDataRetrievalCoroutineWorker(
+        return AssetDataRetrievalCoroutineWorker(
             context = appContext,
             workerParameters = workerParameters,
             marketDataClient = marketDataClient
