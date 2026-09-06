@@ -7,8 +7,8 @@ import androidx.work.WorkerParameters
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.StockPrice
-import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.CURRENCIES
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.domain.util.roundTo
@@ -24,13 +24,12 @@ import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.Currency
 import kotlin.math.roundToInt
 
 class StockDataRetrievalCoroutineWorker(
     private val context: Context,
     workerParameters: WorkerParameters,
-    private val stockMarketDataClient: StockMarketDataClient = YahooStockMarketDataClient
+    private val marketDataClient: MarketDataClient = YahooMarketDataClient
 ) :
     CoroutineWorker(context, workerParameters) {
 
@@ -43,38 +42,35 @@ class StockDataRetrievalCoroutineWorker(
             context: Context,
             portfolioRepository: PortfolioRepository,
             onFinished: () -> Unit,
-            stockMarketDataClient: StockMarketDataClient = YahooStockMarketDataClient
+            marketDataClient: MarketDataClient = YahooMarketDataClient
         ) {
             val notificationsAllowed = isWithinNotificationWindow(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
-            for (currency in CURRENCIES.filterNot { it == "SEK" }) {
-                currencyRates.add(CurrencyRate(currency, stockMarketDataClient.getRateInSek(currency)))
+            val quoteCurrencies = AssetCatalog.assets.map { asset -> asset.quoteCurrency }.distinct()
+            for (currency in quoteCurrencies.filterNot { it.currencyCode == "SEK" }) {
+                currencyRates.add(CurrencyRate(currency.currencyCode, marketDataClient.getRateInSek(currency)))
             }
             CurrencyRateRepository.addAll(currencyRates)
-            val stockPricesBySymbol = stockMarketDataClient.getStockPrices(
-                StockPrice.SYMBOLS.map { pair -> pair.first }.toTypedArray()
-            )
-            val stockPrices = mutableSetOf<StockPrice>()
-            for (triple in StockPrice.SYMBOLS.iterator()) {
-                val stockSymbol = triple.first
-                val price = stockPricesBySymbol[stockSymbol]
-                if (price == null) {
-                    Log.e(TAG, "Skipping $stockSymbol as it cannot be found in the Yahoo API.")
+            val assetPricesById = marketDataClient.getPrices(AssetCatalog.assets)
+            for (asset in AssetCatalog.stocks) {
+                val assetPrice = assetPricesById[asset.id]
+                if (assetPrice == null) {
+                    Log.e(TAG, "Skipping ${asset.symbol} as it cannot be found in the market-data API.")
                 } else {
-                    val currency = triple.third
                     val stockPrice = StockPrice(
-                        stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
-                        price = price.roundTo(3)
+                        stockSymbol = asset.symbol,
+                        currency = assetPrice.currency,
+                        price = assetPrice.price.roundTo(3)
                     )
                     val allPortfolioNamesState = portfolioRepository.portfolioNamesStateFlow.value
                     for (portfolioName in allPortfolioNamesState.filterNot { name -> name == PortfolioRepository.CROM_PORTFOLIO_NAME }) {
-                        val stockEvents = StockEventRepository(context, portfolioName).list(stockSymbol)
-                        val isStockMuted = StockMuteSettingsRepository.isMuted(stockSymbol)
+                        val stockEvents = StockEventRepository(context, portfolioName).list(asset.symbol)
+                        val isStockMuted = StockMuteSettingsRepository.isMuted(asset.symbol)
                         if (isStockMuted) {
                             Log.i(
                                 TAG,
-                                "Skipping recommendation for portfolio [${portfolioName}] for stock [${stockSymbol}] as it has been muted."
+                                "Skipping recommendation for portfolio [${portfolioName}] for stock [${asset.symbol}] as it has been muted."
                             )
                         } else if (stockEvents.isNotEmpty()) {
                             val recommendation = CromFortuneV1RecommendationAlgorithm(context)
@@ -95,18 +91,17 @@ class StockDataRetrievalCoroutineWorker(
                                 } else {
                                     Log.i(
                                         TAG,
-                                        "Skipping recommendation notification for portfolio [$portfolioName] " +
-                                            "for stock [$stockSymbol] outside configured time interval."
+                                            "Skipping recommendation notification for portfolio [$portfolioName] " +
+                                            "for stock [${asset.symbol}] outside configured time interval."
                                     )
                                 }
                             }
                         }
                     }
-                    stockPrices.add(stockPrice)
                 }
             }
             (context.applicationContext as CromFortuneApp).lastRefreshed = Instant.now()
-            StockPriceRepository.put(stockPrices)
+            StockPriceRepository.putAssetPrices(assetPricesById.values.toSet())
             onFinished()
         }
 
@@ -201,7 +196,7 @@ class StockDataRetrievalCoroutineWorker(
                         context = context,
                         portfolioRepository = PortfolioRepository,
                         onFinished = { },
-                        stockMarketDataClient = stockMarketDataClient
+                        marketDataClient = marketDataClient
                     )
                 }
 
@@ -214,7 +209,7 @@ class StockDataRetrievalCoroutineWorker(
                         context = context,
                         portfolioRepository = PortfolioRepository,
                         onFinished = { },
-                        stockMarketDataClient = stockMarketDataClient
+                        marketDataClient = marketDataClient
                     )
                 }
 
@@ -229,7 +224,7 @@ class StockDataRetrievalCoroutineWorker(
     }
 
     private fun isRefreshRequired(): Boolean {
-        return StockPriceRepository.stockPricesStateFlow.value.stockPrices.isEmpty()
+        return StockPriceRepository.assetPricesStateFlow.value.assetPrices.isEmpty()
     }
 
 }
