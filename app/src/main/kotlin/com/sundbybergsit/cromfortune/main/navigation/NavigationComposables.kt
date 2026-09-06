@@ -88,6 +88,7 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
+import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BottomSheetContent
 import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
@@ -101,12 +102,12 @@ import com.sundbybergsit.cromfortune.main.contentDescription
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
+import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import com.sundbybergsit.cromfortune.main.ui.DayPicker
 import com.sundbybergsit.cromfortune.main.ui.PortfolioAddAlertDialog
-import com.sundbybergsit.cromfortune.main.ui.RegisterBuyStockAlertDialog
-import com.sundbybergsit.cromfortune.main.ui.RegisterSellStockAlertDialog
+import com.sundbybergsit.cromfortune.main.ui.RegisterAssetTransactionDialog
 import com.sundbybergsit.cromfortune.main.ui.RegisterSplitStockAlertDialog
 import com.sundbybergsit.cromfortune.main.ui.dashboard.Dashboard
 import com.sundbybergsit.cromfortune.main.ui.dashboard.DashboardViewModel
@@ -462,19 +463,23 @@ fun AddDialogs(
             StockEventsDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
         }
 
+        is DialogHandler.DialogViewState.ShowAssetEvents -> {
+            AssetEventsDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
+        }
+
         is DialogHandler.DialogViewState.ShowBuyStockDialog -> {
             val localContext = LocalContext.current
             val savedText = stringResource(id = R.string.generic_saved)
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
-            RegisterBuyStockAlertDialog(portfolioNameState = portfolioNameState, onDismiss = {
+            RegisterAssetTransactionDialog(action = TransactionAction.BUY, onDismiss = {
                 dialogHandler.dismissDialog()
-            }, stockSymbolParam = dialogViewState.stockSymbol) { stockOrder ->
+            }, initialAssetId = dialogViewState.stockSymbol) { transaction ->
                 homeViewModel.save(
                     context = localContext,
                     portfolioName = portfolioNameState.value,
-                    stockOrder = stockOrder
+                    transaction = transaction
                 )
                 Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT).show()
             }
@@ -486,23 +491,21 @@ fun AddDialogs(
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
-            RegisterSellStockAlertDialog(
-                portfolioNameState = portfolioNameState,
+            RegisterAssetTransactionDialog(
+                action = TransactionAction.SELL,
                 onDismiss = {
                     dialogHandler.dismissDialog()
                 },
-                stockSymbolParam = dialogViewState.stockSymbol,
-                onSave = { stockOrder ->
+                initialAssetId = dialogViewState.stockSymbol,
+                onSave = { transaction ->
                     homeViewModel.save(
                         context = localContext,
                         portfolioName = portfolioNameState.value,
-                        stockOrder = stockOrder
+                        transaction = transaction
                     )
                     Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT)
                         .show()
-                },
-                homeViewModel = homeViewModel,
-                portfolioRepository = portfolioRepository,
+                }
             )
         }
 
@@ -804,6 +807,45 @@ private fun StockEventsDialog(
             }
         }
     }
+}
+
+@Composable
+private fun AssetEventsDialog(
+    state: DialogHandler.DialogViewState.ShowAssetEvents,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(state.title) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                state.events.sortedBy { event -> event.dateInMillis }.forEach { event ->
+                    val transaction = event.transaction
+                    if (transaction != null) {
+                        TextButton(
+                            enabled = !state.readOnly,
+                            onClick = {
+                                AssetTransactionRepository(
+                                    context,
+                                    PortfolioRepository.selectedPortfolioNameStateFlow.value
+                                ).remove(transaction)
+                                onDismiss()
+                            }
+                        ) {
+                            Text(
+                                "${transaction.action.name} ${transaction.quantity.stripTrailingZeros().toPlainString()} " +
+                                    "@ ${transaction.unitPrice.toPlainString()} ${transaction.quoteCurrencyCode}"
+                            )
+                        }
+                    } else {
+                        event.stockSplit?.let { split -> Text("Stock split × ${split.quantity}") }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } }
+    )
 }
 
 // FIXME: Move calculation to view model

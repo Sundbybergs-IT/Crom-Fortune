@@ -51,7 +51,7 @@ import com.sundbybergsit.cromfortune.main.theme.Profit
 
 @Composable
 fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
-    val viewState: StockPriceRepository.ViewState by StockPriceRepository.stockPricesStateFlow.collectAsState()
+    val viewState: StockPriceRepository.AssetViewState by StockPriceRepository.assetPricesStateFlow.collectAsState()
     RefreshFromViewStateLaunchedEffect(viewState = viewState, viewModel = viewModel)
     val infiniteTransition = rememberInfiniteTransition(label = "Infinite Transition")
     val currentRotationMutableState = remember { mutableFloatStateOf(0f) }
@@ -59,6 +59,7 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
     val rotation = remember { Animatable(currentRotation) }
     val durationInMs = 6000
     val scoreState = viewModel.scoreStateFlow.collectAsState()
+    val portfolioSummaryState = viewModel.portfolioSummaryStateFlow.collectAsState()
     AnimateRotationLaunchedEffect(
         rotation = rotation,
         currentRotationMutableState = currentRotationMutableState,
@@ -128,8 +129,8 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            val (imageRef, iconRef, scoreRef) = createRefs()
-            createVerticalChain(imageRef, iconRef, scoreRef, chainStyle = ChainStyle.Packed)
+            val (imageRef, iconRef, scoreRef, summaryRef) = createRefs()
+            createVerticalChain(imageRef, iconRef, scoreRef, summaryRef, chainStyle = ChainStyle.Packed)
             Image(
                 modifier = Modifier
                     .constrainAs(imageRef) {
@@ -159,6 +160,15 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
                         end.linkTo(parent.end)
                     }, text = scoreState.value,
                 style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                modifier = Modifier.padding(16.dp).constrainAs(summaryRef) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                },
+                text = portfolioSummaryState.value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

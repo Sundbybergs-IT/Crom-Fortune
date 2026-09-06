@@ -29,17 +29,16 @@ import java.time.DayOfWeek
 
 @Composable
 internal fun RefreshFromViewStateLaunchedEffect(
-    viewState: StockPriceRepository.ViewState?,
+    viewState: StockPriceRepository.AssetViewState?,
     viewModel: DashboardViewModel
 ) {
     val context = LocalContext.current
     LaunchedEffect(key1 = viewState) {
         when (viewState) {
-            is StockPriceRepository.ViewState -> {
+            is StockPriceRepository.AssetViewState -> {
                 viewModel.refresh(
                     context = context,
-                    timestamp = viewState.instant,
-                    stockPrices = viewState.stockPrices
+                    timestamp = viewState.instant
                 )
             }
 

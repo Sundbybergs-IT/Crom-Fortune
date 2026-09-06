@@ -7,8 +7,12 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.domain.AssetPrice
+import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.main.CoroutineScopeTestRule
 import com.sundbybergsit.cromfortune.main.CromTestRule
 import com.sundbybergsit.cromfortune.main.Databases
@@ -19,7 +23,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.math.BigDecimal
 import java.util.Currency
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
@@ -47,6 +53,7 @@ class HomeComposablesKtTest {
             .commit()
         PortfolioRepository.init(sharedPreferences)
         PortfolioRepository.setCurrentPortfolio(TEST_PORTFOLIO_NAME)
+        context.getSharedPreferences(TEST_PORTFOLIO_NAME, Context.MODE_PRIVATE).edit().clear().commit()
         viewModel = HomeViewModel(
             portfolioRepository = PortfolioRepository,
             ioDispatcher = coroutineScopeTestRule.testDispatcher
@@ -104,6 +111,61 @@ class HomeComposablesKtTest {
         val teslaTopAfter = nodeTop(TESLA_NAME)
         val intelTopAfter = nodeTop(INTEL_NAME)
         assertTrue(teslaTopAfter < intelTopAfter)
+    }
+
+    @Test
+    fun `crypto transaction uses asset repository and holding path`() {
+        val bitcoin = AssetCatalog.cryptocurrencies.first()
+        val transaction = AssetTransaction(
+            assetId = bitcoin.id,
+            assetType = bitcoin.type,
+            symbol = bitcoin.symbol,
+            displayName = bitcoin.displayName,
+            quoteCurrencyCode = bitcoin.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = 1L,
+            unitPrice = BigDecimal("60000.123456"),
+            quantity = BigDecimal("0.00000001")
+        )
+
+        viewModel.save(context, TEST_PORTFOLIO_NAME, transaction)
+
+        val item = viewModel.portfoliosStateFlow.value.getValue(TEST_PORTFOLIO_NAME).items.single()
+        assertEquals(bitcoin.id, item.assetId)
+        assertEquals(BigDecimal("0.00000001"), item.quantity)
+        assertTrue(item.assetEvents.isNotEmpty())
+        assertTrue(item.legacyStockEvents.isEmpty())
+        assertEquals(setOf(bitcoin.id), context.getSharedPreferences(TEST_PORTFOLIO_NAME, Context.MODE_PRIVATE).all.keys)
+    }
+
+    @Test
+    fun `crypto holding displays asset type and stale price`() {
+        val bitcoin = AssetCatalog.cryptocurrencies.first()
+        viewModel.save(
+            context,
+            TEST_PORTFOLIO_NAME,
+            AssetTransaction(
+                assetId = bitcoin.id,
+                assetType = bitcoin.type,
+                symbol = bitcoin.symbol,
+                displayName = bitcoin.displayName,
+                quoteCurrencyCode = bitcoin.quoteCurrency.currencyCode,
+                action = TransactionAction.BUY,
+                dateInMillis = 1L,
+                unitPrice = BigDecimal("60000"),
+                quantity = BigDecimal("0.5")
+            )
+        )
+        StockPriceRepository.updateAssetPrices(
+            assetPrices = listOf(AssetPrice(bitcoin.id, bitcoin.quoteCurrency, BigDecimal("61000.25"))),
+            requestedAssetIds = setOf(bitcoin.id)
+        )
+        StockPriceRepository.updateAssetPrices(assetPrices = emptyList(), requestedAssetIds = setOf(bitcoin.id))
+
+        setContent()
+
+        composeTestRule.onNodeWithText("[CRYPTO] Bitcoin (BTC)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("(stale)", substring = true).assertIsDisplayed()
     }
 
     private fun seedPortfolio() {

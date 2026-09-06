@@ -6,6 +6,10 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.domain.AssetEvent
+import com.sundbybergsit.cromfortune.domain.AssetHolding
+import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -20,6 +24,8 @@ import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.StockDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.main.stocks.AssetEventRepository
+import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
@@ -30,6 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import java.util.Currency
 
 class HomeViewModel(
@@ -147,9 +154,7 @@ class HomeViewModel(
             }
             Log.d(TAG, "Adding $portfolioName portfolio")
             portfolioViewStates[portfolioName] = ViewState(
-                items = stocks(context = context, portfolioName = portfolioName, lambda = { sortedStockEvents ->
-                    getCalculatedStockOrderAggregate(sortedStockEvents)
-                }), readOnly = false
+                items = assetHoldings(context, portfolioName), readOnly = false
             )
             if (portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME) {
                 Log.d(TAG, "Adding Crom portfolio")
@@ -161,7 +166,7 @@ class HomeViewModel(
                         includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) },
                         lambda = { stockEvents ->
                             getCalculatedStockOrderAggregate(stockEvents, recommendationAlgorithm)
-                        }), readOnly = true
+                        }).map(PortfolioItem::fromStockCompatibility), readOnly = true
                 )
             }
         }
@@ -191,6 +196,13 @@ class HomeViewModel(
         } else {
             stockOrderApi.putReplacingAll(stockOrder.name, stockOrder)
         }
+        refresh(context)
+    }
+
+    fun save(context: Context, portfolioName: String, transaction: AssetTransaction) {
+        Log.i(TAG, "save(portfolioName=[$portfolioName], transaction=[$transaction])")
+        val repository = AssetTransactionRepository(context, portfolioName)
+        repository.putAll(transaction.assetId, repository.list(transaction.assetId) + transaction)
         refresh(context)
     }
 
@@ -225,6 +237,29 @@ class HomeViewModel(
         return stockOrderAggregates.sortedBy { stockOrderAggregate -> stockOrderAggregate.displayName }
     }
 
+    private fun assetHoldings(context: Context, portfolioName: String): List<PortfolioItem> {
+        val repository = AssetEventRepository(context, portfolioName)
+        return repository.assetIds().mapNotNull { assetId ->
+            val events = repository.list(assetId).sortedBy(AssetEvent::dateInMillis)
+            val firstTransaction = events.firstNotNullOfOrNull { event -> event.transaction } ?: return@mapNotNull null
+            val catalogAsset = AssetCatalog.findById(assetId)
+            val rate = CurrencyRateRepository.currencyRates.value
+                .find { it.iso4217CurrencySymbol == firstTransaction.quoteCurrencyCode }
+                ?.rateInSek?.toBigDecimal() ?: BigDecimal.ONE
+            val holding = AssetHolding(
+                assetId = assetId,
+                assetType = firstTransaction.assetType,
+                symbol = firstTransaction.symbol,
+                displayName = catalogAsset?.displayName ?: firstTransaction.displayName,
+                quoteCurrency = firstTransaction.quoteCurrency,
+                rateInSek = rate
+            )
+            events.forEach(holding::aggregate)
+            PortfolioItem.fromAssetHolding(holding)
+        }.filter { item -> showAll || item.quantity.signum() != 0 }
+            .sortedBy(PortfolioItem::displayName)
+    }
+
     fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {
         Log.d(TAG, "portfolioStockEvents(portfolio=[$portfolioName], stockSymbol=[$stockSymbol])")
         return if (portfolioName == PortfolioRepository.CROM_PORTFOLIO_NAME) {
@@ -243,17 +278,12 @@ class HomeViewModel(
                 aggregate.events.toList()
             }
         } else {
-            val aggregate = stocks(context = context, portfolioName = portfolioName) { sortedStockEvents ->
-                getCalculatedStockOrderAggregate(sortedStockEvents)
-            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }
-            if (aggregate == null) {
-                Log.e(TAG, "No aggregate found for [$stockSymbol] in portfolio [$portfolioName] during click lookup")
-                emptyList()
-            } else {
-                aggregate.events.toList()
-            }
+            emptyList()
         }
     }
+
+    fun portfolioAssetEvents(context: Context, portfolioName: String, assetId: String): List<AssetEvent> =
+        AssetEventRepository(context, portfolioName).list(assetId).sortedBy(AssetEvent::dateInMillis)
 
     fun hasNumberOfStocks(context: Context, portfolioName: String, stockName: String, quantity: Int): Boolean {
         return StockEventRepository(context, portfolioName = portfolioName).countCurrent(stockName) >= quantity
@@ -302,10 +332,7 @@ class HomeViewModel(
     fun sortProfitAscending(portfolioName: String) {
         updatePortfolioState(portfolioName) { oldViewState ->
             oldViewState.items.sortedBy { item ->
-                val stockPrice = StockPriceRepository.getStockPrice(item.stockSymbol)
-                stockPrice?.let { nullSafeStockPrice ->
-                    item.getProfit(nullSafeStockPrice.price)
-                }
+                StockPriceRepository.getAssetPrice(item.assetId)?.let { price -> item.profit(price.price) }
             }
         }
     }
@@ -313,17 +340,14 @@ class HomeViewModel(
     fun sortProfitDescending(portfolioName: String) {
         updatePortfolioState(portfolioName) { oldViewState ->
             oldViewState.items.sortedByDescending { item ->
-                val stockPrice = StockPriceRepository.getStockPrice(item.stockSymbol)
-                stockPrice?.let { nullSafeStockPrice ->
-                    item.getProfit(nullSafeStockPrice.price)
-                }
+                StockPriceRepository.getAssetPrice(item.assetId)?.let { price -> item.profit(price.price) }
             }
         }
     }
 
     private fun updatePortfolioState(
         portfolioName: String,
-        updateItems: (ViewState) -> List<StockOrderAggregate>
+        updateItems: (ViewState) -> List<PortfolioItem>
     ) {
         val currentState = _portfoliosStateFlow.value
         val oldViewState = checkNotNull(currentState[portfolioName])
@@ -344,6 +368,6 @@ class HomeViewModel(
         refresh(context)
     }
 
-    internal class ViewState(val items: List<StockOrderAggregate>, val readOnly: Boolean)
+    internal class ViewState(val items: List<PortfolioItem>, val readOnly: Boolean)
 
 }

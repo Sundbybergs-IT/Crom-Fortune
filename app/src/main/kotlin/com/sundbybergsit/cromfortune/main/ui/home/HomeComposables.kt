@@ -66,9 +66,8 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.ktx.AppUpdateResult
 import com.google.android.play.core.ktx.requestCompleteUpdate
 import com.google.android.play.core.ktx.requestUpdateFlow
-import com.sundbybergsit.cromfortune.domain.StockEvent
-import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
-import com.sundbybergsit.cromfortune.domain.StockPriceApi
+import com.sundbybergsit.cromfortune.domain.AssetPriceApi
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BuildConfig
@@ -82,6 +81,7 @@ import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.theme.Loss
 import com.sundbybergsit.cromfortune.main.theme.Profit
+import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Currency
 
@@ -91,7 +91,7 @@ fun Home(
     pagerState: PagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { viewModel.portfoliosStateFlow.value.size }),
-    stockPriceApi: StockPriceApi = StockPriceRepository,
+    assetPriceApi: AssetPriceApi = StockPriceRepository,
     onNavigateTo: (String) -> Unit,
     appUpdateManager: AppUpdateManager,
 ) {
@@ -253,17 +253,17 @@ fun Home(
                                 portfolioName = portfolioName,
                                 index = lazyItemScope,
                                 viewState = portfolioState,
-                                stockPriceApi = stockPriceApi,
-                                onShowStock = { stockSymbol, stockEvents, readOnly ->
+                                assetPriceApi = assetPriceApi,
+                                onShowStock = { item, readOnly ->
                                     Log.d(
                                         tag,
-                                        "Opening stock events from rendered row for [$stockSymbol], events=${stockEvents.size}, readOnly=$readOnly"
+                                        "Opening asset events for [${item.assetId}], readOnly=$readOnly"
                                     )
-                                    DialogHandler.showStockEvents(
-                                        stockSymbol = stockSymbol,
-                                        stockEvents = stockEvents,
-                                        readOnly = readOnly
-                                    )
+                                    if (item.assetEvents.isNotEmpty()) {
+                                        DialogHandler.showAssetEvents(item, readOnly)
+                                    } else {
+                                        DialogHandler.showStockEvents(item.symbol, item.legacyStockEvents, readOnly)
+                                    }
                                 },
                                 onNavigateTo = onNavigateTo,
                                 readOnly = portfolioState.readOnly,
@@ -295,19 +295,17 @@ fun Home(
 fun StocksHeader(
     profile: String,
     onNavigateTo: (String) -> Unit,
-    stockOrderAggregates: List<StockOrderAggregate>,
-    stockPriceApi: StockPriceApi,
+    stockOrderAggregates: List<PortfolioItem>,
+    assetPriceApi: AssetPriceApi,
     currencyRates: List<CurrencyRate>
 ) {
-    var count = 0.0
+    var count = BigDecimal.ZERO
     for (stockOrderAggregate in stockOrderAggregates) {
         for (currencyRate in currencyRates) {
             if (currencyRate.iso4217CurrencySymbol == stockOrderAggregate.currency.currencyCode) {
-                val stockPrice = stockPriceApi.getStockPrice(stockOrderAggregate.stockSymbol)
-                stockPrice?.let { nullSafeStockPrice ->
-                    count += (stockOrderAggregate.getProfit(
-                        nullSafeStockPrice.price
-                    )) * currencyRate.rateInSek
+                val assetPrice = assetPriceApi.getAssetPrice(stockOrderAggregate.assetId)
+                assetPrice?.let { price ->
+                    count += stockOrderAggregate.profit(price.price).multiply(currencyRate.rateInSek.toBigDecimal())
                 }
                 break
             }
@@ -385,7 +383,7 @@ fun StocksHeader(
         ) {
             Text(
                 text = format.format(count), color = colorResource(
-                    if (count >= 0.0) {
+                    if (count >= BigDecimal.ZERO) {
                         R.color.colorProfit
                     } else {
                         R.color.colorLoss
@@ -401,8 +399,8 @@ private fun StocksTab(
     portfolioName: String,
     index: Int,
     viewState: HomeViewModel.ViewState,
-    stockPriceApi: StockPriceApi,
-    onShowStock: (String, List<StockEvent>, Boolean) -> Unit,
+    assetPriceApi: AssetPriceApi,
+    onShowStock: (PortfolioItem, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
     readOnly: Boolean,
     currencyRateApi: CurrencyRateApi
@@ -414,7 +412,7 @@ private fun StocksTab(
             profile = portfolioName,
             onNavigateTo = onNavigateTo,
             stockOrderAggregates = viewState.items,
-            stockPriceApi = stockPriceApi,
+            assetPriceApi = assetPriceApi,
             currencyRates = currencyRates
         )
     }
@@ -438,14 +436,14 @@ private fun StocksTab(
                 onNavigateTo = onNavigateTo,
                 route = LeafScreen.BottomSheetsHomeStock.createRoute(
                     portfolioName = portfolioName,
-                    stockSymbol = viewState.items[index].stockSymbol
+                    stockSymbol = viewState.items[index].assetId
                 )
             )
         }
     }
     StockOrderAggregateItem(
         item = viewState.items[index],
-        stockPriceApi = stockPriceApi,
+        assetPriceApi = assetPriceApi,
         onShowStock = onShowStock,
         readOnly = readOnly
     )
@@ -453,23 +451,32 @@ private fun StocksTab(
 
 @Composable
 private fun StockOrderAggregateItem(
-    item: StockOrderAggregate, stockPriceApi: StockPriceApi,
-    onShowStock: (String, List<StockEvent>, Boolean) -> Unit,
+    item: PortfolioItem, assetPriceApi: AssetPriceApi,
+    onShowStock: (PortfolioItem, Boolean) -> Unit,
     readOnly: Boolean
 ) {
-    val stockPrice = stockPriceApi.getStockPrice(item.stockSymbol)
-    stockPrice?.let { nullSafeStockPrice ->
-        val profit = item.getProfit(nullSafeStockPrice.price)
+    val assetPrice = assetPriceApi.getAssetPrice(item.assetId)
+    if (assetPrice == null) {
+        Surface(modifier = Modifier.clickable { onShowStock(item, readOnly) }) {
+            Text(
+                text = "${item.quantity.stripTrailingZeros().toPlainString()} · Price unavailable",
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+    assetPrice.let { currentPrice ->
+        val profit = item.profit(currentPrice.price)
         val percentageFormat: NumberFormat = NumberFormat.getPercentInstance()
         val currencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
         currencyFormat.currency = item.currency
         currencyFormat.maximumFractionDigits = 2
-        val growth = profit / (item.getAcquisitionValue() * item.getQuantity())
+        val invested = item.acquisitionValue.multiply(item.quantity)
+        val growth = if (invested.signum() == 0) 0.0 else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
         Surface(modifier = Modifier.clickable {
             onShowStock.invoke(
-                item.stockSymbol,
-                item.events.toList(),
-                readOnly
+                item, readOnly
             )
         }) {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -480,7 +487,7 @@ private fun StockOrderAggregateItem(
                             .width(IntrinsicSize.Max)
                     ) {
                         Text(
-                            text = item.getQuantity().toString(),
+                            text = item.quantity.stripTrailingZeros().toPlainString(),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -491,7 +498,7 @@ private fun StockOrderAggregateItem(
                             .width(IntrinsicSize.Max)
                     ) {
                         Text(
-                            text = currencyFormat.format(item.getAcquisitionValue()),
+                            text = currencyFormat.format(item.acquisitionValue),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -501,8 +508,10 @@ private fun StockOrderAggregateItem(
                             .weight(1f)
                             .width(IntrinsicSize.Max)
                     ) {
+                        val stale = StockPriceRepository.assetPricesStateFlow.collectAsState().value.statuses
+                            .find { status -> status.assetPrice.assetId == item.assetId }?.isStale == true
                         Text(
-                            text = currencyFormat.format(stockPrice.price),
+                            text = currencyFormat.format(currentPrice.price) + if (stale) " (stale)" else "",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold
@@ -517,7 +526,7 @@ private fun StockOrderAggregateItem(
                             Text(
                                 text = currencyFormat.format(profit),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = when (profit.compareTo(0)) {
+                                color = when (profit.signum()) {
                                     1 -> Profit
                                     -1 -> Loss
                                     else -> MaterialTheme.colorScheme.onSurface
@@ -526,7 +535,7 @@ private fun StockOrderAggregateItem(
                             Text(
                                 text = percentageFormat.format(growth),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = when (profit.compareTo(0)) {
+                                color = when (profit.signum()) {
                                     1 -> Profit
                                     -1 -> Loss
                                     else -> MaterialTheme.colorScheme.onSurface
@@ -544,7 +553,7 @@ private fun StockOrderAggregateItem(
                     ) {
                         TextButton(
                             onClick = {
-                                DialogHandler.showBuyStockDialog(stockSymbol = item.stockSymbol)
+                                DialogHandler.showBuyStockDialog(stockSymbol = item.assetId)
                             }, colors = ButtonDefaults.textButtonColors(
                                 backgroundColor = colorResource(
                                     id = (android.R.color.holo_green_dark)
@@ -555,7 +564,7 @@ private fun StockOrderAggregateItem(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         TextButton(
-                            onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.stockSymbol) },
+                            onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.assetId) },
                             colors = ButtonDefaults.textButtonColors(
                                 backgroundColor = colorResource(
                                     id = (android.R.color.holo_red_dark)
@@ -565,11 +574,11 @@ private fun StockOrderAggregateItem(
                             Text(text = stringResource(id = R.string.action_stock_sell_short))
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        if (StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
-                                .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.stockSymbol && stockMuteSettings.muted } != null
+                        if (item.assetType == AssetType.STOCK && StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
+                                .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.symbol && stockMuteSettings.muted } != null
                         ) {
                             IconButton(onClick = {
-                                StockMuteSettingsRepository.unmute(item.stockSymbol)
+                                StockMuteSettingsRepository.unmute(item.symbol)
                             }) {
                                 Icon(
                                     imageVector = Icons.Filled.NotificationsOff,
@@ -577,9 +586,9 @@ private fun StockOrderAggregateItem(
                                     tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
-                        } else {
+                        } else if (item.assetType == AssetType.STOCK) {
                             IconButton(onClick = {
-                                StockMuteSettingsRepository.mute(item.stockSymbol)
+                                StockMuteSettingsRepository.mute(item.symbol)
                             }) {
                                 Icon(
                                     imageVector = Icons.Filled.NotificationsActive,

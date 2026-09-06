@@ -71,9 +71,8 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
     private fun publish(instant: Instant, statusesById: Map<String, AssetPriceStatus>) {
         val statuses = statusesById.values.toSet()
         val assetPrices = statuses.map(AssetPriceStatus::assetPrice).toSet()
-        _assetPricesStateFlow.value = AssetViewState(assetPrices, statuses)
+        _assetPricesStateFlow.value = AssetViewState(instant, assetPrices, statuses)
         _stockPricesStateFlow.value = ViewState(
-            instant = instant,
             stockPrices = assetPrices.mapNotNull { assetPrice ->
                 val asset = AssetCatalog.findById(assetPrice.assetId)
                 if (asset?.type == AssetType.STOCK) {
@@ -94,12 +93,13 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
         _assetPricesStateFlow.value = getPristineAssetViewState()
     }
 
-    private fun getPristineViewState() = ViewState(Instant.now(), setOf())
-    private fun getPristineAssetViewState() = AssetViewState(setOf(), setOf())
+    private fun getPristineViewState() = ViewState(setOf())
+    private fun getPristineAssetViewState() = AssetViewState(Instant.now(), setOf(), setOf())
 
-    class ViewState(val instant: Instant, val stockPrices: Set<StockPrice>)
+    class ViewState(val stockPrices: Set<StockPrice>)
     data class AssetPriceStatus(val assetPrice: AssetPrice, val lastUpdatedAt: Instant, val isStale: Boolean)
     class AssetViewState(
+        val instant: Instant,
         val assetPrices: Set<AssetPrice>,
         val statuses: Set<AssetPriceStatus>
     )

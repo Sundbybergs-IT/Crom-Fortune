@@ -2,11 +2,14 @@ package com.sundbybergsit.cromfortune.main
 
 import android.content.Context
 import android.util.Log
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.domain.AssetEvent
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
-import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockPrice.Companion.SYMBOLS
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
+import com.sundbybergsit.cromfortune.main.stocks.AssetEventRepository
+import com.sundbybergsit.cromfortune.main.ui.home.PortfolioItem
 import com.sundbybergsit.cromfortune.main.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,7 +44,7 @@ object DialogHandler {
 
     fun showDeleteDialog(context: Context, portfolioName: String, stockName: String) {
         _dialogViewState.value = DialogViewState.ShowDeleteDialog(
-            stockEventApi = StockEventRepository(context = context, portfolioName = portfolioName),
+            assetEventApi = AssetEventRepository(context = context, portfolioName = portfolioName),
             stockName = stockName
         )
     }
@@ -65,7 +68,7 @@ object DialogHandler {
     }
 
     fun showBuyStockDialog(stockSymbol: String? = null) {
-        _dialogViewState.value = DialogViewState.ShowBuyStockDialog(stockSymbol = stockSymbol)
+        _dialogViewState.value = DialogViewState.ShowBuyStockDialog(stockSymbol = stockSymbol?.let(::assetId))
     }
 
     fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>, readOnly: Boolean) {
@@ -80,7 +83,7 @@ object DialogHandler {
     }
 
     fun showSellStockDialog(stockSymbol: String? = null) {
-        _dialogViewState.value = DialogViewState.ShowSellStockDialog(stockSymbol = stockSymbol)
+        _dialogViewState.value = DialogViewState.ShowSellStockDialog(stockSymbol = stockSymbol?.let(::assetId))
     }
 
     fun showSplitStockDialog(stockSymbol: String? = null) {
@@ -91,17 +94,31 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowAddPortfolio
     }
 
+    fun showAssetEvents(item: PortfolioItem, readOnly: Boolean) {
+        _dialogViewState.value = DialogViewState.ShowAssetEvents(
+            title = item.displayName,
+            events = item.assetEvents,
+            readOnly = readOnly
+        )
+    }
+
+    private fun assetId(symbolOrId: String): String = if (symbolOrId.contains(':')) {
+        symbolOrId
+    } else {
+        AssetCatalog.findBySymbol(AssetType.STOCK, symbolOrId)?.id ?: "stock:$symbolOrId"
+    }
+
     sealed class DialogViewState {
 
         data object Dismissed : DialogViewState()
 
         data class ShowDeleteDialog(
-            val stockEventApi: StockEventApi,
+            val assetEventApi: com.sundbybergsit.cromfortune.domain.AssetEventApi,
             val stockName: String
         ) : DialogViewState(), StockRemoveClickListener {
 
             override fun onClickRemove(context: Context, stockSymbol: String) {
-                stockEventApi.remove(stockSymbol)
+                assetEventApi.remove(stockSymbol)
             }
 
         }
@@ -114,6 +131,9 @@ object DialogHandler {
         data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
 
         data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>, val readOnly: Boolean) :
+            DialogViewState()
+
+        data class ShowAssetEvents(val title: String, val events: List<AssetEvent>, val readOnly: Boolean) :
             DialogViewState()
 
         data class ShowBuyStockDialog(val stockSymbol: String? = null) : DialogViewState()
