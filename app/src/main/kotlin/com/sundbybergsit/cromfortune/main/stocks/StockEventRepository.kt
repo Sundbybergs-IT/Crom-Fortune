@@ -22,8 +22,8 @@ class StockEventRepository(
         for (event in stockEvents) {
             event.stockOrder?.let {
                 when (it.orderAction) {
-                    "Buy" -> count += it.quantity
-                    "Sell" -> count -= it.quantity
+                    "Buy" -> count += it.quantity.intValueExact()
+                    "Sell" -> count -= it.quantity.intValueExact()
                     else -> error("Illegal order action: [${it.orderAction}]")
                 }
             }

@@ -22,10 +22,10 @@ class StockOrderRepository(
         for (stockOrder in list) {
             when (stockOrder.orderAction) {
                 "Buy" -> {
-                    count += stockOrder.quantity
+                    count += stockOrder.quantity.intValueExact()
                 }
                 "Sell" -> {
-                    count -= stockOrder.quantity
+                    count -= stockOrder.quantity.intValueExact()
                 }
                 else -> {
                     throw IllegalStateException()

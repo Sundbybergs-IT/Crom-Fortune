@@ -75,11 +75,11 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
             }
             if (stockOrder.name == stockName) {
                 if (stockOrder.orderAction == "Buy") {
-                    grossQuantity += (stockOrder.quantity * splitMultiplicator).toInt()
-                    accumulatedCostInSek += rateInSek * stockOrder.pricePerStock * stockOrder.quantity +
+                    grossQuantity += (stockOrder.quantity.toDouble() * splitMultiplicator).toInt()
+                    accumulatedCostInSek += rateInSek * stockOrder.pricePerStock * stockOrder.quantity.toDouble() +
                             stockOrder.commissionFee
                 } else {
-                    soldQuantity += (stockOrder.quantity * splitMultiplicator).toInt()
+                    soldQuantity += (stockOrder.quantity.toDouble() * splitMultiplicator).toInt()
                 }
                 if (grossQuantity - soldQuantity == 0) {
                     accumulatedCostInSek = 0.0

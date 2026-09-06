@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.domain
 
+import java.math.BigDecimal
 import java.util.Currency
 
 data class StockOrderAggregate(
@@ -9,8 +10,8 @@ data class StockOrderAggregate(
     val currency: Currency,
     private var accumulatedPurchases: Double = 0.0,
     private var accumulatedSales: Double = 0.0,
-    private var aggregateBuyQuantity: Int = 0,
-    private var aggregateSellQuantity: Int = 0,
+    private var aggregateBuyQuantity: BigDecimal = BigDecimal.ZERO,
+    private var aggregateSellQuantity: BigDecimal = BigDecimal.ZERO,
     private var aggregateAcquisitionValue: Double = 0.0,
     val events: MutableList<StockEvent> = mutableListOf()
 ) {
@@ -57,7 +58,7 @@ data class StockOrderAggregate(
                 name = stockSymbol,
                 pricePerStock = 0.0,
                 commissionFee = 0.0,
-                quantity = netQuantity - netQuantity / stockSplit.quantity
+                quantity = netQuantity - netQuantity.divideToIntegralValue(stockSplit.quantity.toBigDecimal())
             )
         } else {
             StockOrder(
@@ -67,7 +68,7 @@ data class StockOrderAggregate(
                 name = stockSymbol,
                 pricePerStock = 0.0,
                 commissionFee = 0.0,
-                quantity = netQuantity * stockSplit.quantity - netQuantity
+                quantity = netQuantity * stockSplit.quantity.toBigDecimal() - netQuantity
             )
         }
 
@@ -76,12 +77,12 @@ data class StockOrderAggregate(
     private fun StockOrder.buy() {
         aggregateAcquisitionValue = getCalculatedAcquisitionValueAfterBuy()
         aggregateBuyQuantity += this.quantity
-        accumulatedPurchases += this.pricePerStock * this.quantity + this.commissionFee / rateInSek
+        accumulatedPurchases += this.pricePerStock * this.quantity.toDouble() + this.commissionFee / rateInSek
     }
 
     private fun StockOrder.sell() {
         aggregateAcquisitionValue = getCalculatedAcquisitionValueAfterSell()
-        val saleIncome = this.quantity * this.pricePerStock
+        val saleIncome = this.quantity.toDouble() * this.pricePerStock
         accumulatedPurchases += (this.commissionFee / rateInSek)
         aggregateSellQuantity += this.quantity
         if (aggregateSellQuantity > aggregateBuyQuantity) {
@@ -91,32 +92,33 @@ data class StockOrderAggregate(
     }
 
     private fun StockOrder.getCalculatedAcquisitionValueAfterBuy(): Double =
-        (accumulatedPurchases - accumulatedSales + (quantity * pricePerStock) + commissionFee / rateInSek) /
-                (aggregateBuyQuantity - aggregateSellQuantity + quantity)
+            (accumulatedPurchases - accumulatedSales + (quantity.toDouble() * pricePerStock) + commissionFee / rateInSek) /
+                (aggregateBuyQuantity - aggregateSellQuantity + quantity).toDouble()
 
     private fun StockOrder.getCalculatedAcquisitionValueAfterSell(): Double {
-        return if (aggregateBuyQuantity - aggregateSellQuantity - quantity == 0) {
+        return if (aggregateBuyQuantity - aggregateSellQuantity - quantity == BigDecimal.ZERO) {
             0.0
         } else {
-            (accumulatedPurchases - accumulatedSales - (quantity * pricePerStock) + commissionFee / rateInSek) /
-                    (aggregateBuyQuantity - aggregateSellQuantity - quantity)
+            (accumulatedPurchases - accumulatedSales - (quantity.toDouble() * pricePerStock) + commissionFee / rateInSek) /
+                    (aggregateBuyQuantity - aggregateSellQuantity - quantity).toDouble()
         }
     }
 
-    fun getQuantity(): Int {
-        return aggregateBuyQuantity - aggregateSellQuantity
-    }
+    fun getExactQuantity(): BigDecimal = aggregateBuyQuantity - aggregateSellQuantity
+
+    @Deprecated("Use getExactQuantity()")
+    fun getQuantity(): Int = getExactQuantity().intValueExact()
 
     fun getAcquisitionValue(): Double {
         return aggregateAcquisitionValue
     }
 
     fun getProfit(currentStockPrice: Double): Double {
-        return if (aggregateBuyQuantity == 0) {
+        return if (aggregateBuyQuantity == BigDecimal.ZERO) {
             0.0
         } else {
             val realizedProfit = accumulatedSales - accumulatedPurchases
-            val currentQuantity = getQuantity()
+            val currentQuantity = getExactQuantity().toDouble()
             val unrealizedProfit = currentStockPrice * currentQuantity
             realizedProfit + unrealizedProfit
         }

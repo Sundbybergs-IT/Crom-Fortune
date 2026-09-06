@@ -14,6 +14,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
+import com.sundbybergsit.cromfortune.main.stocks.StockOrderPersistenceMigration
 import java.net.CookieHandler
 import java.net.CookieManager
 import java.net.CookiePolicy
@@ -87,6 +88,10 @@ class CromFortuneApp : Application(), Configuration.Provider {
                 Databases.PORTFOLIO_DB_NAME,
                 Context.MODE_PRIVATE
             )
+        )
+        StockOrderPersistenceMigration.migrateToVersion2(
+            context = applicationContext,
+            portfolioNames = PortfolioRepository.portfolioNamesStateFlow.value
         )
         retrieveDataInBackground(workManager)
     }
