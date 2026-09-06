@@ -232,6 +232,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     }
 
     class SellRecommendationDummyAlgorithm : RecommendationAlgorithm() {
+        override val supportedAssetTypes = setOf(com.sundbybergsit.cromfortune.domain.AssetType.STOCK)
+
 
         override fun getRecommendation(
             stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Set<StockEvent>,

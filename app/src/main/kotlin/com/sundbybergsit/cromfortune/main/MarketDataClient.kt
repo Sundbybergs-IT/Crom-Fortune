@@ -10,20 +10,37 @@ interface MarketDataClient {
 
     fun getRateInSek(currency: Currency): Double
 
-    fun getPrices(assets: Collection<TradableAsset>): Map<String, AssetPrice>
+    fun getPrices(assets: Collection<TradableAsset>): MarketDataResult
 }
+
+data class MarketDataResult(
+    val prices: Map<String, AssetPrice>,
+    val failures: Map<String, String> = emptyMap()
+)
 
 object YahooMarketDataClient : MarketDataClient {
 
     override fun getRateInSek(currency: Currency): Double =
         getFxHax("${currency.currencyCode}SEK=X")?.price?.toDouble() ?: 1.0
 
-    override fun getPrices(assets: Collection<TradableAsset>): Map<String, AssetPrice> {
-        val marketDataPrices = get(assets.map(TradableAsset::marketDataSymbol).toTypedArray())
-            .mapNotNull { (marketDataSymbol, stock) ->
-                stock.quote?.price?.toDouble()?.let { price -> marketDataSymbol to price }
-            }.toMap()
-        return mapMarketDataPrices(assets, marketDataPrices)
+    override fun getPrices(assets: Collection<TradableAsset>): MarketDataResult {
+        return try {
+            val marketDataPrices = get(assets.map(TradableAsset::marketDataSymbol).toTypedArray())
+                .mapNotNull { (marketDataSymbol, stock) ->
+                    stock.quote?.price?.toDouble()?.let { price -> marketDataSymbol to price }
+                }.toMap()
+            val prices = mapMarketDataPrices(assets, marketDataPrices)
+            MarketDataResult(
+                prices = prices,
+                failures = assets.filterNot { asset -> prices.containsKey(asset.id) }
+                    .associate { asset -> asset.id to "Quote missing from Yahoo response" }
+            )
+        } catch (error: Exception) {
+            MarketDataResult(
+                prices = emptyMap(),
+                failures = assets.associate { asset -> asset.id to (error.message ?: error.javaClass.simpleName) }
+            )
+        }
     }
 }
 

@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
@@ -28,6 +29,31 @@ private const val FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME = "Aktie med annan valutak
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Config.OLDEST_SDK])
 class CromFortuneV1RecommendationAlgorithmTest {
+
+    @Test
+    fun `crypto events are excluded from the stock-only algorithm`() {
+        val cryptoEvent = StockOrder(
+            orderAction = "Buy",
+            currency = "USD",
+            dateInMillis = 1L,
+            name = "BTC",
+            pricePerStock = 60_000.0,
+            quantity = java.math.BigDecimal("0.001"),
+            assetId = "crypto:BTC",
+            assetType = AssetType.CRYPTO
+        ).toStockEvent()
+
+        assertEquals(setOf(AssetType.STOCK), algorithm.supportedAssetTypes)
+        assertNull(
+            algorithm.getRecommendation(
+                StockPrice("BTC", Currency.getInstance("USD"), 61_000.0),
+                10.0,
+                39.0,
+                setOf(cryptoEvent),
+                2L
+            )
+        )
+    }
 
     private lateinit var algorithm: CromFortuneV1RecommendationAlgorithm
 

@@ -1,17 +1,19 @@
 package com.sundbybergsit.cromfortune.main.crom
 
-import android.content.Context
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import java.util.Currency
 import java.util.concurrent.TimeUnit
 
-class CromFortuneV1RecommendationAlgorithm(private val context: Context) : RecommendationAlgorithm() {
+class CromFortuneV1RecommendationAlgorithm : RecommendationAlgorithm() {
+
+    override val supportedAssetTypes: Set<AssetType> = setOf(AssetType.STOCK)
 
     companion object {
 
@@ -30,6 +32,7 @@ class CromFortuneV1RecommendationAlgorithm(private val context: Context) : Recom
         stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Set<StockEvent>,
         timeInMillis: Long,
     ): Recommendation? {
+        if (!supports(stockEvents)) return null
         return getRecommendation(
             stockPrice.stockSymbol, stockPrice.currency,
             currencyRateInSek, stockEvents, stockPrice.price, commissionFee, timeInMillis

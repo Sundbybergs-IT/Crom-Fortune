@@ -689,11 +689,10 @@ private fun StockEventsDialog(
     state: DialogHandler.DialogViewState.ShowStockEvents,
     onDismiss: () -> Unit
 ) {
-    val context = LocalContext.current
     val stockEvents = state.stockEvents
     val opinionatedEvents: List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
         stockEvents,
-        CromFortuneV1RecommendationAlgorithm(context)
+        CromFortuneV1RecommendationAlgorithm()
     )
     val stockOrderEvents = stockEvents.mapNotNull { it.stockOrder }
     if (stockOrderEvents.size != opinionatedEvents.size) {

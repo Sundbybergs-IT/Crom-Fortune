@@ -1,6 +1,5 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -48,7 +47,7 @@ class StockOrderAggregateExtensionsKtTest {
                 price = 2.20
             ),
             existingEvents = listOf(stockEvent1, stockEvent2),
-            recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm(ApplicationProvider.getApplicationContext())
+            recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
         )
 
         assertNull(newStockEvent)

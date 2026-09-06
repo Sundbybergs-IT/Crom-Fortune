@@ -4,6 +4,7 @@ import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
@@ -22,10 +23,13 @@ class CromFortuneV1RecommendationAlgorithm(
         minFreezePeriodInDays = MIN_FREEZE_PERIOD_IN_DAYS
     )
 ) : RecommendationAlgorithm() {
+    override val supportedAssetTypes: Set<AssetType> = setOf(AssetType.STOCK)
+
     override fun getRecommendation(
         stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Set<StockEvent>,
         timeInMillis: Long,
     ): Recommendation? {
+        if (!supports(stockEvents)) return null
         return getRecommendation(
             stockPrice.stockSymbol, stockPrice.currency,
             currencyRateInSek, stockEvents, stockPrice.price, commissionFee, timeInMillis
@@ -39,7 +43,6 @@ class CromFortuneV1RecommendationAlgorithm(
         timeInMillis: Long,
     ): Recommendation? {
         val orders = stockEvents.filter { stockEvent -> stockEvent.stockOrder != null }.map { it.stockOrder!! }
-        val stockSplits = stockEvents.filter { stockEvent -> stockEvent.stockSplit != null }.map { it.stockSplit!! }
         if (orders.isEmpty()) {
             // Dummy recommendation to mimic first buy
             return Recommendation(

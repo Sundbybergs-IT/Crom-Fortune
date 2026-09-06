@@ -52,9 +52,12 @@ class StockDataRetrievalCoroutineWorker(
                 currencyRates.add(CurrencyRate(currency.currencyCode, marketDataClient.getRateInSek(currency)))
             }
             CurrencyRateRepository.addAll(currencyRates)
-            val assetPricesById = marketDataClient.getPrices(AssetCatalog.assets)
+            val marketDataResult = marketDataClient.getPrices(AssetCatalog.assets)
+            marketDataResult.failures.forEach { (assetId, reason) ->
+                Log.w(TAG, "Price refresh failed for [$assetId]: $reason")
+            }
             for (asset in AssetCatalog.stocks) {
-                val assetPrice = assetPricesById[asset.id]
+                val assetPrice = marketDataResult.prices[asset.id]
                 if (assetPrice == null) {
                     Log.e(TAG, "Skipping ${asset.symbol} as it cannot be found in the market-data API.")
                 } else {
@@ -73,7 +76,7 @@ class StockDataRetrievalCoroutineWorker(
                                 "Skipping recommendation for portfolio [${portfolioName}] for stock [${asset.symbol}] as it has been muted."
                             )
                         } else if (stockEvents.isNotEmpty()) {
-                            val recommendation = CromFortuneV1RecommendationAlgorithm(context)
+                            val recommendation = CromFortuneV1RecommendationAlgorithm()
                                 .getRecommendation(
                                     stockPrice = stockPrice,
                                     currencyRateInSek = currencyRates.find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockPrice.currency.currencyCode }!!.rateInSek,
@@ -101,7 +104,10 @@ class StockDataRetrievalCoroutineWorker(
                 }
             }
             (context.applicationContext as CromFortuneApp).lastRefreshed = Instant.now()
-            StockPriceRepository.putAssetPrices(assetPricesById.values.toSet())
+            StockPriceRepository.updateAssetPrices(
+                assetPrices = marketDataResult.prices.values,
+                requestedAssetIds = AssetCatalog.assets.mapTo(mutableSetOf()) { asset -> asset.id }
+            )
             onFinished()
         }
 

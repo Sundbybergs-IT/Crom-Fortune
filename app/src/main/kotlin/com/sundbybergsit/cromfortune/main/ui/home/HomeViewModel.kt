@@ -153,12 +153,14 @@ class HomeViewModel(
             )
             if (portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME) {
                 Log.d(TAG, "Adding Crom portfolio")
+                val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
                 portfolioViewStates[PortfolioRepository.CROM_PORTFOLIO_NAME] = ViewState(
                     items = stocks(
                         context = context,
                         portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+                        includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) },
                         lambda = { stockEvents ->
-                            getCalculatedStockOrderAggregate(stockEvents, CromFortuneV1RecommendationAlgorithm(context))
+                            getCalculatedStockOrderAggregate(stockEvents, recommendationAlgorithm)
                         }), readOnly = true
                 )
             }
@@ -192,7 +194,12 @@ class HomeViewModel(
         refresh(context)
     }
 
-    fun stocks(context: Context, portfolioName: String, lambda: (List<StockEvent>) -> StockOrderAggregate):
+    fun stocks(
+        context: Context,
+        portfolioName: String,
+        includeAsset: (StockOrder) -> Boolean = { true },
+        lambda: (List<StockEvent>) -> StockOrderAggregate
+    ):
         List<StockOrderAggregate> {
         val stockEventApi: StockEventApi = StockEventRepository(context, portfolioName = portfolioName)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
@@ -203,6 +210,10 @@ class HomeViewModel(
                 stockEventApi.remove(stockSymbol)
             } else {
                 val sortedStockOrders: List<StockEvent> = stockEvents.sortedBy { event -> event.dateInMillis }
+                val firstOrder = sortedStockOrders.firstNotNullOfOrNull(StockEvent::stockOrder)
+                if (firstOrder != null && !includeAsset(firstOrder)) {
+                    continue
+                }
                 val stockAggregate = lambda(sortedStockOrders)
                 if (!showAll && stockAggregate.getQuantity() == 0) {
                     Log.i(TAG, "Hiding this stock because of the filter option.")
@@ -217,8 +228,13 @@ class HomeViewModel(
     fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {
         Log.d(TAG, "portfolioStockEvents(portfolio=[$portfolioName], stockSymbol=[$stockSymbol])")
         return if (portfolioName == PortfolioRepository.CROM_PORTFOLIO_NAME) {
-            val aggregate = stocks(context = context, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME) { sortedStockEvents ->
-                getCalculatedStockOrderAggregate(sortedStockEvents, CromFortuneV1RecommendationAlgorithm(context))
+            val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
+            val aggregate = stocks(
+                context = context,
+                portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+                includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) }
+            ) { sortedStockEvents ->
+                getCalculatedStockOrderAggregate(sortedStockEvents, recommendationAlgorithm)
             }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }
             if (aggregate == null) {
                 Log.e(TAG, "No aggregate found for [$stockSymbol] in Crom portfolio during click lookup")

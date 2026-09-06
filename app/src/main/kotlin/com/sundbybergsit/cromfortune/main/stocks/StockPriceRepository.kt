@@ -42,7 +42,36 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
     override fun putAssetPrices(assetPrices: Set<AssetPrice>) {
         Log.v(TAG, "putAssetPrices(${assetPrices})")
         val instant = Instant.now()
-        _assetPricesStateFlow.value = AssetViewState(instant, assetPrices)
+        publish(
+            instant,
+            assetPrices.associate { assetPrice ->
+                assetPrice.assetId to AssetPriceStatus(assetPrice, instant, isStale = false)
+            }
+        )
+    }
+
+    fun updateAssetPrices(
+        assetPrices: Collection<AssetPrice>,
+        requestedAssetIds: Set<String>,
+        retrievedAt: Instant = Instant.now()
+    ) {
+        val statuses = assetPricesStateFlow.value.statuses.associateBy { status -> status.assetPrice.assetId }.toMutableMap()
+        val newPricesById = assetPrices.associateBy(AssetPrice::assetId)
+        for (assetId in requestedAssetIds) {
+            val newPrice = newPricesById[assetId]
+            if (newPrice != null) {
+                statuses[assetId] = AssetPriceStatus(newPrice, retrievedAt, isStale = false)
+            } else {
+                statuses[assetId] = statuses[assetId]?.copy(isStale = true) ?: continue
+            }
+        }
+        publish(retrievedAt, statuses)
+    }
+
+    private fun publish(instant: Instant, statusesById: Map<String, AssetPriceStatus>) {
+        val statuses = statusesById.values.toSet()
+        val assetPrices = statuses.map(AssetPriceStatus::assetPrice).toSet()
+        _assetPricesStateFlow.value = AssetViewState(assetPrices, statuses)
         _stockPricesStateFlow.value = ViewState(
             instant = instant,
             stockPrices = assetPrices.mapNotNull { assetPrice ->
@@ -66,9 +95,13 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
     }
 
     private fun getPristineViewState() = ViewState(Instant.now(), setOf())
-    private fun getPristineAssetViewState() = AssetViewState(Instant.now(), setOf())
+    private fun getPristineAssetViewState() = AssetViewState(setOf(), setOf())
 
     class ViewState(val instant: Instant, val stockPrices: Set<StockPrice>)
-    class AssetViewState(val instant: Instant, val assetPrices: Set<AssetPrice>)
+    data class AssetPriceStatus(val assetPrice: AssetPrice, val lastUpdatedAt: Instant, val isStale: Boolean)
+    class AssetViewState(
+        val assetPrices: Set<AssetPrice>,
+        val statuses: Set<AssetPriceStatus>
+    )
 
 }

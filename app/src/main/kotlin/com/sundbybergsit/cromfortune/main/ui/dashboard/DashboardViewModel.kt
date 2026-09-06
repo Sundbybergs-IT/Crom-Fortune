@@ -34,10 +34,13 @@ class DashboardViewModel : ViewModel() {
             viewModelScope.launch {
                 val repository =
                     StockEventRepository(context = context, portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
+                val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
                 val latestScore = CromFortuneV1AlgorithmConformanceScoreCalculator()
                     .getScore(
-                        recommendationAlgorithm =
-                        CromFortuneV1RecommendationAlgorithm(context), stockEvents = events(repository).toSet(),
+                        recommendationAlgorithm = recommendationAlgorithm,
+                        stockEvents = events(repository).filter { event ->
+                            event.stockOrder?.let { order -> recommendationAlgorithm.supports(order.assetType) } ?: true
+                        }.toSet(),
                         currencyRateApi = CurrencyRateRepository
                     )
                 _scoreStateFlow.value = context.resources.getQuantityString(

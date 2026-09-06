@@ -52,7 +52,11 @@ class StockDataRetrievalCoroutineWorkerTest {
     }
 
     @Test
-    fun `doWork - when market data retrieval fails - returns failure`() {
+    fun `doWork - when market data retrieval fails - retains stale prices and returns success`() {
+        val previousPrices = AssetCatalog.assets.map { asset ->
+            AssetPrice(asset.id, asset.quoteCurrency, 50.0)
+        }.toSet()
+        StockPriceRepository.putAssetPrices(previousPrices)
         val client = FakeMarketDataClient(failure = IllegalStateException("Market data unavailable"))
         val worker = TestListenableWorkerBuilder<StockDataRetrievalCoroutineWorker>(context)
             .setWorkerFactory(StockRetrievalWorkerFactory(client))
@@ -60,8 +64,10 @@ class StockDataRetrievalCoroutineWorkerTest {
 
         runBlocking {
             val result: ListenableWorker.Result = worker.doWork()
-            assertTrue(result == ListenableWorker.Result.failure())
+            assertTrue(result == ListenableWorker.Result.success())
         }
+        assertEquals(previousPrices, StockPriceRepository.assetPricesStateFlow.value.assetPrices)
+        assertTrue(StockPriceRepository.assetPricesStateFlow.value.statuses.all { it.isStale })
     }
 
     @Test
@@ -88,17 +94,26 @@ class StockDataRetrievalCoroutineWorkerTest {
         var requestedAssets: List<TradableAsset> = emptyList()
 
         override fun getRateInSek(currency: Currency): Double {
-            failure?.let { throw it }
             requestedCurrencies.add(currency)
             return 10.0
         }
 
-        override fun getPrices(assets: Collection<TradableAsset>): Map<String, AssetPrice> {
-            failure?.let { throw it }
+        override fun getPrices(assets: Collection<TradableAsset>): MarketDataResult {
             requestedAssets = assets.toList()
-            return assets.filterNot { asset -> asset.id == missingAssetId }.associate { asset ->
+            if (failure != null) {
+                return MarketDataResult(
+                    prices = emptyMap(),
+                    failures = assets.associate { asset -> asset.id to failure.message.orEmpty() }
+                )
+            }
+            val prices = assets.filterNot { asset -> asset.id == missingAssetId }.associate { asset ->
                 asset.id to AssetPrice(asset.id, asset.quoteCurrency, 100.0)
             }
+            return MarketDataResult(
+                prices = prices,
+                failures = assets.filter { asset -> asset.id == missingAssetId }
+                    .associate { asset -> asset.id to "Missing quote" }
+            )
         }
     }
 }
