@@ -83,6 +83,9 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.domain.AssetEvent
+import com.sundbybergsit.cromfortune.domain.AssetTransaction
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
@@ -102,7 +105,6 @@ import com.sundbybergsit.cromfortune.main.contentDescription
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import com.sundbybergsit.cromfortune.main.ui.DayPicker
@@ -851,6 +853,18 @@ private fun AssetEventsDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val stockTransactions = state.events.mapNotNull(AssetEvent::transaction)
+        .filter { transaction -> transaction.assetType == AssetType.STOCK }
+    val opinionatedTransactions = if (stockTransactions.isEmpty()) {
+        emptyMap()
+    } else {
+        val stockEvents = stockTransactions.map { transaction ->
+            StockEvent(transaction.toStockOrder(), null, transaction.dateInMillis)
+        }
+        stockTransactions.zip(
+            getOpinionatedStockOrders(stockEvents, CromFortuneV1RecommendationAlgorithm())
+        ).toMap()
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(state.title) },
@@ -859,21 +873,13 @@ private fun AssetEventsDialog(
                 state.events.sortedBy { event -> event.dateInMillis }.forEach { event ->
                     val transaction = event.transaction
                     if (transaction != null) {
-                        TextButton(
-                            enabled = !state.readOnly,
-                            onClick = {
-                                AssetTransactionRepository(
-                                    context,
-                                    PortfolioRepository.selectedPortfolioNameStateFlow.value
-                                ).remove(transaction)
-                                onDismiss()
-                            }
-                        ) {
-                            Text(
-                                "${transaction.action.name} ${transaction.quantity.stripTrailingZeros().toPlainString()} " +
-                                    "@ ${transaction.unitPrice.toPlainString()} ${transaction.quoteCurrencyCode}"
-                            )
-                        }
+                        AssetTransactionRow(
+                            transaction = transaction,
+                            opinionatedStockOrder = opinionatedTransactions[transaction],
+                            transactionApi = state.transactionApi,
+                            readOnly = state.readOnly,
+                            onRemoved = onDismiss
+                        )
                     } else {
                         event.stockSplit?.let { split -> Text("Stock split × ${split.quantity}") }
                     }
@@ -882,6 +888,66 @@ private fun AssetEventsDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } }
     )
+}
+
+@Composable
+private fun AssetTransactionRow(
+    transaction: AssetTransaction,
+    opinionatedStockOrder: OpinionatedStockOrderWrapper?,
+    transactionApi: com.sundbybergsit.cromfortune.domain.AssetTransactionApi,
+    readOnly: Boolean,
+    onRemoved: () -> Unit
+) {
+    val showDeleteDialog = remember(transaction) { mutableStateOf(false) }
+    if (showDeleteDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog.value = false },
+            title = { Text(stringResource(R.string.generic_dialog_title_are_you_sure)) },
+            text = { Text(stringResource(R.string.home_delete_stock_order, Date(transaction.dateInMillis))) },
+            confirmButton = {
+                TextButton(onClick = {
+                    transactionApi.remove(transaction)
+                    showDeleteDialog.value = false
+                    onRemoved()
+                }) { Text(stringResource(R.string.action_delete).uppercase()) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog.value = false }) {
+                    Text(stringResource(android.R.string.cancel).uppercase())
+                }
+            }
+        )
+    }
+    val backgroundColor = colorResource(
+        if (transaction.action == TransactionAction.BUY) android.R.color.holo_green_light
+        else android.R.color.holo_red_light
+    )
+    Row(
+        modifier = Modifier
+            .clickable(enabled = !readOnly) { showDeleteDialog.value = true }
+            .background(backgroundColor)
+            .padding(8.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "${transaction.action.name} ${transaction.quantity.stripTrailingZeros().toPlainString()} " +
+                "@ ${transaction.unitPrice.toPlainString()} ${transaction.quoteCurrencyCode}",
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (opinionatedStockOrder != null) {
+            Icon(
+                imageVector = if (opinionatedStockOrder.isApprovedByAlgorithm()) {
+                    Icons.Outlined.SentimentSatisfied
+                } else {
+                    Icons.Outlined.SentimentDissatisfied
+                },
+                contentDescription = "Satisfaction",
+                tint = MaterialTheme.colorScheme.surfaceVariant
+            )
+        }
+    }
 }
 
 // FIXME: Move calculation to view model

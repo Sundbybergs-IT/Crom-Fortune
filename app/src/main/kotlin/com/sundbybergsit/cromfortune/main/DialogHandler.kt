@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetEvent
+import com.sundbybergsit.cromfortune.domain.AssetTransactionApi
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
@@ -94,10 +95,11 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowAddPortfolio
     }
 
-    fun showAssetEvents(item: PortfolioItem, readOnly: Boolean) {
+    fun showAssetEvents(item: PortfolioItem, transactionApi: AssetTransactionApi, readOnly: Boolean) {
         _dialogViewState.value = DialogViewState.ShowAssetEvents(
             title = item.displayName,
             events = item.assetEvents,
+            transactionApi = transactionApi,
             readOnly = readOnly
         )
     }
@@ -135,7 +137,12 @@ object DialogHandler {
         data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>, val readOnly: Boolean) :
             DialogViewState()
 
-        data class ShowAssetEvents(val title: String, val events: List<AssetEvent>, val readOnly: Boolean) :
+        data class ShowAssetEvents(
+            val title: String,
+            val events: List<AssetEvent>,
+            val transactionApi: AssetTransactionApi,
+            val readOnly: Boolean
+        ) :
             DialogViewState()
 
         data class ShowBuyStockDialog(val stockSymbol: String? = null) : DialogViewState()

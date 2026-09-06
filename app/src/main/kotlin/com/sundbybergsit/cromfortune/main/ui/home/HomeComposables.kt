@@ -78,6 +78,7 @@ import com.sundbybergsit.cromfortune.main.PagerStateSelectionHapticFeedbackLaunc
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
+import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.theme.Loss
 import com.sundbybergsit.cromfortune.main.theme.Profit
@@ -260,7 +261,11 @@ fun Home(
                                         "Opening asset events for [${item.assetId}], readOnly=$readOnly"
                                     )
                                     if (item.assetEvents.isNotEmpty()) {
-                                        DialogHandler.showAssetEvents(item, readOnly)
+                                        DialogHandler.showAssetEvents(
+                                            item = item,
+                                            transactionApi = AssetTransactionRepository(localContext, portfolioName),
+                                            readOnly = readOnly
+                                        )
                                     } else {
                                         DialogHandler.showStockEvents(item.symbol, item.legacyStockEvents, readOnly)
                                     }
