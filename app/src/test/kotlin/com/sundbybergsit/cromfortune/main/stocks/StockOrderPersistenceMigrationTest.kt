@@ -54,4 +54,35 @@ class StockOrderPersistenceMigrationTest {
             context.getSharedPreferences("$portfolioName-v1-backup", Context.MODE_PRIVATE).all.isEmpty()
         )
     }
+
+    @Test
+    fun `latest migration moves legacy symbol key to stable asset ID and is idempotent`() {
+        val portfolioName = "stable-key-migration-${System.nanoTime()}"
+        val legacyJson =
+            """[{"orderAction":"Buy","currency":"USD","dateInMillis":1,"name":"MSFT","pricePerStock":100.0,"quantity":3}]"""
+        val source = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
+        source.edit().putStringSet("MSFT", setOf(legacyJson)).commit()
+
+        StockOrderPersistenceMigration.migrateToLatest(context, listOf(portfolioName))
+        val firstResult = source.all
+        StockOrderPersistenceMigration.migrateToLatest(context, listOf(portfolioName))
+
+        assertEquals(setOf("stock:MSFT"), source.all.keys)
+        assertEquals(firstResult, source.all)
+        assertTrue(context.getSharedPreferences("$portfolioName-v2-backup", Context.MODE_PRIVATE)
+            .contains("MSFT"))
+    }
+
+    @Test
+    fun `stable-key conflict leaves source untouched`() {
+        val portfolioName = "stable-key-conflict-${System.nanoTime()}"
+        val first = setOf(Json.encodeToString(setOf(StockOrder("Buy", "USD", 1L, "MSFT", 100.0, quantity = 1))))
+        val second = setOf(Json.encodeToString(setOf(StockOrder("Buy", "USD", 2L, "MSFT", 101.0, quantity = 1))))
+        val source = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
+        source.edit().putStringSet("MSFT", first).putStringSet("stock:MSFT", second).commit()
+
+        StockOrderPersistenceMigration.migrateToLatest(context, listOf(portfolioName))
+
+        assertEquals(setOf("MSFT", "stock:MSFT"), source.all.keys)
+    }
 }

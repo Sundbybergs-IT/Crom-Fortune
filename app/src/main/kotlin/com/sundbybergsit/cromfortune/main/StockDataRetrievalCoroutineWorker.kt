@@ -64,7 +64,7 @@ class StockDataRetrievalCoroutineWorker(
                     val stockPrice = StockPrice(
                         stockSymbol = asset.symbol,
                         currency = assetPrice.currency,
-                        price = assetPrice.price.roundTo(3)
+                        price = assetPrice.price.toDouble().roundTo(3)
                     )
                     val allPortfolioNamesState = portfolioRepository.portfolioNamesStateFlow.value
                     for (portfolioName in allPortfolioNamesState.filterNot { name -> name == PortfolioRepository.CROM_PORTFOLIO_NAME }) {

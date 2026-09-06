@@ -22,7 +22,7 @@ class MarketDataClientTest {
 
         assertEquals(setOf(stock.id, crypto.id), result.keys)
         assertEquals(stock.quoteCurrency, result.getValue(stock.id).currency)
-        assertEquals(62_500.25, result.getValue(crypto.id).price, 0.0)
+        assertEquals(0, 62_500.25.toBigDecimal().compareTo(result.getValue(crypto.id).price))
     }
 
     @Test

@@ -89,7 +89,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
                 Context.MODE_PRIVATE
             )
         )
-        StockOrderPersistenceMigration.migrateToVersion2(
+        StockOrderPersistenceMigration.migrateToLatest(
             context = applicationContext,
             portfolioNames = PortfolioRepository.portfolioNamesStateFlow.value
         )

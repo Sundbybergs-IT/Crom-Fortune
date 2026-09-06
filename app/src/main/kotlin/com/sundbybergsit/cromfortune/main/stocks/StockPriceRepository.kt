@@ -77,7 +77,7 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
             stockPrices = assetPrices.mapNotNull { assetPrice ->
                 val asset = AssetCatalog.findById(assetPrice.assetId)
                 if (asset?.type == AssetType.STOCK) {
-                    StockPrice(asset.symbol, assetPrice.currency, assetPrice.price)
+                    StockPrice(asset.symbol, assetPrice.currency, assetPrice.price.toDouble())
                 } else {
                     null
                 }

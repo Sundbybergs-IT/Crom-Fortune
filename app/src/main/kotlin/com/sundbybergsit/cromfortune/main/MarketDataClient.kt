@@ -4,6 +4,7 @@ import com.sundbybergsit.cromfortune.domain.AssetPrice
 import com.sundbybergsit.cromfortune.domain.TradableAsset
 import yahoofinance.get
 import yahoofinance.getFxHax
+import java.math.BigDecimal
 import java.util.Currency
 
 interface MarketDataClient {
@@ -27,9 +28,9 @@ object YahooMarketDataClient : MarketDataClient {
         return try {
             val marketDataPrices = get(assets.map(TradableAsset::marketDataSymbol).toTypedArray())
                 .mapNotNull { (marketDataSymbol, stock) ->
-                    stock.quote?.price?.toDouble()?.let { price -> marketDataSymbol to price }
+                    stock.quote?.price?.let { price -> marketDataSymbol to price }
                 }.toMap()
-            val prices = mapMarketDataPrices(assets, marketDataPrices)
+            val prices = mapExactMarketDataPrices(assets, marketDataPrices)
             MarketDataResult(
                 prices = prices,
                 failures = assets.filterNot { asset -> prices.containsKey(asset.id) }
@@ -47,6 +48,14 @@ object YahooMarketDataClient : MarketDataClient {
 internal fun mapMarketDataPrices(
     assets: Collection<TradableAsset>,
     pricesByMarketDataSymbol: Map<String, Double>
+): Map<String, AssetPrice> = mapExactMarketDataPrices(
+    assets,
+    pricesByMarketDataSymbol.mapValues { (_, price) -> price.toBigDecimal() }
+)
+
+internal fun mapExactMarketDataPrices(
+    assets: Collection<TradableAsset>,
+    pricesByMarketDataSymbol: Map<String, BigDecimal>
 ): Map<String, AssetPrice> = assets.mapNotNull { asset ->
     pricesByMarketDataSymbol[asset.marketDataSymbol]?.let { price ->
         asset.id to AssetPrice(

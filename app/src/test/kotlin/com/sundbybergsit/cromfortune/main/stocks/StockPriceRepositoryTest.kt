@@ -42,7 +42,7 @@ class StockPriceRepositoryTest {
 
         val statuses = StockPriceRepository.assetPricesStateFlow.value.statuses
             .associateBy { status -> status.assetPrice.assetId }
-        assertEquals(101.0, statuses.getValue(stock.id).assetPrice.price, 0.0)
+        assertEquals(0, 101.0.toBigDecimal().compareTo(statuses.getValue(stock.id).assetPrice.price))
         assertEquals(refreshTime, statuses.getValue(stock.id).lastUpdatedAt)
         assertFalse(statuses.getValue(stock.id).isStale)
         assertEquals(initialCryptoPrice, statuses.getValue(crypto.id).assetPrice)

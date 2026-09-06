@@ -215,7 +215,7 @@ class HomeViewModel(
                     continue
                 }
                 val stockAggregate = lambda(sortedStockOrders)
-                if (!showAll && stockAggregate.getQuantity() == 0) {
+                if (!showAll && stockAggregate.getExactQuantity().signum() == 0) {
                     Log.i(TAG, "Hiding this stock because of the filter option.")
                 } else {
                     stockOrderAggregates.add(stockAggregate)

@@ -21,6 +21,6 @@ class YahooMarketDataContractTest {
 
         assertTrue(result.failures.toString(), result.failures.isEmpty())
         assertEquals(cryptocurrencies.map { it.id }.toSet(), result.prices.keys)
-        assertTrue(result.prices.values.all { price -> price.price.isFinite() && price.price > 0.0 })
+        assertTrue(result.prices.values.all { price -> price.price.signum() > 0 })
     }
 }
