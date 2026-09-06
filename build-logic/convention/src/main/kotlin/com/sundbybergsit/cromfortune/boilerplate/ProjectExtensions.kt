@@ -25,7 +25,7 @@ internal fun Project.configureKotlinAndroidApp(appExtension: ApplicationExtensio
             minSdk = libraries.findVersion("minSdk").get().toString().toInt()
         }
 
-        kotlinExtension.jvmToolchain(jdkVersion = 21)
+        kotlinExtension.jvmToolchain(jdkVersion = 25)
 
         testOptions {
             unitTests.isIncludeAndroidResources = true
@@ -52,7 +52,7 @@ internal fun Project.configureKotlinAndroidLibrary(libraryExtension: LibraryExte
             minSdk = libraries.findVersion("minSdk").get().toString().toInt()
         }
 
-        kotlinExtension.jvmToolchain(jdkVersion = 21)
+        kotlinExtension.jvmToolchain(jdkVersion = 25)
 
         testOptions {
             unitTests.isIncludeAndroidResources = true
@@ -72,11 +72,11 @@ internal fun Project.configureKotlinAndroidLibrary(libraryExtension: LibraryExte
 }
 
 internal fun Project.configureKotlin() {
-    kotlinExtension.jvmToolchain(jdkVersion = 21)
+    kotlinExtension.jvmToolchain(jdkVersion = 25)
     // Use withType to workaround https://youtrack.jetbrains.com/issue/KT-55947
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
+            jvmTarget.set(JvmTarget.JVM_25)
             // Treat all Kotlin warnings as errors (disabled by default)
             // Override by setting warningsAsErrors=true in your ~/.gradle/gradle.properties
             val warningsAsErrors: String? by project

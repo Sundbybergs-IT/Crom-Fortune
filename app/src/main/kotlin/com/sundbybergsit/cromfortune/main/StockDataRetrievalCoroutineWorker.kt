@@ -20,11 +20,6 @@ import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import yahoofinance.StockV2
-import yahoofinance.get
-import yahoofinance.getFxHax
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -32,7 +27,11 @@ import java.time.LocalTime
 import java.util.Currency
 import kotlin.math.roundToInt
 
-class StockDataRetrievalCoroutineWorker(private val context: Context, workerParameters: WorkerParameters) :
+class StockDataRetrievalCoroutineWorker(
+    private val context: Context,
+    workerParameters: WorkerParameters,
+    private val stockMarketDataClient: StockMarketDataClient = YahooStockMarketDataClient
+) :
     CoroutineWorker(context, workerParameters) {
 
     companion object {
@@ -40,34 +39,33 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
         const val TAG = "StockRetrievalCoroutineWorker"
         const val COMMISSION_FEE = 39.0
 
-        fun refreshFromYahoo(context: Context, portfolioRepository: PortfolioRepository, onFinished: () -> Unit) {
+        fun refreshFromYahoo(
+            context: Context,
+            portfolioRepository: PortfolioRepository,
+            onFinished: () -> Unit,
+            stockMarketDataClient: StockMarketDataClient = YahooStockMarketDataClient
+        ) {
             val notificationsAllowed = isWithinNotificationWindow(context)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             for (currency in CURRENCIES.filterNot { it == "SEK" }) {
-                currencyRates.add(CurrencyRate(currency, getRateInSek(currency)))
+                currencyRates.add(CurrencyRate(currency, stockMarketDataClient.getRateInSek(currency)))
             }
             CurrencyRateRepository.addAll(currencyRates)
-            val stocks: Map<String, StockV2> =
-                get(StockPrice.SYMBOLS.map { pair -> pair.first }
-                    .toTypedArray())
+            val stockPricesBySymbol = stockMarketDataClient.getStockPrices(
+                StockPrice.SYMBOLS.map { pair -> pair.first }.toTypedArray()
+            )
             val stockPrices = mutableSetOf<StockPrice>()
             for (triple in StockPrice.SYMBOLS.iterator()) {
                 val stockSymbol = triple.first
-                val stockV2 =
-                    stocks[stockSymbol]
-                if (stockV2 == null) {
+                val price = stockPricesBySymbol[stockSymbol]
+                if (price == null) {
                     Log.e(TAG, "Skipping $stockSymbol as it cannot be found in the Yahoo API.")
                 } else {
-                    val quote = stockV2.getQuote(true)
-                    if (quote?.price == null) {
-                        Log.e(TAG, "Skipping $stockSymbol as it has no price in the Yahoo API.")
-                        continue
-                    }
                     val currency = triple.third
                     val stockPrice = StockPrice(
                         stockSymbol = stockSymbol, currency = Currency.getInstance(currency),
-                        price = quote.price.toDouble().roundTo(3)
+                        price = price.roundTo(3)
                     )
                     val allPortfolioNamesState = portfolioRepository.portfolioNamesStateFlow.value
                     for (portfolioName in allPortfolioNamesState.filterNot { name -> name == PortfolioRepository.CROM_PORTFOLIO_NAME }) {
@@ -170,8 +168,6 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
             )
         }
 
-        private fun getRateInSek(currency: String) = getFxHax("${currency}SEK=X")?.price?.toDouble() ?: 1.0
-
         internal fun isWithinNotificationWindow(
             context: Context,
             currentDayOfWeek: DayOfWeek = LocalDate.now().dayOfWeek,
@@ -190,42 +186,42 @@ class StockDataRetrievalCoroutineWorker(private val context: Context, workerPara
 
     }
 
-    override suspend fun doWork(): Result = coroutineScope {
+    override suspend fun doWork(): Result {
         Log.i(TAG, "doWork()")
-        try {
-            val asyncWork =
-                async {
-                    val timeInterval = StockRetrievalSettings(context).timeInterval.value
-                    val currentTime = LocalTime.now()
-                    val currentDayOfWeek = LocalDate.now().dayOfWeek
-                    val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
-                    val toTime = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
-                    when {
-                        isRefreshRequired() -> {
-                            Log.i(TAG, "Initial retrieval of data.")
-                            refreshFromYahoo(
-                                context = context,
-                                portfolioRepository = PortfolioRepository,
-                                onFinished = { })
-                        }
-
-                        timeInterval.weekDays.isWithinConfiguredTimeInterval(
-                            currentDayOfWeek, currentTime,
-                            fromTime, toTime
-                        ) -> {
-                            Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
-                            refreshFromYahoo(
-                                context = context,
-                                portfolioRepository = PortfolioRepository,
-                                onFinished = { })
-                        }
-
-                        else -> {
-                            Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
-                        }
-                    }
+        return try {
+            val timeInterval = StockRetrievalSettings(context).timeInterval.value
+            val currentTime = LocalTime.now()
+            val currentDayOfWeek = LocalDate.now().dayOfWeek
+            val fromTime = LocalTime.of(timeInterval.fromTimeHours, timeInterval.fromTimeMinutes)
+            val toTime = LocalTime.of(timeInterval.toTimeHours, timeInterval.toTimeMinutes)
+            when {
+                isRefreshRequired() -> {
+                    Log.i(TAG, "Initial retrieval of data.")
+                    refreshFromYahoo(
+                        context = context,
+                        portfolioRepository = PortfolioRepository,
+                        onFinished = { },
+                        stockMarketDataClient = stockMarketDataClient
+                    )
                 }
-            asyncWork.await()
+
+                timeInterval.weekDays.isWithinConfiguredTimeInterval(
+                    currentDayOfWeek, currentTime,
+                    fromTime, toTime
+                ) -> {
+                    Log.i(TAG, "Within configured time interval. Will therefore retrieve data.")
+                    refreshFromYahoo(
+                        context = context,
+                        portfolioRepository = PortfolioRepository,
+                        onFinished = { },
+                        stockMarketDataClient = stockMarketDataClient
+                    )
+                }
+
+                else -> {
+                    Log.i(TAG, "User has disabled stock retrieval at this time. Will not retrieve data.")
+                }
+            }
             Result.success()
         } catch (error: Throwable) {
             Result.failure()

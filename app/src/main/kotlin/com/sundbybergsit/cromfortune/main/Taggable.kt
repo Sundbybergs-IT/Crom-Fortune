@@ -10,9 +10,6 @@ interface Taggable {
                 is KClass<*> -> {
                     this.java.simpleName
                 }
-                is Class<*> -> {
-                    this.simpleName
-                }
                 else -> {
                     this::class.java.simpleName
                 }
