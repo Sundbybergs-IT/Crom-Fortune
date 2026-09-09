@@ -15,6 +15,17 @@
     <string name="action_stocks_supported">Aktier som stöds</string>
 
     <string name="app_name">Crom Fortune</string>
+    <string name="asset_transaction_asset">Tillgång</string>
+    <string name="asset_transaction_asset_type">Tillgångstyp</string>
+    <string name="asset_transaction_confirm_buy">Köp</string>
+    <string name="asset_transaction_confirm_sell">Sälj</string>
+    <string name="asset_transaction_price">Pris</string>
+    <string name="asset_transaction_quantity_hint">Upp till %1$d decimaler</string>
+    <string name="asset_transaction_title_buy">Köp tillgång</string>
+    <string name="asset_transaction_title_sell">Sälj tillgång</string>
+    <string name="asset_transaction_unit_price">Pris per enhet</string>
+    <string name="asset_type_crypto">Kryptovaluta</string>
+    <string name="asset_type_stock">Aktie</string>
 
     <string name="dashboard_title">Instrumentbräda</string>
     <plurals name="dashboard_croms_will_message">

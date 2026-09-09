@@ -15,6 +15,17 @@
     <string name="action_stocks_supported">Supported stocks</string>
 
     <string name="app_name">Crom Fortune</string>
+    <string name="asset_transaction_asset">Asset</string>
+    <string name="asset_transaction_asset_type">Asset type</string>
+    <string name="asset_transaction_confirm_buy">Buy</string>
+    <string name="asset_transaction_confirm_sell">Sell</string>
+    <string name="asset_transaction_price">Price</string>
+    <string name="asset_transaction_quantity_hint">Up to %1$d decimal places</string>
+    <string name="asset_transaction_title_buy">Buy asset</string>
+    <string name="asset_transaction_title_sell">Sell asset</string>
+    <string name="asset_transaction_unit_price">Unit price</string>
+    <string name="asset_type_crypto">Cryptocurrency</string>
+    <string name="asset_type_stock">Stock</string>
 
     <string name="dashboard_title">Dashboard</string>
     <plurals name="dashboard_croms_will_message">

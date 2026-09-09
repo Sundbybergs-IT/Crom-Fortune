@@ -1,16 +1,24 @@
 package com.sundbybergsit.cromfortune.main.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,13 +35,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.TradableAsset
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.main.R
+import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -80,7 +88,6 @@ fun RegisterAssetTransactionDialog(
     var selectedAsset by remember(initialAssetId) {
         mutableStateOf(AssetCatalog.findById(initialAssetId.orEmpty()) ?: AssetCatalog.stocks.first())
     }
-    var typeMenuExpanded by remember { mutableStateOf(false) }
     var assetMenuExpanded by remember { mutableStateOf(false) }
     var quantity by remember { mutableStateOf("") }
     var unitPrice by remember { mutableStateOf("") }
@@ -94,8 +101,16 @@ fun RegisterAssetTransactionDialog(
         initialSelectedDateMillis = initialDateInMillis
     )
     var showDatePicker by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var saveError by remember { mutableStateOf<String?>(null) }
     val availableAssets = AssetCatalog.assets.filter { asset -> asset.type == selectedType }
+    val parsedQuantity = quantity.toBigDecimalOrNull()
+    val quantityIsValid = parsedQuantity != null && parsedQuantity > BigDecimal.ZERO &&
+        parsedQuantity.scale().coerceAtLeast(0) <= selectedAsset.quantityScale
+    val parsedUnitPrice = unitPrice.toBigDecimalOrNull()
+    val unitPriceIsValid = parsedUnitPrice != null && parsedUnitPrice > BigDecimal.ZERO
+    val parsedCommission = commissionFee.ifBlank { "0" }.toBigDecimalOrNull()
+    val commissionIsValid = parsedCommission != null && parsedCommission >= BigDecimal.ZERO
+    val formIsValid = quantityIsValid && unitPriceIsValid && commissionIsValid
 
     if (showDatePicker) {
         DateSelectionDialog(
@@ -106,79 +121,107 @@ fun RegisterAssetTransactionDialog(
         )
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState()).padding(24.dp)
-        ) {
-            Text(
-                stringResource(
-                    if (action == TransactionAction.BUY) R.string.action_asset_buy
-                    else R.string.action_asset_sell
-                ),
-                style = MaterialTheme.typography.titleSmall
-            )
-            TextButton(onClick = { typeMenuExpanded = true }) { Text("Type: ${selectedType.name}") }
-            DropdownMenu(expanded = typeMenuExpanded, onDismissRequest = { typeMenuExpanded = false }) {
-                AssetType.entries.forEach { type ->
-                    DropdownMenuItem(text = { Text(type.name) }, onClick = {
-                        selectedType = type
-                        selectedAsset = AssetCatalog.assets.first { asset -> asset.type == type }
-                        typeMenuExpanded = false
-                    })
-                }
-            }
-            TextButton(onClick = { assetMenuExpanded = true }) {
-                Text("${selectedAsset.displayName} (${selectedAsset.symbol})")
-            }
-            DropdownMenu(expanded = assetMenuExpanded, onDismissRequest = { assetMenuExpanded = false }) {
-                availableAssets.forEach { asset ->
-                    DropdownMenuItem(text = { Text("${asset.displayName} (${asset.symbol})") }, onClick = {
-                        selectedAsset = asset
-                        assetMenuExpanded = false
-                    })
-                }
-            }
-            TextButton(onClick = { showDatePicker = true }) {
-                Text(transactionDate.value.text)
-            }
-            OutlinedTextField(
-                value = quantity,
-                onValueChange = { quantity = it },
-                label = { Text(stringResource(R.string.home_add_stock_quantity_label)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                isError = error != null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = unitPrice,
-                onValueChange = { unitPrice = it },
-                label = { Text(stringResource(R.string.generic_price_per_stock)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                isError = error != null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = commissionFee,
-                onValueChange = { commissionFee = it },
-                label = { Text(stringResource(R.string.home_add_commission_fee_label)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                isError = error != null,
-                supportingText = error?.let { message -> ({ Text(message) }) },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Row {
-                TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
-                TextButton(onClick = {
-                    try {
-                        val dateInMillis = checkNotNull(dateFormat.parse(transactionDate.value.text)).time
-                        onSave(buildAssetTransaction(selectedAsset, action, dateInMillis, quantity, unitPrice, commissionFee))
-                        onDismiss()
-                    } catch (exception: RuntimeException) {
-                        error = exception.message ?: "Invalid transaction"
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(stringResource(if (action == TransactionAction.BUY) R.string.asset_transaction_title_buy else R.string.asset_transaction_title_sell))
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.asset_transaction_asset_type),
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AssetType.entries.forEach { type ->
+                        FilterChip(
+                            selected = selectedType == type,
+                            onClick = {
+                                if (selectedType != type) {
+                                    selectedType = type
+                                    selectedAsset = AssetCatalog.assets.first { it.type == type }
+                                }
+                            },
+                            label = { Text(assetTypeName(type)) }
+                        )
                     }
-                }) { Text(stringResource(android.R.string.ok)) }
+                }
+                Box(Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = "${selectedAsset.displayName} (${selectedAsset.symbol})", onValueChange = {}, readOnly = true,
+                        label = { Text(stringResource(R.string.asset_transaction_asset)) },
+                        trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(Modifier.matchParentSize().clickable { assetMenuExpanded = true })
+                    DropdownMenu(assetMenuExpanded, { assetMenuExpanded = false }) {
+                        availableAssets.forEach { asset ->
+                            DropdownMenuItem(text = { Text("${asset.displayName} (${asset.symbol})") }, onClick = {
+                                selectedAsset = asset
+                                assetMenuExpanded = false
+                            })
+                        }
+                    }
+                }
+                Box(Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = transactionDate.value.text, onValueChange = {}, readOnly = true,
+                        label = { Text(stringResource(R.string.generic_date)) },
+                        trailingIcon = { Icon(Icons.Default.CalendarToday, null) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(Modifier.matchParentSize().clickable { showDatePicker = true })
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = quantity, onValueChange = { quantity = it; saveError = null }, singleLine = true,
+                        label = { Text(stringResource(R.string.home_add_stock_quantity_label)) },
+                        isError = quantity.isNotEmpty() && !quantityIsValid,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = unitPrice, onValueChange = { unitPrice = it; saveError = null }, singleLine = true,
+                        label = { Text(stringResource(R.string.asset_transaction_price)) },
+                        suffix = { Text(selectedAsset.quoteCurrency.currencyCode) },
+                        isError = unitPrice.isNotEmpty() && !unitPriceIsValid,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                OutlinedTextField(
+                    value = commissionFee, onValueChange = { commissionFee = it; saveError = null }, singleLine = true,
+                    label = { Text(stringResource(R.string.generic_commission_fee)) }, suffix = { Text("SEK") },
+                    isError = commissionFee.isNotEmpty() && !commissionIsValid,
+                    supportingText = saveError?.let { message -> ({ Text(message) }) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+        confirmButton = {
+            TextButton(enabled = formIsValid, onClick = {
+                try {
+                    val dateInMillis = checkNotNull(dateFormat.parse(transactionDate.value.text)).time
+                    onSave(buildAssetTransaction(selectedAsset, action, dateInMillis, quantity, unitPrice, commissionFee))
+                    onDismiss()
+                } catch (exception: RuntimeException) {
+                    saveError = exception.message ?: "Invalid transaction"
+                }
+            }) {
+                Text(stringResource(if (action == TransactionAction.BUY) R.string.asset_transaction_confirm_buy else R.string.asset_transaction_confirm_sell))
             }
         }
-    }
+    )
 }
+
+@Composable
+private fun assetTypeName(type: AssetType): String = stringResource(
+    if (type == AssetType.STOCK) R.string.asset_type_stock else R.string.asset_type_crypto
+)
