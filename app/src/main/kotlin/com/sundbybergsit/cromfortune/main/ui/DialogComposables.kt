@@ -135,10 +135,12 @@ fun RegisterSplitStockAlertDialog(
     onDismiss: () -> Unit,
     onSave: (StockSplit) -> Unit
 ) {
-    val datePickerState: DatePickerState = rememberDatePickerState()
     val showDatePicker: MutableState<Boolean> = remember { mutableStateOf(false) }
     val horizontalPadding = 28.dp
     val myCalendar = Calendar.getInstance()
+    val datePickerState: DatePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = myCalendar.timeInMillis
+    )
     val locale = LocalLocale.current.platformLocale
     val sdf = SimpleDateFormat(DATE_FORMAT, locale)
     val dateMutableState: MutableState<TextFieldValue> = remember {
@@ -336,7 +338,7 @@ fun RegisterSplitStockAlertDialog(
 }
 
 @Composable
-private fun DateSelectionDialog(
+internal fun DateSelectionDialog(
     onDismiss: () -> Unit,
     datePickerState: DatePickerState,
     dateMutableState: MutableState<TextFieldValue>,
