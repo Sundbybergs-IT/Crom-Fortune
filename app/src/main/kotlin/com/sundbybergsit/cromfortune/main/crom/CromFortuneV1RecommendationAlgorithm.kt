@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 class CromFortuneV1RecommendationAlgorithm : RecommendationAlgorithm() {
 
-    override val supportedAssetTypes: Set<AssetType> = setOf(AssetType.STOCK)
+    override val supportedAssetTypes: Set<AssetType> = setOf(AssetType.STOCK, AssetType.CRYPTO)
 
     companion object {
 

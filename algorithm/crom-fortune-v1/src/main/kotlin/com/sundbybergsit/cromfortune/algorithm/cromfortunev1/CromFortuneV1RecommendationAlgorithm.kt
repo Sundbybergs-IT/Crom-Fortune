@@ -23,7 +23,7 @@ class CromFortuneV1RecommendationAlgorithm(
         minFreezePeriodInDays = MIN_FREEZE_PERIOD_IN_DAYS
     )
 ) : RecommendationAlgorithm() {
-    override val supportedAssetTypes: Set<AssetType> = setOf(AssetType.STOCK)
+    override val supportedAssetTypes: Set<AssetType> = setOf(AssetType.STOCK, AssetType.CRYPTO)
 
     override fun getRecommendation(
         stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Set<StockEvent>,

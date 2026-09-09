@@ -10,6 +10,7 @@ import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetHolding
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockEventApi
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -163,7 +164,7 @@ class HomeViewModel(
                         includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) },
                         lambda = { stockEvents ->
                             getCalculatedStockOrderAggregate(stockEvents, recommendationAlgorithm)
-                        }).map(PortfolioItem::fromStockCompatibility), readOnly = true
+                        }).map(PortfolioItem::fromStockCompatibility) + cromCryptoFirstPurchases(context), readOnly = true
                 )
             }
         }
@@ -255,6 +256,29 @@ class HomeViewModel(
             PortfolioItem.fromAssetHolding(holding)
         }.filter { item -> showAll || item.quantity.signum() != 0 }
             .sortedBy(PortfolioItem::displayName)
+    }
+
+    private fun cromCryptoFirstPurchases(context: Context): List<PortfolioItem> {
+        val repository = AssetEventRepository(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
+        return repository.assetIds().mapNotNull { assetId ->
+            val firstEvent = repository.list(assetId).minByOrNull(AssetEvent::dateInMillis) ?: return@mapNotNull null
+            val transaction = firstEvent.transaction?.takeIf { it.assetType == AssetType.CRYPTO }
+                ?: return@mapNotNull null
+            val catalogAsset = AssetCatalog.findById(assetId)
+            val rate = CurrencyRateRepository.currencyRates.value
+                .find { it.iso4217CurrencySymbol == transaction.quoteCurrencyCode }
+                ?.rateInSek?.toBigDecimal() ?: BigDecimal.ONE
+            val holding = AssetHolding(
+                assetId = assetId,
+                assetType = transaction.assetType,
+                symbol = transaction.symbol,
+                displayName = catalogAsset?.displayName ?: transaction.displayName,
+                quoteCurrency = transaction.quoteCurrency,
+                rateInSek = rate
+            )
+            holding.aggregate(firstEvent)
+            PortfolioItem.fromAssetHolding(holding)
+        }.sortedBy(PortfolioItem::displayName)
     }
 
     fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {

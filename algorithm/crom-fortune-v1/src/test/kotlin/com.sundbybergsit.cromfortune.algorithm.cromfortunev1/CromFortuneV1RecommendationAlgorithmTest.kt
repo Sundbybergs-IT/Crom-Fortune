@@ -31,7 +31,7 @@ private const val FOREIGN_EXCHANGE_10X_SEK_STOCK_NAME = "Aktie med annan valutak
 class CromFortuneV1RecommendationAlgorithmTest {
 
     @Test
-    fun `crypto events are excluded from the stock-only algorithm`() {
+    fun `crypto events are supported by the algorithm`() {
         val cryptoEvent = StockOrder(
             orderAction = "Buy",
             currency = "USD",
@@ -43,15 +43,14 @@ class CromFortuneV1RecommendationAlgorithmTest {
             assetType = AssetType.CRYPTO
         ).toStockEvent()
 
-        assertEquals(setOf(AssetType.STOCK), algorithm.supportedAssetTypes)
-        assertNull(
-            algorithm.getRecommendation(
-                StockPrice("BTC", Currency.getInstance("USD"), 61_000.0),
-                10.0,
-                39.0,
-                setOf(cryptoEvent),
-                2L
-            )
+        assertEquals(setOf(AssetType.STOCK, AssetType.CRYPTO), algorithm.supportedAssetTypes)
+        assertTrue(algorithm.supports(cryptoEvent.stockOrder!!.assetType))
+        algorithm.getRecommendation(
+            StockPrice("BTC", Currency.getInstance("USD"), 61_000.0),
+            10.0,
+            39.0,
+            setOf(cryptoEvent),
+            2L
         )
     }
 

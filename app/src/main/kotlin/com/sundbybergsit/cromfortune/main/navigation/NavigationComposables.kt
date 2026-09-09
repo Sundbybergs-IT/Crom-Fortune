@@ -85,7 +85,6 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
-import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
@@ -853,15 +852,14 @@ private fun AssetEventsDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val stockTransactions = state.events.mapNotNull(AssetEvent::transaction)
-        .filter { transaction -> transaction.assetType == AssetType.STOCK }
-    val opinionatedTransactions = if (stockTransactions.isEmpty()) {
+    val transactions = state.events.mapNotNull(AssetEvent::transaction)
+    val opinionatedTransactions = if (transactions.isEmpty()) {
         emptyMap()
     } else {
-        val stockEvents = stockTransactions.map { transaction ->
-            StockEvent(transaction.toStockOrder(), null, transaction.dateInMillis)
+        val stockEvents = transactions.map { transaction ->
+            StockEvent(transaction.toRecommendationOrder(), null, transaction.dateInMillis)
         }
-        stockTransactions.zip(
+        transactions.zip(
             getOpinionatedStockOrders(stockEvents, CromFortuneV1RecommendationAlgorithm())
         ).toMap()
     }
@@ -919,6 +917,18 @@ private fun AssetEventsDialog(
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } }
     )
 }
+
+private fun AssetTransaction.toRecommendationOrder() = StockOrder(
+    orderAction = if (action == TransactionAction.BUY) "Buy" else "Sell",
+    currency = quoteCurrencyCode,
+    dateInMillis = dateInMillis,
+    name = symbol,
+    pricePerStock = unitPrice.toDouble(),
+    commissionFee = commissionFee.toDouble(),
+    quantity = quantity,
+    assetId = assetId,
+    assetType = assetType
+)
 
 @Composable
 private fun AssetTransactionRow(
@@ -1018,9 +1028,9 @@ private fun getOpinionatedStockOrders(
     recommendationAlgorithm: RecommendationAlgorithm
 ): List<OpinionatedStockOrderWrapper> {
     val stockOrderEvents = stockEvents.filter { it.stockOrder != null }.toList()
-    val currencyRateInSek =
-        checkNotNull(CurrencyRateRepository.currencyRates).value
-            .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrderEvents.first().stockOrder!!.currency }!!.rateInSek
+    val currencyRateInSek = CurrencyRateRepository.currencyRates.value
+        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrderEvents.first().stockOrder!!.currency }
+        ?.rateInSek ?: 1.0
     val opinionatedStockOrderWrappers: MutableList<OpinionatedStockOrderWrapper> =
         mutableListOf()
     for (stockOrderEvent in stockOrderEvents) {

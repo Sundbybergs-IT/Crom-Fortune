@@ -139,6 +139,41 @@ class HomeComposablesKtTest {
     }
 
     @Test
+    fun `Crom portfolio mimics the first crypto purchase`() {
+        val sharedPreferences = context.getSharedPreferences(TEST_CLASS_NAME, Context.MODE_PRIVATE)
+        sharedPreferences.edit()
+            .putStringSet(
+                Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET,
+                setOf(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, PortfolioRepository.CROM_PORTFOLIO_NAME)
+            )
+            .commit()
+        PortfolioRepository.init(sharedPreferences)
+        context.getSharedPreferences(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, Context.MODE_PRIVATE)
+            .edit().clear().commit()
+        viewModel = HomeViewModel(PortfolioRepository, coroutineScopeTestRule.testDispatcher)
+        val bitcoin = AssetCatalog.cryptocurrencies.first()
+        val firstBuy = AssetTransaction(
+            assetId = bitcoin.id,
+            assetType = bitcoin.type,
+            symbol = bitcoin.symbol,
+            displayName = bitcoin.displayName,
+            quoteCurrencyCode = bitcoin.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = 1L,
+            unitPrice = BigDecimal("60000"),
+            quantity = BigDecimal("0.01")
+        )
+
+        viewModel.save(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME, firstBuy)
+
+        val cromItem = viewModel.portfoliosStateFlow.value
+            .getValue(PortfolioRepository.CROM_PORTFOLIO_NAME).items.single()
+        assertEquals(bitcoin.id, cromItem.assetId)
+        assertEquals(firstBuy.quantity, cromItem.quantity)
+        assertEquals(listOf(firstBuy), cromItem.assetEvents.mapNotNull { it.transaction })
+    }
+
+    @Test
     fun `crypto holding displays asset type and stale price`() {
         val bitcoin = AssetCatalog.cryptocurrencies.first()
         viewModel.save(
