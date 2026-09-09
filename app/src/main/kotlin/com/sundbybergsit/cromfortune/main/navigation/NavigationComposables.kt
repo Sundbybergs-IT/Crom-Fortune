@@ -870,6 +870,36 @@ private fun AssetEventsDialog(
         title = { Text(state.title) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Row(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.generic_date),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.generic_title_quantity),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.generic_price_per_stock),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.generic_title_total_cost),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                }
                 state.events.sortedBy { event -> event.dateInMillis }.forEach { event ->
                     val transaction = event.transaction
                     if (transaction != null) {
@@ -898,6 +928,12 @@ private fun AssetTransactionRow(
     readOnly: Boolean,
     onRemoved: () -> Unit
 ) {
+    val locale = LocalLocale.current.platformLocale
+    val dateFormatter = SimpleDateFormat(DATE_FORMAT, locale)
+    val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = Currency.getInstance(transaction.quoteCurrencyCode)
+        maximumFractionDigits = if (transaction.unitPrice < java.math.BigDecimal.ONE) 8 else 2
+    }
     val showDeleteDialog = remember(transaction) { mutableStateOf(false) }
     if (showDeleteDialog.value) {
         AlertDialog(
@@ -932,10 +968,32 @@ private fun AssetTransactionRow(
     ) {
         Text(
             modifier = Modifier.weight(1f),
-            text = "${transaction.action.name} ${transaction.quantity.stripTrailingZeros().toPlainString()} " +
-                "@ ${transaction.unitPrice.toPlainString()} ${transaction.quoteCurrencyCode}",
+            text = dateFormatter.format(Date(transaction.dateInMillis)),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            modifier = Modifier.weight(1f),
+            text = transaction.quantity.stripTrailingZeros().toPlainString(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            modifier = Modifier.weight(1f),
+            text = numberFormatter.format(transaction.unitPrice),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            modifier = Modifier.weight(1f),
+            text = numberFormatter.format(transaction.unitPrice.multiply(transaction.quantity)),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
         if (opinionatedStockOrder != null) {
             Icon(
                 imageVector = if (opinionatedStockOrder.isApprovedByAlgorithm()) {
@@ -946,6 +1004,8 @@ private fun AssetTransactionRow(
                 contentDescription = "Satisfaction",
                 tint = MaterialTheme.colorScheme.surfaceVariant
             )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
