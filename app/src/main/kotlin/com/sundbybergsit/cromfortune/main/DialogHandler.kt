@@ -77,9 +77,10 @@ object DialogHandler {
     fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>, readOnly: Boolean) {
         Log.d(TAG, "showStockEvents(stockSymbol=[$stockSymbol], events=${stockEvents.size}, readOnly=$readOnly)")
         _dialogViewState.value = DialogViewState.ShowStockEvents(
-            title = "${
-                AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.displayName ?: stockSymbol
-            } ($stockSymbol)", stockEvents = stockEvents, readOnly = readOnly
+            title = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.displayName ?: stockSymbol,
+            symbol = stockSymbol,
+            stockEvents = stockEvents,
+            readOnly = readOnly
         )
     }
 
@@ -97,7 +98,8 @@ object DialogHandler {
 
     fun showAssetEvents(item: PortfolioItem, transactionApi: AssetTransactionApi, readOnly: Boolean) {
         _dialogViewState.value = DialogViewState.ShowAssetEvents(
-            title = item.displayName,
+            title = item.displayName.removeSuffix(" (${item.symbol})"),
+            symbol = item.symbol,
             events = item.assetEvents,
             transactionApi = transactionApi,
             readOnly = readOnly
@@ -134,11 +136,17 @@ object DialogHandler {
 
         data class ShowSupportedCryptocurrenciesDialog(val text: String) : DialogViewState()
 
-        data class ShowStockEvents(val title: String, val stockEvents: List<StockEvent>, val readOnly: Boolean) :
+        data class ShowStockEvents(
+            val title: String,
+            val symbol: String,
+            val stockEvents: List<StockEvent>,
+            val readOnly: Boolean
+        ) :
             DialogViewState()
 
         data class ShowAssetEvents(
             val title: String,
+            val symbol: String,
             val events: List<AssetEvent>,
             val transactionApi: AssetTransactionApi,
             val readOnly: Boolean

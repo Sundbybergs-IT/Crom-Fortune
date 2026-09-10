@@ -15,14 +15,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -73,8 +74,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.net.toUri
@@ -123,14 +124,18 @@ import com.sundbybergsit.cromfortune.main.ui.notifications.NotificationsViewMode
 import com.sundbybergsit.cromfortune.main.ui.settings.Settings
 import com.sundbybergsit.cromfortune.main.ui.settings.SettingsViewModel
 import com.sundbybergsit.cromfortune.main.ui.settings.SettingsViewModelFactory
+import java.text.DateFormat
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.util.Currency
 import java.util.Date
 import androidx.navigation3.runtime.NavKey as androidxNavKey
 
-private const val DATE_FORMAT = "MM/dd/yyyy"
+private const val DATE_COLUMN_WEIGHT = 1.25f
+private const val QUANTITY_COLUMN_WEIGHT = 0.75f
+private const val UNIT_PRICE_COLUMN_WEIGHT = 1.15f
+private const val TOTAL_COLUMN_WEIGHT = 1.25f
+private val STATUS_COLUMN_WIDTH = 40.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -741,109 +746,42 @@ private fun StockEventsDialog(
             "Mismatch between stock orders (${stockOrderEvents.size}) and opinionated events (${opinionatedEvents.size})"
         )
     }
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier
-                .padding(vertical = 16.dp)
-                .fillMaxWidth(),
-        ) {
-            ConstraintLayout(modifier = Modifier.padding(8.dp)) {
-                val (tableRef, buttonRef) = createRefs()
-                LazyColumn(modifier = Modifier
-                    .constrainAs(tableRef) {
-                        bottom.linkTo(buttonRef.top)
-                    }
-                    .fillMaxHeight(0.8f)
-                    .fillMaxWidth()) {
-                    stickyHeader {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(color = MaterialTheme.colorScheme.surface)
-                        ) {
-                            Row {
-                                Text(
-                                    text = stringResource(id = R.string.generic_title_stock_orders),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .padding(bottom = 32.dp)
-                            ) {
-                                Text(
-                                    text = state.title,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .background(color = MaterialTheme.colorScheme.surface)
-                            ) {
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_date),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.padding(4.dp))
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_title_quantity),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.padding(4.dp))
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_price_per_stock),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.padding(4.dp))
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.generic_title_total_cost),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                    }
-                    items(stockOrderEvents.size) { index ->
-                        val stockOrder = stockOrderEvents[index]
-                        val opinionatedStockOrder = opinionatedEvents.getOrNull(index)
-                        if (opinionatedStockOrder == null) {
-                            Log.e(
-                                "StockEventsDialog",
-                                "Missing opinionated event for stockOrder index=$index, stock=${stockOrder.name}, date=${stockOrder.dateInMillis}"
-                            )
-                        } else {
-                            StockOrderRow(
-                                stockOrder = stockOrder,
-                                opinionatedStockOrder = opinionatedStockOrder,
-                                readOnly = state.readOnly
-                            )
-                        }
-                    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { EventDialogTitle(title = state.title, symbol = state.symbol) },
+        text = {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 480.dp)
+            ) {
+                stickyHeader {
+                    TransactionTableHeader()
                 }
-                TextButton(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .constrainAs(buttonRef) {
-                            end.linkTo(parent.end)
-                            bottom.linkTo(parent.bottom)
-                        },
-                    onClick = onDismiss
-                ) {
-                    Text(stringResource(id = R.string.action_close).uppercase())
+                items(stockOrderEvents.size) { index ->
+                    val stockOrder = stockOrderEvents[index]
+                    val opinionatedStockOrder = opinionatedEvents.getOrNull(index)
+                    if (opinionatedStockOrder == null) {
+                        Log.e(
+                            "StockEventsDialog",
+                            "Missing opinionated event for stockOrder index=$index, stock=${stockOrder.name}, date=${stockOrder.dateInMillis}"
+                        )
+                    } else {
+                        StockOrderRow(
+                            stockOrder = stockOrder,
+                            opinionatedStockOrder = opinionatedStockOrder,
+                            readOnly = state.readOnly
+                        )
+                    }
                 }
             }
-        }
-    }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.action_close).uppercase())
+            }
+        },
+    )
 }
 
 @Composable
@@ -865,40 +803,17 @@ private fun AssetEventsDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(state.title) },
+        title = { EventDialogTitle(title = state.title, symbol = state.symbol) },
         text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Row(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.generic_date),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.padding(4.dp))
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.generic_title_quantity),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.padding(4.dp))
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.generic_price_per_stock),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.padding(4.dp))
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.generic_title_total_cost),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 480.dp)
+            ) {
+                stickyHeader {
+                    TransactionTableHeader()
                 }
-                state.events.sortedBy { event -> event.dateInMillis }.forEach { event ->
+                items(state.events.sortedBy { event -> event.dateInMillis }) { event ->
                     val transaction = event.transaction
                     if (transaction != null) {
                         AssetTransactionRow(
@@ -916,6 +831,77 @@ private fun AssetEventsDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } }
     )
+}
+
+@Composable
+private fun EventDialogTitle(title: String, symbol: String) {
+    Column {
+        Text(
+            text = stringResource(R.string.generic_title_stock_orders),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = symbol,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun TransactionTableHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier.weight(DATE_COLUMN_WEIGHT),
+            text = stringResource(R.string.generic_date),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            softWrap = false,
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            modifier = Modifier.weight(QUANTITY_COLUMN_WEIGHT),
+            text = stringResource(R.string.generic_title_quantity),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            softWrap = false,
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            modifier = Modifier.weight(UNIT_PRICE_COLUMN_WEIGHT),
+            text = stringResource(R.string.generic_price_per_stock),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            softWrap = false,
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            modifier = Modifier.weight(TOTAL_COLUMN_WEIGHT),
+            text = stringResource(R.string.generic_title_total_cost),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            softWrap = false,
+        )
+        Spacer(modifier = Modifier.width(STATUS_COLUMN_WIDTH))
+    }
 }
 
 private fun AssetTransaction.toRecommendationOrder() = StockOrder(
@@ -939,7 +925,6 @@ private fun AssetTransactionRow(
     onRemoved: () -> Unit
 ) {
     val locale = LocalLocale.current.platformLocale
-    val dateFormatter = SimpleDateFormat(DATE_FORMAT, locale)
     val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
         currency = Currency.getInstance(transaction.quoteCurrencyCode)
         maximumFractionDigits = if (transaction.unitPrice < java.math.BigDecimal.ONE) 8 else 2
@@ -977,45 +962,50 @@ private fun AssetTransactionRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            modifier = Modifier.weight(1f),
-            text = dateFormatter.format(Date(transaction.dateInMillis)),
+            modifier = Modifier.weight(DATE_COLUMN_WEIGHT),
+            text = formatShortDate(transaction.dateInMillis, locale),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.padding(4.dp))
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(QUANTITY_COLUMN_WEIGHT),
             text = transaction.quantity.stripTrailingZeros().toPlainString(),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
         )
         Spacer(modifier = Modifier.padding(4.dp))
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(UNIT_PRICE_COLUMN_WEIGHT),
             text = numberFormatter.format(transaction.unitPrice),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
         )
         Spacer(modifier = Modifier.padding(4.dp))
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(TOTAL_COLUMN_WEIGHT),
             text = numberFormatter.format(transaction.unitPrice.multiply(transaction.quantity)),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
         )
-        Spacer(modifier = Modifier.padding(4.dp))
-        if (opinionatedStockOrder != null) {
-            Icon(
-                imageVector = if (opinionatedStockOrder.isApprovedByAlgorithm()) {
-                    Icons.Outlined.SentimentSatisfied
-                } else {
-                    Icons.Outlined.SentimentDissatisfied
-                },
-                contentDescription = "Satisfaction",
-                tint = MaterialTheme.colorScheme.surfaceVariant
-            )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
+        Box(
+            modifier = Modifier.width(STATUS_COLUMN_WIDTH),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (opinionatedStockOrder != null) {
+                Icon(
+                    imageVector = if (opinionatedStockOrder.isApprovedByAlgorithm()) {
+                        Icons.Outlined.SentimentSatisfied
+                    } else {
+                        Icons.Outlined.SentimentDissatisfied
+                    },
+                    contentDescription = "Satisfaction",
+                    tint = MaterialTheme.colorScheme.surfaceVariant
+                )
+            }
         }
     }
 }
@@ -1066,7 +1056,7 @@ internal fun StockOrderRow(
     currencyRateApi: CurrencyRateApi = CurrencyRateRepository,
     readOnly: Boolean
 ) {
-    val sdf = SimpleDateFormat(DATE_FORMAT, LocalLocale.current.platformLocale)
+    val locale = LocalLocale.current.platformLocale
     val nf: NumberFormat = NumberFormat.getCurrencyInstance()
     if (stockOrder.pricePerStock < 1) {
         nf.maximumFractionDigits = 3
@@ -1094,7 +1084,7 @@ internal fun StockOrderRow(
         Log.e("StockOrderRow", "No currency rate found for ${stockOrder.currency}, defaulting to 1.0")
     }
     val rateInSek = matchingCurrencyRates.lastOrNull()?.rateInSek ?: 1.0
-    val stockEventDate = sdf.format(Date(stockOrder.dateInMillis))
+    val stockEventDate = formatShortDate(stockOrder.dateInMillis, locale)
     if (showDeleteDialog.value) {
         AlertDialog(onDismissRequest = { showDeleteDialog.value = false },
             title = {
@@ -1152,46 +1142,56 @@ internal fun StockOrderRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(DATE_COLUMN_WEIGHT),
             text = stockEventDate,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.padding(4.dp))
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(QUANTITY_COLUMN_WEIGHT),
             text = "${stockOrder.quantity}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
         )
         Spacer(modifier = Modifier.padding(4.dp))
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(UNIT_PRICE_COLUMN_WEIGHT),
             text = nf.format(stockOrder.pricePerStock),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
         )
         Spacer(modifier = Modifier.padding(4.dp))
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(TOTAL_COLUMN_WEIGHT),
             text = nf.format(
                 stockOrder.getTotalCost(rateInSek)
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
         )
-        Spacer(modifier = Modifier.padding(4.dp))
-        Icon(
-            imageVector = (if (opinionatedStockOrder.isApprovedByAlgorithm()) {
-                Icons.Outlined.SentimentSatisfied
-            } else {
-                Icons.Outlined.SentimentDissatisfied
-            }),
-            contentDescription = "Satisfaction",
-            tint = MaterialTheme.colorScheme.surfaceVariant
-        )
+        Box(
+            modifier = Modifier.width(STATUS_COLUMN_WIDTH),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = (if (opinionatedStockOrder.isApprovedByAlgorithm()) {
+                    Icons.Outlined.SentimentSatisfied
+                } else {
+                    Icons.Outlined.SentimentDissatisfied
+                }),
+                contentDescription = "Satisfaction",
+                tint = MaterialTheme.colorScheme.surfaceVariant
+            )
+        }
     }
 }
+
+internal fun formatShortDate(dateInMillis: Long, locale: java.util.Locale): String =
+    DateFormat.getDateInstance(DateFormat.SHORT, locale).format(Date(dateInMillis))
 
 @Composable
 internal fun BottomNavigation(
