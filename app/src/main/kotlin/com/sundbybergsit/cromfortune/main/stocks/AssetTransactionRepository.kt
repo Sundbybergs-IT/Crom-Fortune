@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.AssetTransactionApi
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockOrder
+import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -14,7 +16,8 @@ class AssetTransactionRepository(
     context: Context,
     portfolioName: String,
     private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
+        context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE),
+    private val stockSplitApi: StockSplitApi = StockSplitRepository(context, porfolioName = portfolioName)
 ) : AssetTransactionApi {
 
     override fun currentQuantity(assetId: String): BigDecimal = list(assetId).fold(BigDecimal.ZERO) { quantity, transaction ->
@@ -63,12 +66,28 @@ class AssetTransactionRepository(
 
     private fun validateChronologicalBalance(transactions: Set<AssetTransaction>) {
         var quantity = BigDecimal.ZERO
-        transactions.sortedBy(AssetTransaction::dateInMillis).forEach { transaction ->
-            quantity = when (transaction.action) {
+        val assetId = transactions.firstOrNull()?.assetId.orEmpty()
+        val stockSplits = transactions.firstOrNull()
+            ?.takeIf { it.assetType == AssetType.STOCK }
+            ?.let { stockSplitApi.list(it.symbol) }
+            .orEmpty()
+        val events = transactions.map { transaction ->
+            transaction.dateInMillis to { quantity = when (transaction.action) {
                 TransactionAction.BUY -> quantity + transaction.quantity
                 TransactionAction.SELL -> quantity - transaction.quantity
+            } }
+        } + stockSplits.map { split ->
+            split.dateInMillis to {
+                quantity = if (split.reverse) {
+                    quantity.divideToIntegralValue(split.quantity.toBigDecimal())
+                } else {
+                    quantity.multiply(split.quantity.toBigDecimal())
+                }
             }
-            require(quantity >= BigDecimal.ZERO) { "Sale exceeds available quantity for ${transaction.assetId}" }
+        }
+        events.sortedBy { it.first }.forEach { (_, applyEvent) ->
+            applyEvent()
+            require(quantity >= BigDecimal.ZERO) { "Sale exceeds available quantity for $assetId" }
         }
     }
 

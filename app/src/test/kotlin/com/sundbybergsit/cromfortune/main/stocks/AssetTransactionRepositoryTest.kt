@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.AssetType
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -43,11 +44,39 @@ class AssetTransactionRepositoryTest {
         }
     }
 
+    @Test
+    fun `repository accepts a sale from shares created by a stock split`() {
+        val portfolio = "asset-split-sale-${System.nanoTime()}"
+        StockSplitRepository(context, portfolio).putReplacingAll(
+            "OLD",
+            StockSplit(reverse = false, dateInMillis = 2L, name = "OLD", quantity = 2)
+        )
+        val repository = AssetTransactionRepository(context, portfolio)
+        val buy = stockTransaction(TransactionAction.BUY, "1", 1L)
+        val sell = stockTransaction(TransactionAction.SELL, "2", 3L)
+
+        repository.putAll(buy.assetId, setOf(buy, sell))
+
+        assertEquals(setOf(buy, sell), repository.list(buy.assetId))
+    }
+
     private fun transaction(action: TransactionAction, quantity: String, date: Long = 1L) = AssetTransaction(
         assetId = "crypto:OLD",
         assetType = AssetType.CRYPTO,
         symbol = "OLD",
         displayName = "Retired Coin",
+        quoteCurrencyCode = "USD",
+        action = action,
+        dateInMillis = date,
+        unitPrice = BigDecimal("10.25"),
+        quantity = BigDecimal(quantity)
+    )
+
+    private fun stockTransaction(action: TransactionAction, quantity: String, date: Long) = AssetTransaction(
+        assetId = "stock:OLD",
+        assetType = AssetType.STOCK,
+        symbol = "OLD",
+        displayName = "Old Corp",
         quoteCurrencyCode = "USD",
         action = action,
         dateInMillis = date,
