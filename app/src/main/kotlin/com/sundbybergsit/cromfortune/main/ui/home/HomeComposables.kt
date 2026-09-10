@@ -20,25 +20,25 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -62,9 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.android.play.core.appupdate.AppUpdateManager
-import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.ktx.AppUpdateResult
-import com.google.android.play.core.ktx.requestCompleteUpdate
 import com.google.android.play.core.ktx.requestUpdateFlow
 import com.sundbybergsit.cromfortune.domain.AssetPriceApi
 import com.sundbybergsit.cromfortune.domain.AssetType
@@ -100,25 +98,17 @@ fun Home(
     val localContext = LocalContext.current
     val portfoliosState = viewModel.portfoliosStateFlow.collectAsState()
     if (!BuildConfig.DEBUG) {
-        val requestUpdateFlow = appUpdateManager.requestUpdateFlow()
+        val requestUpdateFlow = remember(appUpdateManager) { appUpdateManager.requestUpdateFlow() }
         val appUpdateResultState = requestUpdateFlow.collectAsState(initial = AppUpdateResult.NotAvailable)
         val updateResult = appUpdateResultState.value
         val updateCompletedString = stringResource(R.string.generic_update_completed)
-        val actionRestartString = stringResource(R.string.action_restart)
+        val actionInstallString = stringResource(R.string.action_install)
         LaunchedEffect(key1 = updateResult) {
-            if (updateResult is AppUpdateResult.Downloaded) {
-                DialogHandler.showSnack(
-                    text = updateCompletedString,
-                    action = Pair(actionRestartString) {
-                        updateResult.completeUpdate()
-                    }
-                )
-            } else if (updateResult is AppUpdateResult.Available && updateResult.updateInfo.isUpdateTypeAllowed(
-                    AppUpdateType.FLEXIBLE
-                )
-            ) {
-                appUpdateManager.requestCompleteUpdate()
-            }
+            handleInAppUpdateResult(
+                updateResult = updateResult,
+                downloadedMessage = updateCompletedString,
+                installActionLabel = actionInstallString,
+            )
         }
     }
     LaunchedEffect(key1 = Unit) {
@@ -465,7 +455,9 @@ private fun StockOrderAggregateItem(
         Surface(modifier = Modifier.clickable { onShowStock(item, readOnly) }) {
             Text(
                 text = "${item.quantity.stripTrailingZeros().toPlainString()} · Price unavailable",
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -478,7 +470,8 @@ private fun StockOrderAggregateItem(
         currencyFormat.currency = item.currency
         currencyFormat.maximumFractionDigits = 2
         val invested = item.acquisitionValue.multiply(item.quantity)
-        val growth = if (invested.signum() == 0) 0.0 else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
+        val growth =
+            if (invested.signum() == 0) 0.0 else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
         Surface(modifier = Modifier.clickable {
             onShowStock.invoke(
                 item, readOnly
@@ -560,7 +553,7 @@ private fun StockOrderAggregateItem(
                             onClick = {
                                 DialogHandler.showBuyStockDialog(stockSymbol = item.assetId)
                             }, colors = ButtonDefaults.textButtonColors(
-                                backgroundColor = colorResource(
+                                containerColor = colorResource(
                                     id = (android.R.color.holo_green_dark)
                                 )
                             )
@@ -571,7 +564,7 @@ private fun StockOrderAggregateItem(
                         TextButton(
                             onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.assetId) },
                             colors = ButtonDefaults.textButtonColors(
-                                backgroundColor = colorResource(
+                                containerColor = colorResource(
                                     id = (android.R.color.holo_red_dark)
                                 )
                             )
