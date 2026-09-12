@@ -203,12 +203,13 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 Snackbar {
                     val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
                     val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
+                    val actionLabel = hostData.visuals.actionLabel
                     ConstraintLayout(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(backgroundColor),
                     ) {
-                        val (textRef, leftLineRef) = createRefs()
+                        val (textRef, leftLineRef, actionRef) = createRefs()
                         Box(
                             modifier = Modifier
                                 .width(4.dp)
@@ -229,10 +230,29 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                                     top.linkTo(parent.top)
                                     bottom.linkTo(parent.bottom)
                                     start.linkTo(leftLineRef.end, 18.dp)
+                                    if (actionLabel != null) {
+                                        end.linkTo(actionRef.start)
+                                        width = Dimension.fillToConstraints
+                                    }
                                 }
-                                .padding(end = 18.dp)
+                                .padding(end = if (actionLabel == null) 18.dp else 0.dp)
                                 .contentDescription("Snackbar Message"),
                         )
+                        if (actionLabel != null) {
+                            TextButton(
+                                onClick = hostData::performAction,
+                                modifier = Modifier.constrainAs(actionRef) {
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                    end.linkTo(parent.end, 6.dp)
+                                },
+                            ) {
+                                Text(
+                                    text = actionLabel,
+                                    color = lineColor,
+                                )
+                            }
+                        }
                     }
                 }
             }
