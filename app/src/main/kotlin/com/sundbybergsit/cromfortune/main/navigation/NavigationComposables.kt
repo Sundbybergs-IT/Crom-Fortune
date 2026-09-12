@@ -7,8 +7,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,10 +23,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
@@ -38,7 +43,9 @@ import androidx.compose.material.icons.outlined.SentimentDissatisfied
 import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -65,6 +72,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -72,10 +80,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.net.toUri
@@ -95,6 +106,7 @@ import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BottomSheetContent
 import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
+import com.sundbybergsit.cromfortune.main.BuildConfig
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
@@ -364,6 +376,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     SettingsItems(
                         onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
                         onShowSupportedCryptocurrencies = { DialogHandler.showSupportedCryptocurrenciesDialog() },
+                        onShowAbout = { DialogHandler.showAboutDialog() },
                         onShowStockRetrievalTimeIntervals = {
                             DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))
                         },
@@ -464,6 +477,10 @@ fun AddDialogs(
 
         is DialogHandler.DialogViewState.ShowSupportedCryptocurrenciesDialog -> {
             SupportedCryptocurrenciesDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
+        }
+
+        DialogHandler.DialogViewState.ShowAboutDialog -> {
+            AboutDialog(onDismiss = { dialogHandler.dismissDialog() })
         }
 
         DialogHandler.DialogViewState.Dismissed -> {
@@ -782,6 +799,102 @@ private fun StockEventsDialog(
             }
         },
     )
+}
+
+@Composable
+internal fun AboutDialog(onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .fillMaxWidth()
+                .widthIn(max = 420.dp),
+            shape = RoundedCornerShape(32.dp),
+            tonalElevation = 8.dp
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            )
+                        )
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.action_about),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Surface(
+                        modifier = Modifier.size(72.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        shadowElevation = 6.dp
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                            contentDescription = stringResource(id = R.string.about_app_logo_description),
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = stringResource(id = R.string.about_app_tagline),
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(50)
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.about_app_version, BuildConfig.VERSION_NAME),
+                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Text(
+                        text = stringResource(id = R.string.about_app_created_by),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(id = R.string.action_close))
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -1316,10 +1429,11 @@ private fun NotificationsItems(onClear: () -> Unit) {
 }
 
 @Composable
-private fun SettingsItems(
+internal fun SettingsItems(
     onShowSupportedStocks: () -> Unit,
     onShowSupportedCryptocurrencies: () -> Unit,
     onShowStockRetrievalTimeIntervals: () -> Unit,
+    onShowAbout: () -> Unit,
     onShowTodo: () -> Unit,
 ) {
     BottomSheetMenuItem(
@@ -1337,6 +1451,10 @@ private fun SettingsItems(
     BottomSheetMenuItem(
         onClick = onShowTodo,
         text = stringResource(id = R.string.generic_to_do)
+    )
+    BottomSheetMenuItem(
+        onClick = onShowAbout,
+        text = stringResource(id = R.string.action_about)
     )
 }
 

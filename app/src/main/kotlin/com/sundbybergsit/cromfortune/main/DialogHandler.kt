@@ -70,6 +70,10 @@ object DialogHandler {
         )
     }
 
+    fun showAboutDialog() {
+        _dialogViewState.value = DialogViewState.ShowAboutDialog
+    }
+
     fun showBuyStockDialog(stockSymbol: String? = null) {
         _dialogViewState.value = DialogViewState.ShowBuyStockDialog(stockSymbol = stockSymbol?.let(::assetId))
     }
@@ -135,6 +139,8 @@ object DialogHandler {
         data class ShowSupportedStocksDialog(val text: String) : DialogViewState()
 
         data class ShowSupportedCryptocurrenciesDialog(val text: String) : DialogViewState()
+
+        data object ShowAboutDialog : DialogViewState()
 
         data class ShowStockEvents(
             val title: String,

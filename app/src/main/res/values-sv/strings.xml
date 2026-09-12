@@ -105,5 +105,10 @@
     <string name="settings_title">Inställningar</string>
     <string name="settings_default_values">Standardvärden</string>
     <string name="settings_dialog_time_intervals_title">Tidsintervall då Crom Fortune hämtar aktiekurser</string>
+    <string name="action_about">Om appen</string>
+    <string name="about_app_tagline">En tydligare bild av din ekonomiska resa</string>
+    <string name="about_app_version">Version %1$s</string>
+    <string name="about_app_created_by">Skapad med omsorg av\nAlix Émile Warnké</string>
+    <string name="about_app_logo_description">Crom Fortunes applogga</string>
 
 </resources>

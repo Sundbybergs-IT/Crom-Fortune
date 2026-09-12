@@ -106,5 +106,10 @@
     <string name="settings_title">Settings</string>
     <string name="settings_default_values">Default values</string>
     <string name="settings_dialog_time_intervals_title">Time interval during which Crom Fortune should fetch stock rates</string>
+    <string name="action_about">About the app</string>
+    <string name="about_app_tagline">A clearer view of your financial journey</string>
+    <string name="about_app_version">Version %1$s</string>
+    <string name="about_app_created_by">Created with care by\nAlix Émile Warnké</string>
+    <string name="about_app_logo_description">Crom Fortune app logo</string>
 
 </resources>
