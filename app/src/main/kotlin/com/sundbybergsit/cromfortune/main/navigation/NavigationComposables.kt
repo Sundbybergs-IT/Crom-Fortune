@@ -492,7 +492,22 @@ fun AddDialogs(
         }
 
         is DialogHandler.DialogViewState.ShowAssetEvents -> {
-            AssetEventsDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
+            val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
+            })
+            AssetEventsDialog(
+                state = dialogViewState,
+                onDismiss = { dialogHandler.dismissDialog() },
+                onRemove = { transaction ->
+                    homeViewModel.remove(
+                        context = localContext,
+                        portfolioName = dialogViewState.portfolioName,
+                        transaction = transaction
+                    )
+                    dialogHandler.dismissDialog()
+                }
+            )
         }
 
         is DialogHandler.DialogViewState.ShowBuyStockDialog -> {
@@ -900,7 +915,8 @@ internal fun AboutDialog(onDismiss: () -> Unit) {
 @Composable
 private fun AssetEventsDialog(
     state: DialogHandler.DialogViewState.ShowAssetEvents,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onRemove: (AssetTransaction) -> Unit
 ) {
     val context = LocalContext.current
     val transactions = state.events.mapNotNull(AssetEvent::transaction)
@@ -932,9 +948,8 @@ private fun AssetEventsDialog(
                         AssetTransactionRow(
                             transaction = transaction,
                             opinionatedStockOrder = opinionatedTransactions[transaction],
-                            transactionApi = state.transactionApi,
                             readOnly = state.readOnly,
-                            onRemoved = onDismiss
+                            onRemoved = { onRemove(transaction) }
                         )
                     } else {
                         event.stockSplit?.let { split -> Text("Stock split × ${split.quantity}") }
@@ -1033,7 +1048,6 @@ private fun AssetTransaction.toRecommendationOrder() = StockOrder(
 private fun AssetTransactionRow(
     transaction: AssetTransaction,
     opinionatedStockOrder: OpinionatedStockOrderWrapper?,
-    transactionApi: com.sundbybergsit.cromfortune.domain.AssetTransactionApi,
     readOnly: Boolean,
     onRemoved: () -> Unit
 ) {
@@ -1050,7 +1064,6 @@ private fun AssetTransactionRow(
             text = { Text(stringResource(R.string.home_delete_stock_order, Date(transaction.dateInMillis))) },
             confirmButton = {
                 TextButton(onClick = {
-                    transactionApi.remove(transaction)
                     showDeleteDialog.value = false
                     onRemoved()
                 }) { Text(stringResource(R.string.action_delete).uppercase()) }

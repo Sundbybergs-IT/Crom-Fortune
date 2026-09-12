@@ -7,6 +7,7 @@ import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.TransactionAction
+import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -58,6 +59,24 @@ class AssetTransactionRepositoryTest {
         repository.putAll(buy.assetId, setOf(buy, sell))
 
         assertEquals(setOf(buy, sell), repository.list(buy.assetId))
+    }
+
+    @Test
+    fun `removing the last legacy stock transaction removes its legacy key`() {
+        val portfolio = "asset-legacy-remove-${System.nanoTime()}"
+        val transaction = stockTransaction(TransactionAction.BUY, "1", 1L)
+        context.getSharedPreferences(portfolio, Context.MODE_PRIVATE)
+            .edit()
+            .putStringSet(transaction.symbol, setOf(Json.encodeToString(setOf(transaction))))
+            .commit()
+        val repository = AssetTransactionRepository(context, portfolio)
+
+        assertEquals(setOf(transaction), repository.list(transaction.assetId))
+
+        repository.remove(transaction)
+
+        assertEquals(emptySet<AssetTransaction>(), repository.list(transaction.assetId))
+        assertEquals(emptySet<String>(), repository.assetIds())
     }
 
     private fun transaction(action: TransactionAction, quantity: String, date: Long = 1L) = AssetTransaction(

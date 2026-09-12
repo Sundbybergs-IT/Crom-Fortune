@@ -204,6 +204,12 @@ class HomeViewModel(
         refresh(context)
     }
 
+    fun remove(context: Context, portfolioName: String, transaction: AssetTransaction) {
+        Log.i(TAG, "remove(portfolioName=[$portfolioName], transaction=[$transaction])")
+        AssetTransactionRepository(context, portfolioName).remove(transaction)
+        refresh(context)
+    }
+
     fun stocks(
         context: Context,
         portfolioName: String,

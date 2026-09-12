@@ -47,7 +47,9 @@ class AssetTransactionRepository(
             "Every transaction must match storage key $assetId"
         }
         validateChronologicalBalance(transactions)
-        check(sharedPreferences.edit().putStringSet(assetId, setOf(Json.encodeToString(transactions))).commit()) {
+        val editor = sharedPreferences.edit().putStringSet(assetId, setOf(Json.encodeToString(transactions)))
+        legacyStockKey(assetId)?.let(editor::remove)
+        check(editor.commit()) {
             "Failed to persist transactions for $assetId"
         }
     }
@@ -56,7 +58,9 @@ class AssetTransactionRepository(
         putAll(assetId, setOf(transaction))
 
     override fun remove(assetId: String) {
-        check(sharedPreferences.edit().remove(assetId).commit()) { "Failed to remove transactions for $assetId" }
+        val editor = sharedPreferences.edit().remove(assetId)
+        legacyStockKey(assetId)?.let(editor::remove)
+        check(editor.commit()) { "Failed to remove transactions for $assetId" }
     }
 
     override fun remove(transaction: AssetTransaction) {
@@ -98,4 +102,7 @@ class AssetTransactionRepository(
     } catch (_: IllegalArgumentException) {
         Json.decodeFromString<Set<StockOrder>>(serializedSet).mapTo(mutableSetOf(), AssetTransaction::fromStockOrder)
     }
+
+    private fun legacyStockKey(assetId: String): String? =
+        assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:")
 }

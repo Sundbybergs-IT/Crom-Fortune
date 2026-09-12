@@ -76,7 +76,6 @@ import com.sundbybergsit.cromfortune.main.PagerStateSelectionHapticFeedbackLaunc
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
-import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.theme.Loss
 import com.sundbybergsit.cromfortune.main.theme.Profit
@@ -253,7 +252,7 @@ fun Home(
                                     if (item.assetEvents.isNotEmpty()) {
                                         DialogHandler.showAssetEvents(
                                             item = item,
-                                            transactionApi = AssetTransactionRepository(localContext, portfolioName),
+                                            portfolioName = portfolioName,
                                             readOnly = readOnly
                                         )
                                     } else {
