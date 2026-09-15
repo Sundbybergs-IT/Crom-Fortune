@@ -26,10 +26,10 @@ import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -291,7 +291,8 @@ fun StocksHeader(
     onNavigateTo: (String) -> Unit,
     stockOrderAggregates: List<PortfolioItem>,
     assetPriceApi: AssetPriceApi,
-    currencyRates: List<CurrencyRate>
+    currencyRates: List<CurrencyRate>,
+    simulatedCashBalanceSek: BigDecimal? = null
 ) {
     var count = BigDecimal.ZERO
     for (stockOrderAggregate in stockOrderAggregates) {
@@ -376,7 +377,14 @@ fun StocksHeader(
                 .width(IntrinsicSize.Max)
         ) {
             Text(
-                text = format.format(count), color = colorResource(
+                text = buildString {
+                    append(format.format(count))
+                    simulatedCashBalanceSek?.let { balance ->
+                        append(" (")
+                        append(format.format(balance))
+                        append(")")
+                    }
+                }, color = colorResource(
                     if (count >= BigDecimal.ZERO) {
                         R.color.colorProfit
                     } else {
@@ -407,10 +415,11 @@ private fun StocksTab(
             onNavigateTo = onNavigateTo,
             stockOrderAggregates = viewState.items,
             assetPriceApi = assetPriceApi,
-            currencyRates = currencyRates
+            currencyRates = currencyRates,
+            simulatedCashBalanceSek = viewState.cromCreditSek
         )
     }
-    Divider(thickness = 1.dp)
+    HorizontalDivider(thickness = 1.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()

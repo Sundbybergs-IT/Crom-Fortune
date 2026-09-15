@@ -12,33 +12,79 @@ import com.sundbybergsit.cromfortune.main.AssetDataRetrievalCoroutineWorker
 fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
     eventToConsider: StockEvent,
     existingEvents: List<StockEvent>,
-    recommendationAlgorithm: RecommendationAlgorithm
+    recommendationAlgorithm: RecommendationAlgorithm,
+    cromCashWallet: SimulatedCashWallet,
+    userSimulatedCashWallet: SimulatedCashWallet
 ) : StockEvent? {
     val stockOrder = checkNotNull(eventToConsider.stockOrder)
+    if (stockOrder.orderAction == "Buy") {
+        val outsideCapital = userSimulatedCashWallet.buyWithTopUp(
+            quantity = stockOrder.quantity,
+            pricePerStock = stockOrder.pricePerStock,
+            rateInSek = rateInSek,
+            commissionFeeSek = stockOrder.commissionFee
+        )
+        cromCashWallet.fund(amountSek = outsideCapital)
+    } else {
+        userSimulatedCashWallet.sell(
+            quantity = stockOrder.quantity,
+            pricePerStock = stockOrder.pricePerStock,
+            rateInSek = rateInSek,
+            commissionFeeSek = stockOrder.commissionFee
+        )
+    }
     val recommendation = recommendationAlgorithm
         .getRecommendation(
             StockPrice(
-                stockOrder.name,
-                this.currency, stockOrder.pricePerStock
+                stockSymbol = stockOrder.name,
+                currency = this.currency,
+                price = stockOrder.pricePerStock
             ),
-            this.rateInSek, AssetDataRetrievalCoroutineWorker.COMMISSION_FEE,
-            existingEvents.toSet(),
-            eventToConsider.dateInMillis
+            currencyRateInSek = this.rateInSek,
+            commissionFee = AssetDataRetrievalCoroutineWorker.COMMISSION_FEE,
+            stockEvents = existingEvents.toSet(),
+            timeInMillis = eventToConsider.dateInMillis
         )
     when (recommendation?.command) {
         is BuyStockCommand -> {
+            val quantity = cromCashWallet.maximumAffordableQuantity(
+                pricePerStock = stockOrder.pricePerStock,
+                rateInSek = rateInSek,
+                commissionFeeSek = AssetDataRetrievalCoroutineWorker.COMMISSION_FEE
+            ).coerceAtMost(recommendation.command.quantity())
+            if (quantity == 0) return null
             val buyOrder = StockOrder(
-                "Buy", this.currency.toString(),
-                eventToConsider.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                AssetDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                orderAction = "Buy",
+                currency = this.currency.toString(),
+                dateInMillis = eventToConsider.dateInMillis,
+                name = stockOrder.name,
+                pricePerStock = stockOrder.pricePerStock,
+                commissionFee = AssetDataRetrievalCoroutineWorker.COMMISSION_FEE,
+                quantity = quantity
+            )
+            cromCashWallet.buy(
+                quantity = quantity,
+                pricePerStock = stockOrder.pricePerStock,
+                rateInSek = rateInSek,
+                commissionFeeSek = AssetDataRetrievalCoroutineWorker.COMMISSION_FEE
             )
             return StockEvent(buyOrder, null, eventToConsider.dateInMillis)
         }
         is SellStockCommand -> {
             val sellOrder = StockOrder(
-                "Sell", this.currency.toString(),
-                eventToConsider.dateInMillis, stockOrder.name, stockOrder.pricePerStock,
-                AssetDataRetrievalCoroutineWorker.COMMISSION_FEE, recommendation.command.quantity()
+                orderAction = "Sell",
+                currency = this.currency.toString(),
+                dateInMillis = eventToConsider.dateInMillis,
+                name = stockOrder.name,
+                pricePerStock = stockOrder.pricePerStock,
+                commissionFee = AssetDataRetrievalCoroutineWorker.COMMISSION_FEE,
+                quantity = recommendation.command.quantity()
+            )
+            cromCashWallet.sell(
+                quantity = recommendation.command.quantity(),
+                pricePerStock = stockOrder.pricePerStock,
+                rateInSek = rateInSek,
+                commissionFeeSek = AssetDataRetrievalCoroutineWorker.COMMISSION_FEE
             )
             return StockEvent(sellOrder, null, eventToConsider.dateInMillis)
         }
