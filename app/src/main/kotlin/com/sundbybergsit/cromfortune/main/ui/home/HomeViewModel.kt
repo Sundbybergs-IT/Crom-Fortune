@@ -96,6 +96,8 @@ class HomeViewModel(
     private fun getCalculatedStockOrderAggregate(
         stockEvents: List<StockEvent>,
         recommendationAlgorithm: RecommendationAlgorithm,
+        cromCashWallet: SimulatedCashWallet,
+        userSimulatedCashWallet: SimulatedCashWallet,
     ): StockOrderAggregate {
         val sortedStockEvents = stockEvents.sortedBy { it.dateInMillis }
         var stockOrderAggregate: StockOrderAggregate? = null
@@ -121,7 +123,9 @@ class HomeViewModel(
                     stockOrderAggregate.applyStockOrderForRecommendedEvent(
                         eventToConsider = stockEvent,
                         existingEvents = cromSortedStockEvents,
-                        recommendationAlgorithm = recommendationAlgorithm
+                        recommendationAlgorithm = recommendationAlgorithm,
+                        cromCashWallet = cromCashWallet,
+                        userSimulatedCashWallet = userSimulatedCashWallet
                     )
                 if (possibleNewStockEvent != null) {
                     cromSortedStockEvents.add(possibleNewStockEvent)
@@ -157,14 +161,23 @@ class HomeViewModel(
             if (portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME) {
                 Log.d(TAG, "Adding Crom portfolio")
                 val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
+                val cromCashWallet = SimulatedCashWallet()
+                val userSimulatedCashWallet = SimulatedCashWallet()
                 portfolioViewStates[PortfolioRepository.CROM_PORTFOLIO_NAME] = ViewState(
                     items = stocks(
                         context = context,
                         portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
                         includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) },
                         lambda = { stockEvents ->
-                            getCalculatedStockOrderAggregate(stockEvents, recommendationAlgorithm)
-                        }).map(PortfolioItem::fromStockCompatibility) + cromCryptoFirstPurchases(context), readOnly = true
+                            getCalculatedStockOrderAggregate(
+                                stockEvents = stockEvents,
+                                recommendationAlgorithm = recommendationAlgorithm,
+                                cromCashWallet = cromCashWallet,
+                               userSimulatedCashWallet =  userSimulatedCashWallet
+                            )
+                        }).map(PortfolioItem::fromStockCompatibility) + cromCryptoFirstPurchases(context),
+                    readOnly = true,
+                    cromCreditSek = cromCashWallet.creditSek
                 )
             }
         }
@@ -219,7 +232,7 @@ class HomeViewModel(
         List<StockOrderAggregate> {
         val stockEventApi: StockEventApi = StockEventRepository(context, portfolioName = portfolioName)
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
-        for (stockSymbol in stockEventApi.listOfStockNames()) {
+        for (stockSymbol in stockEventApi.listOfStockNames().sorted()) {
             val stockEvents: Set<StockEvent> = stockEventApi.list(stockSymbol)
             if (stockEvents.isEmpty()) {
                 // Preventive cleanup, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/20
@@ -291,12 +304,19 @@ class HomeViewModel(
         Log.d(TAG, "portfolioStockEvents(portfolio=[$portfolioName], stockSymbol=[$stockSymbol])")
         return if (portfolioName == PortfolioRepository.CROM_PORTFOLIO_NAME) {
             val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
+            val cromCashWallet = SimulatedCashWallet()
+            val userSimulatedCashWallet = SimulatedCashWallet()
             val aggregate = stocks(
                 context = context,
                 portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
                 includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) }
             ) { sortedStockEvents ->
-                getCalculatedStockOrderAggregate(sortedStockEvents, recommendationAlgorithm)
+                getCalculatedStockOrderAggregate(
+                    stockEvents = sortedStockEvents,
+                    recommendationAlgorithm = recommendationAlgorithm,
+                    cromCashWallet = cromCashWallet,
+                    userSimulatedCashWallet = userSimulatedCashWallet
+                )
             }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }
             if (aggregate == null) {
                 Log.e(TAG, "No aggregate found for [$stockSymbol] in Crom portfolio during click lookup")
@@ -395,6 +415,10 @@ class HomeViewModel(
         refresh(context)
     }
 
-    internal class ViewState(val items: List<PortfolioItem>, val readOnly: Boolean)
+    internal class ViewState(
+        val items: List<PortfolioItem>,
+        val readOnly: Boolean,
+        val cromCreditSek: BigDecimal? = null
+    )
 
 }

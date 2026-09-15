@@ -47,7 +47,9 @@ class StockOrderAggregateExtensionsKtTest {
                 price = 2.20
             ),
             existingEvents = listOf(stockEvent1, stockEvent2),
-            recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
+            recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm(),
+            cromCashWallet = SimulatedCashWallet(),
+            userSimulatedCashWallet = SimulatedCashWallet()
         )
 
         assertNull(newStockEvent)
