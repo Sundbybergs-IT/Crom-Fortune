@@ -23,6 +23,9 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
 
+private const val STONK_HAPPINESS_CONFORMITY_THRESHOLD = 90
+private const val STONK_NEUTRAL_CONFORMITY_THRESHOLD = 70
+
 class DashboardViewModel : ViewModel() {
 
     private var lastUpdated: Instant = Instant.ofEpochMilli(0L)
@@ -32,6 +35,9 @@ class DashboardViewModel : ViewModel() {
     val scoreStateFlow: StateFlow<String> = _scoreStateFlow
     private val _portfolioSummaryStateFlow = MutableStateFlow("")
     val portfolioSummaryStateFlow: StateFlow<String> = _portfolioSummaryStateFlow
+
+    private val _aiStonkMood = MutableStateFlow(AiStonkMood.Neutral)
+    val aiStonkMood: StateFlow<AiStonkMood> = _aiStonkMood
 
     fun refresh(context: Context, timestamp: Instant) {
         Log.i(TAG, "refresh($timestamp)")
@@ -49,6 +55,13 @@ class DashboardViewModel : ViewModel() {
                         }.toSet(),
                         currencyRateApi = CurrencyRateRepository
                     )
+                _aiStonkMood.value = if (latestScore.score >= STONK_HAPPINESS_CONFORMITY_THRESHOLD) {
+                    AiStonkMood.Happy
+                } else if (latestScore.score >= STONK_NEUTRAL_CONFORMITY_THRESHOLD) {
+                    AiStonkMood.Neutral
+                } else {
+                    AiStonkMood.Angry
+                }
                 _scoreStateFlow.value = context.resources.getQuantityString(
                     R.plurals.dashboard_croms_will_message,
                     latestScore.score, latestScore.score

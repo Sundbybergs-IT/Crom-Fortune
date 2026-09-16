@@ -86,6 +86,20 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     }
 
     @Test
+    fun `getScore - when an exchange rate is unavailable - ignores unevaluable orders`() = runBlocking {
+        val score = calculator.getScore(
+            SellRecommendationDummyAlgorithm(),
+            setOf(
+                StockOrder("Buy", "USD", 1, "USD-ASSET", 1.0, 0.0, 1).toStockEvent(),
+                StockOrder("Sell", "USD", 2, "USD-ASSET", 1.0, 0.0, 1).toStockEvent()
+            ),
+            currencyRateApi
+        )
+
+        assertScore(100, score)
+    }
+
+    @Test
     fun `getScore - when 1 out of 2 correct decisions - returns 50`() = runBlocking {
         val score = calculator.getScore(
             SellRecommendationDummyAlgorithm(),
