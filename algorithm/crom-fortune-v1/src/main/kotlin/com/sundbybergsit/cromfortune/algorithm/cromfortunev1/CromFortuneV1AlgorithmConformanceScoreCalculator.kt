@@ -27,10 +27,18 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
         currencyRateApi: CurrencyRateApi,
     ): ConformanceScore {
         var correctDecision = 0
-        val stockOrders: MutableList<StockOrder> = stockEvents
+        val stockOrders: List<StockOrder> = stockEvents
             .filter { stockEvent -> stockEvent.stockOrder != null }
-            .map { stockEvent -> stockEvent.stockOrder!! }.toMutableList()
-        val stockNames = stockOrders.map { order -> order.name }.toSet()
+            .map { stockEvent -> stockEvent.stockOrder!! }
+        val currencyRatesByCode = currencyRateApi.currencyRates.value.associateBy {
+            currencyRate -> currencyRate.iso4217CurrencySymbol
+        }
+        // Rates are populated asynchronously. An asset cannot be scored reliably until
+        // its rate exists, so omit it for this refresh instead of crashing the UI.
+        val evaluableStockOrders = stockOrders.filter { order ->
+            currencyRatesByCode.containsKey(order.currency)
+        }
+        val stockNames = evaluableStockOrders.map { order -> order.name }.toSet()
 
         // FIXME: recommend in groups of stocks
 
@@ -41,8 +49,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 .map { stockEvent -> stockEvent.stockOrder!! }
                 .sortedBy { stockOrder -> stockOrder.dateInMillis }.toMutableList()
             val firstStockOrderForStock = stockOrdersForAsset.first()
-            val currencyRateInSek =
-                currencyRateApi.currencyRates.value.find { currencyRate -> currencyRate.iso4217CurrencySymbol == firstStockOrderForStock.currency }!!.rateInSek
+            val currencyRateInSek = currencyRatesByCode.getValue(firstStockOrderForStock.currency).rateInSek
             val stockOrderAggregate = StockOrderAggregate(
                 rateInSek = currencyRateInSek,
                 displayName = "FIXME",
@@ -103,7 +110,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
             }
         }
         return when {
-            stockOrders.size <= 1 -> {
+            evaluableStockOrders.size <= 1 -> {
                 ConformanceScore(100)
             }
 
@@ -112,7 +119,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
             }
 
             else -> {
-                ConformanceScore(100 * correctDecision / stockOrders.size)
+                ConformanceScore(100 * correctDecision / evaluableStockOrders.size)
             }
         }
     }
