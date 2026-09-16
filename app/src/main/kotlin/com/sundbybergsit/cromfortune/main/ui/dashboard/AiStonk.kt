@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import kotlin.math.abs
@@ -61,7 +62,11 @@ fun AiStonk(mood: AiStonkMood, modifier: Modifier = Modifier) {
         val shellMid = Color(0xFFAAA096)
         val shellDark = Color(0xFF4A4642)
         val seam = Color(0xFF625D57)
-        val eyeColor = if (expression < -.5f) Color(0xFFFF3025) else Color(0xFFFF4B38)
+        val eyeColor = lerp(
+            start = Color(0xFFFF3025),
+            stop = Color(0xFF35D66F),
+            fraction = expression.coerceAtLeast(0f)
+        )
 
         // Elongated neck and pedestal retain the recognizable Stonks bust form.
         val neck = Path().apply {
