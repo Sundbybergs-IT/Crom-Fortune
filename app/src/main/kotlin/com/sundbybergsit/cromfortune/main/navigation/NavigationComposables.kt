@@ -519,6 +519,15 @@ fun AddDialogs(
             AssetEventsDialog(
                 state = dialogViewState,
                 onDismiss = { dialogHandler.dismissDialog() },
+                onUpdate = { original, updated ->
+                    homeViewModel.update(
+                        context = localContext,
+                        portfolioName = dialogViewState.portfolioName,
+                        original = original,
+                        updated = updated
+                    )
+                    dialogHandler.dismissDialog()
+                },
                 onRemove = { transaction ->
                     homeViewModel.remove(
                         context = localContext,
@@ -936,9 +945,21 @@ internal fun AboutDialog(onDismiss: () -> Unit) {
 private fun AssetEventsDialog(
     state: DialogHandler.DialogViewState.ShowAssetEvents,
     onDismiss: () -> Unit,
+    onUpdate: (AssetTransaction, AssetTransaction) -> Unit,
     onRemove: (AssetTransaction) -> Unit
 ) {
     val context = LocalContext.current
+    var transactionToEdit by remember { mutableStateOf<AssetTransaction?>(null) }
+    transactionToEdit?.let { original ->
+        RegisterAssetTransactionDialog(
+            action = original.action,
+            transactionToEdit = original,
+            onDismiss = { transactionToEdit = null },
+            onDelete = { onRemove(original) },
+            onSave = { updated -> onUpdate(original, updated) }
+        )
+        return
+    }
     val transactions = state.events.mapNotNull(AssetEvent::transaction)
     val opinionatedTransactions = if (transactions.isEmpty()) {
         emptyMap()
@@ -969,7 +990,7 @@ private fun AssetEventsDialog(
                             transaction = transaction,
                             opinionatedStockOrder = opinionatedTransactions[transaction],
                             readOnly = state.readOnly,
-                            onRemoved = { onRemove(transaction) }
+                            onEdit = { transactionToEdit = transaction }
                         )
                     } else {
                         event.stockSplit?.let { split -> Text("Stock split × ${split.quantity}") }
@@ -1069,31 +1090,12 @@ private fun AssetTransactionRow(
     transaction: AssetTransaction,
     opinionatedStockOrder: OpinionatedStockOrderWrapper?,
     readOnly: Boolean,
-    onRemoved: () -> Unit
+    onEdit: () -> Unit
 ) {
     val locale = LocalLocale.current.platformLocale
     val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
         currency = Currency.getInstance(transaction.quoteCurrencyCode)
         maximumFractionDigits = if (transaction.unitPrice < java.math.BigDecimal.ONE) 8 else 2
-    }
-    val showDeleteDialog = remember(transaction) { mutableStateOf(false) }
-    if (showDeleteDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog.value = false },
-            title = { Text(stringResource(R.string.generic_dialog_title_are_you_sure)) },
-            text = { Text(stringResource(R.string.home_delete_stock_order, Date(transaction.dateInMillis))) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog.value = false
-                    onRemoved()
-                }) { Text(stringResource(R.string.action_delete).uppercase()) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog.value = false }) {
-                    Text(stringResource(android.R.string.cancel).uppercase())
-                }
-            }
-        )
     }
     val backgroundColor = colorResource(
         if (transaction.action == TransactionAction.BUY) android.R.color.holo_green_light
@@ -1101,7 +1103,7 @@ private fun AssetTransactionRow(
     )
     Row(
         modifier = Modifier
-            .clickable(enabled = !readOnly) { showDeleteDialog.value = true }
+            .clickable(enabled = !readOnly, onClick = onEdit)
             .background(backgroundColor)
             .padding(8.dp)
             .fillMaxWidth(),

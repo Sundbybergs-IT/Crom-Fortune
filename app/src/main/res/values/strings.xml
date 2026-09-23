@@ -9,6 +9,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_portfolio_add">Add portfolio</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_save">Save</string>
     <string name="action_install">Install</string>
     <string name="action_asset_buy">Register asset purchase</string>
     <string name="action_stock_add_split">Register stock split</string>
@@ -23,6 +24,7 @@
     <string name="asset_transaction_quantity_hint">Up to %1$d decimal places</string>
     <string name="asset_transaction_title_buy">Buy asset</string>
     <string name="asset_transaction_title_sell">Sell asset</string>
+    <string name="asset_transaction_title_edit">Edit transaction</string>
     <string name="asset_transaction_unit_price">Unit price</string>
     <string name="asset_type_crypto">Cryptocurrency</string>
     <string name="asset_type_stock">Stock</string>

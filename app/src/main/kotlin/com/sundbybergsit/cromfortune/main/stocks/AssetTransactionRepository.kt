@@ -68,6 +68,32 @@ class AssetTransactionRepository(
         if (remaining.isEmpty()) remove(transaction.assetId) else putAll(transaction.assetId, remaining)
     }
 
+    fun update(original: AssetTransaction, updated: AssetTransaction) {
+        val originalTransactions = list(original.assetId)
+        require(original in originalTransactions) { "Transaction to update no longer exists" }
+
+        if (original.assetId == updated.assetId) {
+            putAll(original.assetId, originalTransactions - original + updated)
+            return
+        }
+
+        val remainingOriginals = originalTransactions - original
+        val updatedTransactions = list(updated.assetId) + updated
+        validateChronologicalBalance(remainingOriginals)
+        validateChronologicalBalance(updatedTransactions)
+
+        val editor = sharedPreferences.edit()
+        if (remainingOriginals.isEmpty()) {
+            editor.remove(original.assetId)
+        } else {
+            editor.putStringSet(original.assetId, setOf(Json.encodeToString(remainingOriginals)))
+        }
+        legacyStockKey(original.assetId)?.let(editor::remove)
+        editor.putStringSet(updated.assetId, setOf(Json.encodeToString(updatedTransactions)))
+        legacyStockKey(updated.assetId)?.let(editor::remove)
+        check(editor.commit()) { "Failed to update transaction" }
+    }
+
     private fun validateChronologicalBalance(transactions: Set<AssetTransaction>) {
         var quantity = BigDecimal.ZERO
         val assetId = transactions.firstOrNull()?.assetId.orEmpty()

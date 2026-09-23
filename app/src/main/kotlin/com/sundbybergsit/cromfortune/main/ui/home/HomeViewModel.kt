@@ -223,6 +223,17 @@ class HomeViewModel(
         refresh(context)
     }
 
+    fun update(
+        context: Context,
+        portfolioName: String,
+        original: AssetTransaction,
+        updated: AssetTransaction
+    ) {
+        Log.i(TAG, "update(portfolioName=[$portfolioName], original=[$original], updated=[$updated])")
+        AssetTransactionRepository(context, portfolioName).update(original, updated)
+        refresh(context)
+    }
+
     fun stocks(
         context: Context,
         portfolioName: String,

@@ -10,6 +10,7 @@
     <string name="action_delete">Radera</string>
     <string name="action_portfolio_add">Lägg till portfölj</string>
     <string name="action_refresh">Uppdatera</string>
+    <string name="action_save">Spara</string>
     <string name="action_install">Installera</string>
     <string name="action_stock_add_split">Registrera aktiesplit</string>
     <string name="action_stocks_supported">Aktier som stöds</string>
@@ -23,6 +24,7 @@
     <string name="asset_transaction_quantity_hint">Upp till %1$d decimaler</string>
     <string name="asset_transaction_title_buy">Köp tillgång</string>
     <string name="asset_transaction_title_sell">Sälj tillgång</string>
+    <string name="asset_transaction_title_edit">Redigera transaktion</string>
     <string name="asset_transaction_unit_price">Styckpris</string>
     <string name="asset_type_crypto">Kryptovaluta</string>
     <string name="asset_type_stock">Aktie</string>

@@ -79,21 +79,33 @@ internal fun buildAssetTransaction(
 fun RegisterAssetTransactionDialog(
     action: TransactionAction,
     initialAssetId: String? = null,
+    transactionToEdit: AssetTransaction? = null,
     onDismiss: () -> Unit,
+    onDelete: (() -> Unit)? = null,
     onSave: (AssetTransaction) -> Unit
 ) {
-    var selectedType by remember(initialAssetId) {
-        mutableStateOf(AssetCatalog.findById(initialAssetId.orEmpty())?.type ?: AssetType.STOCK)
+    val initialAsset = AssetCatalog.findById(transactionToEdit?.assetId ?: initialAssetId.orEmpty())
+    var selectedAction by remember(transactionToEdit) { mutableStateOf(transactionToEdit?.action ?: action) }
+    var selectedType by remember(initialAssetId, transactionToEdit) {
+        mutableStateOf(initialAsset?.type ?: transactionToEdit?.assetType ?: AssetType.STOCK)
     }
-    var selectedAsset by remember(initialAssetId) {
-        mutableStateOf(AssetCatalog.findById(initialAssetId.orEmpty()) ?: AssetCatalog.stocks.first())
+    var selectedAsset by remember(initialAssetId, transactionToEdit) {
+        mutableStateOf(initialAsset ?: AssetCatalog.assets.first { it.type == selectedType })
     }
     var assetMenuExpanded by remember { mutableStateOf(false) }
-    var quantity by remember { mutableStateOf("") }
-    var unitPrice by remember { mutableStateOf("") }
-    var commissionFee by remember { mutableStateOf("") }
+    var quantity by remember(transactionToEdit) {
+        mutableStateOf(transactionToEdit?.quantity?.toPlainString().orEmpty())
+    }
+    var unitPrice by remember(transactionToEdit) {
+        mutableStateOf(transactionToEdit?.unitPrice?.toPlainString().orEmpty())
+    }
+    var commissionFee by remember(transactionToEdit) {
+        mutableStateOf(transactionToEdit?.commissionFee?.toPlainString().orEmpty())
+    }
     val dateFormat = remember { SimpleDateFormat(ASSET_TRANSACTION_DATE_FORMAT, Locale.getDefault()) }
-    val initialDateInMillis = remember { Calendar.getInstance().timeInMillis }
+    val initialDateInMillis = remember(transactionToEdit) {
+        transactionToEdit?.dateInMillis ?: Calendar.getInstance().timeInMillis
+    }
     val transactionDate: MutableState<TextFieldValue> = remember {
         mutableStateOf(TextFieldValue(dateFormat.format(initialDateInMillis)))
     }
@@ -101,6 +113,7 @@ fun RegisterAssetTransactionDialog(
         initialSelectedDateMillis = initialDateInMillis
     )
     var showDatePicker by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
     val availableAssets = AssetCatalog.assets.filter { asset -> asset.type == selectedType }
     val parsedQuantity = quantity.toBigDecimalOrNull()
@@ -121,16 +134,60 @@ fun RegisterAssetTransactionDialog(
         )
     }
 
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(stringResource(R.string.generic_dialog_title_are_you_sure)) },
+            text = { Text(stringResource(R.string.home_delete_stock_order, transactionDate.value.text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirmation = false
+                    onDelete?.invoke()
+                }) { Text(stringResource(R.string.action_delete).uppercase()) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(stringResource(android.R.string.cancel).uppercase())
+                }
+            }
+        )
+        return
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(stringResource(if (action == TransactionAction.BUY) R.string.asset_transaction_title_buy else R.string.asset_transaction_title_sell))
+            Text(
+                stringResource(
+                    if (transactionToEdit != null) R.string.asset_transaction_title_edit
+                    else if (selectedAction == TransactionAction.BUY) R.string.asset_transaction_title_buy
+                    else R.string.asset_transaction_title_sell
+                )
+            )
         },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                if (transactionToEdit != null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TransactionAction.entries.forEach { transactionAction ->
+                            FilterChip(
+                                selected = selectedAction == transactionAction,
+                                onClick = { selectedAction = transactionAction; saveError = null },
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            if (transactionAction == TransactionAction.BUY) R.string.asset_transaction_confirm_buy
+                                            else R.string.asset_transaction_confirm_sell
+                                        )
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
                 Text(
                     text = stringResource(R.string.asset_transaction_asset_type),
                     style = MaterialTheme.typography.labelMedium
@@ -204,18 +261,33 @@ fun RegisterAssetTransactionDialog(
                 )
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+        dismissButton = {
+            Row {
+                if (onDelete != null) {
+                    TextButton(onClick = { showDeleteConfirmation = true }) {
+                        Text(stringResource(R.string.action_delete))
+                    }
+                }
+                TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
+            }
+        },
         confirmButton = {
             TextButton(enabled = formIsValid, onClick = {
                 try {
                     val dateInMillis = checkNotNull(dateFormat.parse(transactionDate.value.text)).time
-                    onSave(buildAssetTransaction(selectedAsset, action, dateInMillis, quantity, unitPrice, commissionFee))
+                    onSave(buildAssetTransaction(selectedAsset, selectedAction, dateInMillis, quantity, unitPrice, commissionFee))
                     onDismiss()
                 } catch (exception: RuntimeException) {
                     saveError = exception.message ?: "Invalid transaction"
                 }
             }) {
-                Text(stringResource(if (action == TransactionAction.BUY) R.string.asset_transaction_confirm_buy else R.string.asset_transaction_confirm_sell))
+                Text(
+                    stringResource(
+                        if (transactionToEdit != null) R.string.action_save
+                        else if (selectedAction == TransactionAction.BUY) R.string.asset_transaction_confirm_buy
+                        else R.string.asset_transaction_confirm_sell
+                    )
+                )
             }
         }
     )

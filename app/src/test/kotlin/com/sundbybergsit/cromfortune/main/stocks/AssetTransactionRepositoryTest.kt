@@ -79,6 +79,53 @@ class AssetTransactionRepositoryTest {
         assertEquals(emptySet<String>(), repository.assetIds())
     }
 
+    @Test
+    fun `update replaces every editable value without retaining original`() {
+        val repository = AssetTransactionRepository(context, "asset-update-${System.nanoTime()}")
+        val earlierBuy = stockTransaction(TransactionAction.BUY, "3", 1L)
+        val original = stockTransaction(TransactionAction.BUY, "2", 2L)
+        val updated = original.copy(
+            action = TransactionAction.SELL,
+            dateInMillis = 3L,
+            unitPrice = BigDecimal("12.75"),
+            commissionFee = BigDecimal("1.25"),
+            quantity = BigDecimal("1")
+        )
+        repository.putAll(original.assetId, setOf(earlierBuy, original))
+
+        repository.update(original, updated)
+
+        assertEquals(setOf(earlierBuy, updated), repository.list(original.assetId))
+    }
+
+    @Test
+    fun `update can move a transaction to another asset`() {
+        val repository = AssetTransactionRepository(context, "asset-update-move-${System.nanoTime()}")
+        val original = stockTransaction(TransactionAction.BUY, "2", 1L)
+        val updated = transaction(TransactionAction.BUY, "0.5", 2L)
+        repository.putReplacingAll(original.assetId, original)
+
+        repository.update(original, updated)
+
+        assertEquals(emptySet<AssetTransaction>(), repository.list(original.assetId))
+        assertEquals(setOf(updated), repository.list(updated.assetId))
+        assertEquals(setOf(updated.assetId), repository.assetIds())
+    }
+
+    @Test
+    fun `invalid update leaves original transaction unchanged`() {
+        val repository = AssetTransactionRepository(context, "asset-update-invalid-${System.nanoTime()}")
+        val buy = stockTransaction(TransactionAction.BUY, "1", 1L)
+        val sell = stockTransaction(TransactionAction.SELL, "1", 2L)
+        repository.putAll(buy.assetId, setOf(buy, sell))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            repository.update(buy, buy.copy(quantity = BigDecimal("0.5")))
+        }
+
+        assertEquals(setOf(buy, sell), repository.list(buy.assetId))
+    }
+
     private fun transaction(action: TransactionAction, quantity: String, date: Long = 1L) = AssetTransaction(
         assetId = "crypto:OLD",
         assetType = AssetType.CRYPTO,
