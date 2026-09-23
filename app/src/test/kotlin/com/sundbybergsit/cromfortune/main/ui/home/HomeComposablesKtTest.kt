@@ -2,8 +2,10 @@ package com.sundbybergsit.cromfortune.main.ui.home
 
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -17,6 +19,7 @@ import com.sundbybergsit.cromfortune.main.CoroutineScopeTestRule
 import com.sundbybergsit.cromfortune.main.CromTestRule
 import com.sundbybergsit.cromfortune.main.Databases
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
+import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import org.junit.Before
 import org.junit.Rule
@@ -69,19 +72,16 @@ class HomeComposablesKtTest {
             viewModel.portfoliosStateFlow.value[TEST_PORTFOLIO_NAME]?.items?.size == 2
         }
 
+        assertEquals(listOf(INTEL_SYMBOL, TESLA_SYMBOL), currentSymbols())
+        scrollToHolding(1)
         composeTestRule.onNodeWithText(TESLA_NAME).assertIsDisplayed()
-        composeTestRule.onNodeWithText(INTEL_NAME).assertIsDisplayed()
-
-        val teslaTopBefore = nodeTop(TESLA_NAME)
-        val intelTopBefore = nodeTop(INTEL_NAME)
-        assertTrue(intelTopBefore < teslaTopBefore)
 
         viewModel.sortNameDescending(TEST_PORTFOLIO_NAME)
         composeTestRule.waitForIdle()
 
-        val teslaTopAfter = nodeTop(TESLA_NAME)
-        val intelTopAfter = nodeTop(INTEL_NAME)
-        assertTrue(teslaTopAfter < intelTopAfter)
+        assertEquals(listOf(TESLA_SYMBOL, INTEL_SYMBOL), currentSymbols())
+        scrollToHolding(1)
+        composeTestRule.onNodeWithText(INTEL_NAME).assertIsDisplayed()
     }
 
     @Test
@@ -101,16 +101,14 @@ class HomeComposablesKtTest {
         )
         composeTestRule.waitForIdle()
 
-        val teslaTopBefore = nodeTop(TESLA_NAME)
-        val intelTopBefore = nodeTop(INTEL_NAME)
-        assertTrue(intelTopBefore < teslaTopBefore)
+        assertEquals(listOf(INTEL_SYMBOL, TESLA_SYMBOL), currentSymbols())
 
         viewModel.sortProfitDescending(TEST_PORTFOLIO_NAME)
         composeTestRule.waitForIdle()
 
-        val teslaTopAfter = nodeTop(TESLA_NAME)
-        val intelTopAfter = nodeTop(INTEL_NAME)
-        assertTrue(teslaTopAfter < intelTopAfter)
+        assertEquals(listOf(TESLA_SYMBOL, INTEL_SYMBOL), currentSymbols())
+        scrollToHolding(1)
+        composeTestRule.onNodeWithText(INTEL_NAME).assertIsDisplayed()
     }
 
     @Test
@@ -136,6 +134,13 @@ class HomeComposablesKtTest {
         assertTrue(item.assetEvents.isNotEmpty())
         assertTrue(item.legacyStockEvents.isEmpty())
         assertEquals(setOf(bitcoin.id), context.getSharedPreferences(TEST_PORTFOLIO_NAME, Context.MODE_PRIVATE).all.keys)
+    }
+
+    @Test
+    fun `portfolio summary remains visible when portfolio is empty`() {
+        setContent()
+
+        composeTestRule.onNodeWithText(context.getString(R.string.home_portfolio_profit)).assertIsDisplayed()
     }
 
     @Test
@@ -199,7 +204,8 @@ class HomeComposablesKtTest {
 
         setContent()
 
-        composeTestRule.onNodeWithText("[CRYPTO] Bitcoin (BTC)").assertIsDisplayed()
+        scrollToHolding(0)
+        composeTestRule.onNodeWithText("Bitcoin").assertIsDisplayed()
         composeTestRule.onNodeWithText("(stale)", substring = true).assertIsDisplayed()
     }
 
@@ -248,13 +254,22 @@ class HomeComposablesKtTest {
         }
     }
 
-    private fun nodeTop(text: String): Float =
-        composeTestRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.top
+    private fun currentSymbols(): List<String> = viewModel.portfoliosStateFlow.value
+        .getValue(TEST_PORTFOLIO_NAME)
+        .items
+        .map(PortfolioItem::symbol)
+
+    private fun scrollToHolding(index: Int) {
+        composeTestRule.onAllNodes(hasScrollAction())[1].performScrollToIndex(index + 1)
+        composeTestRule.waitForIdle()
+    }
 
     private companion object {
         const val TEST_CLASS_NAME = "HomeComposablesKtTest"
         const val TEST_PORTFOLIO_NAME = "HomeComposablesKtTestPortfolio"
-        const val TESLA_NAME = "Tesla, Inc. (TSLA)"
-        const val INTEL_NAME = "Intel Corporation (INTC)"
+        const val TESLA_NAME = "Tesla, Inc."
+        const val INTEL_NAME = "Intel Corporation"
+        const val TESLA_SYMBOL = "TSLA"
+        const val INTEL_SYMBOL = "INTC"
     }
 }

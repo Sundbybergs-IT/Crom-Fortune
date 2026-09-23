@@ -92,6 +92,14 @@
     <string name="home_stocks_personal_title">Ditt</string>
     <string name="home_stocks_crom_title">Croms</string>
     <string name="home_title">Hem</string>
+    <string name="home_last_updated">Uppdaterad %1$s</string>
+    <string name="home_not_updated">Uppdatera</string>
+    <string name="home_buy">Köp</string>
+    <string name="home_sell">Sälj</string>
+    <string name="home_acquisition_price">Inköpskurs</string>
+    <string name="home_quantity">Antal</string>
+    <string name="home_portfolio_profit">Portföljvinst</string>
+    <string name="home_cash_balance">Kassa: %1$s</string>
 
     <string name="notification_channel_name">Crom Fortune-händelser</string>
     <string name="notification_recommendation_body_buy">%1$s rekommenderas att köpa %2$d av %3$s till %4$s %5$s (courtage %6$d SEK)</string>

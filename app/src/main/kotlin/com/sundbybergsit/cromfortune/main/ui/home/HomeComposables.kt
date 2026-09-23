@@ -1,35 +1,41 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +58,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
@@ -59,7 +67,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.ktx.AppUpdateResult
@@ -81,6 +91,8 @@ import com.sundbybergsit.cromfortune.main.theme.Loss
 import com.sundbybergsit.cromfortune.main.theme.Profit
 import java.math.BigDecimal
 import java.text.NumberFormat
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Currency
 
 @Composable
@@ -96,6 +108,7 @@ fun Home(
     val tag = "Home"
     val localContext = LocalContext.current
     val portfoliosState = viewModel.portfoliosStateFlow.collectAsState()
+    val lastRefreshed = viewModel.lastRefreshedStateFlow.collectAsState()
     if (!BuildConfig.DEBUG) {
         val requestUpdateFlow = remember(appUpdateManager) { appUpdateManager.requestUpdateFlow() }
         val appUpdateResultState = requestUpdateFlow.collectAsState(initial = AppUpdateResult.NotAvailable)
@@ -120,22 +133,37 @@ fun Home(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.home_title), style = MaterialTheme.typography.titleMedium)
-                }, colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                windowInsets = WindowInsets.safeDrawing.only(
-                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-                ),
-                actions = {
+            Column(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
+                TopAppBar(
+                    title = {
+                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall)
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    windowInsets = WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                    ),
+                    actions = {
+                        OverflowMenu(
+                            onNavigateTo = onNavigateTo,
+                            contentDescription = "Home Menu",
+                            route = LeafScreen.BottomSheetsHome.route
+                        )
+                    }
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
-                            .width(164.dp)
-                            .padding(16.dp)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surface)
                             .clickable(onClick = { expanded = true }),
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -144,7 +172,7 @@ fun Home(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = items[selectedIndex], modifier = Modifier.padding(16.dp))
+                            Text(text = items[selectedIndex], modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Dropdown arrow",
@@ -175,22 +203,38 @@ fun Home(
                         }
                     }
                     val message = stringResource(R.string.home_information_data_refreshed)
-                    IconButton(onClick = {
-                        viewModel.refreshData(
-                            context = localContext,
-                            onFinished = { DialogHandler.showSnack(message) })
-                    }) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clickable {
+                                viewModel.refreshData(
+                                    context = localContext,
+                                    onFinished = { DialogHandler.showSnack(message) })
+                            }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
                             contentDescription = "Refresh",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(28.dp)
                         )
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            val updatedAt = lastRefreshed.value?.atZone(ZoneId.systemDefault())
+                                ?.format(DateTimeFormatter.ofPattern("HH:mm"))
+                            Text(
+                                text = updatedAt?.let { stringResource(R.string.home_last_updated, it) }
+                                    ?: stringResource(R.string.home_not_updated),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
                     }
-                    OverflowMenu(
-                        onNavigateTo = onNavigateTo, contentDescription = "Home Menu",
-                        route = LeafScreen.BottomSheetsHome.route
-                    )
-                })
+                }
+            }
         }) { paddingValues ->
         ConstraintLayout(
             modifier = Modifier
@@ -235,14 +279,30 @@ fun Home(
                             )
                         }
                     }
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(count = tabs[page].second.items.size) { lazyItemScope ->
-                            val portfolioName = tabs[page].first
-                            val portfolioState = tabs[page].second
-                            StocksTab(
+                    val portfolioName = tabs[page].first
+                    val portfolioState = tabs[page].second
+                    val currencyRates = currencyRateApi.currencyRates.collectAsState().value.toList()
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        item(key = "portfolio-summary-$portfolioName") {
+                            StocksHeader(
+                                profile = portfolioName,
+                                onNavigateTo = onNavigateTo,
+                                stockOrderAggregates = portfolioState.items,
+                                assetPriceApi = assetPriceApi,
+                                currencyRates = currencyRates,
+                                simulatedCashBalanceSek = portfolioState.cromCreditSek
+                            )
+                        }
+                        itemsIndexed(
+                            items = portfolioState.items,
+                            key = { _, item -> item.assetId }
+                        ) { _, item ->
+                            StockCard(
                                 portfolioName = portfolioName,
-                                index = lazyItemScope,
-                                viewState = portfolioState,
+                                item = item,
                                 assetPriceApi = assetPriceApi,
                                 onShowStock = { item, readOnly ->
                                     Log.d(
@@ -260,10 +320,10 @@ fun Home(
                                     }
                                 },
                                 onNavigateTo = onNavigateTo,
-                                readOnly = portfolioState.readOnly,
-                                currencyRateApi = currencyRateApi
+                                readOnly = portfolioState.readOnly
                             )
                         }
+                        item { Spacer(Modifier.height(12.dp)) }
                     }
                 }
             }
@@ -309,304 +369,281 @@ fun StocksHeader(
     val format: NumberFormat = NumberFormat.getCurrencyInstance()
     format.currency = Currency.getInstance("SEK")
     format.maximumFractionDigits = 2
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(all = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .width(IntrinsicSize.Max)
+        Row(
+            modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "#", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold
-            )
-        }
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .width(IntrinsicSize.Max)
-        ) {
-            Text(
-                text = stringResource(id = R.string.generic_acquisition_value),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .width(IntrinsicSize.Max)
-        ) {
-            Text(
-                text = stringResource(id = R.string.generic_title_latest), style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .width(IntrinsicSize.Max)
-        ) {
-            Text(
-                text = stringResource(id = R.string.generic_profit), style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        OverflowMenu(
-            onNavigateTo = onNavigateTo, contentDescription = "Home All Stocks Menu",
-            route = LeafScreen.BottomSheetsHomeAllStocks.createRoute(profile = profile)
-        )
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(3f)
-                .width(IntrinsicSize.Max)
-        ) {
-            // Nothing
-        }
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .width(IntrinsicSize.Max)
-        ) {
-            Text(
-                text = buildString {
-                    append(format.format(count))
-                    simulatedCashBalanceSek?.let { balance ->
-                        append(" (")
-                        append(format.format(balance))
-                        append(")")
-                    }
-                }, color = colorResource(
-                    if (count >= BigDecimal.ZERO) {
-                        R.color.colorProfit
-                    } else {
-                        R.color.colorLoss
-                    }
-                ), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.home_portfolio_profit),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = format.format(count),
+                    color = colorResource(
+                        if (count >= BigDecimal.ZERO) R.color.colorProfit else R.color.colorLoss
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                simulatedCashBalanceSek?.let { balance ->
+                    Text(
+                        text = stringResource(R.string.home_cash_balance, format.format(balance)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+                OverflowMenu(
+                    onNavigateTo = onNavigateTo,
+                    contentDescription = "Home All Stocks Menu",
+                    route = LeafScreen.BottomSheetsHomeAllStocks.createRoute(profile = profile)
+                )
         }
     }
 }
 
 @Composable
-private fun StocksTab(
+private fun StockCard(
     portfolioName: String,
-    index: Int,
-    viewState: HomeViewModel.ViewState,
+    item: PortfolioItem,
     assetPriceApi: AssetPriceApi,
     onShowStock: (PortfolioItem, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
-    readOnly: Boolean,
-    currencyRateApi: CurrencyRateApi
-) {
-    val currencyRatesState = currencyRateApi.currencyRates.collectAsState()
-    if (index == 0) {
-        val currencyRates = currencyRatesState.value.toList()
-        StocksHeader(
-            profile = portfolioName,
-            onNavigateTo = onNavigateTo,
-            stockOrderAggregates = viewState.items,
-            assetPriceApi = assetPriceApi,
-            currencyRates = currencyRates,
-            simulatedCashBalanceSek = viewState.cromCreditSek
-        )
-    }
-    HorizontalDivider(thickness = 1.dp)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            modifier = Modifier.padding(top = 16.dp),
-            text = viewState.items[index].displayName,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Bold
-        )
-        if (!readOnly) {
-            OverflowMenu(
-                onNavigateTo = onNavigateTo,
-                route = LeafScreen.BottomSheetsHomeStock.createRoute(
-                    portfolioName = portfolioName,
-                    stockSymbol = viewState.items[index].assetId
-                )
-            )
-        }
-    }
-    StockOrderAggregateItem(
-        item = viewState.items[index],
-        assetPriceApi = assetPriceApi,
-        onShowStock = onShowStock,
-        readOnly = readOnly
-    )
-}
-
-@Composable
-private fun StockOrderAggregateItem(
-    item: PortfolioItem, assetPriceApi: AssetPriceApi,
-    onShowStock: (PortfolioItem, Boolean) -> Unit,
     readOnly: Boolean
 ) {
     val assetPrice = assetPriceApi.getAssetPrice(item.assetId)
-    if (assetPrice == null) {
-        Surface(modifier = Modifier.clickable { onShowStock(item, readOnly) }) {
-            Text(
-                text = "${item.quantity.stripTrailingZeros().toPlainString()} · Price unavailable",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        return
+    val currencyFormat = NumberFormat.getCurrencyInstance().apply {
+        currency = item.currency
+        maximumFractionDigits = 2
     }
-    assetPrice.let { currentPrice ->
-        val profit = item.profit(currentPrice.price)
-        val percentageFormat: NumberFormat = NumberFormat.getPercentInstance()
-        val currencyFormat: NumberFormat = NumberFormat.getCurrencyInstance()
-        currencyFormat.currency = item.currency
-        currencyFormat.maximumFractionDigits = 2
-        val invested = item.acquisitionValue.multiply(item.quantity)
-        val growth =
-            if (invested.signum() == 0) 0.0 else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
-        Surface(modifier = Modifier.clickable {
-            onShowStock.invoke(
-                item, readOnly
-            )
-        }) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .width(IntrinsicSize.Max)
-                    ) {
-                        Text(
-                            text = item.quantity.stripTrailingZeros().toPlainString(),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall
+    val priceStatuses = StockPriceRepository.assetPricesStateFlow.collectAsState().value.statuses
+    val stale = priceStatuses.find { it.assetPrice.assetId == item.assetId }?.isStale == true
+    val profit = assetPrice?.let { item.profit(it.price) }
+    val invested = item.acquisitionValue.multiply(item.quantity)
+    val growth = if (profit == null || invested.signum() == 0) null
+        else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
+    val valueColor = when (profit?.signum()) {
+        1 -> Profit
+        -1 -> Loss
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .clickable { onShowStock(item, readOnly) },
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 1.dp
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item.assetInitials(),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                    Text(
+                        text = item.companyName(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(item.symbol, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (!readOnly) {
+                    OverflowMenu(
+                        onNavigateTo = onNavigateTo,
+                        route = LeafScreen.BottomSheetsHomeStock.createRoute(
+                            portfolioName = portfolioName,
+                            stockSymbol = item.assetId
                         )
+                    )
+                }
+            }
+
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(top = 14.dp)) {
+                if (maxWidth < 340.dp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            MetricCell(
+                                stringResource(R.string.home_quantity),
+                                item.quantity.stripTrailingZeros().toPlainString(),
+                                Modifier.weight(1f)
+                            )
+                            MetricCell(
+                                stringResource(R.string.home_acquisition_price),
+                                currencyFormat.format(item.acquisitionValue),
+                                Modifier.weight(1f)
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            MetricCell(
+                                stringResource(R.string.generic_title_latest),
+                                assetPrice?.let { currencyFormat.format(it.price) + if (stale) " (stale)" else "" } ?: "—",
+                                Modifier.weight(1f),
+                                fontWeight = FontWeight.Bold
+                            )
+                            MetricCell(
+                                stringResource(R.string.generic_profit),
+                                buildString {
+                                    append(profit?.let(currencyFormat::format) ?: "—")
+                                    growth?.let {
+                                        appendLine()
+                                        append(NumberFormat.getPercentInstance().format(it))
+                                    }
+                                },
+                                Modifier.weight(1f),
+                                color = valueColor
+                            )
+                        }
                     }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .width(IntrinsicSize.Max)
-                    ) {
-                        Text(
-                            text = currencyFormat.format(item.acquisitionValue),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .width(IntrinsicSize.Max)
-                    ) {
-                        val stale = StockPriceRepository.assetPricesStateFlow.collectAsState().value.statuses
-                            .find { status -> status.assetPrice.assetId == item.assetId }?.isStale == true
-                        Text(
-                            text = currencyFormat.format(currentPrice.price) + if (stale) " (stale)" else "",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall,
+                } else {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        StockValue(item.quantity.stripTrailingZeros().toPlainString(), Modifier.weight(0.6f))
+                        StockValue(currencyFormat.format(item.acquisitionValue), Modifier.weight(1.1f))
+                        StockValue(
+                            assetPrice?.let { currencyFormat.format(it.price) + if (stale) " (stale)" else "" } ?: "—",
+                            Modifier.weight(1.1f),
                             fontWeight = FontWeight.Bold
                         )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .width(IntrinsicSize.Max)
-                    ) {
-                        Column {
-                            Text(
-                                text = currencyFormat.format(profit),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = when (profit.signum()) {
-                                    1 -> Profit
-                                    -1 -> Loss
-                                    else -> MaterialTheme.colorScheme.onSurface
-                                }
-                            )
-                            Text(
-                                text = percentageFormat.format(growth),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = when (profit.signum()) {
-                                    1 -> Profit
-                                    -1 -> Loss
-                                    else -> MaterialTheme.colorScheme.onSurface
-                                }
-                            )
+                        Column(modifier = Modifier.weight(1.6f)) {
+                            StockValue(profit?.let(currencyFormat::format) ?: "—", color = valueColor)
+                            growth?.let {
+                                StockValue(NumberFormat.getPercentInstance().format(it), color = valueColor)
+                            }
                         }
                     }
                 }
-                if (!readOnly) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp, bottom = 16.dp), horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
+            }
+
+            if (!readOnly) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TradeButton(
+                        text = stringResource(R.string.home_buy),
+                        color = Color(0xFF259E16),
+                        modifier = Modifier.weight(1f),
+                        onClick = { DialogHandler.showBuyStockDialog(stockSymbol = item.assetId) }
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    TradeButton(
+                        text = stringResource(R.string.home_sell),
+                        color = Color(0xFFD9293E),
+                        modifier = Modifier.weight(1f),
+                        onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.assetId) }
+                    )
+                    if (item.assetType == AssetType.STOCK) {
+                        Spacer(Modifier.width(12.dp))
+                        val muted = StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
+                            .any { it.stockSymbol == item.symbol && it.muted }
+                        IconButton(
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface, CircleShape),
                             onClick = {
-                                DialogHandler.showBuyStockDialog(stockSymbol = item.assetId)
-                            }, colors = ButtonDefaults.textButtonColors(
-                                containerColor = colorResource(
-                                    id = (android.R.color.holo_green_dark)
-                                )
-                            )
-                        ) {
-                            Text(text = stringResource(id = R.string.action_asset_buy_short))
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        TextButton(
-                            onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.assetId) },
-                            colors = ButtonDefaults.textButtonColors(
-                                containerColor = colorResource(
-                                    id = (android.R.color.holo_red_dark)
-                                )
-                            )
-                        ) {
-                            Text(text = stringResource(id = R.string.action_asset_sell_short))
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        if (item.assetType == AssetType.STOCK && StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
-                                .find { stockMuteSettings -> stockMuteSettings.stockSymbol == item.symbol && stockMuteSettings.muted } != null
-                        ) {
-                            IconButton(onClick = {
-                                StockMuteSettingsRepository.unmute(item.symbol)
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Filled.NotificationsOff,
-                                    contentDescription = "Muted stock",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                )
+                                if (muted) StockMuteSettingsRepository.unmute(item.symbol)
+                                else StockMuteSettingsRepository.mute(item.symbol)
                             }
-                        } else if (item.assetType == AssetType.STOCK) {
-                            IconButton(onClick = {
-                                StockMuteSettingsRepository.mute(item.symbol)
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Filled.NotificationsActive,
-                                    contentDescription = "Unmuted stock",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
+                        ) {
+                            Icon(
+                                imageVector = if (muted) Icons.Outlined.NotificationsOff else Icons.Outlined.Notifications,
+                                contentDescription = if (muted) "Muted stock" else "Unmuted stock"
+                            )
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+private fun MetricCell(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    fontWeight: FontWeight? = null
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color,
+            fontWeight = fontWeight,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun StockValue(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    fontWeight: FontWeight? = null
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = color,
+        style = MaterialTheme.typography.bodySmall,
+        fontWeight = fontWeight,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+@Composable
+private fun TradeButton(text: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    TextButton(
+        modifier = modifier.height(42.dp),
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        colors = ButtonDefaults.textButtonColors(containerColor = color, contentColor = Color.White)
+    ) {
+        Text(text = text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+    }
+}
+
+private fun PortfolioItem.companyName(): String = displayName
+    .removePrefix("[CRYPTO] ")
+    .removeSuffix(" ($symbol)")
+
+private fun PortfolioItem.assetInitials(): String = symbol
+    .filter(Char::isLetterOrDigit)
+    .take(3)
+    .uppercase()
