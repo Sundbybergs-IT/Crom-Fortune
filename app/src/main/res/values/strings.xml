@@ -101,6 +101,8 @@
     <string name="home_quantity">Quantity</string>
     <string name="home_portfolio_profit">Portfolio profit</string>
     <string name="home_cash_balance">Cash: %1$s</string>
+    <string name="home_asset_logo">%1$s logo</string>
+    <string name="home_sort">Sort</string>
 
     <string name="notification_channel_name">Crom Fortune Events</string>
     <string name="notification_recommendation_body_buy">%1$s is recommended to buy %2$d of %3$s at %4$s %5$s (commission fee %6$d SEK)</string>

@@ -385,19 +385,19 @@ class HomeViewModel(
     }
 
     fun sortNameAscending(portfolioName: String) {
-        updatePortfolioState(portfolioName) { oldViewState ->
+        updatePortfolioState(portfolioName, SortOrder.NAME_ASCENDING) { oldViewState ->
             oldViewState.items.sortedBy { item -> item.displayName }
         }
     }
 
     fun sortNameDescending(portfolioName: String) {
-        updatePortfolioState(portfolioName) { oldViewState ->
+        updatePortfolioState(portfolioName, SortOrder.NAME_DESCENDING) { oldViewState ->
             oldViewState.items.sortedByDescending { item -> item.displayName }
         }
     }
 
     fun sortProfitAscending(portfolioName: String) {
-        updatePortfolioState(portfolioName) { oldViewState ->
+        updatePortfolioState(portfolioName, SortOrder.PROFIT_ASCENDING) { oldViewState ->
             oldViewState.items.sortedBy { item ->
                 StockPriceRepository.getAssetPrice(item.assetId)?.let { price -> item.profit(price.price) }
             }
@@ -405,7 +405,7 @@ class HomeViewModel(
     }
 
     fun sortProfitDescending(portfolioName: String) {
-        updatePortfolioState(portfolioName) { oldViewState ->
+        updatePortfolioState(portfolioName, SortOrder.PROFIT_DESCENDING) { oldViewState ->
             oldViewState.items.sortedByDescending { item ->
                 StockPriceRepository.getAssetPrice(item.assetId)?.let { price -> item.profit(price.price) }
             }
@@ -414,6 +414,7 @@ class HomeViewModel(
 
     private fun updatePortfolioState(
         portfolioName: String,
+        sortOrder: SortOrder,
         updateItems: (ViewState) -> List<PortfolioItem>
     ) {
         val currentState = _portfoliosStateFlow.value
@@ -424,7 +425,8 @@ class HomeViewModel(
                 ViewState(
                     items = updateItems(oldViewState),
                     readOnly = oldViewState.readOnly,
-                    cromCreditSek = oldViewState.cromCreditSek
+                    cromCreditSek = oldViewState.cromCreditSek,
+                    sortOrder = sortOrder
                 )
             )
         }
@@ -439,7 +441,15 @@ class HomeViewModel(
     internal class ViewState(
         val items: List<PortfolioItem>,
         val readOnly: Boolean,
-        val cromCreditSek: BigDecimal? = null
+        val cromCreditSek: BigDecimal? = null,
+        val sortOrder: SortOrder = SortOrder.NAME_ASCENDING
     )
+
+    enum class SortOrder {
+        NAME_ASCENDING,
+        NAME_DESCENDING,
+        PROFIT_ASCENDING,
+        PROFIT_DESCENDING
+    }
 
 }

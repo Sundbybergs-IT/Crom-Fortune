@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("cromfortune.android.application")
     id("cromfortune.android.application.compose")
@@ -8,19 +10,34 @@ plugins {
 }
 
 val baseVersionName = ext.get("baseVersionName") as String
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+val logoDevPublishableKey = providers.gradleProperty("LOGO_DEV_PUBLISHABLE_KEY")
+    .orElse(providers.environmentVariable("LOGO_DEV_PUBLISHABLE_KEY"))
+    .orElse(providers.provider { localProperties.getProperty("LOGO_DEV_PUBLISHABLE_KEY", "") })
+    .getOrElse("")
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
 
 android {
     namespace = "com.sundbybergsit.cromfortune.main"
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
         versionCode = 153
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "LOGO_DEV_PUBLISHABLE_KEY", "\"$logoDevPublishableKey\"")
     }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            buildFeatures.buildConfig = true
         }
     }
     lint {
@@ -41,6 +58,8 @@ dependencies {
     implementation(libs.uiTooling)
     implementation(libs.bundles.compose)
     implementation(libs.androidxComposeMaterialIconsExtended)
+    implementation(libs.coilCompose)
+    implementation(libs.coilNetworkOkhttp)
 
     implementation(libs.androidxWorkRuntime)
     implementation(libs.kotlinxCoroutinesCore)

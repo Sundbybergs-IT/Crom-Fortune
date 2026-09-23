@@ -1,9 +1,11 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,6 +30,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Notifications
@@ -60,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
@@ -71,6 +75,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import coil3.compose.AsyncImage
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.ktx.AppUpdateResult
 import com.google.android.play.core.ktx.requestUpdateFlow
@@ -155,7 +160,9 @@ fun Home(
                     }
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -172,7 +179,10 @@ fun Home(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = items[selectedIndex], modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
+                            Text(
+                                text = items[selectedIndex],
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Dropdown arrow",
@@ -293,7 +303,8 @@ fun Home(
                                 stockOrderAggregates = portfolioState.items,
                                 assetPriceApi = assetPriceApi,
                                 currencyRates = currencyRates,
-                                simulatedCashBalanceSek = portfolioState.cromCreditSek
+                                simulatedCashBalanceSek = portfolioState.cromCreditSek,
+                                sortOrder = portfolioState.sortOrder
                             )
                         }
                         itemsIndexed(
@@ -352,7 +363,8 @@ fun StocksHeader(
     stockOrderAggregates: List<PortfolioItem>,
     assetPriceApi: AssetPriceApi,
     currencyRates: List<CurrencyRate>,
-    simulatedCashBalanceSek: BigDecimal? = null
+    simulatedCashBalanceSek: BigDecimal? = null,
+    sortOrder: HomeViewModel.SortOrder = HomeViewModel.SortOrder.NAME_ASCENDING
 ) {
     var count = BigDecimal.ZERO
     for (stockOrderAggregate in stockOrderAggregates) {
@@ -378,7 +390,7 @@ fun StocksHeader(
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
-            modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 14.dp),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -405,13 +417,40 @@ fun StocksHeader(
                     )
                 }
             }
-                OverflowMenu(
-                    onNavigateTo = onNavigateTo,
-                    contentDescription = "Home All Stocks Menu",
-                    route = LeafScreen.BottomSheetsHomeAllStocks.createRoute(profile = profile)
+            TextButton(
+                onClick = {
+                    onNavigateTo(LeafScreen.BottomSheetsHomeAllStocks.createRoute(profile = profile))
+                },
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Sort,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
                 )
+                Spacer(Modifier.width(6.dp))
+                Column {
+                    Text(
+                        text = stringResource(R.string.home_sort),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = sortOrder.label(),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun HomeViewModel.SortOrder.label(): String = when (this) {
+    HomeViewModel.SortOrder.NAME_ASCENDING -> stringResource(R.string.home_sort_alphabetical_down)
+    HomeViewModel.SortOrder.NAME_DESCENDING -> stringResource(R.string.home_sort_alphabetical_up)
+    HomeViewModel.SortOrder.PROFIT_ASCENDING -> stringResource(R.string.home_sort_profit_down)
+    HomeViewModel.SortOrder.PROFIT_DESCENDING -> stringResource(R.string.home_sort_profit_up)
 }
 
 @Composable
@@ -433,7 +472,7 @@ private fun StockCard(
     val profit = assetPrice?.let { item.profit(it.price) }
     val invested = item.acquisitionValue.multiply(item.quantity)
     val growth = if (profit == null || invested.signum() == 0) null
-        else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
+    else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
     val valueColor = when (profit?.signum()) {
         1 -> Profit
         -1 -> Loss
@@ -452,22 +491,10 @@ private fun StockCard(
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = item.assetInitials(),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                AssetLogo(item = item, modifier = Modifier.size(46.dp))
+                Column(modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)) {
                     Text(
                         text = item.companyName(),
                         style = MaterialTheme.typography.titleMedium,
@@ -488,7 +515,9 @@ private fun StockCard(
                 }
             }
 
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(top = 14.dp)) {
+            BoxWithConstraints(modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 14.dp)) {
                 if (maxWidth < 340.dp) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -506,7 +535,8 @@ private fun StockCard(
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             MetricCell(
                                 stringResource(R.string.generic_title_latest),
-                                assetPrice?.let { currencyFormat.format(it.price) + if (stale) " (stale)" else "" } ?: "—",
+                                assetPrice?.let { currencyFormat.format(it.price) + if (stale) " (stale)" else "" }
+                                    ?: "—",
                                 Modifier.weight(1f),
                                 fontWeight = FontWeight.Bold
                             )
@@ -545,7 +575,9 @@ private fun StockCard(
 
             if (!readOnly) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TradeButton(
@@ -647,3 +679,49 @@ private fun PortfolioItem.assetInitials(): String = symbol
     .filter(Char::isLetterOrDigit)
     .take(3)
     .uppercase()
+
+@Composable
+private fun AssetLogo(item: PortfolioItem, modifier: Modifier = Modifier) {
+    val token = BuildConfig.LOGO_DEV_PUBLISHABLE_KEY
+    val logoUrl = if (token.isBlank()) null else {
+        val path = when (item.assetType) {
+            AssetType.CRYPTO -> "crypto/${Uri.encode(item.symbol)}"
+            AssetType.STOCK -> "ticker/${Uri.encode(item.symbol)}"
+        }
+        val theme = if (isSystemInDarkTheme()) "dark" else "light"
+        "https://img.logo.dev/$path" +
+            "?token=${Uri.encode(token)}&size=96&format=png&theme=$theme&fallback=404"
+    }
+    var logoLoaded by remember(logoUrl) { mutableStateOf(false) }
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(
+                if (logoLoaded) MaterialTheme.colorScheme.surface
+                else MaterialTheme.colorScheme.primaryContainer
+            )
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        if (!logoLoaded) {
+            Text(
+                text = item.assetInitials(),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        if (logoUrl != null) {
+            AsyncImage(
+                model = logoUrl,
+                contentDescription = stringResource(R.string.home_asset_logo, item.companyName()),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(1.dp),
+                contentScale = ContentScale.Fit,
+                onSuccess = { logoLoaded = true },
+                onError = { logoLoaded = false }
+            )
+        }
+    }
+}

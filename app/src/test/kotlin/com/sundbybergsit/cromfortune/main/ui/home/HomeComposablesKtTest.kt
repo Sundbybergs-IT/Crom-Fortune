@@ -80,6 +80,10 @@ class HomeComposablesKtTest {
         composeTestRule.waitForIdle()
 
         assertEquals(listOf(TESLA_SYMBOL, INTEL_SYMBOL), currentSymbols())
+        assertEquals(
+            HomeViewModel.SortOrder.NAME_DESCENDING,
+            viewModel.portfoliosStateFlow.value.getValue(TEST_PORTFOLIO_NAME).sortOrder
+        )
         scrollToHolding(1)
         composeTestRule.onNodeWithText(INTEL_NAME).assertIsDisplayed()
     }
@@ -107,6 +111,10 @@ class HomeComposablesKtTest {
         composeTestRule.waitForIdle()
 
         assertEquals(listOf(TESLA_SYMBOL, INTEL_SYMBOL), currentSymbols())
+        assertEquals(
+            HomeViewModel.SortOrder.PROFIT_DESCENDING,
+            viewModel.portfoliosStateFlow.value.getValue(TEST_PORTFOLIO_NAME).sortOrder
+        )
         scrollToHolding(1)
         composeTestRule.onNodeWithText(INTEL_NAME).assertIsDisplayed()
     }

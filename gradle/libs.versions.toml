@@ -4,6 +4,7 @@ compileSdk = "37"
 # @keep
 minSdk = "31"
 accompanist = "0.36.0"
+coil = "3.6.3"
 android-gradle-plugin = "9.4.1"
 androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.10.0"
@@ -57,6 +58,8 @@ androidxTestJunit = { module = "androidx.test.ext:junit", version.ref = "android
 androidxWorkRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 androidxWorkTesting = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
+coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coilNetworkOkhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 #noinspection UnusedVersionCatalogEntry
 firebaseBom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 googlePlayAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-play-appupdate" }

@@ -100,6 +100,8 @@
     <string name="home_quantity">Antal</string>
     <string name="home_portfolio_profit">Portföljvinst</string>
     <string name="home_cash_balance">Kassa: %1$s</string>
+    <string name="home_asset_logo">Logotyp för %1$s</string>
+    <string name="home_sort">Sortera</string>
 
     <string name="notification_channel_name">Crom Fortune-händelser</string>
     <string name="notification_recommendation_body_buy">%1$s rekommenderas att köpa %2$d av %3$s till %4$s %5$s (courtage %6$d SEK)</string>
