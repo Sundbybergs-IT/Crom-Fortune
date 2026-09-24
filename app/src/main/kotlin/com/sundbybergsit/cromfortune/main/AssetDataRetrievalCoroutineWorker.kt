@@ -145,7 +145,14 @@ class AssetDataRetrievalCoroutineWorker(
                 }
             }
 
-            val notification = NotificationMessage(System.currentTimeMillis(), message)
+            val notification = NotificationMessage(
+                dateInMillis = System.currentTimeMillis(),
+                message = message,
+                portfolioName = portfolioName,
+                stockSymbol = recommendation.command.stockSymbol(),
+                currencyCode = recommendation.command.currency().currencyCode,
+                pricePerStock = recommendation.command.price()
+            )
 
             // TODO: Move repository logic
             val notificationsRepository = NotificationsRepositoryImpl(context)

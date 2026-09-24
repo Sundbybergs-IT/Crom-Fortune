@@ -15,11 +15,13 @@ import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.TransactionAction
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.main.CoroutineScopeTestRule
 import com.sundbybergsit.cromfortune.main.CromTestRule
 import com.sundbybergsit.cromfortune.main.Databases
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
+import com.sundbybergsit.cromfortune.main.notifications.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import org.junit.Before
 import org.junit.Rule
@@ -57,6 +59,7 @@ class HomeComposablesKtTest {
         PortfolioRepository.init(sharedPreferences)
         PortfolioRepository.setCurrentPortfolio(TEST_PORTFOLIO_NAME)
         context.getSharedPreferences(TEST_PORTFOLIO_NAME, Context.MODE_PRIVATE).edit().clear().commit()
+        NotificationsRepositoryImpl(context).clear()
         viewModel = HomeViewModel(
             portfolioRepository = PortfolioRepository,
             ioDispatcher = coroutineScopeTestRule.testDispatcher
@@ -187,6 +190,99 @@ class HomeComposablesKtTest {
     }
 
     @Test
+    fun `Crom applies a Default notification only to its matching stock`() {
+        configureCromPortfolio()
+        NotificationsRepositoryImpl(context).add(
+            notification(portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME, symbol = TESLA_SYMBOL)
+        )
+
+        saveDefaultBuy(TESLA_SYMBOL)
+        saveDefaultBuy(INTEL_SYMBOL)
+
+        assertTrue(cromItem(TESLA_SYMBOL).quantity < BigDecimal("50"))
+        assertEquals(BigDecimal("50"), cromItem(INTEL_SYMBOL).quantity)
+    }
+
+    @Test
+    fun `Crom ignores notifications for another portfolio`() {
+        configureCromPortfolio()
+        NotificationsRepositoryImpl(context).add(
+            notification(portfolioName = TEST_PORTFOLIO_NAME, symbol = TESLA_SYMBOL)
+        )
+
+        saveDefaultBuy(TESLA_SYMBOL)
+
+        assertEquals(BigDecimal("50"), cromItem(TESLA_SYMBOL).quantity)
+    }
+
+    @Test
+    fun `removing a notification removes its derived Crom trade`() {
+        configureCromPortfolio()
+        val repository = NotificationsRepositoryImpl(context)
+        val notification = notification(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, TESLA_SYMBOL)
+        repository.add(notification)
+        saveDefaultBuy(TESLA_SYMBOL)
+        assertTrue(cromItem(TESLA_SYMBOL).quantity < BigDecimal("50"))
+
+        repository.remove(notification)
+        viewModel.showCurrent(context)
+
+        assertEquals(BigDecimal("50"), cromItem(TESLA_SYMBOL).quantity)
+        assertTrue(
+            context.getSharedPreferences(PortfolioRepository.CROM_PORTFOLIO_NAME, Context.MODE_PRIVATE).all.isEmpty()
+        )
+    }
+
+    @Test
+    fun `Crom ignores a notification before the first transaction`() {
+        configureCromPortfolio()
+        NotificationsRepositoryImpl(context).add(
+            notification(
+                portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+                symbol = TESLA_SYMBOL,
+                dateInMillis = 0L
+            )
+        )
+
+        saveDefaultBuy(TESLA_SYMBOL)
+
+        assertEquals(BigDecimal("50"), cromItem(TESLA_SYMBOL).quantity)
+    }
+
+    @Test
+    fun `Crom notification buy uses proceeds from an earlier Crom sale`() {
+        configureCromPortfolio()
+        NotificationsRepositoryImpl(context).add(
+            notification(
+                portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+                symbol = TESLA_SYMBOL,
+                dateInMillis = SIXTEEN_DAYS_IN_MILLIS,
+                price = 70.0
+            )
+        )
+        saveDefaultBuy(TESLA_SYMBOL)
+        saveDefaultSell(TESLA_SYMBOL, dateInMillis = EIGHT_DAYS_IN_MILLIS, price = 200.0)
+
+        val actions = cromItem(TESLA_SYMBOL).legacyStockEvents.mapNotNull { event ->
+            event.stockOrder?.orderAction
+        }
+
+        assertEquals(listOf("Buy", "Sell", "Buy"), actions)
+    }
+
+    @Test
+    fun `Crom ignores notifications without structured stock data`() {
+        configureCromPortfolio()
+        NotificationsRepositoryImpl(context).add(
+            NotificationMessage(dateInMillis = EIGHT_DAYS_IN_MILLIS, message = "legacy notification")
+        )
+
+        saveDefaultBuy(TESLA_SYMBOL)
+
+        assertEquals(BigDecimal("50"), cromItem(TESLA_SYMBOL).quantity)
+    }
+
+    @Test
     fun `Litecoin holding displays its name and stale price`() {
         val litecoin = requireNotNull(AssetCatalog.findById("crypto:LTC"))
         viewModel.save(
@@ -272,12 +368,80 @@ class HomeComposablesKtTest {
         composeTestRule.waitForIdle()
     }
 
+    private fun configureCromPortfolio() {
+        val sharedPreferences = context.getSharedPreferences(TEST_CLASS_NAME, Context.MODE_PRIVATE)
+        sharedPreferences.edit()
+            .putStringSet(
+                Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET,
+                setOf(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, PortfolioRepository.CROM_PORTFOLIO_NAME)
+            )
+            .commit()
+        PortfolioRepository.init(sharedPreferences)
+        context.getSharedPreferences(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, Context.MODE_PRIVATE)
+            .edit().clear().commit()
+        context.getSharedPreferences(PortfolioRepository.CROM_PORTFOLIO_NAME, Context.MODE_PRIVATE)
+            .edit().clear().commit()
+        viewModel = HomeViewModel(PortfolioRepository, coroutineScopeTestRule.testDispatcher)
+    }
+
+    private fun saveDefaultBuy(symbol: String) {
+        viewModel.save(
+            context = context,
+            portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+            stockOrder = StockOrder(
+                orderAction = "Buy",
+                currency = "SEK",
+                dateInMillis = 1L,
+                name = symbol,
+                pricePerStock = 100.0,
+                commissionFee = 0.0,
+                quantity = 50
+            )
+        )
+    }
+
+    private fun saveDefaultSell(symbol: String, dateInMillis: Long, price: Double) {
+        viewModel.save(
+            context = context,
+            portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+            stockOrder = StockOrder(
+                orderAction = "Sell",
+                currency = "SEK",
+                dateInMillis = dateInMillis,
+                name = symbol,
+                pricePerStock = price,
+                commissionFee = 0.0,
+                quantity = 1
+            )
+        )
+    }
+
+    private fun notification(
+        portfolioName: String,
+        symbol: String,
+        dateInMillis: Long = EIGHT_DAYS_IN_MILLIS,
+        price: Double = 200.0
+    ) = NotificationMessage(
+        dateInMillis = dateInMillis,
+        message = "recommendation",
+        portfolioName = portfolioName,
+        stockSymbol = symbol,
+        currencyCode = "SEK",
+        pricePerStock = price
+    )
+
+    private fun cromItem(symbol: String) = viewModel.portfoliosStateFlow.value
+        .getValue(PortfolioRepository.CROM_PORTFOLIO_NAME)
+        .items.single { item -> item.symbol == symbol }
+
     private companion object {
         const val TEST_CLASS_NAME = "HomeComposablesKtTest"
         const val TEST_PORTFOLIO_NAME = "HomeComposablesKtTestPortfolio"
         const val TESLA_NAME = "Tesla, Inc."
         const val INTEL_NAME = "Intel Corporation"
         const val TESLA_SYMBOL = "TSLA"
+        const val EIGHT_DAYS_IN_MILLIS = 8L * 24L * 60L * 60L * 1000L
+        const val SIXTEEN_DAYS_IN_MILLIS = 16L * 24L * 60L * 60L * 1000L
         const val INTEL_SYMBOL = "INTC"
     }
 }

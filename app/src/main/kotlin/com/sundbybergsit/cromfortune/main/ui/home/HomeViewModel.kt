@@ -17,6 +17,7 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockSplit
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.main.AssetDataRetrievalCoroutineWorker
 import com.sundbybergsit.cromfortune.main.CromFortuneApp
 import com.sundbybergsit.cromfortune.main.DialogHandler
@@ -24,6 +25,7 @@ import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.main.notifications.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.main.stocks.AssetEventRepository
 import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
@@ -99,19 +101,41 @@ class HomeViewModel(
 
     private fun getCalculatedStockOrderAggregate(
         stockEvents: List<StockEvent>,
+        notifications: List<NotificationMessage>,
         recommendationAlgorithm: RecommendationAlgorithm,
         cromCashWallet: SimulatedCashWallet,
         userSimulatedCashWallet: SimulatedCashWallet,
     ): StockOrderAggregate {
-        val sortedStockEvents = stockEvents.sortedBy { it.dateInMillis }
+        val decisionMoments = (
+            stockEvents.map { event -> CromDecisionMoment(event.dateInMillis, stockEvent = event) } +
+                notifications.map { notification ->
+                    CromDecisionMoment(notification.dateInMillis, notification = notification)
+                }
+            ).sortedBy(CromDecisionMoment::dateInMillis)
         var stockOrderAggregate: StockOrderAggregate? = null
         val cromSortedStockEvents: MutableList<StockEvent> = mutableListOf()
-        for (stockEvent in sortedStockEvents) {
+        for (moment in decisionMoments) {
+            val notification = moment.notification
+            if (notification != null) {
+                val aggregate = stockOrderAggregate ?: continue
+                val possibleNewStockEvent = aggregate.applyNotificationForRecommendedEvent(
+                    notification = notification,
+                    existingEvents = cromSortedStockEvents,
+                    recommendationAlgorithm = recommendationAlgorithm,
+                    cromCashWallet = cromCashWallet
+                )
+                if (possibleNewStockEvent != null) {
+                    cromSortedStockEvents.add(possibleNewStockEvent)
+                    aggregate.aggregate(possibleNewStockEvent)
+                }
+                continue
+            }
+            val stockEvent = checkNotNull(moment.stockEvent)
             if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
                 // Ignore splits before first stock order
             } else if (stockOrderAggregate == null) {
                 val stockOrder = checkNotNull(stockEvent.stockOrder)
-                Log.d(TAG, "Creating Crom aggregate for [${stockOrder.name}] with ${sortedStockEvents.size} event(s)")
+                Log.d(TAG, "Creating Crom aggregate for [${stockOrder.name}] with ${decisionMoments.size} decision moment(s)")
                 val stockName = AssetCatalog.findById(stockOrder.assetId)?.displayName ?: stockOrder.name
                 stockOrderAggregate = StockOrderAggregate(
                     rateInSek = CurrencyRateRepository.currencyRates.value
@@ -167,6 +191,10 @@ class HomeViewModel(
                 val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
                 val cromCashWallet = SimulatedCashWallet()
                 val userSimulatedCashWallet = SimulatedCashWallet()
+                val cromNotifications = NotificationsRepositoryImpl(context).list().filter { notification ->
+                    notification.portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME &&
+                        notification.stockSymbol != null && notification.pricePerStock != null
+                }
                 portfolioViewStates[PortfolioRepository.CROM_PORTFOLIO_NAME] = ViewState(
                     items = stocks(
                         context = context,
@@ -175,6 +203,9 @@ class HomeViewModel(
                         lambda = { stockEvents ->
                             getCalculatedStockOrderAggregate(
                                 stockEvents = stockEvents,
+                                notifications = cromNotifications.filter { notification ->
+                                    notification.stockSymbol == stockEvents.firstNotNullOfOrNull { it.stockOrder }?.name
+                                },
                                 recommendationAlgorithm = recommendationAlgorithm,
                                 cromCashWallet = cromCashWallet,
                                userSimulatedCashWallet =  userSimulatedCashWallet
@@ -321,6 +352,10 @@ class HomeViewModel(
             val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
             val cromCashWallet = SimulatedCashWallet()
             val userSimulatedCashWallet = SimulatedCashWallet()
+            val cromNotifications = NotificationsRepositoryImpl(context).list().filter { notification ->
+                notification.portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME &&
+                    notification.stockSymbol == stockSymbol && notification.pricePerStock != null
+            }
             val aggregate = stocks(
                 context = context,
                 portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
@@ -328,6 +363,7 @@ class HomeViewModel(
             ) { sortedStockEvents ->
                 getCalculatedStockOrderAggregate(
                     stockEvents = sortedStockEvents,
+                    notifications = cromNotifications,
                     recommendationAlgorithm = recommendationAlgorithm,
                     cromCashWallet = cromCashWallet,
                     userSimulatedCashWallet = userSimulatedCashWallet
@@ -451,5 +487,11 @@ class HomeViewModel(
         PROFIT_ASCENDING,
         PROFIT_DESCENDING
     }
+
+    private data class CromDecisionMoment(
+        val dateInMillis: Long,
+        val stockEvent: StockEvent? = null,
+        val notification: NotificationMessage? = null
+    )
 
 }
