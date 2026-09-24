@@ -13,6 +13,9 @@ data object Home : NavKey
 data object Dashboard : NavKey
 
 @Serializable
+data object Transactions : NavKey
+
+@Serializable
 data object Notifications : NavKey
 
 @Serializable

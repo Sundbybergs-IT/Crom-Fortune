@@ -92,6 +92,8 @@
     <string name="home_stocks_personal_title">Ditt</string>
     <string name="home_stocks_crom_title">Croms</string>
     <string name="home_title">Hem</string>
+    <string name="transactions_title">Transaktioner</string>
+    <string name="transactions_empty">Det finns inga transaktioner.</string>
     <string name="home_last_updated">Uppdaterad %1$s</string>
     <string name="home_not_updated">Uppdatera</string>
     <string name="home_buy">Köp</string>

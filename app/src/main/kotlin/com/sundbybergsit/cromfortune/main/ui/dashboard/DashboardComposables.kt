@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,7 +26,7 @@ import com.sundbybergsit.cromfortune.main.RefreshFromViewStateLaunchedEffect
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 
 @Composable
-fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
+fun Dashboard(viewModel: DashboardViewModel) {
     val viewState: StockPriceRepository.AssetViewState by StockPriceRepository.assetPricesStateFlow.collectAsState()
     RefreshFromViewStateLaunchedEffect(viewState = viewState, viewModel = viewModel)
     val scoreState = viewModel.scoreStateFlow.collectAsState()
@@ -51,11 +47,6 @@ fun Dashboard(viewModel: DashboardViewModel, onBack: () -> Unit) {
             windowInsets = WindowInsets.safeDrawing.only(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal
             ),
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back Icon")
-                }
-            }
         )
     }) { paddingValues ->
         ConstraintLayout(

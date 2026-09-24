@@ -33,6 +33,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -143,6 +145,7 @@ import java.time.DayOfWeek
 import java.util.Currency
 import java.util.Date
 import androidx.navigation3.runtime.NavKey as androidxNavKey
+import com.sundbybergsit.cromfortune.main.ui.transactions.Transactions as TransactionsScreen
 
 private const val DATE_COLUMN_WEIGHT = 1.25f
 private const val QUANTITY_COLUMN_WEIGHT = 0.75f
@@ -158,6 +161,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
     val homeBackStack = rememberNavBackStack(Home)
     val dashboardBackStack = rememberNavBackStack(Dashboard)
+    val transactionsBackStack = rememberNavBackStack(Transactions)
     val notificationsBackStack = rememberNavBackStack(Notifications)
     val settingsBackStack = rememberNavBackStack(Settings)
 
@@ -165,6 +169,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
         mapOf(
             Home to homeBackStack as MutableList<androidxNavKey>,
             Dashboard to dashboardBackStack as MutableList<androidxNavKey>,
+            Transactions to transactionsBackStack as MutableList<androidxNavKey>,
             Notifications to notificationsBackStack as MutableList<androidxNavKey>,
             Settings to settingsBackStack as MutableList<androidxNavKey>
         )
@@ -289,7 +294,14 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
             entry<Dashboard> {
                 val dashboardViewModel: DashboardViewModel by activityBoundViewModel(factoryProducer = { DashboardViewModelFactory() })
-                Dashboard(viewModel = dashboardViewModel, onBack = onBack)
+                Dashboard(viewModel = dashboardViewModel)
+            }
+
+            entry<Transactions> {
+                val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                    HomeViewModelFactory(portfolioRepository = portfolioRepository)
+                })
+                TransactionsScreen(viewModel = homeViewModel)
             }
 
             entry<Notifications> {
@@ -299,13 +311,12 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 })
                 Notifications(
                     viewModel = notificationsViewModel,
-                    onBack = onBack,
                     onNavigateTo = { route -> onNavigate(route.toNavKey()) })
             }
 
             entry<Settings> {
                 val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = { SettingsViewModelFactory() })
-                Settings(viewModel = settingsViewModel, onBack = onBack,
+                Settings(viewModel = settingsViewModel,
                     onNavigateTo = { route -> onNavigate(route.toNavKey()) })
             }
 
@@ -444,6 +455,7 @@ private fun String.toNavKey(): NavKey {
     return when {
         this == "home" -> Home
         this == "dashboard" -> Dashboard
+        this == "transactions" -> Transactions
         this == "notifications" -> Notifications
         this == "settings" -> Settings
         this == "bottom-sheet/home" -> BottomSheetsHome
@@ -468,6 +480,7 @@ private fun NavKey.toRoute(): String {
     return when (this) {
         Home -> "home"
         Dashboard -> "dashboard"
+        Transactions -> "transactions"
         Notifications -> "notifications"
         Settings -> "settings"
         BottomSheetsHome -> "bottom-sheet/home"
@@ -1440,6 +1453,13 @@ private val bottomNavigationItems = listOf(
         contentDescriptionResId = R.string.dashboard_title,
         iconImageVector = Icons.Outlined.Dashboard,
         selectedImageVector = Icons.Filled.Dashboard
+    ),
+    NavigationItem.ImageVectorIcon(
+        screenKey = Transactions,
+        labelResId = R.string.transactions_title,
+        contentDescriptionResId = R.string.transactions_title,
+        iconImageVector = Icons.AutoMirrored.Outlined.ReceiptLong,
+        selectedImageVector = Icons.AutoMirrored.Filled.ReceiptLong
     ),
     NavigationItem.ImageVectorIcon(
         screenKey = Notifications,
