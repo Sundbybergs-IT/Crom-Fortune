@@ -96,7 +96,7 @@
     <string name="home_not_updated">Uppdatera</string>
     <string name="home_buy">Köp</string>
     <string name="home_sell">Sälj</string>
-    <string name="home_acquisition_price">Inköpskurs</string>
+    <string name="home_acquisition_price">Break-even-kurs</string>
     <string name="home_quantity">Antal</string>
     <string name="home_portfolio_profit">Portföljvinst</string>
     <string name="home_cash_balance">Kassa: %1$s</string>
