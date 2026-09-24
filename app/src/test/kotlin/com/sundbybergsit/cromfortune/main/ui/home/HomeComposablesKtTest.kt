@@ -187,33 +187,33 @@ class HomeComposablesKtTest {
     }
 
     @Test
-    fun `crypto holding displays asset type and stale price`() {
-        val bitcoin = AssetCatalog.cryptocurrencies.first()
+    fun `Litecoin holding displays its name and stale price`() {
+        val litecoin = requireNotNull(AssetCatalog.findById("crypto:LTC"))
         viewModel.save(
             context,
             TEST_PORTFOLIO_NAME,
             AssetTransaction(
-                assetId = bitcoin.id,
-                assetType = bitcoin.type,
-                symbol = bitcoin.symbol,
-                displayName = bitcoin.displayName,
-                quoteCurrencyCode = bitcoin.quoteCurrency.currencyCode,
+                assetId = litecoin.id,
+                assetType = litecoin.type,
+                symbol = litecoin.symbol,
+                displayName = litecoin.displayName,
+                quoteCurrencyCode = litecoin.quoteCurrency.currencyCode,
                 action = TransactionAction.BUY,
                 dateInMillis = 1L,
-                unitPrice = BigDecimal("60000"),
+                unitPrice = BigDecimal("85.40"),
                 quantity = BigDecimal("0.5")
             )
         )
         StockPriceRepository.updateAssetPrices(
-            assetPrices = listOf(AssetPrice(bitcoin.id, bitcoin.quoteCurrency, BigDecimal("61000.25"))),
-            requestedAssetIds = setOf(bitcoin.id)
+            assetPrices = listOf(AssetPrice(litecoin.id, litecoin.quoteCurrency, BigDecimal("92.25"))),
+            requestedAssetIds = setOf(litecoin.id)
         )
-        StockPriceRepository.updateAssetPrices(assetPrices = emptyList(), requestedAssetIds = setOf(bitcoin.id))
+        StockPriceRepository.updateAssetPrices(assetPrices = emptyList(), requestedAssetIds = setOf(litecoin.id))
 
         setContent()
 
         scrollToHolding(0)
-        composeTestRule.onNodeWithText("Bitcoin").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Litecoin").assertIsDisplayed()
         composeTestRule.onNodeWithText("(stale)", substring = true).assertIsDisplayed()
     }
 

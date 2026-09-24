@@ -66,7 +66,8 @@ object AssetCatalog {
 
     val cryptocurrencies: List<TradableAsset> = listOf(
         cryptocurrency("BTC", "Bitcoin", "BTC-USD"),
-        cryptocurrency("ETH", "Ethereum", "ETH-USD")
+        cryptocurrency("ETH", "Ethereum", "ETH-USD"),
+        cryptocurrency("LTC", "Litecoin", "LTC-USD")
     )
 
     val assets: List<TradableAsset> = stocks + cryptocurrencies

@@ -28,11 +28,11 @@ class AssetCatalogTest {
     @Test
     fun `initial cryptocurrencies have stable identity and Yahoo market symbols`() {
         assertEquals(
-            listOf("crypto:BTC", "crypto:ETH"),
+            listOf("crypto:BTC", "crypto:ETH", "crypto:LTC"),
             AssetCatalog.cryptocurrencies.map(TradableAsset::id)
         )
         assertEquals(
-            listOf("BTC-USD", "ETH-USD"),
+            listOf("BTC-USD", "ETH-USD", "LTC-USD"),
             AssetCatalog.cryptocurrencies.map(TradableAsset::marketDataSymbol)
         )
         assertEquals(

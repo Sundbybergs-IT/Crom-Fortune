@@ -14,7 +14,7 @@ class YahooMarketDataContractTest {
     fun `configured crypto symbols return positive USD quotes`() {
         val cryptocurrencies = AssetCatalog.cryptocurrencies
 
-        assertEquals(listOf("BTC-USD", "ETH-USD"), cryptocurrencies.map { it.marketDataSymbol })
+        assertEquals(listOf("BTC-USD", "ETH-USD", "LTC-USD"), cryptocurrencies.map { it.marketDataSymbol })
         assertTrue(cryptocurrencies.all { it.quoteCurrency == Currency.getInstance("USD") })
 
         val result = YahooMarketDataClient.getPrices(cryptocurrencies)
