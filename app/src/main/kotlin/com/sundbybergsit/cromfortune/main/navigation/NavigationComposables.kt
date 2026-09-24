@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -206,7 +207,8 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     val actionLabel = hostData.visuals.actionLabel
                     ConstraintLayout(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .wrapContentHeight()
                             .background(backgroundColor),
                     ) {
                         val (textRef, leftLineRef, actionRef) = createRefs()
