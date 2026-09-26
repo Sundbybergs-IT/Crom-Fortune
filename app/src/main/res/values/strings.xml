@@ -8,6 +8,7 @@
     <string name="action_cryptocurrencies_supported">Supported cryptocurrencies</string>
     <string name="action_delete">Delete</string>
     <string name="action_portfolio_add">Add portfolio</string>
+    <string name="action_portfolio_delete">Delete portfolio</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_save">Save</string>
     <string name="action_install">Install</string>
@@ -76,6 +77,7 @@
     <string name="home_add_stock_message">Add one purchase order at a time.</string>
     <string name="home_delete_stock_order">This will delete the transaction for the following date %1$s.</string>
     <string name="home_delete_all_stock_orders">This will delete all transactions for the following stock: %1$s.</string>
+    <string name="home_delete_portfolio">This will permanently delete the portfolio %1$s and all of its transactions.</string>
     <string name="home_information_data_refreshed">The app is now refreshed with the latest rates. Note: Refreshes automatically every hour.</string>
     <string name="home_remove_commission_fee_label">Commission fee (in SEK)</string>
     <string name="home_remove_stock_currency_label">Currency</string>

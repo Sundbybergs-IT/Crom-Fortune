@@ -332,6 +332,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                         onSell = { DialogHandler.showSellStockDialog() },
                         onSplit = { DialogHandler.showSplitStockDialog() },
                         onAddPortfolio = { DialogHandler.showAddPortfolioDialog() },
+                        onDeletePortfolio = { DialogHandler.showDeletePortfolioDialog(it) },
                     )
                 }
             }
@@ -500,6 +501,29 @@ fun AddDialogs(
     when (val dialogViewState = dialogHandler.dialogViewState.collectAsState().value) {
         is DialogHandler.DialogViewState.ShowDeleteDialog -> {
             DeleteDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
+        }
+
+        is DialogHandler.DialogViewState.ShowDeletePortfolio -> {
+            val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
+            })
+            AlertDialog(
+                onDismissRequest = { dialogHandler.dismissDialog() },
+                title = { Text(stringResource(R.string.generic_dialog_title_are_you_sure)) },
+                text = { Text(stringResource(R.string.home_delete_portfolio, dialogViewState.portfolioName)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        homeViewModel.removePortfolio(localContext, dialogViewState.portfolioName)
+                        dialogHandler.dismissDialog()
+                    }) { Text(stringResource(R.string.action_delete)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { dialogHandler.dismissDialog() }) {
+                        Text(stringResource(R.string.action_close))
+                    }
+                }
+            )
         }
 
         is DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog -> {
@@ -1522,6 +1546,7 @@ private fun HomeItems(
     onSell: () -> Unit,
     onSplit: () -> Unit,
     onAddPortfolio: () -> Unit,
+    onDeletePortfolio: (String) -> Unit,
     homeViewModel: HomeViewModel
 ) {
     val portfoliosState = homeViewModel.portfoliosStateFlow.collectAsState()
@@ -1544,5 +1569,12 @@ private fun HomeItems(
     BottomSheetMenuItem(
         onClick = onAddPortfolio,
         text = stringResource(id = R.string.action_portfolio_add)
+    )
+    val currentPortfolioName = currentPortfolioNameState.value
+    BottomSheetMenuItem(
+        onClick = { onDeletePortfolio(currentPortfolioName) },
+        text = stringResource(id = R.string.action_portfolio_delete),
+        enabled = currentPortfolioName != PortfolioRepository.DEFAULT_PORTFOLIO_NAME &&
+            currentPortfolioName != PortfolioRepository.CROM_PORTFOLIO_NAME
     )
 }

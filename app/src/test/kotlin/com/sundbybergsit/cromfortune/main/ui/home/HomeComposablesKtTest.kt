@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -151,6 +152,18 @@ class HomeComposablesKtTest {
     fun `portfolio summary remains visible when portfolio is empty`() {
         setContent()
 
+        composeTestRule.onNodeWithText(context.getString(R.string.home_portfolio_profit)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `new portfolio can be selected after pager page count grows`() {
+        setContent()
+
+        viewModel.savePortfolio(context, "Second portfolio")
+        composeTestRule.onNodeWithText("Second portfolio").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals("Second portfolio", PortfolioRepository.selectedPortfolioNameStateFlow.value)
         composeTestRule.onNodeWithText(context.getString(R.string.home_portfolio_profit)).assertIsDisplayed()
     }
 

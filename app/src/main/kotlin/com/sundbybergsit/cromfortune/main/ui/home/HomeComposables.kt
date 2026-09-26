@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,6 +93,7 @@ import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.theme.Loss
 import com.sundbybergsit.cromfortune.main.theme.Profit
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.time.ZoneId
@@ -103,16 +103,15 @@ import java.util.Currency
 @Composable
 fun Home(
     viewModel: HomeViewModel,
-    pagerState: PagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { viewModel.portfoliosStateFlow.value.size }),
     assetPriceApi: AssetPriceApi = StockPriceRepository,
     onNavigateTo: (String) -> Unit,
     appUpdateManager: AppUpdateManager,
 ) {
     val tag = "Home"
     val localContext = LocalContext.current
-    val portfoliosState = viewModel.portfoliosStateFlow.collectAsState()
+    val portfoliosState by viewModel.portfoliosStateFlow.collectAsState()
+    val tabs = portfoliosState.toList()
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { tabs.size })
     val lastRefreshed = viewModel.lastRefreshedStateFlow.collectAsState()
     if (!BuildConfig.DEBUG) {
         val requestUpdateFlow = remember(appUpdateManager) { appUpdateManager.requestUpdateFlow() }
@@ -258,7 +257,6 @@ fun Home(
             PagerStateSelectionHapticFeedbackLaunchedEffect(
                 pagerState = pagerState, view = view, changedState = changedPagerMutableState
             )
-            val tabs: List<Pair<String, HomeViewModel.ViewState>> = portfoliosState.value.toList()
             val showFab = tabs.getOrNull(0)?.second?.items?.isEmpty() ?: false
             HorizontalPager(
                 modifier = Modifier
@@ -279,12 +277,10 @@ fun Home(
                                 text = { Text(text = title.first) },
                                 selected = index == page,
                                 onClick = {
-                                    viewModel.selectTab(
-                                        portfolioName = title.first,
-                                        index = index,
-                                        pagerState = pagerState,
-                                        coroutineScope = coroutineScope
-                                    )
+                                    viewModel.selectPortfolio(title.first)
+                                    coroutineScope.launch {
+                                        pagerState.scrollToPage(index)
+                                    }
                                 }
                             )
                         }

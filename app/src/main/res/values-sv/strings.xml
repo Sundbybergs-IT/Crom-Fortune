@@ -9,6 +9,7 @@
     <string name="action_cryptocurrencies_supported">Kryptovalutor som stöds</string>
     <string name="action_delete">Radera</string>
     <string name="action_portfolio_add">Lägg till portfölj</string>
+    <string name="action_portfolio_delete">Ta bort portfölj</string>
     <string name="action_refresh">Uppdatera</string>
     <string name="action_save">Spara</string>
     <string name="action_install">Installera</string>
@@ -75,6 +76,7 @@
     <string name="home_add_split_message">Registrera en split i taget.</string>
     <string name="home_delete_stock_order">Det här innebär att transaktionen för detta datum kommer att raderas: %1$s.</string>
     <string name="home_delete_all_stock_orders">Det här innebär att alla transaktioner för denna aktie kommer att raderas: %1$s.</string>
+    <string name="home_delete_portfolio">Det här tar permanent bort portföljen %1$s och alla dess transaktioner.</string>
     <string name="home_information_data_refreshed">Appen är nu uppdaterad med senaste kurserna. OBS: Uppdaterar automatiskt varje timme.</string>
     <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
     <string name="home_remove_commission_fee_label">Courtageavgift (i SEK)</string>

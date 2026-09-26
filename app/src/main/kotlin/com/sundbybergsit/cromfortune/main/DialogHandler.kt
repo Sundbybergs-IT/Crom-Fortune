@@ -99,6 +99,10 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowAddPortfolio
     }
 
+    fun showDeletePortfolioDialog(portfolioName: String) {
+        _dialogViewState.value = DialogViewState.ShowDeletePortfolio(portfolioName)
+    }
+
     fun showAssetEvents(item: PortfolioItem, portfolioName: String, readOnly: Boolean) {
         _dialogViewState.value = DialogViewState.ShowAssetEvents(
             title = item.displayName.removeSuffix(" (${item.symbol})"),
@@ -165,6 +169,8 @@ object DialogHandler {
         data class ShowRegisterSplitStockDialog(val stockSymbol: String? = null) : DialogViewState()
 
         data object ShowAddPortfolio : DialogViewState()
+
+        data class ShowDeletePortfolio(val portfolioName: String) : DialogViewState()
 
     }
 

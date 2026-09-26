@@ -2,7 +2,6 @@ package com.sundbybergsit.cromfortune.main.ui.home
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
@@ -33,7 +32,6 @@ import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -167,11 +165,8 @@ class HomeViewModel(
         return stockOrderAggregate!!
     }
 
-    fun selectTab(portfolioName: String, index: Int, pagerState: PagerState, coroutineScope: CoroutineScope) {
+    fun selectPortfolio(portfolioName: String) {
         PortfolioRepository.setCurrentPortfolio(portfolioName)
-        coroutineScope.launch {
-            pagerState.scrollToPage(page = index, pageOffsetFraction = 0f)
-        }
     }
 
     private fun refresh(context: Context) {
@@ -472,6 +467,13 @@ class HomeViewModel(
         Log.i(TAG, "Save new portfolio: $portfolioName")
         PortfolioRepository.saveNew(portfolioName = portfolioName)
         refresh(context)
+    }
+
+    fun removePortfolio(context: Context, portfolioName: String): Boolean {
+        Log.i(TAG, "Remove portfolio: $portfolioName")
+        val removed = portfolioRepository.remove(context, portfolioName)
+        if (removed) refresh(context)
+        return removed
     }
 
     internal class ViewState(
