@@ -696,7 +696,7 @@ private fun StockRetrievalTimeIntervalsDialog(
     val selectedDaysMutableState: MutableState<Set<DayOfWeek>> = remember { mutableStateOf(setOf()) }
     val fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
     val toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
-    val settingsViewState by state.stockRetrievalSettings.timeInterval
+    val settingsViewState by state.stockRetrievalSettings.timeInterval.collectAsState()
     UpdateTimePickerLaunchedEffect(
         settingsViewState, state, selectedDaysMutableState,
         fromTimePickerState, toTimePickerState

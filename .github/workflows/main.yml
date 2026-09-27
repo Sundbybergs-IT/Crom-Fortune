@@ -36,6 +36,7 @@ jobs:
         run: |
           ./gradlew \
             :app:jacocoTestReport \
+            :core:data:jacocoTestReport \
             :core:ui:jacocoTestReport \
             :feature:settings:jacocoTestReport \
             :domain:jacocoTestReport \

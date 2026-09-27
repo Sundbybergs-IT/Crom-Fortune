@@ -12,6 +12,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(
     ":app",
     ":core:ui",
+    ":core:data",
     ":feature:settings",
     ":algorithm:algorithmApi",
     ":algorithm:algorithmCore",
@@ -19,6 +20,7 @@ include(
     ":domain"
 )
 project(":core:ui").projectDir = file("$rootDir/core/ui")
+project(":core:data").projectDir = file("$rootDir/core/data")
 project(":feature:settings").projectDir = file("$rootDir/feature/settings")
 project(":algorithm:algorithmApi").projectDir = file("$rootDir/algorithm/algorithm-api")
 project(":algorithm:algorithmCore").projectDir = file("$rootDir/algorithm/algorithm-core")

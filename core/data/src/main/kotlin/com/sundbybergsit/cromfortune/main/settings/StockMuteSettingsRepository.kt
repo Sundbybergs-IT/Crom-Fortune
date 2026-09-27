@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 const val PREFERENCES_NAME = "StockMuteSettings"
 
@@ -16,9 +16,9 @@ object StockMuteSettingsRepository {
 
     private lateinit var sharedPreferences: SharedPreferences
 
-    private val _stockMuteSettings : MutableState<Collection<StockMuteSettings>> = mutableStateOf(emptyList())
+    private val _stockMuteSettings = MutableStateFlow<Collection<StockMuteSettings>>(emptyList())
 
-    val STOCK_MUTE_MUTE_SETTINGS: State<Collection<StockMuteSettings>> = _stockMuteSettings
+    val STOCK_MUTE_MUTE_SETTINGS: StateFlow<Collection<StockMuteSettings>> = _stockMuteSettings.asStateFlow()
 
     fun init(context: Context) {
         sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)

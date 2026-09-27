@@ -47,6 +47,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.data)
     implementation(projects.core.ui)
     implementation(projects.feature.settings)
     api(projects.domain)

@@ -3,9 +3,9 @@ package com.sundbybergsit.cromfortune.main.settings
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.time.DayOfWeek
 
 class StockRetrievalSettings(
@@ -21,9 +21,9 @@ class StockRetrievalSettings(
 
     }
 
-    private val _timeInterval: MutableState<ViewState> = mutableStateOf(getValuesFromDb())
+    private val _timeInterval = MutableStateFlow(getValuesFromDb())
 
-    val timeInterval: State<ViewState> = _timeInterval
+    val timeInterval: StateFlow<ViewState> = _timeInterval.asStateFlow()
 
     fun set(fromTimeHours: Int, fromTimeMinutes: Int, toTimeHours: Int, toTimeMinutes: Int, weekDays: List<DayOfWeek>) {
         Log.v(
