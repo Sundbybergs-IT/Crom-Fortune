@@ -12,6 +12,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.sundbybergsit.cromfortune.main.notes.AssetNoteRepository
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderPersistenceMigration
@@ -79,6 +80,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
         System.setProperty("http.agent", "")
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
+        AssetNoteRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
         migrateOldData(fromDb = "Stocks", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
         migrateOldData(fromDb = "SPLITS", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME + "-splits")

@@ -8,6 +8,8 @@
     <string name="action_configure_stock_retrieval_intervals">Tidsintervaller för aktieprishämtning</string>
     <string name="action_cryptocurrencies_supported">Kryptovalutor som stöds</string>
     <string name="action_delete">Radera</string>
+    <string name="action_note_add">Lägg till anteckning</string>
+    <string name="action_note_edit">Redigera anteckning</string>
     <string name="action_portfolio_add">Lägg till portfölj</string>
     <string name="action_portfolio_delete">Ta bort portfölj</string>
     <string name="action_refresh">Uppdatera</string>
@@ -106,7 +108,9 @@
     <string name="home_cash_balance">Kassa: %1$s</string>
     <string name="home_asset_logo">Logotyp för %1$s</string>
     <string name="home_sort">Sortera</string>
-
+    <string name="note_add_title">Lägg till anteckning</string>
+    <string name="note_edit_title">Redigera anteckning</string>
+    <string name="note_label">Anteckning</string>
     <string name="notification_channel_name">Crom Fortune-händelser</string>
     <string name="notification_recommendation_body_buy">%1$s rekommenderas att köpa %2$d av %3$s till %4$s %5$s (courtage %6$d SEK)</string>
     <string name="notification_recommendation_body_sell">%1$s rekommenderas att sälja %2$d av %3$s till %4$s %5$s (courtage %6$d SEK)</string>

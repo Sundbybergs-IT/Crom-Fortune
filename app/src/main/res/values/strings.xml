@@ -7,6 +7,8 @@
     <string name="action_configure_stock_retrieval_intervals">Stock retrieval time intervals</string>
     <string name="action_cryptocurrencies_supported">Supported cryptocurrencies</string>
     <string name="action_delete">Delete</string>
+    <string name="action_note_add">Add note</string>
+    <string name="action_note_edit">Edit note</string>
     <string name="action_portfolio_add">Add portfolio</string>
     <string name="action_portfolio_delete">Delete portfolio</string>
     <string name="action_refresh">Refresh</string>
@@ -15,7 +17,6 @@
     <string name="action_asset_buy">Register asset purchase</string>
     <string name="action_stock_add_split">Register stock split</string>
     <string name="action_stocks_supported">Supported stocks</string>
-
     <string name="app_name">Crom Fortune</string>
     <string name="asset_transaction_asset">Asset</string>
     <string name="asset_transaction_asset_type">Asset type</string>
@@ -107,6 +108,9 @@
     <string name="home_cash_balance">Cash: %1$s</string>
     <string name="home_asset_logo">%1$s logo</string>
     <string name="home_sort">Sort</string>
+    <string name="note_add_title">Add note</string>
+    <string name="note_edit_title">Edit note</string>
+    <string name="note_label">Note</string>
 
     <string name="notification_channel_name">Crom Fortune Events</string>
     <string name="notification_recommendation_body_buy">%1$s is recommended to buy %2$d of %3$s at %4$s %5$s (commission fee %6$d SEK)</string>

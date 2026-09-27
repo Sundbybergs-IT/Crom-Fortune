@@ -89,6 +89,7 @@ import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.LeafScreen
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.main.notes.AssetNoteRepository
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.theme.Loss
@@ -286,6 +287,7 @@ fun Home(
                     }
                     val portfolioName = tabs[page].first
                     val portfolioState = tabs[page].second
+                    val assetNotes = AssetNoteRepository.notes.collectAsState().value
                     val currencyRates = currencyRateApi.currencyRates.collectAsState().value.toList()
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -326,7 +328,8 @@ fun Home(
                                     }
                                 },
                                 onNavigateTo = onNavigateTo,
-                                readOnly = portfolioState.readOnly
+                                readOnly = portfolioState.readOnly,
+                                noteText = assetNotes[portfolioName to item.assetId]?.text
                             )
                         }
                         item { Spacer(Modifier.height(12.dp)) }
@@ -455,7 +458,8 @@ private fun StockCard(
     assetPriceApi: AssetPriceApi,
     onShowStock: (PortfolioItem, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
-    readOnly: Boolean
+    readOnly: Boolean,
+    noteText: String?
 ) {
     val assetPrice = assetPriceApi.getAssetPrice(item.assetId)
     val currencyFormat = NumberFormat.getCurrencyInstance().apply {
@@ -466,6 +470,7 @@ private fun StockCard(
     val stale = priceStatuses.find { it.assetPrice.assetId == item.assetId }?.isStale == true
     val profit = assetPrice?.let { item.profit(it.price) }
     val invested = item.acquisitionValue.multiply(item.quantity)
+    val stockMuteMuteSettings = StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS
     val growth = if (profit == null || invested.signum() == 0) null
     else profit.divide(invested, java.math.MathContext.DECIMAL128).toDouble()
     val valueColor = when (profit?.signum()) {
@@ -567,6 +572,17 @@ private fun StockCard(
                 }
             }
 
+            if (noteText != null) {
+                Text(
+                    text = noteText,
+                    modifier = Modifier.padding(top = 12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
             if (!readOnly) {
                 Row(
                     modifier = Modifier
@@ -589,7 +605,7 @@ private fun StockCard(
                     )
                     if (item.assetType == AssetType.STOCK) {
                         Spacer(Modifier.width(12.dp))
-                        val muted = StockMuteSettingsRepository.STOCK_MUTE_MUTE_SETTINGS.value
+                        val muted = stockMuteMuteSettings.collectAsState().value
                             .any { it.stockSymbol == item.symbol && it.muted }
                         IconButton(
                             modifier = Modifier.background(MaterialTheme.colorScheme.surface, CircleShape),

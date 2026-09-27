@@ -55,6 +55,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -122,6 +123,8 @@ import com.sundbybergsit.cromfortune.main.activityBoundViewModel
 import com.sundbybergsit.cromfortune.main.contentDescription
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.main.notes.AssetNoteRepository
+import com.sundbybergsit.cromfortune.main.notes.MAX_ASSET_NOTE_LENGTH
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
@@ -390,6 +393,18 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 }
                 BottomSheetContent {
                     BottomSheetMenuItem(
+                        onClick = {
+                            DialogHandler.showAssetNoteDialog(key.portfolioName, key.stockSymbol)
+                        },
+                        text = stringResource(
+                            if (AssetNoteRepository.get(key.portfolioName, key.stockSymbol) == null) {
+                                R.string.action_note_add
+                            } else {
+                                R.string.action_note_edit
+                            }
+                        )
+                    )
+                    BottomSheetMenuItem(
                         onClick = onDelete,
                         text = stringResource(id = R.string.action_delete)
                     )
@@ -528,6 +543,13 @@ fun AddDialogs(
             )
         }
 
+        is DialogHandler.DialogViewState.ShowAssetNote -> {
+            AssetNoteDialog(
+                state = dialogViewState,
+                onDismiss = dialogHandler::dismissDialog
+            )
+        }
+
         is DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog -> {
             StockRetrievalTimeIntervalsDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
         }
@@ -649,6 +671,52 @@ fun AddDialogs(
             }
         }
     }
+}
+
+@Composable
+private fun AssetNoteDialog(
+    state: DialogHandler.DialogViewState.ShowAssetNote,
+    onDismiss: () -> Unit
+) {
+    val existingNote = remember(state.portfolioName, state.assetId) {
+        AssetNoteRepository.get(state.portfolioName, state.assetId)?.text.orEmpty()
+    }
+    var text by rememberSaveable(state.portfolioName, state.assetId) { mutableStateOf(existingNote) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (existingNote.isEmpty()) R.string.note_add_title else R.string.note_edit_title)) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { value -> if (value.length <= MAX_ASSET_NOTE_LENGTH) text = value },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.note_label)) },
+                supportingText = { Text("${text.length}/$MAX_ASSET_NOTE_LENGTH") },
+                minLines = 4,
+                maxLines = 8
+            )
+        },
+        confirmButton = {
+            TextButton(
+                enabled = text.isNotBlank(),
+                onClick = {
+                    AssetNoteRepository.save(state.portfolioName, state.assetId, text)
+                    onDismiss()
+                }
+            ) { Text(stringResource(R.string.action_save)) }
+        },
+        dismissButton = {
+            Row {
+                if (existingNote.isNotEmpty()) {
+                    TextButton(onClick = {
+                        AssetNoteRepository.delete(state.portfolioName, state.assetId)
+                        onDismiss()
+                    }) { Text(stringResource(R.string.action_delete)) }
+                }
+                TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
+            }
+        }
+    )
 }
 
 @Composable
