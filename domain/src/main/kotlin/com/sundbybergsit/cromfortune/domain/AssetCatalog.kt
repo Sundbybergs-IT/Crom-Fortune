@@ -44,6 +44,7 @@ object AssetCatalog {
         stock("NAS.OL", "Norwegian Air Shuttle ASA", "NOK"),
         stock("NOKIA-SEK.ST", "Nokia Corporation", "SEK"),
         stock("NVD.DE", "NVIDIA Corporation", "EUR"),
+        stock("NOW", "ServiceNow, Inc.", "USD"),
         stock("OXY", "Occidental Petroleum Corporation", "USD"),
         stock("POLYG.ST", "Polygiene AB (publ.)", "SEK"),
         stock("QNT", "Quantinuum", "USD"),
