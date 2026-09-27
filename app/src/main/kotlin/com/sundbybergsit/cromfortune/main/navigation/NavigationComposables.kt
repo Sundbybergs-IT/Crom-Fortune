@@ -294,7 +294,10 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
             entry<Dashboard> {
                 val dashboardViewModel: DashboardViewModel by activityBoundViewModel(factoryProducer = { DashboardViewModelFactory() })
-                Dashboard(viewModel = dashboardViewModel)
+                val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                    HomeViewModelFactory(portfolioRepository = portfolioRepository)
+                })
+                Dashboard(viewModel = dashboardViewModel, homeViewModel = homeViewModel)
             }
 
             entry<Transactions> {

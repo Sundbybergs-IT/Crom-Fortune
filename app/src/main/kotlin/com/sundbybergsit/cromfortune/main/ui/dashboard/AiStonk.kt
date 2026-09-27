@@ -25,12 +25,13 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 enum class AiStonkMood { Neutral, Happy, Angry }
 
 /** Fully code-drawn character. No bitmap is used as its base. */
 @Composable
-fun AiStonk(mood: AiStonkMood, modifier: Modifier = Modifier) {
+fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modifier = Modifier) {
     val expression by animateFloatAsState(
         when (mood) {
             AiStonkMood.Angry -> -1f
@@ -53,10 +54,20 @@ fun AiStonk(mood: AiStonkMood, modifier: Modifier = Modifier) {
     val hover by idle.animateFloat(
         -.005f, .005f, infiniteRepeatable(tween(1_800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "Hover"
     )
+    val gestureDepth by idle.animateFloat(
+        -1f,
+        1f,
+        infiniteRepeatable(tween(320, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "Forward fist gesture"
+    )
 
-    Canvas(modifier.semantics { contentDescription = "AI Stonk, ${mood.name.lowercase()}" }) {
+    Canvas(modifier.semantics {
+        contentDescription = "AI Stonk, ${mood.name.lowercase()}, " +
+            if (userPortfolioIsWorthMore) "shaking his fist" else "matching his expression"
+    }) {
         val w = size.width
-        val h = size.height
+        val canvasHeight = size.height
+        val h = canvasHeight * .70f
         val y = h * hover
         val shellLight = Color(0xFFE1D8CC)
         val shellMid = Color(0xFFAAA096)
@@ -66,6 +77,327 @@ fun AiStonk(mood: AiStonkMood, modifier: Modifier = Modifier) {
             start = Color(0xFFFF3025),
             stop = Color(0xFF35D66F),
             fraction = expression.coerceAtLeast(0f)
+        )
+
+        // Arms are drawn behind the bust. Their targets interpolate with the same
+        // expression value as the face, keeping the whole character emotionally coherent.
+        fun drawArm(
+            shoulder: Offset,
+            elbow: Offset,
+            wrist: Offset,
+            fist: Boolean = false,
+            drawLimb: Boolean = true,
+            drawHandLayer: Boolean = true,
+            handDepthScale: Float = 1f,
+            limbDepthScale: Float = 1f
+        ) {
+            fun unitVector(from: Offset, to: Offset): Offset {
+                val dx = to.x - from.x
+                val dy = to.y - from.y
+                val length = sqrt(dx * dx + dy * dy).coerceAtLeast(.001f)
+                return Offset(dx / length, dy / length)
+            }
+
+            fun muscularSegment(
+                start: Offset,
+                end: Offset,
+                startRadius: Float,
+                endRadius: Float,
+                bulge: Float
+            ) {
+                val direction = unitVector(start, end)
+                val normal = Offset(-direction.y, direction.x)
+                val length = sqrt((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y))
+                val third = start + direction * (length * .38f)
+                val twoThirds = start + direction * (length * .72f)
+                val silhouette = Path().apply {
+                    moveTo((start + normal * startRadius).x, (start + normal * startRadius).y)
+                    cubicTo(
+                        (third + normal * (startRadius + bulge)).x,
+                        (third + normal * (startRadius + bulge)).y,
+                        (twoThirds + normal * (endRadius + bulge * .35f)).x,
+                        (twoThirds + normal * (endRadius + bulge * .35f)).y,
+                        (end + normal * endRadius).x,
+                        (end + normal * endRadius).y
+                    )
+                    lineTo((end - normal * endRadius).x, (end - normal * endRadius).y)
+                    cubicTo(
+                        (twoThirds - normal * (endRadius + bulge * .18f)).x,
+                        (twoThirds - normal * (endRadius + bulge * .18f)).y,
+                        (third - normal * (startRadius + bulge * .55f)).x,
+                        (third - normal * (startRadius + bulge * .55f)).y,
+                        (start - normal * startRadius).x,
+                        (start - normal * startRadius).y
+                    )
+                    close()
+                }
+                drawPath(silhouette, shellDark)
+                val inset = w * .010f
+                val inner = Path().apply {
+                    moveTo((start + normal * (startRadius - inset)).x, (start + normal * (startRadius - inset)).y)
+                    cubicTo(
+                        (third + normal * (startRadius + bulge - inset)).x,
+                        (third + normal * (startRadius + bulge - inset)).y,
+                        (twoThirds + normal * (endRadius + bulge * .35f - inset)).x,
+                        (twoThirds + normal * (endRadius + bulge * .35f - inset)).y,
+                        (end + normal * (endRadius - inset)).x,
+                        (end + normal * (endRadius - inset)).y
+                    )
+                    lineTo((end - normal * (endRadius - inset)).x, (end - normal * (endRadius - inset)).y)
+                    cubicTo(
+                        (twoThirds - normal * (endRadius + bulge * .18f - inset)).x,
+                        (twoThirds - normal * (endRadius + bulge * .18f - inset)).y,
+                        (third - normal * (startRadius + bulge * .55f - inset)).x,
+                        (third - normal * (startRadius + bulge * .55f - inset)).y,
+                        (start - normal * (startRadius - inset)).x,
+                        (start - normal * (startRadius - inset)).y
+                    )
+                    close()
+                }
+                drawPath(inner, Brush.linearGradient(listOf(shellDark, shellMid, shellLight), start, end))
+                drawLine(
+                    shellLight.copy(alpha = .45f),
+                    start + normal * (startRadius * .35f),
+                    end + normal * (endRadius * .30f),
+                    w * .009f,
+                    StrokeCap.Round
+                )
+            }
+
+            fun local(origin: Offset, direction: Offset, along: Float, across: Float): Offset {
+                val normal = Offset(-direction.y, direction.x)
+                return origin + direction * along + normal * across
+            }
+
+            fun drawHand() {
+                val direction = unitVector(elbow, wrist)
+                val normal = Offset(-direction.y, direction.x)
+                val palmLength = w * (if (fist) .130f else .118f) * handDepthScale
+                val palmHalfWidth = w * (if (fist) .083f else .065f) * handDepthScale
+                val palmCenter = wrist + direction * (palmLength * .45f)
+                val depthFraction = ((handDepthScale - .82f) / .36f).coerceIn(0f, 1f)
+                val palm = Path().apply {
+                    moveTo(local(wrist, direction, 0f, palmHalfWidth * .72f).x, local(wrist, direction, 0f, palmHalfWidth * .72f).y)
+                    cubicTo(
+                        local(palmCenter, direction, 0f, palmHalfWidth).x,
+                        local(palmCenter, direction, 0f, palmHalfWidth).y,
+                        local(wrist, direction, palmLength, palmHalfWidth * .82f).x,
+                        local(wrist, direction, palmLength, palmHalfWidth * .82f).y,
+                        local(wrist, direction, palmLength, 0f).x,
+                        local(wrist, direction, palmLength, 0f).y
+                    )
+                    cubicTo(
+                        local(wrist, direction, palmLength, -palmHalfWidth * .88f).x,
+                        local(wrist, direction, palmLength, -palmHalfWidth * .88f).y,
+                        local(palmCenter, direction, 0f, -palmHalfWidth).x,
+                        local(palmCenter, direction, 0f, -palmHalfWidth).y,
+                        local(wrist, direction, 0f, -palmHalfWidth * .72f).x,
+                        local(wrist, direction, 0f, -palmHalfWidth * .72f).y
+                    )
+                    close()
+                }
+                drawPath(palm, shellDark)
+                drawPath(
+                    palm,
+                    Brush.linearGradient(
+                        listOf(shellDark.copy(alpha = .70f), shellMid, shellLight),
+                        wrist - normal * palmHalfWidth,
+                        wrist + normal * palmHalfWidth
+                    ),
+                    style = Stroke(w * .010f * handDepthScale)
+                )
+                drawPath(palm, shellMid)
+                drawOval(
+                    Brush.radialGradient(
+                        listOf(shellLight.copy(alpha = .35f + depthFraction * .40f), Color.Transparent),
+                        palmCenter - normal * (palmHalfWidth * .25f),
+                        palmLength
+                    ),
+                    palmCenter - Offset(palmLength * .42f, palmLength * .42f),
+                    Size(palmLength * .84f, palmLength * .84f)
+                )
+                drawPath(palm, seam, style = Stroke(w * .010f * handDepthScale))
+
+                if (fist) {
+                    // Four curled fingers form the front plane; the thumb crosses
+                    // them on top, making palm/back orientation unambiguous.
+                    repeat(4) { index ->
+                        val across = palmHalfWidth * (.70f - index * .47f)
+                        val knuckle = local(wrist, direction, palmLength * .82f, across)
+                        drawCircle(shellDark, w * .030f * handDepthScale, knuckle)
+                        drawCircle(
+                            if (index == 0) shellLight else shellMid,
+                            w * .023f * handDepthScale,
+                            knuckle
+                        )
+                        drawLine(
+                            seam,
+                            local(wrist, direction, palmLength * .48f, across),
+                            local(wrist, direction, palmLength * .75f, across),
+                            w * .006f * handDepthScale,
+                            StrokeCap.Round
+                        )
+                    }
+                    val thumb = Path().apply {
+                        moveTo(local(wrist, direction, palmLength * .18f, -palmHalfWidth * .95f).x, local(wrist, direction, palmLength * .18f, -palmHalfWidth * .95f).y)
+                        quadraticTo(
+                            local(wrist, direction, palmLength * .60f, -palmHalfWidth * .42f).x,
+                            local(wrist, direction, palmLength * .60f, -palmHalfWidth * .42f).y,
+                            local(wrist, direction, palmLength * .68f, palmHalfWidth * .28f).x,
+                            local(wrist, direction, palmLength * .68f, palmHalfWidth * .28f).y
+                        )
+                    }
+                    drawPath(
+                        thumb,
+                        shellLight,
+                        style = Stroke(w * .038f * handDepthScale, cap = StrokeCap.Round)
+                    )
+                    drawPath(
+                        thumb,
+                        seam,
+                        style = Stroke(w * .007f * handDepthScale, cap = StrokeCap.Round)
+                    )
+                } else {
+                    // Relaxed, separated fingers extend from the palm with unequal
+                    // lengths; the thumb fans away on its own plane.
+                    val lengths = listOf(.75f, 1f, .93f, .70f)
+                    lengths.forEachIndexed { index, lengthFactor ->
+                        val across = palmHalfWidth * (.68f - index * .45f)
+                        drawLine(
+                            shellDark,
+                            local(wrist, direction, palmLength * .75f, across),
+                            local(wrist, direction, palmLength * (1.0f + lengthFactor * .28f), across),
+                            w * .031f,
+                            StrokeCap.Round
+                        )
+                        drawLine(
+                            shellLight.copy(alpha = .55f),
+                            local(wrist, direction, palmLength * .78f, across),
+                            local(wrist, direction, palmLength * (1.0f + lengthFactor * .25f), across),
+                            w * .012f,
+                            StrokeCap.Round
+                        )
+                    }
+                    drawLine(
+                        shellMid,
+                        local(wrist, direction, palmLength * .35f, -palmHalfWidth * .85f),
+                        local(wrist, direction, palmLength * .82f, -palmHalfWidth * 1.45f),
+                        w * .039f,
+                        StrokeCap.Round
+                    )
+                }
+            }
+
+            if (drawLimb) {
+                val upperDepthScale = 1f + (limbDepthScale - 1f) * .35f
+                muscularSegment(
+                    shoulder,
+                    elbow,
+                    w * .080f * upperDepthScale,
+                    w * .070f * upperDepthScale,
+                    w * .035f * upperDepthScale
+                )
+                drawCircle(shellDark, w * .075f * upperDepthScale, elbow)
+                drawCircle(shellMid, w * .062f * upperDepthScale, elbow)
+                muscularSegment(
+                    elbow,
+                    wrist,
+                    w * .068f * limbDepthScale,
+                    w * .048f * limbDepthScale,
+                    w * .028f * limbDepthScale
+                )
+            }
+            if (drawHandLayer) drawHand()
+        }
+
+        // Attach the arms at the lower outside edge of the bust. Keeping raised
+        // hands outside the head silhouette is important because the bust is
+        // painted over the arms to make the shoulder joint look natural.
+        val shoulderY = canvasHeight * .655f
+        val leftShoulder = Offset(w * .13f, shoulderY)
+        val rightShoulder = Offset(w * .87f, shoulderY)
+        val leftElbow: Offset
+        val leftHand: Offset
+        val rightElbow: Offset
+        val rightHand: Offset
+        if (userPortfolioIsWorthMore) {
+            // Crom raises and shakes one fist when the user's portfolio overtakes his.
+            leftElbow = Offset(w * .15f, canvasHeight * .76f)
+            leftHand = Offset(w * .17f, canvasHeight * .85f)
+            val approach = (gestureDepth + 1f) / 2f
+            rightElbow = Offset(
+                w * (.93f - approach * .008f),
+                canvasHeight * (.59f + approach * .008f)
+            )
+            val restingWrist = Offset(w * .86f, canvasHeight * .37f)
+            rightHand = restingWrist + (rightElbow - restingWrist) * (approach * .13f)
+        } else if (expression > .35f) {
+            leftElbow = Offset(w * .11f, canvasHeight * .59f)
+            leftHand = Offset(w * .07f, canvasHeight * .43f)
+            rightElbow = Offset(w * .89f, canvasHeight * .59f)
+            rightHand = Offset(w * .93f, canvasHeight * .43f)
+        } else if (expression < -.35f) {
+            leftElbow = Offset(w * .14f, canvasHeight * .78f)
+            leftHand = Offset(w * .62f, canvasHeight * .84f)
+            rightElbow = Offset(w * .86f, canvasHeight * .78f)
+            rightHand = Offset(w * .38f, canvasHeight * .87f)
+        } else {
+            leftElbow = Offset(w * .15f, canvasHeight * .76f)
+            leftHand = Offset(w * .17f, canvasHeight * .85f)
+            rightElbow = Offset(w * .85f, canvasHeight * .76f)
+            rightHand = Offset(w * .83f, canvasHeight * .85f)
+        }
+        drawArm(
+            leftShoulder,
+            leftElbow,
+            leftHand,
+            fist = expression < -.35f,
+            drawHandLayer = false
+        )
+        drawArm(
+            rightShoulder,
+            rightElbow,
+            rightHand,
+            fist = userPortfolioIsWorthMore || expression < -.35f,
+            drawHandLayer = false,
+            limbDepthScale = if (userPortfolioIsWorthMore) 1f + gestureDepth * .10f else 1f
+        )
+
+        // A broad shoulder and upper-chest plate gives the muscular arms a
+        // believable attachment. It is painted over the shoulder joints but
+        // behind the narrower neck pedestal below.
+        val torso = Path().apply {
+            moveTo(w * .35f, h * .72f + y)
+            cubicTo(w * .31f, h * .80f, w * .20f, h * .87f, w * .08f, h * .92f)
+            cubicTo(w * .045f, h * .94f, w * .035f, h * .98f, w * .055f, h * .995f)
+            lineTo(w * .945f, h * .995f)
+            cubicTo(w * .965f, h * .98f, w * .955f, h * .94f, w * .92f, h * .92f)
+            cubicTo(w * .80f, h * .87f, w * .69f, h * .80f, w * .65f, h * .72f + y)
+            close()
+        }
+        drawPath(
+            torso,
+            Brush.horizontalGradient(
+                listOf(shellDark, shellMid, shellLight, shellLight, shellMid, shellDark)
+            )
+        )
+        clipPath(torso) {
+            drawOval(
+                Brush.radialGradient(
+                    listOf(shellLight.copy(alpha = .30f), Color.Transparent),
+                    Offset(w * .50f, h * .86f),
+                    w * .45f
+                ),
+                Offset(w * .20f, h * .72f),
+                Size(w * .60f, h * .28f)
+            )
+        }
+        drawPath(torso, seam, style = Stroke(w * .007f))
+        drawLine(
+            seam.copy(alpha = .55f),
+            Offset(w * .50f, h * .76f),
+            Offset(w * .50f, h * .99f),
+            w * .004f
         )
 
         // Elongated neck and pedestal retain the recognizable Stonks bust form.
@@ -282,6 +614,25 @@ fun AiStonk(mood: AiStonkMood, modifier: Modifier = Modifier) {
             topLeft = Offset(w * .42f, mouthY + h * .018f),
             size = Size(w * .16f, h * .055f),
             style = Stroke(w * .007f, cap = StrokeCap.Round)
+        )
+
+        // Hands belong to the foreground plane. Drawing them after the head
+        // prevents a raised fist from disappearing behind the face while the
+        // upper and lower arm remain correctly behind the bust.
+        drawArm(
+            leftShoulder,
+            leftElbow,
+            leftHand,
+            fist = expression < -.35f,
+            drawLimb = false
+        )
+        drawArm(
+            rightShoulder,
+            rightElbow,
+            rightHand,
+            fist = userPortfolioIsWorthMore || expression < -.35f,
+            drawLimb = false,
+            handDepthScale = if (userPortfolioIsWorthMore) 1f + gestureDepth * .18f else 1f
         )
     }
 }
