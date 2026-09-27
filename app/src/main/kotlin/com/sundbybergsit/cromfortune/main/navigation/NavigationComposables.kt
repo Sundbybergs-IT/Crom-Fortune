@@ -37,11 +37,9 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.SentimentDissatisfied
 import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Settings
@@ -165,7 +163,6 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
     val homeBackStack = rememberNavBackStack(Home)
     val dashboardBackStack = rememberNavBackStack(Dashboard)
     val transactionsBackStack = rememberNavBackStack(Transactions)
-    val notificationsBackStack = rememberNavBackStack(Notifications)
     val settingsBackStack = rememberNavBackStack(Settings)
 
     val backStacks = remember {
@@ -173,7 +170,6 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
             Home to homeBackStack as MutableList<androidxNavKey>,
             Dashboard to dashboardBackStack as MutableList<androidxNavKey>,
             Transactions to transactionsBackStack as MutableList<androidxNavKey>,
-            Notifications to notificationsBackStack as MutableList<androidxNavKey>,
             Settings to settingsBackStack as MutableList<androidxNavKey>
         )
     }
@@ -291,6 +287,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 Home(
                     viewModel = homeViewModel,
                     onNavigateTo = { route -> onNavigate(route.toNavKey()) },
+                    onOpenNotifications = { onNavigate(Notifications) },
                     appUpdateManager = appUpdateManager
                 )
             }
@@ -314,7 +311,9 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 })
                 Notifications(
                     viewModel = notificationsViewModel,
-                    onNavigateTo = { route -> onNavigate(route.toNavKey()) })
+                    onNavigateTo = { route -> onNavigate(route.toNavKey()) },
+                    onBack = onBack
+                )
             }
 
             entry<Settings> {
@@ -1554,13 +1553,6 @@ private val bottomNavigationItems = listOf(
         contentDescriptionResId = R.string.transactions_title,
         iconImageVector = Icons.AutoMirrored.Outlined.ReceiptLong,
         selectedImageVector = Icons.AutoMirrored.Filled.ReceiptLong
-    ),
-    NavigationItem.ImageVectorIcon(
-        screenKey = Notifications,
-        labelResId = R.string.notifications_title,
-        contentDescriptionResId = R.string.notifications_title,
-        iconImageVector = Icons.Outlined.Notifications,
-        selectedImageVector = Icons.Filled.Notifications
     ),
     NavigationItem.ImageVectorIcon(
         screenKey = Settings,

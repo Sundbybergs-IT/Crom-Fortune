@@ -106,6 +106,7 @@ fun Home(
     viewModel: HomeViewModel,
     assetPriceApi: AssetPriceApi = StockPriceRepository,
     onNavigateTo: (String) -> Unit,
+    onOpenNotifications: () -> Unit = { onNavigateTo("notifications") },
     appUpdateManager: AppUpdateManager,
 ) {
     val tag = "Home"
@@ -152,6 +153,12 @@ fun Home(
                         WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                     ),
                     actions = {
+                        IconButton(onClick = onOpenNotifications) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = stringResource(R.string.notifications_title)
+                            )
+                        }
                         OverflowMenu(
                             onClick = { onNavigateTo(LeafScreen.BottomSheetsHome.route) },
                             contentDescription = "Home Menu",

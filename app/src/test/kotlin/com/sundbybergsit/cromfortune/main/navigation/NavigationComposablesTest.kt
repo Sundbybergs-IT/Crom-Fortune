@@ -1,8 +1,10 @@
 package com.sundbybergsit.cromfortune.main.navigation
 
 import android.content.Context
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -23,6 +25,19 @@ class NavigationComposablesTest {
     val composeTestRule = createComposeRule()
 
     private val context: Context = ApplicationProvider.getApplicationContext()
+
+    @Test
+    fun `bottom navigation excludes notifications`() {
+        composeTestRule.setContent {
+            BottomNavigation(currentTab = Home, onNavigationSelected = {})
+        }
+
+        composeTestRule.onAllNodesWithText(context.getString(R.string.notifications_title)).assertCountEquals(0)
+        composeTestRule.onNodeWithText(context.getString(R.string.home_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.dashboard_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.transactions_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.navigation_settings)).assertIsDisplayed()
+    }
 
     @Test
     fun `about menu item invokes about action`() {

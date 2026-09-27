@@ -21,6 +21,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
@@ -55,7 +59,8 @@ import java.util.Date
 fun Notifications(
     viewModel: NotificationsViewModel,
     pagerState: PagerState = rememberPagerState(initialPage = 0, pageCount = { 2 }),
-    onNavigateTo: (String) -> Unit
+    onNavigateTo: (String) -> Unit,
+    onBack: (() -> Unit)? = null
 ) {
     val configuration = LocalConfiguration.current
     val formatter = remember(configuration) {
@@ -96,6 +101,16 @@ fun Notifications(
                 windowInsets = WindowInsets.safeDrawing.only(
                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                 ),
+                navigationIcon = {
+                    onBack?.let { navigateBack ->
+                        IconButton(onClick = navigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(android.R.string.cancel)
+                            )
+                        }
+                    }
+                },
                 actions = {
                     OverflowMenu(
                         onClick = { onNavigateTo(LeafScreen.BottomSheetsNotifications.route) },
