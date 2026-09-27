@@ -253,6 +253,18 @@ class HomeViewModel(
         refresh(context)
     }
 
+    fun update(context: Context, portfolioName: String, original: StockSplit, updated: StockSplit) {
+        Log.i(TAG, "update(portfolioName=[$portfolioName], original=[$original], updated=[$updated])")
+        StockSplitRepository(context, porfolioName = portfolioName).update(original, updated)
+        refresh(context)
+    }
+
+    fun remove(context: Context, portfolioName: String, stockSplit: StockSplit) {
+        Log.i(TAG, "remove(portfolioName=[$portfolioName], stockSplit=[$stockSplit])")
+        StockSplitRepository(context, porfolioName = portfolioName).remove(stockSplit)
+        refresh(context)
+    }
+
     fun update(
         context: Context,
         portfolioName: String,

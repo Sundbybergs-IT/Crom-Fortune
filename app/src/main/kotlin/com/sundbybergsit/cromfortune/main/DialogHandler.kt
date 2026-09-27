@@ -77,12 +77,18 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowBuyStockDialog(stockSymbol = stockSymbol?.let(::assetId))
     }
 
-    fun showStockEvents(stockSymbol: String, stockEvents: List<StockEvent>, readOnly: Boolean) {
+    fun showStockEvents(
+        portfolioName: String,
+        stockSymbol: String,
+        stockEvents: List<StockEvent>,
+        readOnly: Boolean
+    ) {
         Log.d(TAG, "showStockEvents(stockSymbol=[$stockSymbol], events=${stockEvents.size}, readOnly=$readOnly)")
         _dialogViewState.value = DialogViewState.ShowStockEvents(
             title = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.displayName ?: stockSymbol,
             symbol = stockSymbol,
             stockEvents = stockEvents,
+            portfolioName = portfolioName,
             readOnly = readOnly
         )
     }
@@ -153,6 +159,7 @@ object DialogHandler {
             val title: String,
             val symbol: String,
             val stockEvents: List<StockEvent>,
+            val portfolioName: String,
             val readOnly: Boolean
         ) :
             DialogViewState()

@@ -70,6 +70,9 @@
 
     <string name="home_add_commission_fee_label">Commission fee (in SEK)</string>
     <string name="home_add_split_reverse">Reverse split</string>
+    <string name="action_stock_edit_split">Edit stock split</string>
+    <string name="home_stock_split">%1$s split × %2$d</string>
+    <string name="home_stock_reverse_split">%1$s reverse split ÷ %2$d</string>
     <string name="home_add_split_message">Add one stock split at a time.</string>
     <string name="home_add_stock_currency_label">Currency</string>
     <string name="home_add_stock_date_label">Date</string>

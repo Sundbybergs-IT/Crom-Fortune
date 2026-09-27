@@ -132,12 +132,16 @@ fun PortfolioAddAlertDialog(
 fun RegisterSplitStockAlertDialog(
     portfolioNameState: State<String>,
     stockSymbolParam: String? = null,
+    stockSplitToEdit: StockSplit? = null,
     onDismiss: () -> Unit,
+    onDelete: (() -> Unit)? = null,
     onSave: (StockSplit) -> Unit
 ) {
     val showDatePicker: MutableState<Boolean> = remember { mutableStateOf(false) }
     val horizontalPadding = 28.dp
-    val myCalendar = Calendar.getInstance()
+    val myCalendar = Calendar.getInstance().apply {
+        stockSplitToEdit?.let { timeInMillis = it.dateInMillis }
+    }
     val datePickerState: DatePickerState = rememberDatePickerState(
         initialSelectedDateMillis = myCalendar.timeInMillis
     )
@@ -149,10 +153,14 @@ fun RegisterSplitStockAlertDialog(
     val dateErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
     val dateErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
     val stockQuantityMutableState: MutableState<TextFieldValue> =
-        remember { mutableStateOf(TextFieldValue(text = "")) }
+        remember(stockSplitToEdit) {
+            mutableStateOf(TextFieldValue(text = stockSplitToEdit?.quantity?.toString().orEmpty()))
+        }
     val stockQuantityErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
     val stockQuantityErrorMessageMutableState: MutableState<String> = remember { mutableStateOf("") }
-    val reverseSplitMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
+    val reverseSplitMutableState: MutableState<Boolean> = remember(stockSplitToEdit) {
+        mutableStateOf(stockSplitToEdit?.reverse ?: false)
+    }
     val stockNameMutableState: MutableState<TextFieldValue> =
         remember { mutableStateOf(TextFieldValue(text = "")) }
     val stockNameErrorMutableState: MutableState<Boolean> = remember { mutableStateOf(false) }
@@ -167,7 +175,7 @@ fun RegisterSplitStockAlertDialog(
     val dropDownOptionsMutableState = remember { mutableStateOf(listOf<String>()) }
     val dropDownExpandedMutableState = remember { mutableStateOf(false) }
     LoadValueFromParameterLaunchedEffect(
-        stockSymbol = stockSymbolParam,
+        stockSymbol = stockSplitToEdit?.name ?: stockSymbolParam,
         stockNameMutableState = stockNameMutableState,
         stockCurrencyMutableState = currencyMutableState
     )
@@ -194,7 +202,13 @@ fun RegisterSplitStockAlertDialog(
                     top.linkTo(parent.top)
                 }) {
                 Text(
-                    text = stringResource(id = R.string.action_stock_add_split),
+                    text = stringResource(
+                        id = if (stockSplitToEdit == null) {
+                            R.string.action_stock_add_split
+                        } else {
+                            R.string.action_stock_edit_split
+                        }
+                    ),
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleSmall,
                 )
@@ -289,6 +303,9 @@ fun RegisterSplitStockAlertDialog(
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
                 }) {
+                onDelete?.let { delete ->
+                    DialogButton(text = stringResource(id = R.string.action_delete), onClick = delete)
+                }
                 DialogButton(text = stringResource(id = android.R.string.cancel), onClick = onDismiss)
                 val context = LocalContext.current
                 DialogButton(text = stringResource(id = android.R.string.ok), onClick = {

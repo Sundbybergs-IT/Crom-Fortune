@@ -105,6 +105,7 @@ import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockPrice
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
@@ -573,7 +574,22 @@ fun AddDialogs(
         }
 
         is DialogHandler.DialogViewState.ShowStockEvents -> {
-            StockEventsDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
+            val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
+            })
+            StockEventsDialog(
+                state = dialogViewState,
+                onDismiss = dialogHandler::dismissDialog,
+                onUpdateSplit = { original, updated ->
+                    homeViewModel.update(localContext, dialogViewState.portfolioName, original, updated)
+                    dialogHandler.dismissDialog()
+                },
+                onRemoveSplit = { split ->
+                    homeViewModel.remove(localContext, dialogViewState.portfolioName, split)
+                    dialogHandler.dismissDialog()
+                }
+            )
         }
 
         is DialogHandler.DialogViewState.ShowAssetEvents -> {
@@ -598,6 +614,23 @@ fun AddDialogs(
                         context = localContext,
                         portfolioName = dialogViewState.portfolioName,
                         transaction = transaction
+                    )
+                    dialogHandler.dismissDialog()
+                },
+                onUpdateSplit = { original, updated ->
+                    homeViewModel.update(
+                        context = localContext,
+                        portfolioName = dialogViewState.portfolioName,
+                        original = original,
+                        updated = updated
+                    )
+                    dialogHandler.dismissDialog()
+                },
+                onRemoveSplit = { split ->
+                    homeViewModel.remove(
+                        context = localContext,
+                        portfolioName = dialogViewState.portfolioName,
+                        stockSplit = split
                     )
                     dialogHandler.dismissDialog()
                 }
@@ -904,8 +937,21 @@ private fun SupportedCryptocurrenciesDialog(
 @Composable
 private fun StockEventsDialog(
     state: DialogHandler.DialogViewState.ShowStockEvents,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onUpdateSplit: (StockSplit, StockSplit) -> Unit,
+    onRemoveSplit: (StockSplit) -> Unit
 ) {
+    var splitToEdit by remember { mutableStateOf<StockSplit?>(null) }
+    splitToEdit?.let { original ->
+        RegisterSplitStockAlertDialog(
+            portfolioNameState = remember(state.portfolioName) { mutableStateOf(state.portfolioName) },
+            stockSplitToEdit = original,
+            onDismiss = { splitToEdit = null },
+            onDelete = { onRemoveSplit(original) },
+            onSave = { updated -> onUpdateSplit(original, updated) }
+        )
+        return
+    }
     val stockEvents = state.stockEvents
     val opinionatedEvents: List<OpinionatedStockOrderWrapper> = getOpinionatedStockOrders(
         stockEvents,
@@ -930,20 +976,26 @@ private fun StockEventsDialog(
                 stickyHeader {
                     TransactionTableHeader()
                 }
-                items(stockOrderEvents.size) { index ->
-                    val stockOrder = stockOrderEvents[index]
-                    val opinionatedStockOrder = opinionatedEvents.getOrNull(index)
-                    if (opinionatedStockOrder == null) {
-                        Log.e(
-                            "StockEventsDialog",
-                            "Missing opinionated event for stockOrder index=$index, stock=${stockOrder.name}, date=${stockOrder.dateInMillis}"
-                        )
+                items(stockEvents.sortedBy(StockEvent::dateInMillis)) { event ->
+                    val stockOrder = event.stockOrder
+                    if (stockOrder != null) {
+                        val orderIndex = stockOrderEvents.indexOf(stockOrder)
+                        val opinionatedStockOrder = opinionatedEvents.getOrNull(orderIndex)
+                        if (opinionatedStockOrder != null) {
+                            StockOrderRow(
+                                stockOrder = stockOrder,
+                                opinionatedStockOrder = opinionatedStockOrder,
+                                readOnly = state.readOnly
+                            )
+                        }
                     } else {
-                        StockOrderRow(
-                            stockOrder = stockOrder,
-                            opinionatedStockOrder = opinionatedStockOrder,
-                            readOnly = state.readOnly
-                        )
+                        event.stockSplit?.let { split ->
+                            StockSplitRow(
+                                split = split,
+                                readOnly = state.readOnly,
+                                onEdit = { splitToEdit = split }
+                            )
+                        }
                     }
                 }
             }
@@ -1057,10 +1109,13 @@ private fun AssetEventsDialog(
     state: DialogHandler.DialogViewState.ShowAssetEvents,
     onDismiss: () -> Unit,
     onUpdate: (AssetTransaction, AssetTransaction) -> Unit,
-    onRemove: (AssetTransaction) -> Unit
+    onRemove: (AssetTransaction) -> Unit,
+    onUpdateSplit: (StockSplit, StockSplit) -> Unit,
+    onRemoveSplit: (StockSplit) -> Unit
 ) {
     val context = LocalContext.current
     var transactionToEdit by remember { mutableStateOf<AssetTransaction?>(null) }
+    var splitToEdit by remember { mutableStateOf<StockSplit?>(null) }
     transactionToEdit?.let { original ->
         RegisterAssetTransactionDialog(
             action = original.action,
@@ -1068,6 +1123,16 @@ private fun AssetEventsDialog(
             onDismiss = { transactionToEdit = null },
             onDelete = { onRemove(original) },
             onSave = { updated -> onUpdate(original, updated) }
+        )
+        return
+    }
+    splitToEdit?.let { original ->
+        RegisterSplitStockAlertDialog(
+            portfolioNameState = remember(state.portfolioName) { mutableStateOf(state.portfolioName) },
+            stockSplitToEdit = original,
+            onDismiss = { splitToEdit = null },
+            onDelete = { onRemoveSplit(original) },
+            onSave = { updated -> onUpdateSplit(original, updated) }
         )
         return
     }
@@ -1104,13 +1169,55 @@ private fun AssetEventsDialog(
                             onEdit = { transactionToEdit = transaction }
                         )
                     } else {
-                        event.stockSplit?.let { split -> Text("Stock split × ${split.quantity}") }
+                        event.stockSplit?.let { split ->
+                            StockSplitRow(
+                                split = split,
+                                readOnly = state.readOnly,
+                                onEdit = { splitToEdit = split }
+                            )
+                        }
                     }
                 }
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } }
     )
+}
+
+@Composable
+private fun StockSplitRow(
+    split: StockSplit,
+    readOnly: Boolean,
+    onEdit: () -> Unit
+) {
+    val locale = LocalLocale.current.platformLocale
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !readOnly, onClick = onEdit)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = formatShortDate(split.dateInMillis, locale),
+            modifier = Modifier.weight(DATE_COLUMN_WEIGHT),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(Modifier.padding(4.dp))
+        Text(
+            text = stringResource(
+                if (split.reverse) R.string.home_stock_reverse_split else R.string.home_stock_split,
+                split.name,
+                split.quantity
+            ),
+            modifier = Modifier.weight(
+                QUANTITY_COLUMN_WEIGHT + UNIT_PRICE_COLUMN_WEIGHT + TOTAL_COLUMN_WEIGHT
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.End
+        )
+    }
 }
 
 @Composable

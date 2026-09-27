@@ -331,7 +331,12 @@ fun Home(
                                             readOnly = readOnly
                                         )
                                     } else {
-                                        DialogHandler.showStockEvents(item.symbol, item.legacyStockEvents, readOnly)
+                                        DialogHandler.showStockEvents(
+                                            portfolioName,
+                                            item.symbol,
+                                            item.legacyStockEvents,
+                                            readOnly
+                                        )
                                     }
                                 },
                                 onNavigateTo = onNavigateTo,
