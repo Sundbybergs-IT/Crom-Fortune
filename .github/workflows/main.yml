@@ -33,7 +33,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Run tests and generate Jacoco report
-        run: ./gradlew jacocoTestReport
+        run: |
+          ./gradlew \
+            :app:jacocoTestReport \
+            :core:ui:jacocoTestReport \
+            :feature:settings:jacocoTestReport \
+            :domain:jacocoTestReport \
+            :algorithm:algorithmApi:jacocoTestReport \
+            :algorithm:algorithmCore:jacocoTestReport \
+            :algorithm:cromFortuneV1:jacocoTestReport
       - name: Lint
         run: ./gradlew lintDebug
       - name: Analyze

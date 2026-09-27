@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.main
+package com.sundbybergsit.cromfortune.core.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -19,11 +19,11 @@ fun BottomSheetContent(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .wrapContentSize()
-            .background(color = MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surface)
             .navigationBarsPadding()
             .padding(8.dp)
     ) {
-        content.invoke()
+        content()
     }
 }
 
@@ -43,4 +43,4 @@ fun BottomSheetMenuItem(text: String, onClick: () -> Unit, enabled: Boolean = tr
     )
 }
 
-private fun Color.disabled(): Color = this.copy(alpha = 0.38f)
+private fun Color.disabled(): Color = copy(alpha = 0.38f)

@@ -78,6 +78,8 @@ import coil3.compose.AsyncImage
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.ktx.AppUpdateResult
 import com.google.android.play.core.ktx.requestUpdateFlow
+import com.sundbybergsit.cromfortune.core.ui.OverflowMenu
+import com.sundbybergsit.cromfortune.core.ui.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.domain.AssetPriceApi
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
@@ -85,8 +87,6 @@ import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.main.BuildConfig
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.LeafScreen
-import com.sundbybergsit.cromfortune.main.OverflowMenu
-import com.sundbybergsit.cromfortune.main.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
@@ -152,9 +152,8 @@ fun Home(
                     ),
                     actions = {
                         OverflowMenu(
-                            onNavigateTo = onNavigateTo,
+                            onClick = { onNavigateTo(LeafScreen.BottomSheetsHome.route) },
                             contentDescription = "Home Menu",
-                            route = LeafScreen.BottomSheetsHome.route
                         )
                     }
                 )
@@ -502,11 +501,10 @@ private fun StockCard(
                 }
                 if (!readOnly) {
                     OverflowMenu(
-                        onNavigateTo = onNavigateTo,
-                        route = LeafScreen.BottomSheetsHomeStock.createRoute(
+                        onClick = { onNavigateTo(LeafScreen.BottomSheetsHomeStock.createRoute(
                             portfolioName = portfolioName,
                             stockSymbol = item.assetId
-                        )
+                        )) }
                     )
                 }
             }

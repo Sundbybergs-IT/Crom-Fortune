@@ -98,6 +98,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.core.ui.BottomSheetContent
+import com.sundbybergsit.cromfortune.core.ui.BottomSheetMenuItem
 import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.StockEvent
@@ -107,8 +109,9 @@ import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
-import com.sundbybergsit.cromfortune.main.BottomSheetContent
-import com.sundbybergsit.cromfortune.main.BottomSheetMenuItem
+import com.sundbybergsit.cromfortune.feature.settings.Settings
+import com.sundbybergsit.cromfortune.feature.settings.SettingsViewModel
+import com.sundbybergsit.cromfortune.feature.settings.SettingsViewModelFactory
 import com.sundbybergsit.cromfortune.main.BuildConfig
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
@@ -136,9 +139,6 @@ import com.sundbybergsit.cromfortune.main.ui.home.view.OpinionatedStockOrderWrap
 import com.sundbybergsit.cromfortune.main.ui.notifications.Notifications
 import com.sundbybergsit.cromfortune.main.ui.notifications.NotificationsViewModel
 import com.sundbybergsit.cromfortune.main.ui.notifications.NotificationsViewModelFactory
-import com.sundbybergsit.cromfortune.main.ui.settings.Settings
-import com.sundbybergsit.cromfortune.main.ui.settings.SettingsViewModel
-import com.sundbybergsit.cromfortune.main.ui.settings.SettingsViewModelFactory
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.time.DayOfWeek
@@ -316,8 +316,10 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
             entry<Settings> {
                 val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = { SettingsViewModelFactory() })
-                Settings(viewModel = settingsViewModel,
-                    onNavigateTo = { route -> onNavigate(route.toNavKey()) })
+                Settings(
+                    viewModel = settingsViewModel,
+                    onOpenMenu = { onNavigate(BottomSheetsSettings) }
+                )
             }
 
             entry<BottomSheetsHome> {
@@ -1494,8 +1496,8 @@ private val bottomNavigationItems = listOf(
     ),
     NavigationItem.ImageVectorIcon(
         screenKey = Settings,
-        labelResId = R.string.settings_title,
-        contentDescriptionResId = R.string.settings_title,
+        labelResId = R.string.navigation_settings,
+        contentDescriptionResId = R.string.navigation_settings,
         iconImageVector = Icons.Outlined.Settings,
         selectedImageVector = Icons.Filled.Settings
     )

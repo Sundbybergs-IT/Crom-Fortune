@@ -77,8 +77,13 @@ internal fun Project.configureJacoco() {
             val kotlinDebugTree2 = fileTree(layout.buildDirectory.dir("intermediates/kotlin-classes/debug")) {
                 exclude(coverageExclusions)
             }
+            val builtInKotlinDebugTree = fileTree(
+                layout.buildDirectory.dir("intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes")
+            ) {
+                exclude(coverageExclusions)
+            }
             sourceDirectories.setFrom(files("${projectDir}/src/main/java", "${projectDir}/src/main/kotlin"))
-            classDirectories.setFrom(files(debugTree, kotlinDebugTree, kotlinDebugTree2))
+            classDirectories.setFrom(files(debugTree, kotlinDebugTree, kotlinDebugTree2, builtInKotlinDebugTree))
         } else {
             dependsOn("test")
             val mainTree = fileTree(layout.buildDirectory.dir("classes/kotlin/main")) {

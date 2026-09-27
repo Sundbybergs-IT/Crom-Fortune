@@ -43,10 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
+import com.sundbybergsit.cromfortune.core.ui.OverflowMenu
+import com.sundbybergsit.cromfortune.core.ui.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.main.LeafScreen
-import com.sundbybergsit.cromfortune.main.OverflowMenu
-import com.sundbybergsit.cromfortune.main.PagerStateSelectionHapticFeedbackLaunchedEffect
 import com.sundbybergsit.cromfortune.main.R
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -98,8 +98,8 @@ fun Notifications(
                 ),
                 actions = {
                     OverflowMenu(
-                        onNavigateTo = onNavigateTo, contentDescription = "Notifications Menu",
-                        route = LeafScreen.BottomSheetsNotifications.route
+                        onClick = { onNavigateTo(LeafScreen.BottomSheetsNotifications.route) },
+                        contentDescription = "Notifications Menu"
                     )
                 }
             )

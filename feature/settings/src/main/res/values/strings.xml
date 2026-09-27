@@ -1,0 +1,5 @@
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_default_values">Default values</string>
+    <string name="settings_not_supported">This feature is not yet supported.</string>
+</resources>

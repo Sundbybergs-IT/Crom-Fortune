@@ -118,8 +118,7 @@
 
     <string name="recommendations_none">Inga rekommendationer</string>
 
-    <string name="settings_title">Inställningar</string>
-    <string name="settings_default_values">Standardvärden</string>
+    <string name="navigation_settings">Inställningar</string>
     <string name="settings_dialog_time_intervals_title">Tidsintervall då Crom Fortune hämtar aktiekurser</string>
     <string name="action_about">Om appen</string>
     <string name="about_app_tagline">En tydligare bild av din ekonomiska resa</string>

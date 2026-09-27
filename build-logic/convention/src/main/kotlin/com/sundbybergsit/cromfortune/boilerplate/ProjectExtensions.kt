@@ -2,6 +2,7 @@ package com.sundbybergsit.cromfortune.boilerplate
 
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.LibraryExtension
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -23,6 +24,11 @@ internal fun Project.configureKotlinAndroidApp(appExtension: ApplicationExtensio
 
         defaultConfig {
             minSdk = libraries.findVersion("minSdk").get().toString().toInt()
+        }
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_25
+            targetCompatibility = JavaVersion.VERSION_25
         }
 
         kotlinExtension.jvmToolchain(jdkVersion = 25)
@@ -50,6 +56,11 @@ internal fun Project.configureKotlinAndroidLibrary(libraryExtension: LibraryExte
 
         defaultConfig {
             minSdk = libraries.findVersion("minSdk").get().toString().toInt()
+        }
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_25
+            targetCompatibility = JavaVersion.VERSION_25
         }
 
         kotlinExtension.jvmToolchain(jdkVersion = 25)

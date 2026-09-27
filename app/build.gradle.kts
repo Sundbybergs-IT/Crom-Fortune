@@ -47,6 +47,8 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.ui)
+    implementation(projects.feature.settings)
     api(projects.domain)
     implementation(projects.algorithm.algorithmApi)
     implementation(projects.algorithm.algorithmCore)

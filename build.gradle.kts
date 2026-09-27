@@ -46,7 +46,7 @@ subprojects {
             val buildDir = layout.buildDirectory.get().asFile
             property("sonar.sources", "src/main/kotlin,src/main/java")
             property("sonar.tests", "src/test/kotlin,src/test/java")
-            property("sonar.java.binaries", "${buildDir}/classes/kotlin/main,${buildDir}/intermediates/javac/debug/classes,${buildDir}/tmp/kotlin-classes/debug,${buildDir}/intermediates/kotlin-classes/debug")
+            property("sonar.java.binaries", "${buildDir}/classes/kotlin/main,${buildDir}/intermediates/javac/debug/classes,${buildDir}/tmp/kotlin-classes/debug,${buildDir}/intermediates/kotlin-classes/debug,${buildDir}/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes")
             property("sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
             property("sonar.junit.reportPaths", "${buildDir}/test-results/testDebugUnitTest,${buildDir}/test-results/test")
         }

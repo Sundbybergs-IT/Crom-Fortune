@@ -1,4 +1,4 @@
-package com.sundbybergsit.cromfortune.main
+package com.sundbybergsit.cromfortune.core.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
@@ -13,33 +13,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-private const val MENU_SHOW_DELAY_IN_MILLIS: Int = 1500
+private const val MENU_SHOW_DELAY_IN_MILLIS = 1500
 
 @Composable
 fun OverflowMenu(
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onNavigateTo: (String) -> Unit,
     contentDescription: String = "Overflow Menu",
     menuColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    enabled: Boolean = true,
-    route: String
+    enabled: Boolean = true
 ) {
     var lastShownMenu by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
-    IconButton(modifier = modifier, enabled = enabled, onClick = {
-        if (System.currentTimeMillis() - lastShownMenu > MENU_SHOW_DELAY_IN_MILLIS) {
-            lastShownMenu = System.currentTimeMillis()
-            onNavigateTo.invoke(route)
+    IconButton(
+        modifier = modifier,
+        enabled = enabled,
+        onClick = {
+            if (System.currentTimeMillis() - lastShownMenu > MENU_SHOW_DELAY_IN_MILLIS) {
+                lastShownMenu = System.currentTimeMillis()
+                onClick()
+            }
         }
-    }) {
+    ) {
         Icon(
             imageVector = Icons.Outlined.MoreVert,
-            tint = if (enabled) {
-                menuColor
-            } else {
-                Color.Gray
-            },
-            contentDescription = contentDescription,
+            tint = if (enabled) menuColor else Color.Gray,
+            contentDescription = contentDescription
         )
     }
 }

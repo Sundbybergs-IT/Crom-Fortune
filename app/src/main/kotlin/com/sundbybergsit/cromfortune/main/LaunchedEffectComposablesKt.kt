@@ -8,7 +8,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.TimePickerState
@@ -16,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
@@ -107,19 +105,6 @@ internal fun UpdateTimePickerLaunchedEffect(
         onDispose {
             fromTimePickerState.value = null
             toTimePickerState.value = null
-        }
-    }
-}
-
-@Composable
-internal fun PagerStateSelectionHapticFeedbackLaunchedEffect(
-    pagerState: PagerState,
-    view: View,
-    changedState: State<Boolean>
-) {
-    LaunchedEffect(key1 = pagerState.currentPage) {
-        if (changedState.value) {
-            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
         }
     }
 }
