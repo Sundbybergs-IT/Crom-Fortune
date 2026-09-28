@@ -54,7 +54,7 @@ fun Dashboard(viewModel: DashboardViewModel, homeViewModel: HomeViewModel) {
         topBar = {
         TopAppBar(
             title = {
-                Text(text = stringResource(id = R.string.dashboard_title), style = MaterialTheme.typography.titleMedium)
+                Text(text = stringResource(id = R.string.dashboard_title), style = MaterialTheme.typography.titleLarge)
             }, colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,

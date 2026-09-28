@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.feature.settings
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
@@ -19,11 +20,21 @@ class SettingsTest {
     @Test
     fun `settings content is displayed`() {
         composeTestRule.setContent {
-            Settings(viewModel = SettingsViewModel(), onOpenMenu = {})
+            Settings(
+                onShowRetrievalIntervals = {},
+                onShowSupportedStocks = {},
+                onShowSupportedCryptocurrencies = {},
+                onShowIssues = {},
+                onShowAbout = {}
+            )
         }
 
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         composeTestRule.onNodeWithText(context.getString(R.string.settings_title)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(context.getString(R.string.settings_default_values)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_retrieval_intervals)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_supported_stocks)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_about))
+            .performScrollTo()
+            .assertIsDisplayed()
     }
 }

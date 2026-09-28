@@ -1,5 +1,13 @@
 <resources>
     <string name="settings_title">Settings</string>
-    <string name="settings_default_values">Default values</string>
-    <string name="settings_not_supported">This feature is not yet supported.</string>
+    <string name="settings_section_data_updates">Data updates</string>
+    <string name="settings_section_supported_assets">Supported assets</string>
+    <string name="settings_section_application">Application</string>
+    <string name="settings_retrieval_intervals">Retrieval intervals</string>
+    <string name="settings_retrieval_intervals_description">Choose when market data is refreshed</string>
+    <string name="settings_supported_stocks">Supported stocks</string>
+    <string name="settings_supported_cryptocurrencies">Supported cryptocurrencies</string>
+    <string name="settings_issues">Issues and feature requests</string>
+    <string name="settings_issues_description">Open the project issue tracker</string>
+    <string name="settings_about">About</string>
 </resources>

@@ -1,5 +1,13 @@
 <resources>
     <string name="settings_title">Inställningar</string>
-    <string name="settings_default_values">Standardvärden</string>
-    <string name="settings_not_supported">Denna funktion stöds inte.</string>
+    <string name="settings_section_data_updates">Datauppdateringar</string>
+    <string name="settings_section_supported_assets">Tillgångar som stöds</string>
+    <string name="settings_section_application">Applikation</string>
+    <string name="settings_retrieval_intervals">Uppdateringsintervall</string>
+    <string name="settings_retrieval_intervals_description">Välj när marknadsdata ska uppdateras</string>
+    <string name="settings_supported_stocks">Aktier som stöds</string>
+    <string name="settings_supported_cryptocurrencies">Kryptovalutor som stöds</string>
+    <string name="settings_issues">Problem och funktionsförslag</string>
+    <string name="settings_issues_description">Öppna projektets ärendehanterare</string>
+    <string name="settings_about">Om appen</string>
 </resources>

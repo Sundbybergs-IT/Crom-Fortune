@@ -110,8 +110,6 @@ import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.feature.settings.Settings
-import com.sundbybergsit.cromfortune.feature.settings.SettingsViewModel
-import com.sundbybergsit.cromfortune.feature.settings.SettingsViewModelFactory
 import com.sundbybergsit.cromfortune.main.BuildConfig
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
@@ -321,10 +319,23 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
             }
 
             entry<Settings> {
-                val settingsViewModel: SettingsViewModel by activityBoundViewModel(factoryProducer = { SettingsViewModelFactory() })
+                val localContext = LocalContext.current
                 Settings(
-                    viewModel = settingsViewModel,
-                    onOpenMenu = { onNavigate(BottomSheetsSettings) }
+                    onShowRetrievalIntervals = {
+                        DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))
+                    },
+                    onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
+                    onShowSupportedCryptocurrencies = {
+                        DialogHandler.showSupportedCryptocurrenciesDialog()
+                    },
+                    onShowIssues = {
+                        val browserIntent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/Sundbybergs-IT/Crom-Fortune/issues".toUri()
+                        )
+                        localContext.startActivity(browserIntent)
+                    },
+                    onShowAbout = { DialogHandler.showAboutDialog() }
                 )
             }
 
