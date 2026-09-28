@@ -1,16 +1,20 @@
 package com.sundbybergsit.cromfortune.main.ui.dashboard
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -24,6 +28,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -32,15 +37,25 @@ enum class AiStonkMood { Neutral, Happy, Angry }
 /** Fully code-drawn character. No bitmap is used as its base. */
 @Composable
 fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modifier = Modifier) {
-    val expression by animateFloatAsState(
-        when (mood) {
+    val expressionAnimation = remember { Animatable(0f) }
+    val expression = expressionAnimation.value
+    var isInitialMood by remember { mutableStateOf(true) }
+
+    LaunchedEffect(mood) {
+        val targetExpression = when (mood) {
             AiStonkMood.Angry -> -1f
             AiStonkMood.Neutral -> 0f
             AiStonkMood.Happy -> 1f
-        },
-        tween(500, easing = FastOutSlowInEasing),
-        label = "Expression"
-    )
+        }
+        if (isInitialMood && targetExpression != 0f) {
+            delay(300)
+        }
+        isInitialMood = false
+        expressionAnimation.animateTo(
+            targetValue = targetExpression,
+            animationSpec = tween(700, easing = FastOutSlowInEasing)
+        )
+    }
     val idle = rememberInfiniteTransition(label = "Living face")
     val pulse by idle.animateFloat(
         .55f, 1f, infiniteRepeatable(tween(1_250), RepeatMode.Reverse), label = "Eye pulse"
@@ -320,6 +335,7 @@ fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modi
         val leftHand: Offset
         val rightElbow: Offset
         val rightHand: Offset
+        val hasCrossedArms = !userPortfolioIsWorthMore && expression < -.35f
         if (userPortfolioIsWorthMore) {
             // Crom raises and shakes one fist when the user's portfolio overtakes his.
             leftElbow = Offset(w * .15f, canvasHeight * .76f)
@@ -352,14 +368,15 @@ fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modi
             leftElbow,
             leftHand,
             fist = expression < -.35f,
-            drawHandLayer = false
+            drawHandLayer = hasCrossedArms
         )
         drawArm(
             rightShoulder,
             rightElbow,
             rightHand,
             fist = userPortfolioIsWorthMore || expression < -.35f,
-            drawHandLayer = false,
+            drawLimb = !userPortfolioIsWorthMore,
+            drawHandLayer = hasCrossedArms,
             limbDepthScale = if (userPortfolioIsWorthMore) 1f + gestureDepth * .10f else 1f
         )
 
@@ -399,6 +416,19 @@ fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modi
             Offset(w * .50f, h * .99f),
             w * .004f
         )
+
+        // The raised arm emerges in front of the shoulder plate, while the
+        // neck and head below are still allowed to occlude it naturally.
+        if (userPortfolioIsWorthMore) {
+            drawArm(
+                rightShoulder,
+                rightElbow,
+                rightHand,
+                fist = true,
+                drawHandLayer = false,
+                limbDepthScale = 1f + gestureDepth * .10f
+            )
+        }
 
         // Elongated neck and pedestal retain the recognizable Stonks bust form.
         val neck = Path().apply {
@@ -619,20 +649,21 @@ fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modi
         // Hands belong to the foreground plane. Drawing them after the head
         // prevents a raised fist from disappearing behind the face while the
         // upper and lower arm remain correctly behind the bust.
-        drawArm(
-            leftShoulder,
-            leftElbow,
-            leftHand,
-            fist = expression < -.35f,
-            drawLimb = false
-        )
-        drawArm(
-            rightShoulder,
-            rightElbow,
-            rightHand,
-            fist = userPortfolioIsWorthMore || expression < -.35f,
-            drawLimb = false,
-            handDepthScale = if (userPortfolioIsWorthMore) 1f + gestureDepth * .18f else 1f
-        )
+        if (!hasCrossedArms) {
+            drawArm(
+                leftShoulder,
+                leftElbow,
+                leftHand,
+                drawLimb = false
+            )
+            drawArm(
+                rightShoulder,
+                rightElbow,
+                rightHand,
+                fist = userPortfolioIsWorthMore,
+                drawLimb = false,
+                handDepthScale = if (userPortfolioIsWorthMore) 1f + gestureDepth * .18f else 1f
+            )
+        }
     }
 }
