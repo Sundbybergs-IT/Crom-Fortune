@@ -1,7 +1,7 @@
 package com.sundbybergsit.cromfortune.main.ui.dashboard
 
-import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -40,6 +40,20 @@ class DashboardComposablesTest {
         )
 
         assertEquals(BigDecimal("250.000"), listOf(item(quantity = "2")).portfolioMarketValueSek())
+    }
+
+    @Test
+    fun `Crom portfolio value includes cash wallet`() {
+        CurrencyRateRepository.addAll(setOf(CurrencyRate("USD", 10.0)))
+        StockPriceRepository.updateAssetPrices(
+            assetPrices = listOf(AssetPrice("stock:TEST", Currency.getInstance("USD"), BigDecimal("12.50"))),
+            requestedAssetIds = setOf("stock:TEST")
+        )
+
+        assertEquals(
+            BigDecimal("280.000"),
+            listOf(item(quantity = "2")).portfolioValueIncludingCashSek(BigDecimal("30.00"))
+        )
     }
 
     @Test

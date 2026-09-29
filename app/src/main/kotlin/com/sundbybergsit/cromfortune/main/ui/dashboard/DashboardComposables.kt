@@ -46,8 +46,10 @@ fun Dashboard(viewModel: DashboardViewModel, homeViewModel: HomeViewModel) {
     val portfolios by homeViewModel.portfoliosStateFlow.collectAsState()
     val userPortfolioValue = portfolios[PortfolioRepository.DEFAULT_PORTFOLIO_NAME]
         ?.items?.portfolioMarketValueSek() ?: BigDecimal.ZERO
-    val cromPortfolioValue = portfolios[PortfolioRepository.CROM_PORTFOLIO_NAME]
-        ?.items?.portfolioMarketValueSek() ?: BigDecimal.ZERO
+    val cromPortfolio = portfolios[PortfolioRepository.CROM_PORTFOLIO_NAME]
+    val cromPortfolioValue = cromPortfolio?.items
+        ?.portfolioValueIncludingCashSek(cromPortfolio.cromCreditSek)
+        ?: BigDecimal.ZERO
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -112,3 +114,6 @@ internal fun List<PortfolioItem>.portfolioMarketValueSek(): BigDecimal = sumOf {
         ?.rateInSek?.toBigDecimal() ?: BigDecimal.ONE
     item.quantity.multiply(price).multiply(rate)
 }
+
+internal fun List<PortfolioItem>.portfolioValueIncludingCashSek(cashSek: BigDecimal?): BigDecimal =
+    portfolioMarketValueSek() + (cashSek ?: BigDecimal.ZERO)
