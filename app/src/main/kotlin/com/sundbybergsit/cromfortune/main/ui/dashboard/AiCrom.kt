@@ -32,20 +32,20 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-enum class AiStonkMood { Neutral, Happy, Angry }
+enum class AiCromMood { Neutral, Happy, Angry }
 
 /** Fully code-drawn character. No bitmap is used as its base. */
 @Composable
-fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modifier = Modifier) {
+fun AiCrom(modifier: Modifier = Modifier, mood: AiCromMood, userPortfolioIsWorthMore: Boolean) {
     val expressionAnimation = remember { Animatable(0f) }
     val expression = expressionAnimation.value
     var isInitialMood by remember { mutableStateOf(true) }
 
     LaunchedEffect(mood) {
         val targetExpression = when (mood) {
-            AiStonkMood.Angry -> -1f
-            AiStonkMood.Neutral -> 0f
-            AiStonkMood.Happy -> 1f
+            AiCromMood.Angry -> -1f
+            AiCromMood.Neutral -> 0f
+            AiCromMood.Happy -> 1f
         }
         if (isInitialMood && targetExpression != 0f) {
             delay(300)
@@ -621,6 +621,73 @@ fun AiStonk(mood: AiStonkMood, userPortfolioIsWorthMore: Boolean, modifier: Modi
             )
         )
         drawPath(nose, seam.copy(alpha = .75f), style = Stroke(w * .009f, cap = StrokeCap.Round))
+
+        // The beard follows the jaw before narrowing into a slightly split,
+        // irregular tip. Uneven highlights and wisps make it read as hair
+        // rather than a rigid plate attached to the face.
+        val beardDark = Color(0xFF211F1D)
+        val beardMid = Color(0xFF49443F)
+        val beardLight = Color(0xFF756C64)
+        val beard = Path().apply {
+            moveTo(w * .29f, h * .58f + y)
+            cubicTo(w * .28f, h * .68f + y, w * .31f, h * .78f + y, w * .36f, h * .84f + y)
+            cubicTo(w * .37f, h * .96f + y, w * .40f, h * 1.09f + y, w * .46f, h * 1.17f + y)
+            cubicTo(w * .475f, h * 1.20f + y, w * .49f, h * 1.18f + y, w * .50f, h * 1.16f + y)
+            cubicTo(w * .51f, h * 1.19f + y, w * .53f, h * 1.20f + y, w * .555f, h * 1.16f + y)
+            cubicTo(w * .61f, h * 1.07f + y, w * .63f, h * .95f + y, w * .64f, h * .84f + y)
+            cubicTo(w * .69f, h * .78f + y, w * .72f, h * .68f + y, w * .71f, h * .58f + y)
+            cubicTo(w * .67f, h * .63f + y, w * .64f, h * .70f + y, w * .58f, h * .72f + y)
+            cubicTo(w * .55f, h * .72f + y, w * .53f, h * .70f + y, w * .50f, h * .69f + y)
+            cubicTo(w * .47f, h * .70f + y, w * .45f, h * .72f + y, w * .42f, h * .72f + y)
+            cubicTo(w * .36f, h * .70f + y, w * .33f, h * .63f + y, w * .29f, h * .58f + y)
+            close()
+        }
+        drawPath(
+            beard,
+            Brush.linearGradient(
+                listOf(beardDark, beardMid, beardLight.copy(alpha = .92f), beardMid, beardDark),
+                start = Offset(w * .28f, h * .65f + y),
+                end = Offset(w * .69f, h * 1.13f + y)
+            )
+        )
+        drawPath(beard, beardDark.copy(alpha = .85f), style = Stroke(w * .006f))
+
+        clipPath(beard) {
+            val strandXs = listOf(.325f, .36f, .395f, .43f, .465f, .505f, .54f, .575f, .61f, .65f, .685f)
+            strandXs.forEachIndexed { index, startX ->
+                val direction = if (index % 3 == 0) -.018f else if (index % 3 == 1) .012f else -.006f
+                val startY = .69f + (index % 4) * .025f
+                val endY = 1.08f + (index % 3) * .035f
+                val strand = Path().apply {
+                    moveTo(w * startX, h * startY + y)
+                    cubicTo(
+                        w * (startX + direction), h * .82f + y,
+                        w * (startX - direction * .7f), h * .96f + y,
+                        w * (startX + direction), h * endY + y
+                    )
+                }
+                drawPath(
+                    strand,
+                    if (index % 2 == 0) beardDark.copy(alpha = .42f) else beardLight.copy(alpha = .34f),
+                    style = Stroke(w * (if (index % 4 == 0) .009f else .006f), cap = StrokeCap.Round)
+                )
+            }
+        }
+
+        // Two short curves sit below the nose but stop well clear of the mouth.
+        // The wider centre gap also keeps animated smiles and grimaces readable.
+        val leftMoustache = Path().apply {
+            moveTo(w * .475f, h * .632f + y)
+            cubicTo(w * .45f, h * .618f + y, w * .42f, h * .638f + y, w * .39f, h * .652f + y)
+        }
+        val rightMoustache = Path().apply {
+            moveTo(w * .525f, h * .632f + y)
+            cubicTo(w * .55f, h * .618f + y, w * .58f, h * .638f + y, w * .61f, h * .652f + y)
+        }
+        drawPath(leftMoustache, beardMid, style = Stroke(w * .014f, cap = StrokeCap.Round))
+        drawPath(rightMoustache, beardMid, style = Stroke(w * .014f, cap = StrokeCap.Round))
+        drawPath(leftMoustache, beardLight.copy(alpha = .40f), style = Stroke(w * .004f, cap = StrokeCap.Round))
+        drawPath(rightMoustache, beardLight.copy(alpha = .40f), style = Stroke(w * .004f, cap = StrokeCap.Round))
 
         // Happy becomes a smile; angry becomes a tight, asymmetric grimace rather
         // than a sad downward curve.

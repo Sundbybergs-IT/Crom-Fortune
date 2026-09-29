@@ -59,10 +59,10 @@ class DashboardComposablesTest {
     @Test
     fun `Crom shakes his fist when user portfolio is worth more`() {
         composeTestRule.setContent {
-            AiStonk(
-                mood = AiStonkMood.Neutral,
-                userPortfolioIsWorthMore = true,
-                modifier = Modifier.size(200.dp)
+            AiCrom(
+                modifier = Modifier.size(200.dp),
+                mood = AiCromMood.Neutral,
+                userPortfolioIsWorthMore = true
             )
         }
 
@@ -72,10 +72,10 @@ class DashboardComposablesTest {
     @Test
     fun `arms match angry expression when Crom is not behind`() {
         composeTestRule.setContent {
-            AiStonk(
-                mood = AiStonkMood.Angry,
-                userPortfolioIsWorthMore = false,
-                modifier = Modifier.size(200.dp)
+            AiCrom(
+                modifier = Modifier.size(200.dp),
+                mood = AiCromMood.Angry,
+                userPortfolioIsWorthMore = false
             )
         }
 

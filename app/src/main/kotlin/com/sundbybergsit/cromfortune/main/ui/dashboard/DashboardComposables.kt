@@ -42,7 +42,7 @@ fun Dashboard(viewModel: DashboardViewModel, homeViewModel: HomeViewModel) {
     RefreshFromViewStateLaunchedEffect(viewState = viewState, viewModel = viewModel)
     val scoreState = viewModel.scoreStateFlow.collectAsState()
     val portfolioSummaryState = viewModel.portfolioSummaryStateFlow.collectAsState()
-    val aiStonkMood by viewModel.aiStonkMood.collectAsState()
+    val aiStonkMood by viewModel.aiCromMood.collectAsState()
     val portfolios by homeViewModel.portfoliosStateFlow.collectAsState()
     val userPortfolioValue = portfolios[PortfolioRepository.DEFAULT_PORTFOLIO_NAME]
         ?.items?.portfolioMarketValueSek() ?: BigDecimal.ZERO
@@ -74,16 +74,16 @@ fun Dashboard(viewModel: DashboardViewModel, homeViewModel: HomeViewModel) {
         ) {
             val (robotRef, scoreRef, summaryRef) = createRefs()
             createVerticalChain(robotRef, scoreRef, summaryRef, chainStyle = ChainStyle.Packed)
-            AiStonk(
-                mood = aiStonkMood,
-                userPortfolioIsWorthMore = userPortfolioValue > cromPortfolioValue,
+            AiCrom(
                 modifier = Modifier
                     .constrainAs(robotRef) {
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     }
                     .width(246.dp)
-                    .aspectRatio(646f / 1120f)
+                    .aspectRatio(646f / 1120f),
+                mood = aiStonkMood,
+                userPortfolioIsWorthMore = userPortfolioValue > cromPortfolioValue
             )
             Text(
                 modifier = Modifier
