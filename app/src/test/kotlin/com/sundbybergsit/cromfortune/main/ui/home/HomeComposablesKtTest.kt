@@ -11,6 +11,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetPrice
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -228,8 +229,26 @@ class HomeComposablesKtTest {
             unitPrice = BigDecimal("60000"),
             quantity = BigDecimal("0.01")
         )
+        val sameTimeSale = firstBuy.copy(
+            action = TransactionAction.SELL,
+            unitPrice = BigDecimal("65000"),
+            quantity = BigDecimal("0.005")
+        )
+
+        val firstPurchase = listOf(sameTimeSale, firstBuy)
+            .map { transaction ->
+                AssetEvent(
+                    assetId = transaction.assetId,
+                    assetType = transaction.assetType,
+                    transaction = transaction,
+                    dateInMillis = transaction.dateInMillis
+                )
+            }
+            .firstCryptoPurchase()
+        assertEquals(firstBuy, firstPurchase?.transaction)
 
         viewModel.save(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME, firstBuy)
+        viewModel.save(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME, sameTimeSale)
 
         val cromItem = viewModel.portfoliosStateFlow.value
             .getValue(PortfolioRepository.CROM_PORTFOLIO_NAME).items.single()

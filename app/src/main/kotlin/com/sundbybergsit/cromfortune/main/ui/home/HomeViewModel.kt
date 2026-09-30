@@ -16,6 +16,7 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockSplit
+import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.assetEventChronologicalComparator
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.main.AssetRefreshCoordinator
@@ -333,9 +334,8 @@ class HomeViewModel(
     private fun cromCryptoFirstPurchases(context: Context): List<PortfolioItem> {
         val repository = AssetEventRepository(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
         return repository.assetIds().mapNotNull { assetId ->
-            val firstEvent = repository.list(assetId).minByOrNull(AssetEvent::dateInMillis) ?: return@mapNotNull null
-            val transaction = firstEvent.transaction?.takeIf { it.assetType == AssetType.CRYPTO }
-                ?: return@mapNotNull null
+            val firstEvent = repository.list(assetId).firstCryptoPurchase() ?: return@mapNotNull null
+            val transaction = checkNotNull(firstEvent.transaction)
             val catalogAsset = AssetCatalog.findById(assetId)
             val rate = CurrencyRateRepository.currencyRates.value
                 .find { it.iso4217CurrencySymbol == transaction.quoteCurrencyCode }
@@ -524,3 +524,9 @@ class HomeViewModel(
     )
 
 }
+
+internal fun Iterable<AssetEvent>.firstCryptoPurchase(): AssetEvent? =
+    filter { event ->
+        event.assetType == AssetType.CRYPTO &&
+            event.transaction?.action == TransactionAction.BUY
+    }.minWithOrNull(assetEventChronologicalComparator)
