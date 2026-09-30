@@ -70,7 +70,10 @@ class AssetTransactionRepository(
 
     fun update(original: AssetTransaction, updated: AssetTransaction) {
         val originalTransactions = list(original.assetId)
-        require(original in originalTransactions) { "Transaction to update no longer exists" }
+        if (original !in originalTransactions) {
+            if (updated in list(updated.assetId)) return
+            throw IllegalArgumentException("Transaction to update no longer exists")
+        }
 
         if (original.assetId == updated.assetId) {
             putAll(original.assetId, originalTransactions - original + updated)

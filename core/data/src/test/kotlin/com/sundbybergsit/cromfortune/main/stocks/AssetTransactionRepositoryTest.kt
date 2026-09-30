@@ -99,6 +99,19 @@ class AssetTransactionRepositoryTest {
     }
 
     @Test
+    fun `retrying an already persisted update succeeds`() {
+        val repository = AssetTransactionRepository(context, "asset-update-retry-${System.nanoTime()}")
+        val original = transaction(TransactionAction.BUY, "0.5")
+        val updated = original.copy(unitPrice = BigDecimal("12.75"))
+        repository.putReplacingAll(original.assetId, original)
+        repository.update(original, updated)
+
+        repository.update(original, updated)
+
+        assertEquals(setOf(updated), repository.list(original.assetId))
+    }
+
+    @Test
     fun `update can move a transaction to another asset`() {
         val repository = AssetTransactionRepository(context, "asset-update-move-${System.nanoTime()}")
         val original = stockTransaction(TransactionAction.BUY, "2", 1L)
