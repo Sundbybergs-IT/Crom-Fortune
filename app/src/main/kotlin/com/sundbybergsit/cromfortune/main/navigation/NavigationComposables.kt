@@ -54,6 +54,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -61,10 +62,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -144,6 +145,7 @@ import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.util.Currency
 import java.util.Date
+import kotlin.math.roundToInt
 import androidx.navigation3.runtime.NavKey as androidxNavKey
 import com.sundbybergsit.cromfortune.main.ui.transactions.Transactions as TransactionsScreen
 
@@ -817,32 +819,43 @@ private fun StockRetrievalTimeIntervalsDialog(
     )
     val savedText = stringResource(id = R.string.generic_saved)
     if (fromTimePickerState.value != null && toTimePickerState.value != null) {
-        AlertDialog(
-            modifier = Modifier,
-            title = {
+        Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .widthIn(max = 520.dp)
+                    .heightIn(max = 720.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
                 Text(
                     text = stringResource(id = R.string.settings_dialog_time_intervals_title),
-                    style = MaterialTheme.typography.titleSmall
+                        style = MaterialTheme.typography.headlineSmall
                 )
-            },
-            text = {
-                Column {
                     Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(id = R.string.generic_time_start_label),
-                        style = MaterialTheme.typography.titleSmall
+                        text = stringResource(R.string.settings_dialog_time_intervals_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    fromTimePickerState.value?.let { nullSafeTimePickerState ->
-                        TimeInput(state = nullSafeTimePickerState)
-                    }
+                    TimeSettings(
+                        fromState = checkNotNull(fromTimePickerState.value),
+                        toState = checkNotNull(toTimePickerState.value)
+                    )
                     Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(id = R.string.generic_time_end_label),
-                        style = MaterialTheme.typography.titleSmall
+                        text = stringResource(R.string.settings_dialog_weekdays_label),
+                        style = MaterialTheme.typography.titleMedium
                     )
-                    toTimePickerState.value?.let { nullSafeTimePickerState ->
-                        TimeInput(state = nullSafeTimePickerState)
-                    }
                     DayPicker(selectedDays = selectedDaysMutableState, onDaySelected = { day ->
                         if (selectedDaysMutableState.value.contains(day)) {
                             selectedDaysMutableState.value -= day
@@ -850,36 +863,114 @@ private fun StockRetrievalTimeIntervalsDialog(
                             selectedDaysMutableState.value += day
                         }
                     })
-                }
-            },
-            onDismissRequest = onDismiss,
-            confirmButton = {
-                TextButton(onClick = {
-                    val nullSafeFromTimePickerState = checkNotNull(fromTimePickerState.value)
-                    val nullSafeToTimePickerState = checkNotNull(toTimePickerState.value)
-                    state.stockRetrievalSettings.set(nullSafeFromTimePickerState.hour,
-                        nullSafeFromTimePickerState.minute,
-                        nullSafeToTimePickerState.hour,
-                        nullSafeToTimePickerState.minute,
-                        selectedDaysMutableState.value.map { materialWeekday ->
-                            DayOfWeek.valueOf(
-                                materialWeekday.name
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(id = android.R.string.cancel))
+                        }
+                        TextButton(onClick = {
+                            val fromState = checkNotNull(fromTimePickerState.value)
+                            val toState = checkNotNull(toTimePickerState.value)
+                            state.stockRetrievalSettings.set(
+                                fromState.hour,
+                                fromState.minute,
+                                toState.hour,
+                                toState.minute,
+                                selectedDaysMutableState.value.toList()
                             )
-                        })
-                    onDismiss()
-                    DialogHandler.showSnack(savedText)
-                }) {
-                    Text(stringResource(id = android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(id = android.R.string.cancel))
+                            onDismiss()
+                            DialogHandler.showSnack(savedText)
+                        }) {
+                            Text(stringResource(id = android.R.string.ok))
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 }
+
+@Composable
+private fun TimeSettings(
+    fromState: TimePickerState,
+    toState: TimePickerState
+) {
+    val fromLabel = stringResource(R.string.generic_time_start_label)
+    val toLabel = stringResource(R.string.generic_time_end_label)
+    val initialStartSlot = timeToHalfHourSlot(fromState.hour, fromState.minute).coerceAtMost(47)
+    val initialEndSlot = if (toState.hour == 0 && toState.minute == 0) {
+        48
+    } else {
+        timeToHalfHourSlot(toState.hour, toState.minute).coerceIn(initialStartSlot + 1, 48)
+    }
+    var selectedSlots by remember(fromState, toState) {
+        mutableStateOf(initialStartSlot.toFloat()..initialEndSlot.toFloat())
+    }
+
+    fun applySlots(range: ClosedFloatingPointRange<Float>) {
+        val startSlot = range.start.roundToInt()
+        val endSlot = range.endInclusive.roundToInt()
+        fromState.hour = startSlot / 2
+        fromState.minute = (startSlot % 2) * 30
+        if (endSlot == 48) {
+            toState.hour = 0
+            toState.minute = 0
+        } else {
+            toState.hour = endSlot / 2
+            toState.minute = (endSlot % 2) * 30
+        }
+    }
+
+    LaunchedEffect(fromState, toState) { applySlots(selectedSlots) }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+                Column {
+                    Text(text = fromLabel, style = MaterialTheme.typography.labelMedium)
+                    Text(formatHalfHourSlot(selectedSlots.start.roundToInt()), style = MaterialTheme.typography.titleMedium)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = toLabel, style = MaterialTheme.typography.labelMedium)
+                    Text(formatHalfHourSlot(selectedSlots.endInclusive.roundToInt()), style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            RangeSlider(
+                value = selectedSlots,
+                onValueChange = { proposed ->
+                    val start = proposed.start.roundToInt().coerceIn(0, 47)
+                    val end = proposed.endInclusive.roundToInt().coerceIn(1, 48)
+                    if (start < end) {
+                        selectedSlots = start.toFloat()..end.toFloat()
+                        applySlots(selectedSlots)
+                    }
+                },
+                valueRange = 0f..48f,
+                steps = 47
+            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("00:00", style = MaterialTheme.typography.labelSmall)
+                Text("24:00", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
+private fun timeToHalfHourSlot(hour: Int, minute: Int): Int =
+    ((hour * 60 + minute) / 30f).roundToInt().coerceIn(0, 48)
+
+private fun formatHalfHourSlot(slot: Int): String =
+    if (slot == 48) "24:00" else "%02d:%02d".format(slot / 2, (slot % 2) * 30)
 
 @Composable
 private fun SupportedStocksDialog(
