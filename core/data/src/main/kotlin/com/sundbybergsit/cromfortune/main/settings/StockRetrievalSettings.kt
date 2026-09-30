@@ -18,6 +18,7 @@ class StockRetrievalSettings(
 
         const val PREFERENCES_NAME = "StockRetrievalSettings"
         private const val TAG = "StockRetrievalSettings"
+        private const val REFRESH_INTERVAL_MINUTES = "refreshIntervalMinutes"
 
     }
 
@@ -25,7 +26,17 @@ class StockRetrievalSettings(
 
     val timeInterval: StateFlow<ViewState> = _timeInterval.asStateFlow()
 
-    fun set(fromTimeHours: Int, fromTimeMinutes: Int, toTimeHours: Int, toTimeMinutes: Int, weekDays: List<DayOfWeek>) {
+    fun set(fromTimeHours: Int, fromTimeMinutes: Int, toTimeHours: Int, toTimeMinutes: Int, weekDays: List<DayOfWeek>) =
+        set(fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes, weekDays, _timeInterval.value.refreshInterval)
+
+    fun set(
+        fromTimeHours: Int,
+        fromTimeMinutes: Int,
+        toTimeHours: Int,
+        toTimeMinutes: Int,
+        weekDays: List<DayOfWeek>,
+        refreshInterval: RefreshInterval
+    ) {
         Log.v(
             TAG,
             "set(fromTimeHours=[${fromTimeHours}],fromTimeMinutes=[${fromTimeMinutes}], " +
@@ -34,8 +45,12 @@ class StockRetrievalSettings(
 
         sharedPreferences.edit().putInt("fromTimeHours", fromTimeHours).putInt("fromTimeMinutes", fromTimeMinutes)
             .putInt("toTimeHours", toTimeHours).putInt("toTimeMinutes", toTimeMinutes)
-            .putStringSet("weekDays", weekDays.map { weekDay -> weekDay.name }.toSet()).apply()
-        _timeInterval.value = ViewState(fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes, weekDays)
+            .putStringSet("weekDays", weekDays.map { weekDay -> weekDay.name }.toSet())
+            .putInt(REFRESH_INTERVAL_MINUTES, refreshInterval.minutes)
+            .apply()
+        _timeInterval.value = ViewState(
+            fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes, weekDays, refreshInterval
+        )
     }
 
     private fun getValuesFromDb(): ViewState {
@@ -51,12 +66,33 @@ class StockRetrievalSettings(
                 DayOfWeek.valueOf(stringRepresentation)
             }
 
-        return ViewState(fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes, weekDays.toList())
+        val refreshInterval = RefreshInterval.fromMinutes(
+            sharedPreferences.getInt(REFRESH_INTERVAL_MINUTES, RefreshInterval.ONE_HOUR.minutes)
+        )
+
+        return ViewState(
+            fromTimeHours, fromTimeMinutes, toTimeHours, toTimeMinutes, weekDays.toList(), refreshInterval
+        )
     }
 
     class ViewState(
         val fromTimeHours: Int, val fromTimeMinutes: Int, val toTimeHours: Int, val toTimeMinutes: Int,
         val weekDays: List<DayOfWeek>,
+        val refreshInterval: RefreshInterval,
     )
+
+    enum class RefreshInterval(val minutes: Int) {
+        FIFTEEN_MINUTES(15),
+        THIRTY_MINUTES(30),
+        ONE_HOUR(60),
+        THREE_HOURS(180),
+        SIX_HOURS(360),
+        TWELVE_HOURS(720);
+
+        companion object {
+            fun fromMinutes(minutes: Int): RefreshInterval =
+                entries.firstOrNull { it.minutes == minutes } ?: ONE_HOUR
+        }
+    }
 
 }

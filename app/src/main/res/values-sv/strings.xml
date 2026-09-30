@@ -82,7 +82,7 @@
     <string name="home_delete_stock_order">Det här innebär att transaktionen för detta datum kommer att raderas: %1$s.</string>
     <string name="home_delete_all_stock_orders">Det här innebär att alla transaktioner för denna aktie kommer att raderas: %1$s.</string>
     <string name="home_delete_portfolio">Det här tar permanent bort portföljen %1$s och alla dess transaktioner.</string>
-    <string name="home_information_data_refreshed">Appen är nu uppdaterad med senaste kurserna. OBS: Uppdaterar automatiskt varje timme.</string>
+    <string name="home_information_data_refreshed">Appen är nu uppdaterad med de senaste kurserna. Automatiska uppdateringar följer intervallet som valts i Inställningar.</string>
     <string name="home_no_stocks">Lägg till din första aktie för att bli smutsigt rik!</string>
     <string name="home_remove_commission_fee_label">Courtageavgift (i SEK)</string>
     <string name="home_remove_stock_currency_label">Valuta</string>
@@ -130,8 +130,15 @@
     <string name="recommendations_none">Inga rekommendationer</string>
 
     <string name="navigation_settings">Inställningar</string>
-    <string name="settings_dialog_time_intervals_title">Automatiska aktieuppdateringar</string>
-    <string name="settings_dialog_time_intervals_description">Aktier uppdateras ungefär varje timme under dessa tider. Krypto uppdateras dygnet runt och manuell uppdatering är alltid möjlig.</string>
+    <string name="settings_dialog_time_intervals_title">Automatiska uppdateringar</string>
+    <string name="settings_dialog_time_intervals_description">Välj uppdateringsfrekvens. Schemat nedan gäller aktier; krypto uppdateras dygnet runt.</string>
+    <string name="settings_dialog_refresh_interval_label">Uppdateringsfrekvens</string>
+    <string name="refresh_interval_15_minutes">Var 15:e minut</string>
+    <string name="refresh_interval_30_minutes">Var 30:e minut</string>
+    <string name="refresh_interval_1_hour">Varje timme</string>
+    <string name="refresh_interval_3_hours">Var 3:e timme</string>
+    <string name="refresh_interval_6_hours">Var 6:e timme</string>
+    <string name="refresh_interval_12_hours">Var 12:e timme</string>
     <string name="settings_dialog_weekdays_label">Dagar</string>
     <string name="action_about">Om appen</string>
     <string name="about_app_tagline">En tydligare bild av din ekonomiska resa</string>
