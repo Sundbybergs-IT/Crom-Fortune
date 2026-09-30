@@ -90,7 +90,7 @@ fun RegisterAssetTransactionDialog(
         mutableStateOf(initialAsset?.type ?: transactionToEdit?.assetType ?: AssetType.STOCK)
     }
     var selectedAsset by remember(initialAssetId, transactionToEdit) {
-        mutableStateOf(initialAsset ?: AssetCatalog.assets.first { it.type == selectedType })
+        mutableStateOf(initialAsset ?: AssetCatalog.activeAssets.first { it.type == selectedType })
     }
     var assetMenuExpanded by remember { mutableStateOf(false) }
     var quantity by remember(transactionToEdit) {
@@ -115,7 +115,14 @@ fun RegisterAssetTransactionDialog(
     var showDatePicker by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
-    val availableAssets = AssetCatalog.assets.filter { asset -> asset.type == selectedType }
+    val availableAssets = AssetCatalog.activeAssets.filter { asset -> asset.type == selectedType }
+        .let { activeAssets ->
+            if (selectedAsset.type == selectedType && !selectedAsset.isActive) {
+                listOf(selectedAsset) + activeAssets
+            } else {
+                activeAssets
+            }
+        }
     val parsedQuantity = quantity.toBigDecimalOrNull()
     val quantityIsValid = parsedQuantity != null && parsedQuantity > BigDecimal.ZERO &&
         parsedQuantity.scale().coerceAtLeast(0) <= selectedAsset.quantityScale
@@ -199,7 +206,7 @@ fun RegisterAssetTransactionDialog(
                             onClick = {
                                 if (selectedType != type) {
                                     selectedType = type
-                                    selectedAsset = AssetCatalog.assets.first { it.type == type }
+                                    selectedAsset = AssetCatalog.activeAssets.first { it.type == type }
                                 }
                             },
                             label = { Text(assetTypeName(type)) }

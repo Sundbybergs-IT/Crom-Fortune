@@ -2,6 +2,11 @@ package com.sundbybergsit.cromfortune.domain
 
 import java.util.Currency
 
+enum class AssetStatus {
+    ACTIVE,
+    DELISTED
+}
+
 data class TradableAsset(
     val id: String,
     val symbol: String,
@@ -9,8 +14,11 @@ data class TradableAsset(
     val type: AssetType,
     val quoteCurrency: Currency,
     val marketDataSymbol: String,
-    val quantityScale: Int
+    val quantityScale: Int,
+    val status: AssetStatus = AssetStatus.ACTIVE
 ) {
+
+    val isActive: Boolean get() = status == AssetStatus.ACTIVE
 
     init {
         require(id.isNotBlank()) { "Asset ID must not be blank" }
@@ -20,4 +28,3 @@ data class TradableAsset(
         require(quantityScale >= 0) { "Asset quantity scale must not be negative" }
     }
 }
-

@@ -49,6 +49,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.PopupProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.main.LoadValueFromParameterLaunchedEffect
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
@@ -170,8 +171,13 @@ fun RegisterSplitStockAlertDialog(
             TextFieldValue(text = "")
         )
     }
-    val allStocks = ArrayList(AssetCatalog.stocks.map { asset -> "${asset.displayName} (${asset.symbol})" }
-        .toList())
+    val selectedInactiveStock = (stockSplitToEdit?.name ?: stockSymbolParam)?.let { symbol ->
+        AssetCatalog.findBySymbol(AssetType.STOCK, symbol)?.takeUnless { asset -> asset.isActive }
+    }
+    val allStocks = ArrayList(
+        (AssetCatalog.activeStocks + listOfNotNull(selectedInactiveStock))
+            .map { asset -> "${asset.displayName} (${asset.symbol})" }
+    )
     val dropDownOptionsMutableState = remember { mutableStateOf(listOf<String>()) }
     val dropDownExpandedMutableState = remember { mutableStateOf(false) }
     LoadValueFromParameterLaunchedEffect(

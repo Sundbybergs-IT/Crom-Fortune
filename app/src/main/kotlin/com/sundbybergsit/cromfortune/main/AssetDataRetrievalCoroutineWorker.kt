@@ -44,24 +44,25 @@ class AssetDataRetrievalCoroutineWorker(
             context: Context,
             portfolioRepository: PortfolioRepository,
             marketDataClient: MarketDataClient = YahooMarketDataClient,
-            assets: Collection<TradableAsset> = AssetCatalog.assets,
+            assets: Collection<TradableAsset> = AssetCatalog.activeAssets,
             notificationsAllowed: Boolean = isWithinNotificationWindow(context)
         ): RefreshOutcome {
+            val refreshableAssets = assets.filter(TradableAsset::isActive)
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
-            val quoteCurrencies = assets.map { asset -> asset.quoteCurrency }.distinct()
+            val quoteCurrencies = refreshableAssets.map { asset -> asset.quoteCurrency }.distinct()
             for (currency in quoteCurrencies.filterNot { it.currencyCode == "SEK" }) {
                 currencyRates.add(CurrencyRate(currency.currencyCode, marketDataClient.getRateInSek(currency)))
             }
             CurrencyRateRepository.addAll(currencyRates)
-            val marketDataResult = marketDataClient.getPrices(assets)
+            val marketDataResult = marketDataClient.getPrices(refreshableAssets)
             marketDataResult.failures.forEach { (assetId, reason) ->
                 Log.w(TAG, "Price refresh failed for [$assetId]: $reason")
             }
-            for (asset in assets.filter { asset -> asset.type == AssetType.STOCK }) {
+            for (asset in refreshableAssets.filter { asset -> asset.type == AssetType.STOCK }) {
                 val assetPrice = marketDataResult.prices[asset.id]
                 if (assetPrice == null) {
-                    Log.e(TAG, "Skipping ${asset.symbol} as it cannot be found in the market-data API.")
+                    Log.w(TAG, "Skipping ${asset.symbol} as it cannot be found in the market-data API.")
                 } else {
                     val stockPrice = StockPrice(
                         stockSymbol = asset.symbol,
@@ -107,7 +108,7 @@ class AssetDataRetrievalCoroutineWorker(
             }
             StockPriceRepository.updateAssetPrices(
                 assetPrices = marketDataResult.prices.values,
-                requestedAssetIds = assets.mapTo(mutableSetOf()) { asset -> asset.id }
+                requestedAssetIds = refreshableAssets.mapTo(mutableSetOf()) { asset -> asset.id }
             )
             return RefreshOutcome(
                 successfulAssets = marketDataResult.prices.size,
@@ -201,9 +202,9 @@ class AssetDataRetrievalCoroutineWorker(
             currentDayOfWeek: DayOfWeek = LocalDate.now().dayOfWeek,
             currentTime: LocalTime = LocalTime.now()
         ): List<TradableAsset> = if (isWithinNotificationWindow(context, currentDayOfWeek, currentTime)) {
-            AssetCatalog.assets
+            AssetCatalog.activeAssets
         } else {
-            AssetCatalog.cryptocurrencies
+            AssetCatalog.activeCryptocurrencies
         }
 
     }

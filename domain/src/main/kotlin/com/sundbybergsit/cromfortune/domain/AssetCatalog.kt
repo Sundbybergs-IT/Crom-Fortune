@@ -6,12 +6,12 @@ object AssetCatalog {
 
     val stocks: List<TradableAsset> = listOf(
         stock("AC.TO", "Air Canada", "CAD"),
-        stock("ACST", "Acasti Pharma Inc.", "USD"),
-        stock("ANOT.ST", "Anoto Group AB (publ)", "SEK"),
+        stock("ACST", "Acasti Pharma Inc.", "USD", AssetStatus.DELISTED),
+        stock("ANOT.ST", "Anoto Group AB (publ)", "SEK", AssetStatus.DELISTED),
         stock("AIR.PA", "Airbus SE", "EUR"),
-        stock("ASAB.ST", "Advanced Soltech Sweden AB (publ)", "SEK"),
+        stock("ASAB.ST", "Advanced Soltech Sweden AB (publ)", "SEK", AssetStatus.DELISTED),
         stock("ASSA-B.ST", "ASSA ABLOY AB (publ)", "SEK"),
-        stock("AZELIO.ST", "Azelio AB (publ)", "SEK"),
+        stock("AZELIO.ST", "Azelio AB (publ)", "SEK", AssetStatus.DELISTED),
         stock("BRK-B", "Berkshire Hathaway Inc. Class B", "USD"),
         stock("CRNO-B.ST", "Cereno Scientific AB (publ)", "SEK"),
         stock("CDI.PA", "Christian Dior SE", "EUR"),
@@ -24,8 +24,8 @@ object AssetCatalog {
         stock("FERRO.ST", "Ferroamp Elektronik AB (publ)", "SEK"),
         stock("FIA1S.HE", "Finnair Oyj", "EUR"),
         stock("GBK.ST", "Goodbye Kansas Group AB (publ)", "SEK"),
-        stock("GGG.V", "G6 Materials Corp.", "CAD"),
-        stock("GIGSEK.ST", "Gaming Innovation Group Inc.", "SEK"),
+        stock("GGG.V", "G6 Materials Corp.", "CAD", AssetStatus.DELISTED),
+        stock("GIGSEK.ST", "Gaming Innovation Group Inc.", "SEK", AssetStatus.DELISTED),
         stock("GOOGL", "Alphabet Inc. Class A", "USD"),
         stock("SHB-A.ST", "Svenska Handelsbanken AB (publ)", "SEK"),
         stock("HIMX", "Himax Technologies ADR", "USD"),
@@ -52,7 +52,7 @@ object AssetCatalog {
         stock("RKT", "Rocket Companies, Inc.", "USD"),
         stock("SALT-B.ST", "SaltX Technology Holding AB (publ)", "SEK"),
         stock("SAND.ST", "Sandvik AB (publ)", "SEK"),
-        stock("SAS.ST", "SAS AB (publ)", "SEK"),
+        stock("SAS.ST", "SAS AB (publ)", "SEK", AssetStatus.DELISTED),
         stock("SBB-B.ST", "Samhällsbyggnadsbolaget i Norden AB (publ)", "SEK"),
         stock("SHOT.ST", "Scandic Hotels Group AB (publ)", "SEK"),
         stock("SMCI", "Super Micro Computer, Inc.", "USD"),
@@ -60,7 +60,7 @@ object AssetCatalog {
         stock("SOS", "SOS ADR", "USD"),
         stock("SPCX", "Space Exploration Technologies Corp.", "USD"),
         stock("SWED-A.ST", "Swedbank AB (publ)", "SEK"),
-        stock("TANGI.ST", "Tangiamo Touch Technology AB (publ)", "SEK"),
+        stock("TANGI.ST", "Tangiamo Touch Technology AB (publ)", "SEK", AssetStatus.DELISTED),
         stock("TSLA", "Tesla, Inc.", "USD"),
         stock("VUZI", "Vuzix Corporation", "USD")
     )
@@ -72,6 +72,9 @@ object AssetCatalog {
     )
 
     val assets: List<TradableAsset> = stocks + cryptocurrencies
+    val activeStocks: List<TradableAsset> = stocks.filter(TradableAsset::isActive)
+    val activeCryptocurrencies: List<TradableAsset> = cryptocurrencies.filter(TradableAsset::isActive)
+    val activeAssets: List<TradableAsset> = assets.filter(TradableAsset::isActive)
 
     private val assetsById = assets.associateBy(TradableAsset::id)
     private val assetsByTypeAndSymbol = assets.associateBy { asset -> asset.type to asset.symbol }
@@ -89,14 +92,20 @@ object AssetCatalog {
     fun findBySymbol(type: AssetType, symbol: String): TradableAsset? =
         assetsByTypeAndSymbol[type to symbol]
 
-    private fun stock(symbol: String, displayName: String, currencyCode: String) = TradableAsset(
+    private fun stock(
+        symbol: String,
+        displayName: String,
+        currencyCode: String,
+        status: AssetStatus = AssetStatus.ACTIVE
+    ) = TradableAsset(
         id = "stock:$symbol",
         symbol = symbol,
         displayName = displayName,
         type = AssetType.STOCK,
         quoteCurrency = Currency.getInstance(currencyCode),
         marketDataSymbol = symbol,
-        quantityScale = 0
+        quantityScale = 0,
+        status = status
     )
 
     private fun cryptocurrency(symbol: String, displayName: String, marketDataSymbol: String) = TradableAsset(

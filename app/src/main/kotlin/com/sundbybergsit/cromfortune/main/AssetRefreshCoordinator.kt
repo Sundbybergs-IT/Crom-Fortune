@@ -30,7 +30,7 @@ object AssetRefreshCoordinator {
         AssetRefreshStatusRepository.recordAttempt(trigger)
         return try {
             val assets = when (trigger) {
-                RefreshTrigger.MANUAL -> AssetCatalog.assets
+                RefreshTrigger.MANUAL -> AssetCatalog.activeAssets
                 RefreshTrigger.BACKGROUND -> AssetDataRetrievalCoroutineWorker.assetsToRefresh(context)
             }
             val outcome = AssetDataRetrievalCoroutineWorker.refreshFromYahoo(

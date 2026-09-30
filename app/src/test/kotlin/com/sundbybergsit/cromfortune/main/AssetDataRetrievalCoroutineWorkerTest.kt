@@ -39,21 +39,21 @@ class AssetDataRetrievalCoroutineWorkerTest {
             assertTrue(result == ListenableWorker.Result.success())
         }
         assertEquals(
-            AssetCatalog.assets.map { it.quoteCurrency }.distinct().filterNot { it.currencyCode == "SEK" },
+            AssetCatalog.activeAssets.map { it.quoteCurrency }.distinct().filterNot { it.currencyCode == "SEK" },
             client.requestedCurrencies
         )
-        assertEquals(AssetCatalog.assets, client.requestedAssets)
-        assertEquals(AssetCatalog.assets.map { it.id }.toSet(), StockPriceRepository.assetPricesStateFlow.value.assetPrices.map {
+        assertEquals(AssetCatalog.activeAssets, client.requestedAssets)
+        assertEquals(AssetCatalog.activeAssets.map { it.id }.toSet(), StockPriceRepository.assetPricesStateFlow.value.assetPrices.map {
             it.assetId
         }.toSet())
-        assertEquals(AssetCatalog.assets.map { it.quoteCurrency.currencyCode }.toSet(), CurrencyRateRepository.currencyRates.value.map {
+        assertEquals(AssetCatalog.activeAssets.map { it.quoteCurrency.currencyCode }.toSet(), CurrencyRateRepository.currencyRates.value.map {
             it.iso4217CurrencySymbol
         }.toSet())
     }
 
     @Test
     fun `doWork - when market data retrieval fails - retains stale prices and returns retry`() {
-        val previousPrices = AssetCatalog.assets.map { asset ->
+        val previousPrices = AssetCatalog.activeAssets.map { asset ->
             AssetPrice(asset.id, asset.quoteCurrency, 50.0)
         }.toSet()
         StockPriceRepository.putAssetPrices(previousPrices)
@@ -82,7 +82,7 @@ class AssetDataRetrievalCoroutineWorkerTest {
             assertEquals(ListenableWorker.Result.success(), worker.doWork())
         }
         assertEquals(null, StockPriceRepository.getAssetPrice(missingAsset.id))
-        assertEquals(AssetCatalog.assets.size - 1, StockPriceRepository.assetPricesStateFlow.value.assetPrices.size)
+        assertEquals(AssetCatalog.activeAssets.size - 1, StockPriceRepository.assetPricesStateFlow.value.assetPrices.size)
     }
 
     private class FakeMarketDataClient(

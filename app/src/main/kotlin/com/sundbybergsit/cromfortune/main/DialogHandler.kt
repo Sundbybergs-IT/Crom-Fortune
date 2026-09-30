@@ -59,7 +59,7 @@ object DialogHandler {
 
     fun showSupportedStocksDialog() {
         _dialogViewState.value = DialogViewState.ShowSupportedStocksDialog(
-            text = AssetCatalog.stocks.joinToString { asset -> "${asset.displayName} (${asset.symbol})" }
+            text = AssetCatalog.activeStocks.joinToString { asset -> "${asset.displayName} (${asset.symbol})" }
         )
     }
 

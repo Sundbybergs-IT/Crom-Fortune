@@ -26,6 +26,16 @@ class AssetCatalogTest {
     }
 
     @Test
+    fun `delisted stocks remain addressable but are excluded from active assets`() {
+        val delistedStock = AssetCatalog.findBySymbol(AssetType.STOCK, "SAS.ST")
+
+        assertEquals(AssetStatus.DELISTED, delistedStock?.status)
+        assertEquals(delistedStock, AssetCatalog.findById("stock:SAS.ST"))
+        assertEquals(false, AssetCatalog.activeAssets.contains(delistedStock))
+        assertEquals(false, AssetCatalog.activeStocks.contains(delistedStock))
+    }
+
+    @Test
     fun `initial cryptocurrencies have stable identity and Yahoo market symbols`() {
         assertEquals(
             listOf("crypto:BTC", "crypto:ETH", "crypto:LTC"),
