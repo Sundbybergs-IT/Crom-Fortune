@@ -9,6 +9,12 @@ fun List<DayOfWeek>.isWithinConfiguredTimeInterval(
         fromTime: LocalTime,
         toTime: LocalTime,
 ): Boolean {
-    return contains(currentDayOfWeek) && currentTime.isAfter(fromTime) && currentTime.isBefore(toTime)
+    if (fromTime == toTime) return contains(currentDayOfWeek)
+    return if (fromTime < toTime) {
+        contains(currentDayOfWeek) && currentTime >= fromTime && currentTime < toTime
+    } else {
+        (contains(currentDayOfWeek) && currentTime >= fromTime) ||
+            (contains(currentDayOfWeek.minus(1)) && currentTime < toTime)
+    }
 }
 

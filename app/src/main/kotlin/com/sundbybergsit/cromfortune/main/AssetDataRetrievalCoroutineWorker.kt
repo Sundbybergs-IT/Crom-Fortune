@@ -22,8 +22,8 @@ import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
+import java.io.IOException
 import java.time.DayOfWeek
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.math.roundToInt
@@ -43,11 +43,10 @@ class AssetDataRetrievalCoroutineWorker(
         fun refreshFromYahoo(
             context: Context,
             portfolioRepository: PortfolioRepository,
-            onFinished: () -> Unit,
             marketDataClient: MarketDataClient = YahooMarketDataClient,
-            assets: Collection<TradableAsset> = AssetCatalog.assets
-        ) {
-            val notificationsAllowed = isWithinNotificationWindow(context)
+            assets: Collection<TradableAsset> = AssetCatalog.assets,
+            notificationsAllowed: Boolean = isWithinNotificationWindow(context)
+        ): RefreshOutcome {
             val currencyRates: MutableSet<CurrencyRate> = mutableSetOf()
             currencyRates.add(CurrencyRate("SEK", 1.0))
             val quoteCurrencies = assets.map { asset -> asset.quoteCurrency }.distinct()
@@ -106,12 +105,14 @@ class AssetDataRetrievalCoroutineWorker(
                     }
                 }
             }
-            (context.applicationContext as CromFortuneApp).lastRefreshed = Instant.now()
             StockPriceRepository.updateAssetPrices(
                 assetPrices = marketDataResult.prices.values,
                 requestedAssetIds = assets.mapTo(mutableSetOf()) { asset -> asset.id }
             )
-            onFinished()
+            return RefreshOutcome(
+                successfulAssets = marketDataResult.prices.size,
+                failedAssets = marketDataResult.failures.size
+            )
         }
 
         private fun notifyRecommendation(context: Context, recommendation: Recommendation, portfolioName: String) {
@@ -197,12 +198,9 @@ class AssetDataRetrievalCoroutineWorker(
 
         internal fun assetsToRefresh(
             context: Context,
-            hasPersistedPrices: Boolean,
             currentDayOfWeek: DayOfWeek = LocalDate.now().dayOfWeek,
             currentTime: LocalTime = LocalTime.now()
-        ): List<TradableAsset> = if (
-            !hasPersistedPrices || isWithinNotificationWindow(context, currentDayOfWeek, currentTime)
-        ) {
+        ): List<TradableAsset> = if (isWithinNotificationWindow(context, currentDayOfWeek, currentTime)) {
             AssetCatalog.assets
         } else {
             AssetCatalog.cryptocurrencies
@@ -213,23 +211,24 @@ class AssetDataRetrievalCoroutineWorker(
     override suspend fun doWork(): Result {
         Log.i(TAG, "doWork()")
         return try {
-            val assets = assetsToRefresh(context, hasPersistedPrices = !isRefreshRequired())
-            Log.i(TAG, "Retrieving ${assets.size} asset prices; cryptocurrencies are refreshed 24/7.")
-            refreshFromYahoo(
+            val outcome = AssetRefreshCoordinator.refresh(
                 context = context,
                 portfolioRepository = PortfolioRepository,
-                onFinished = { },
-                marketDataClient = marketDataClient,
-                assets = assets
+                trigger = RefreshTrigger.BACKGROUND,
+                marketDataClient = marketDataClient
             )
+            Log.i(TAG, "Refresh completed: ${outcome.successfulAssets} succeeded, ${outcome.failedAssets} failed.")
             Result.success()
+        } catch (error: IOException) {
+            Log.e(TAG, "Temporary network failure while refreshing market data", error)
+            Result.retry()
+        } catch (error: AssetRefreshException) {
+            Log.e(TAG, "Market data refresh returned no prices; retrying", error)
+            Result.retry()
         } catch (error: Throwable) {
+            Log.e(TAG, "Permanent failure while refreshing market data", error)
             Result.failure()
         }
-    }
-
-    private fun isRefreshRequired(): Boolean {
-        return StockPriceRepository.assetPricesStateFlow.value.assetPrices.isEmpty()
     }
 
 }

@@ -13,7 +13,8 @@ class StockRetrievalWorkerFactory(
         appContext: Context,
         workerClassName: String,
         workerParameters: WorkerParameters,
-    ): ListenableWorker {
+    ): ListenableWorker? {
+        if (workerClassName != AssetDataRetrievalCoroutineWorker::class.java.name) return null
         return AssetDataRetrievalCoroutineWorker(
             context = appContext,
             workerParameters = workerParameters,

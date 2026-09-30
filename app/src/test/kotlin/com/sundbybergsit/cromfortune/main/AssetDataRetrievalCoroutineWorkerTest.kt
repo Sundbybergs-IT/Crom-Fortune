@@ -52,7 +52,7 @@ class AssetDataRetrievalCoroutineWorkerTest {
     }
 
     @Test
-    fun `doWork - when market data retrieval fails - retains stale prices and returns success`() {
+    fun `doWork - when market data retrieval fails - retains stale prices and returns retry`() {
         val previousPrices = AssetCatalog.assets.map { asset ->
             AssetPrice(asset.id, asset.quoteCurrency, 50.0)
         }.toSet()
@@ -64,7 +64,7 @@ class AssetDataRetrievalCoroutineWorkerTest {
 
         runBlocking {
             val result: ListenableWorker.Result = worker.doWork()
-            assertTrue(result == ListenableWorker.Result.success())
+            assertTrue(result == ListenableWorker.Result.retry())
         }
         assertEquals(previousPrices, StockPriceRepository.assetPricesStateFlow.value.assetPrices)
         assertTrue(StockPriceRepository.assetPricesStateFlow.value.statuses.all { it.isStale })

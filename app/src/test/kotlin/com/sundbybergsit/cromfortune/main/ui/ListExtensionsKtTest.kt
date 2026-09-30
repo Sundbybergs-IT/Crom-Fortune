@@ -15,6 +15,43 @@ import java.time.LocalTime
 class ListExtensionsKtTest {
 
     @Test
+    fun `isWithinConfiguredTimeInterval - includes start and excludes end`() {
+        val days = listOf(DayOfWeek.MONDAY)
+
+        assertTrue(
+            days.isWithinConfiguredTimeInterval(
+                DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(9, 0), LocalTime.of(17, 0)
+            )
+        )
+        assertFalse(
+            days.isWithinConfiguredTimeInterval(
+                DayOfWeek.MONDAY, LocalTime.of(17, 0), LocalTime.of(9, 0), LocalTime.of(17, 0)
+            )
+        )
+    }
+
+    @Test
+    fun `isWithinConfiguredTimeInterval - supports interval over midnight`() {
+        val days = listOf(DayOfWeek.MONDAY)
+
+        assertTrue(
+            days.isWithinConfiguredTimeInterval(
+                DayOfWeek.MONDAY, LocalTime.of(23, 0), LocalTime.of(22, 0), LocalTime.of(2, 0)
+            )
+        )
+        assertTrue(
+            days.isWithinConfiguredTimeInterval(
+                DayOfWeek.TUESDAY, LocalTime.of(1, 0), LocalTime.of(22, 0), LocalTime.of(2, 0)
+            )
+        )
+        assertFalse(
+            days.isWithinConfiguredTimeInterval(
+                DayOfWeek.TUESDAY, LocalTime.of(2, 0), LocalTime.of(22, 0), LocalTime.of(2, 0)
+            )
+        )
+    }
+
+    @Test
     fun `isWithinConfiguredTimeInterval - when correct day and time - returns true`() {
         val currentTime = LocalTime.of(11, 0)
         val currentDayOfWeek = DayOfWeek.WEDNESDAY

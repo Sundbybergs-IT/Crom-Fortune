@@ -62,7 +62,6 @@ class AssetDataRetrievalCoroutineWorkerNotificationWindowTest {
     fun `outside stock retrieval window only cryptocurrencies are refreshed`() {
         val assets = AssetDataRetrievalCoroutineWorker.assetsToRefresh(
             context = context,
-            hasPersistedPrices = true,
             currentDayOfWeek = DayOfWeek.MONDAY,
             currentTime = LocalTime.of(18, 0)
         )

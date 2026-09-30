@@ -114,7 +114,7 @@ fun Home(
     val portfoliosState by viewModel.portfoliosStateFlow.collectAsState()
     val tabs = portfoliosState.toList()
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { tabs.size })
-    val lastRefreshed = viewModel.lastRefreshedStateFlow.collectAsState()
+    val refreshStatus = viewModel.refreshStatusStateFlow.collectAsState()
     if (!BuildConfig.DEBUG) {
         val requestUpdateFlow = remember(appUpdateManager) { appUpdateManager.requestUpdateFlow() }
         val appUpdateResultState = requestUpdateFlow.collectAsState(initial = AppUpdateResult.NotAvailable)
@@ -130,7 +130,7 @@ fun Home(
         }
     }
     LaunchedEffect(key1 = Unit) {
-        viewModel.refreshData(localContext)
+        viewModel.refreshAutomatically(localContext)
     }
     var expanded by remember { mutableStateOf(false) }
     val items = stringArrayResource(id = R.array.filter_array)
@@ -240,11 +240,23 @@ fun Home(
                         )
                         Spacer(Modifier.width(8.dp))
                         Column {
-                            val updatedAt = lastRefreshed.value?.atZone(ZoneId.systemDefault())
+                            val updatedAt = refreshStatus.value.lastSuccessfulAt?.atZone(ZoneId.systemDefault())
                                 ?.format(DateTimeFormatter.ofPattern("HH:mm"))
+                            val updateStatusText = when {
+                                refreshStatus.value.isRefreshing -> stringResource(R.string.home_updating)
+                                refreshStatus.value.lastError != null -> updatedAt?.let {
+                                    stringResource(R.string.home_update_failed_with_last_success, it)
+                                } ?: stringResource(R.string.home_update_failed)
+                                refreshStatus.value.failedAssets > 0 && updatedAt != null -> stringResource(
+                                    R.string.home_last_updated_with_failures,
+                                    updatedAt,
+                                    refreshStatus.value.failedAssets
+                                )
+                                updatedAt != null -> stringResource(R.string.home_last_updated, updatedAt)
+                                else -> stringResource(R.string.home_not_updated)
+                            }
                             Text(
-                                text = updatedAt?.let { stringResource(R.string.home_last_updated, it) }
-                                    ?: stringResource(R.string.home_not_updated),
+                                text = updateStatusText,
                                 style = MaterialTheme.typography.labelMedium
                             )
                         }

@@ -17,11 +17,12 @@ import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
-import com.sundbybergsit.cromfortune.main.AssetDataRetrievalCoroutineWorker
-import com.sundbybergsit.cromfortune.main.CromFortuneApp
+import com.sundbybergsit.cromfortune.main.AssetRefreshCoordinator
+import com.sundbybergsit.cromfortune.main.AssetRefreshStatusRepository
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
+import com.sundbybergsit.cromfortune.main.RefreshTrigger
 import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.notifications.NotificationsRepositoryImpl
@@ -37,7 +38,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
-import java.time.Instant
 import java.util.Currency
 
 class HomeViewModel(
@@ -58,8 +58,7 @@ class HomeViewModel(
 
     val changedPagerMutableStateFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    private val _lastRefreshedStateFlow = MutableStateFlow<Instant?>(null)
-    val lastRefreshedStateFlow: StateFlow<Instant?> = _lastRefreshedStateFlow.asStateFlow()
+    val refreshStatusStateFlow = AssetRefreshStatusRepository.status
 
     init {
 
@@ -394,27 +393,42 @@ class HomeViewModel(
         return StockEventRepository(context, portfolioName = portfolioName).countCurrent(stockName) >= quantity
     }
 
+    fun refreshAutomatically(context: Context) {
+        viewModelScope.launch(ioDispatcher) {
+            refresh(context)
+            if (!AssetRefreshCoordinator.shouldRefreshAutomatically(context)) {
+                Log.i(TAG, "Skipping automatic refresh because current data is recent.")
+                return@launch
+            }
+            try {
+                refreshDataInternal(context, RefreshTrigger.BACKGROUND)
+            } catch (error: Exception) {
+                Log.e(TAG, "Automatic refresh failed", error)
+            }
+        }
+    }
+
     fun refreshData(context: Context, onFinished: () -> Unit = {}) {
         viewModelScope.launch(ioDispatcher) {
-            val application = context.applicationContext as CromFortuneApp
-            application.lastRefreshed.takeUnless { it == Instant.EPOCH }?.let {
-                _lastRefreshedStateFlow.value = it
-            }
             refresh(context)
             try {
-                AssetDataRetrievalCoroutineWorker.refreshFromYahoo(
-                    context,
-                    portfolioRepository = portfolioRepository, onFinished = {
-                        refresh(context)
-                        _lastRefreshedStateFlow.value = application.lastRefreshed
-                        onFinished.invoke()
-                    })
-                Log.i(TAG, "Last refreshed: " + application.lastRefreshed)
+                refreshDataInternal(context, RefreshTrigger.MANUAL)
+                onFinished.invoke()
             } catch (e: Exception) {
                 Log.e(TAG, "refreshData failed", e)
                 DialogHandler.showSnack(context.getString(R.string.generic_error_network))
             }
         }
+    }
+
+    private fun refreshDataInternal(context: Context, trigger: RefreshTrigger) {
+        val outcome = AssetRefreshCoordinator.refresh(
+            context = context,
+            portfolioRepository = portfolioRepository,
+            trigger = trigger
+        )
+        refresh(context)
+        Log.i(TAG, "Refresh completed: $outcome")
     }
 
     fun showAll(context: Context) {

@@ -19,7 +19,6 @@ import com.sundbybergsit.cromfortune.main.stocks.StockOrderPersistenceMigration
 import java.net.CookieHandler
 import java.net.CookieManager
 import java.net.CookiePolicy
-import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -31,8 +30,6 @@ class CromFortuneApp : Application(), Configuration.Provider {
             .setMinimumLoggingLevel(Log.INFO)
             .setWorkerFactory(StockRetrievalWorkerFactory())
             .build()
-
-    var lastRefreshed: Instant = Instant.ofEpochMilli(0L)
 
     override fun onCreate() {
         super.onCreate()
@@ -81,6 +78,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
         AssetNoteRepository.init(applicationContext)
+        AssetRefreshStatusRepository.init(applicationContext)
         val workManager = WorkManager.getInstance(applicationContext)
         migrateOldData(fromDb = "Stocks", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
         migrateOldData(fromDb = "SPLITS", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME + "-splits")
@@ -139,9 +137,8 @@ class CromFortuneApp : Application(), Configuration.Provider {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<AssetDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
             .setConstraints(constraints).build()
-        workManager.cancelAllWork()
         workManager.enqueueUniquePeriodicWork(
-            "fetchFromYahoo", ExistingPeriodicWorkPolicy.UPDATE,
+            "fetchFromYahoo", ExistingPeriodicWorkPolicy.KEEP,
             stockRetrievalWorkRequest
         )
     }
