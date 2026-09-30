@@ -14,3 +14,12 @@ data class AssetEvent(
         require(stockSplit == null || assetType == AssetType.STOCK) { "Splits are only supported for stocks" }
     }
 }
+
+val assetEventChronologicalComparator: Comparator<AssetEvent> =
+    compareBy(AssetEvent::dateInMillis).thenBy { event ->
+        when (event.transaction?.action) {
+            TransactionAction.BUY -> 0
+            null -> 1
+            TransactionAction.SELL -> 2
+        }
+    }

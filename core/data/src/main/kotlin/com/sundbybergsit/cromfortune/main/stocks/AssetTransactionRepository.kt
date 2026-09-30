@@ -102,12 +102,12 @@ class AssetTransactionRepository(
             ?.let { stockSplitApi.list(it.symbol) }
             .orEmpty()
         val events = transactions.map { transaction ->
-            transaction.dateInMillis to { quantity = when (transaction.action) {
+            Triple(transaction.dateInMillis, transaction.action.validationPriority) { quantity = when (transaction.action) {
                 TransactionAction.BUY -> quantity + transaction.quantity
                 TransactionAction.SELL -> quantity - transaction.quantity
             } }
         } + stockSplits.map { split ->
-            split.dateInMillis to {
+            Triple(split.dateInMillis, STOCK_SPLIT_VALIDATION_PRIORITY) {
                 quantity = if (split.reverse) {
                     quantity.divideToIntegralValue(split.quantity.toBigDecimal())
                 } else {
@@ -115,7 +115,7 @@ class AssetTransactionRepository(
                 }
             }
         }
-        events.sortedBy { it.first }.forEach { (_, applyEvent) ->
+        events.sortedWith(compareBy({ it.first }, { it.second })).forEach { (_, _, applyEvent) ->
             applyEvent()
             require(quantity >= BigDecimal.ZERO) { "Sale exceeds available quantity for $assetId" }
         }
@@ -131,4 +131,14 @@ class AssetTransactionRepository(
 
     private fun legacyStockKey(assetId: String): String? =
         assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:")
+
+    private val TransactionAction.validationPriority: Int
+        get() = when (this) {
+            TransactionAction.BUY -> 0
+            TransactionAction.SELL -> 2
+        }
+
+    private companion object {
+        const val STOCK_SPLIT_VALIDATION_PRIORITY = 1
+    }
 }

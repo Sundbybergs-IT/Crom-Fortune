@@ -149,6 +149,42 @@ class HomeComposablesKtTest {
     }
 
     @Test
+    fun `editing first crypto purchase price keeps same-time sale valid`() {
+        val bitcoin = AssetCatalog.cryptocurrencies.first()
+        val buy = AssetTransaction(
+            assetId = bitcoin.id,
+            assetType = bitcoin.type,
+            symbol = bitcoin.symbol,
+            displayName = bitcoin.displayName,
+            quoteCurrencyCode = bitcoin.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = 1L,
+            unitPrice = BigDecimal("60000"),
+            quantity = BigDecimal("0.01")
+        )
+        val sell = buy.copy(
+            action = TransactionAction.SELL,
+            unitPrice = BigDecimal("65000"),
+            quantity = BigDecimal("0.005")
+        )
+        viewModel.save(context, TEST_PORTFOLIO_NAME, buy)
+        viewModel.save(context, TEST_PORTFOLIO_NAME, sell)
+
+        val updatedBuy = buy.copy(unitPrice = BigDecimal("59000"))
+        viewModel.update(context, TEST_PORTFOLIO_NAME, buy, updatedBuy)
+
+        val transactions = viewModel.portfoliosStateFlow.value
+            .getValue(TEST_PORTFOLIO_NAME)
+            .items.single()
+            .assetEvents.mapNotNull { it.transaction }
+        assertEquals(setOf(updatedBuy, sell), transactions.toSet())
+        assertEquals(
+            BigDecimal("0.005"),
+            viewModel.portfoliosStateFlow.value.getValue(TEST_PORTFOLIO_NAME).items.single().quantity
+        )
+    }
+
+    @Test
     fun `portfolio summary remains visible when portfolio is empty`() {
         setContent()
 

@@ -8,6 +8,7 @@ import com.sundbybergsit.cromfortune.domain.AssetTransactionApi
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
+import com.sundbybergsit.cromfortune.domain.assetEventChronologicalComparator
 import java.math.BigDecimal
 
 class AssetEventRepository(
@@ -19,7 +20,7 @@ class AssetEventRepository(
 
     override fun currentQuantity(assetId: String): BigDecimal {
         var quantity = BigDecimal.ZERO
-        list(assetId).sortedBy(AssetEvent::dateInMillis).forEach { event ->
+        list(assetId).sortedWith(assetEventChronologicalComparator).forEach { event ->
             event.transaction?.let { transaction ->
                 quantity += if (transaction.action == TransactionAction.BUY) transaction.quantity else -transaction.quantity
                 require(quantity >= BigDecimal.ZERO) { "Sale exceeds available quantity for $assetId" }

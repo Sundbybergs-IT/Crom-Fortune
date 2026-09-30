@@ -16,6 +16,7 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockSplit
+import com.sundbybergsit.cromfortune.domain.assetEventChronologicalComparator
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.main.AssetRefreshCoordinator
 import com.sundbybergsit.cromfortune.main.AssetRefreshStatusRepository
@@ -309,7 +310,7 @@ class HomeViewModel(
     private fun assetHoldings(context: Context, portfolioName: String): List<PortfolioItem> {
         val repository = AssetEventRepository(context, portfolioName)
         return repository.assetIds().mapNotNull { assetId ->
-            val events = repository.list(assetId).sortedBy(AssetEvent::dateInMillis)
+            val events = repository.list(assetId).sortedWith(assetEventChronologicalComparator)
             val firstTransaction = events.firstNotNullOfOrNull { event -> event.transaction } ?: return@mapNotNull null
             val catalogAsset = AssetCatalog.findById(assetId)
             val rate = CurrencyRateRepository.currencyRates.value
