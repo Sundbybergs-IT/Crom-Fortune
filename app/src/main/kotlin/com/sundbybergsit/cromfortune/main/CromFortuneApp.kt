@@ -3,24 +3,18 @@
 package com.sundbybergsit.cromfortune.main
 
 import android.app.Application
-import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.work.Configuration
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.sundbybergsit.cromfortune.main.notes.AssetNoteRepository
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
+import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderPersistenceMigration
 import java.net.CookieHandler
 import java.net.CookieManager
 import java.net.CookiePolicy
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class CromFortuneApp : Application(), Configuration.Provider {
 
@@ -79,25 +73,27 @@ class CromFortuneApp : Application(), Configuration.Provider {
         StockMuteSettingsRepository.init(applicationContext)
         AssetNoteRepository.init(applicationContext)
         AssetRefreshStatusRepository.init(applicationContext)
-        val workManager = WorkManager.getInstance(applicationContext)
         migrateOldData(fromDb = "Stocks", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
         migrateOldData(fromDb = "SPLITS", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME + "-splits")
         createDataIfMissing(Databases.PORTFOLIO_DB_NAME)
         PortfolioRepository.init(
             getSharedPreferences(
                 Databases.PORTFOLIO_DB_NAME,
-                Context.MODE_PRIVATE
+                MODE_PRIVATE
             )
         )
         StockOrderPersistenceMigration.migrateToLatest(
             context = applicationContext,
             portfolioNames = PortfolioRepository.portfolioNamesStateFlow.value
         )
-        retrieveDataInBackground(workManager)
+        AssetRefreshScheduler.schedule(
+            applicationContext,
+            StockRetrievalSettings(applicationContext).timeInterval.value.refreshInterval
+        )
     }
 
     private fun createDataIfMissing(db: String) {
-        val sharedPreferences = getSharedPreferences(db, Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(db, MODE_PRIVATE)
         if (sharedPreferences.all.isEmpty()) {
             sharedPreferences.edit().putStringSet(
                 Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET,
@@ -107,10 +103,10 @@ class CromFortuneApp : Application(), Configuration.Provider {
     }
 
     private fun migrateOldData(fromDb: String, toDb: String) {
-        val oldPrefs = getSharedPreferences(fromDb, Context.MODE_PRIVATE)
+        val oldPrefs = getSharedPreferences(fromDb, MODE_PRIVATE)
         if (oldPrefs.all.isNotEmpty()) {
             Log.i("CromFortuneApp", "Migrating old data...")
-            oldPrefs.copyTo(getSharedPreferences(toDb, Context.MODE_PRIVATE))
+            oldPrefs.copyTo(getSharedPreferences(toDb, MODE_PRIVATE))
             oldPrefs.edit().clear().apply()
             Log.i("CromFortuneApp", "Done migrating.")
         }
@@ -131,16 +127,6 @@ class CromFortuneApp : Application(), Configuration.Provider {
             }
         }
         apply()
-    }
-
-    private fun retrieveDataInBackground(workManager: WorkManager) {
-        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-        val stockRetrievalWorkRequest = PeriodicWorkRequestBuilder<AssetDataRetrievalCoroutineWorker>(1, TimeUnit.HOURS)
-            .setConstraints(constraints).build()
-        workManager.enqueueUniquePeriodicWork(
-            "fetchFromYahoo", ExistingPeriodicWorkPolicy.KEEP,
-            stockRetrievalWorkRequest
-        )
     }
 
 }

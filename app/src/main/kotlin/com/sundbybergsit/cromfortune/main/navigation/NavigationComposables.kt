@@ -45,7 +45,11 @@ import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -111,6 +115,7 @@ import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRateApi
 import com.sundbybergsit.cromfortune.feature.settings.Settings
+import com.sundbybergsit.cromfortune.main.AssetRefreshScheduler
 import com.sundbybergsit.cromfortune.main.BuildConfig
 import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
@@ -809,10 +814,14 @@ private fun StockRetrievalTimeIntervalsDialog(
     state: DialogHandler.DialogViewState.ShowStockRetrievalTimeIntervalsDialog,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    val settingsViewState by state.stockRetrievalSettings.timeInterval.collectAsState()
     val selectedDaysMutableState: MutableState<Set<DayOfWeek>> = remember { mutableStateOf(setOf()) }
+    var selectedRefreshInterval by remember(settingsViewState.refreshInterval) {
+        mutableStateOf(settingsViewState.refreshInterval)
+    }
     val fromTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
     val toTimePickerState: MutableState<TimePickerState?> = remember { mutableStateOf(null) }
-    val settingsViewState by state.stockRetrievalSettings.timeInterval.collectAsState()
     UpdateTimePickerLaunchedEffect(
         settingsViewState, state, selectedDaysMutableState,
         fromTimePickerState, toTimePickerState
@@ -848,6 +857,14 @@ private fun StockRetrievalTimeIntervalsDialog(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        text = stringResource(R.string.settings_dialog_refresh_interval_label),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    StockRefreshIntervalOptions(
+                        selected = selectedRefreshInterval,
+                        onSelected = { selectedRefreshInterval = it }
+                    )
                     TimeSettings(
                         fromState = checkNotNull(fromTimePickerState.value),
                         toState = checkNotNull(toTimePickerState.value)
@@ -878,7 +895,12 @@ private fun StockRetrievalTimeIntervalsDialog(
                                 fromState.minute,
                                 toState.hour,
                                 toState.minute,
-                                selectedDaysMutableState.value.toList()
+                                selectedDaysMutableState.value.toList(),
+                                selectedRefreshInterval
+                            )
+                            AssetRefreshScheduler.schedule(
+                                context = context,
+                                interval = selectedRefreshInterval
                             )
                             onDismiss()
                             DialogHandler.showSnack(savedText)
@@ -891,6 +913,56 @@ private fun StockRetrievalTimeIntervalsDialog(
         }
     }
 }
+
+@Composable
+private fun StockRefreshIntervalOptions(
+    selected: StockRetrievalSettings.RefreshInterval,
+    onSelected: (StockRetrievalSettings.RefreshInterval) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = refreshIntervalLabel(selected),
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            readOnly = true,
+            singleLine = true,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            StockRetrievalSettings.RefreshInterval.entries.forEach { interval ->
+                DropdownMenuItem(
+                    text = { Text(refreshIntervalLabel(interval)) },
+                    onClick = {
+                        onSelected(interval)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun refreshIntervalLabel(interval: StockRetrievalSettings.RefreshInterval): String =
+    stringResource(
+        when (interval) {
+            StockRetrievalSettings.RefreshInterval.FIFTEEN_MINUTES -> R.string.refresh_interval_15_minutes
+            StockRetrievalSettings.RefreshInterval.THIRTY_MINUTES -> R.string.refresh_interval_30_minutes
+            StockRetrievalSettings.RefreshInterval.ONE_HOUR -> R.string.refresh_interval_1_hour
+            StockRetrievalSettings.RefreshInterval.THREE_HOURS -> R.string.refresh_interval_3_hours
+            StockRetrievalSettings.RefreshInterval.SIX_HOURS -> R.string.refresh_interval_6_hours
+            StockRetrievalSettings.RefreshInterval.TWELVE_HOURS -> R.string.refresh_interval_12_hours
+        }
+    )
 
 @Composable
 private fun TimeSettings(
