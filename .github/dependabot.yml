@@ -1,6 +1,29 @@
 version: 2
 updates:
   - package-ecosystem: "gradle"
+    directories:
+      - "/"
+      - "/build-logic"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Stockholm"
+    open-pull-requests-limit: 10
+    groups:
+      kotlin-and-android:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "com.android.tools.build*"
+      androidx:
+        patterns:
+          - "androidx.*"
+      firebase:
+        patterns:
+          - "com.google.firebase*"
+
+  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
