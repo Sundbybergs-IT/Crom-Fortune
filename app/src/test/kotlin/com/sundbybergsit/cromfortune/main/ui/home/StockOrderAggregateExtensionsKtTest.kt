@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
+import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -11,7 +12,6 @@ import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
-import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import junit.framework.TestCase.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith

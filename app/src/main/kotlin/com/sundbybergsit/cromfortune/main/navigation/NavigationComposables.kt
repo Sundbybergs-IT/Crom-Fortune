@@ -102,6 +102,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.core.ui.BottomSheetContent
 import com.sundbybergsit.cromfortune.core.ui.BottomSheetMenuItem
 import com.sundbybergsit.cromfortune.domain.AssetEvent
@@ -124,7 +125,6 @@ import com.sundbybergsit.cromfortune.main.ShowSnackbarLaunchedEffect
 import com.sundbybergsit.cromfortune.main.UpdateTimePickerLaunchedEffect
 import com.sundbybergsit.cromfortune.main.activityBoundViewModel
 import com.sundbybergsit.cromfortune.main.contentDescription
-import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.notes.AssetNoteRepository
 import com.sundbybergsit.cromfortune.main.notes.MAX_ASSET_NOTE_LENGTH

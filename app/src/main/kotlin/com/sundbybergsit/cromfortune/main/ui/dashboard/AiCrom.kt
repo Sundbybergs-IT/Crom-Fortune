@@ -187,8 +187,8 @@ fun AiCrom(modifier: Modifier = Modifier, mood: AiCromMood, userPortfolioIsWorth
             fun drawHand() {
                 val direction = unitVector(elbow, wrist)
                 val normal = Offset(-direction.y, direction.x)
-                val palmLength = w * (if (fist) .130f else .118f) * handDepthScale
-                val palmHalfWidth = w * (if (fist) .083f else .065f) * handDepthScale
+                val palmLength = w * (if (fist) .105f else .118f) * handDepthScale
+                val palmHalfWidth = w * (if (fist) .074f else .065f) * handDepthScale
                 val palmCenter = wrist + direction * (palmLength * .45f)
                 val depthFraction = ((handDepthScale - .82f) / .36f).coerceIn(0f, 1f)
                 val palm = Path().apply {
@@ -234,38 +234,41 @@ fun AiCrom(modifier: Modifier = Modifier, mood: AiCromMood, userPortfolioIsWorth
                 drawPath(palm, seam, style = Stroke(w * .010f * handDepthScale))
 
                 if (fist) {
-                    // Four curled fingers form the front plane; the thumb crosses
-                    // them on top, making palm/back orientation unambiguous.
+                    // Keep the curled fingers inside the palm silhouette. Exposed
+                    // circular knuckles read as toes when the fist is raised.
                     repeat(4) { index ->
-                        val across = palmHalfWidth * (.70f - index * .47f)
-                        val knuckle = local(wrist, direction, palmLength * .82f, across)
-                        drawCircle(shellDark, w * .030f * handDepthScale, knuckle)
+                        val across = palmHalfWidth * (.63f - index * .42f)
+                        val knuckle = local(wrist, direction, palmLength * .76f, across)
+                        drawCircle(shellDark, w * .023f * handDepthScale, knuckle)
                         drawCircle(
                             if (index == 0) shellLight else shellMid,
-                            w * .023f * handDepthScale,
+                            w * .017f * handDepthScale,
                             knuckle
                         )
                         drawLine(
                             seam,
-                            local(wrist, direction, palmLength * .48f, across),
+                            local(wrist, direction, palmLength * .58f, across),
                             local(wrist, direction, palmLength * .75f, across),
-                            w * .006f * handDepthScale,
+                            w * .005f * handDepthScale,
                             StrokeCap.Round
                         )
                     }
                     val thumb = Path().apply {
-                        moveTo(local(wrist, direction, palmLength * .18f, -palmHalfWidth * .95f).x, local(wrist, direction, palmLength * .18f, -palmHalfWidth * .95f).y)
+                        val thumbBase = local(wrist, direction, palmLength * .30f, -palmHalfWidth * .82f)
+                        val thumbBend = local(wrist, direction, palmLength * .50f, -palmHalfWidth * .30f)
+                        val thumbTip = local(wrist, direction, palmLength * .58f, palmHalfWidth * .25f)
+                        moveTo(thumbBase.x, thumbBase.y)
                         quadraticTo(
-                            local(wrist, direction, palmLength * .60f, -palmHalfWidth * .42f).x,
-                            local(wrist, direction, palmLength * .60f, -palmHalfWidth * .42f).y,
-                            local(wrist, direction, palmLength * .68f, palmHalfWidth * .28f).x,
-                            local(wrist, direction, palmLength * .68f, palmHalfWidth * .28f).y
+                            thumbBend.x,
+                            thumbBend.y,
+                            thumbTip.x,
+                            thumbTip.y
                         )
                     }
                     drawPath(
                         thumb,
                         shellLight,
-                        style = Stroke(w * .038f * handDepthScale, cap = StrokeCap.Round)
+                        style = Stroke(w * .030f * handDepthScale, cap = StrokeCap.Round)
                     )
                     drawPath(
                         thumb,

@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetHolding
@@ -25,7 +26,6 @@ import com.sundbybergsit.cromfortune.main.DialogHandler
 import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
 import com.sundbybergsit.cromfortune.main.RefreshTrigger
-import com.sundbybergsit.cromfortune.main.crom.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.notifications.NotificationsRepositoryImpl
 import com.sundbybergsit.cromfortune.main.stocks.AssetEventRepository
