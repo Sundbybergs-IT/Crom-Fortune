@@ -13,6 +13,8 @@ data class StockOrderAggregate(
     private var aggregateBuyQuantity: BigDecimal = BigDecimal.ZERO,
     private var aggregateSellQuantity: BigDecimal = BigDecimal.ZERO,
     private var aggregateAcquisitionValue: Double = 0.0,
+    private var holdingCost: Double = 0.0,
+    private var realizedProfit: Double = 0.0,
     val events: MutableList<StockEvent> = mutableListOf()
 ) {
 
@@ -75,33 +77,35 @@ data class StockOrderAggregate(
     }
 
     private fun StockOrder.buy() {
-        aggregateAcquisitionValue = getCalculatedAcquisitionValueAfterBuy()
+        val buyCost = this.pricePerStock * this.quantity.toDouble() + this.commissionFee / rateInSek
+        holdingCost += buyCost
+        accumulatedPurchases += buyCost
         aggregateBuyQuantity += this.quantity
-        accumulatedPurchases += this.pricePerStock * this.quantity.toDouble() + this.commissionFee / rateInSek
+        val currentQty = (aggregateBuyQuantity - aggregateSellQuantity).toDouble()
+        aggregateAcquisitionValue = if (currentQty > 0.0) holdingCost / currentQty else 0.0
     }
 
     private fun StockOrder.sell() {
-        aggregateAcquisitionValue = getCalculatedAcquisitionValueAfterSell()
-        val saleIncome = this.quantity.toDouble() * this.pricePerStock
+        val currentQtyBefore = (aggregateBuyQuantity - aggregateSellQuantity).toDouble()
+        val soldQty = this.quantity.toDouble()
+        val netSaleIncome = soldQty * this.pricePerStock - this.commissionFee / rateInSek
+        val currentGav = if (currentQtyBefore > 0.0) holdingCost / currentQtyBefore else 0.0
+        val costOfSold = if (this.pricePerStock == 0.0) 0.0 else soldQty * currentGav
+        realizedProfit += (netSaleIncome - costOfSold)
+        holdingCost -= costOfSold
         accumulatedPurchases += (this.commissionFee / rateInSek)
         aggregateSellQuantity += this.quantity
         if (aggregateSellQuantity > aggregateBuyQuantity) {
             throw IllegalStateException("Number of sold stocks exceed available quantity!")
         }
-        accumulatedSales += saleIncome
-    }
-
-    private fun StockOrder.getCalculatedAcquisitionValueAfterBuy(): Double =
-            (accumulatedPurchases - accumulatedSales + (quantity.toDouble() * pricePerStock) + commissionFee / rateInSek) /
-                (aggregateBuyQuantity - aggregateSellQuantity + quantity).toDouble()
-
-    private fun StockOrder.getCalculatedAcquisitionValueAfterSell(): Double {
-        return if (aggregateBuyQuantity - aggregateSellQuantity - quantity == BigDecimal.ZERO) {
-            0.0
+        val currentQtyAfter = (aggregateBuyQuantity - aggregateSellQuantity).toDouble()
+        if (currentQtyAfter <= 0.0) {
+            holdingCost = 0.0
+            aggregateAcquisitionValue = 0.0
         } else {
-            (accumulatedPurchases - accumulatedSales - (quantity.toDouble() * pricePerStock) + commissionFee / rateInSek) /
-                    (aggregateBuyQuantity - aggregateSellQuantity - quantity).toDouble()
+            aggregateAcquisitionValue = holdingCost / currentQtyAfter
         }
+        accumulatedSales += soldQty * this.pricePerStock
     }
 
     fun getExactQuantity(): BigDecimal = aggregateBuyQuantity - aggregateSellQuantity
@@ -113,13 +117,16 @@ data class StockOrderAggregate(
         return aggregateAcquisitionValue
     }
 
+    fun getRealizedProfit(): Double {
+        return realizedProfit
+    }
+
     fun getProfit(currentStockPrice: Double): Double {
         return if (aggregateBuyQuantity == BigDecimal.ZERO) {
             0.0
         } else {
-            val realizedProfit = accumulatedSales - accumulatedPurchases
             val currentQuantity = getExactQuantity().toDouble()
-            val unrealizedProfit = currentStockPrice * currentQuantity
+            val unrealizedProfit = (currentStockPrice * currentQuantity) - holdingCost
             realizedProfit + unrealizedProfit
         }
     }

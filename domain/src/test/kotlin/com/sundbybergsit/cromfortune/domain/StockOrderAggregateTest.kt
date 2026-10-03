@@ -154,8 +154,10 @@ class StockOrderAggregateTest {
         )
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
+        val realizedProfit = stockOrderAggregate.getRealizedProfit()
 
-        assertEquals(expected = 13.53080, actual = acquisitionValue, absoluteTolerance = 0.0001)
+        assertEquals(expected = 16.63736, actual = acquisitionValue, absoluteTolerance = 0.0001)
+        assertEquals(expected = 270.27055, actual = realizedProfit, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -290,7 +292,45 @@ class StockOrderAggregateTest {
 
         val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
 
-        assertEquals(expected = 9.98288888, actual = acquisitionValue, absoluteTolerance = 0.0001)
+        assertEquals(expected = 19.25788, actual = acquisitionValue, absoluteTolerance = 0.0001)
+    }
+
+    @Test
+    fun `user scenario - buy, sell for profit, buy again - calculates correct GAV and realized profit`() {
+        val stockOrderAggregate = StockOrderAggregate(
+            1.0,
+            StockPrice.SYMBOLS[0].first,
+            StockPrice.SYMBOLS[0].first,
+            currency
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder("Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first, 5.0, 0.0, 10),
+                null,
+                0L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder("Sell", currency.toString(), 1L, StockPrice.SYMBOLS[0].first, 10.0, 0.0, 10),
+                null,
+                1L
+            )
+        )
+        stockOrderAggregate.aggregate(
+            StockEvent(
+                StockOrder("Buy", currency.toString(), 2L, StockPrice.SYMBOLS[0].first, 7.0, 0.0, 5),
+                null,
+                2L
+            )
+        )
+
+        val acquisitionValue = stockOrderAggregate.getAcquisitionValue()
+        val realizedProfit = stockOrderAggregate.getRealizedProfit()
+
+        assertEquals(expected = 5.0, actual = stockOrderAggregate.getExactQuantity().toDouble(), absoluteTolerance = 0.0001)
+        assertEquals(expected = 7.0, actual = acquisitionValue, absoluteTolerance = 0.0001)
+        assertEquals(expected = 50.0, actual = realizedProfit, absoluteTolerance = 0.0001)
     }
 
     @Test

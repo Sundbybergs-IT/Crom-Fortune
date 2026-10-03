@@ -53,7 +53,7 @@
     <string name="generic_hint">Select</string>
     <string name="generic_price_per_stock">Unit price</string>
     <string name="generic_portfolio_x">Portfolio: %1$s</string>
-    <string name="generic_profit">Profit</string>
+    <string name="generic_profit">Value change</string>
     <string name="generic_saved">Saved successfully</string>
     <string name="generic_time_start_label">From</string>
     <string name="generic_time_end_label">Until</string>
@@ -109,7 +109,9 @@
     <string name="home_not_updated">Update</string>
     <string name="home_buy">Buy</string>
     <string name="home_sell">Sell</string>
-    <string name="home_acquisition_price">Break-even price</string>
+    <string name="home_acquisition_price">GAV</string>
+    <string name="home_realized_profit">Return</string>
+    <string name="home_realized_profit_format">Return: %1$s</string>
     <string name="home_quantity">Quantity</string>
     <string name="home_portfolio_profit">Portfolio profit</string>
     <string name="home_cash_balance">Cash: %1$s</string>

@@ -19,6 +19,18 @@ class AssetHoldingTest {
     }
 
     @Test
+    fun `user scenario - buy, sell for profit, buy again - calculates correct GAV and realized profit`() {
+        val holding = stockHolding()
+        holding.aggregate(event(stockTransaction(TransactionAction.BUY, "10", "5")))
+        holding.aggregate(event(stockTransaction(TransactionAction.SELL, "10", "10", date = 2L)))
+        holding.aggregate(event(stockTransaction(TransactionAction.BUY, "5", "7", date = 3L)))
+
+        assertEquals(BigDecimal("5"), holding.quantity)
+        assertEquals(0, BigDecimal("7").compareTo(holding.acquisitionValue()))
+        assertEquals(0, BigDecimal("50").compareTo(holding.realizedProfit()))
+    }
+
+    @Test
     fun `selling more than exact holding is rejected`() {
         val holding = cryptoHolding()
         holding.aggregate(event(transaction(TransactionAction.BUY, "0.1", "100")))
@@ -49,6 +61,15 @@ class AssetHoldingTest {
         rateInSek = BigDecimal.ONE
     )
 
+    private fun stockHolding() = AssetHolding(
+        assetId = "stock:ERIC-B",
+        assetType = AssetType.STOCK,
+        symbol = "ERIC-B",
+        displayName = "Ericsson",
+        quoteCurrency = Currency.getInstance("SEK"),
+        rateInSek = BigDecimal.ONE
+    )
+
     private fun transaction(action: TransactionAction, quantity: String, price: String, date: Long = 1L) =
         AssetTransaction(
             assetId = "crypto:BTC",
@@ -56,6 +77,19 @@ class AssetHoldingTest {
             symbol = "BTC",
             displayName = "Bitcoin",
             quoteCurrencyCode = "USD",
+            action = action,
+            dateInMillis = date,
+            unitPrice = BigDecimal(price),
+            quantity = BigDecimal(quantity)
+        )
+
+    private fun stockTransaction(action: TransactionAction, quantity: String, price: String, date: Long = 1L) =
+        AssetTransaction(
+            assetId = "stock:ERIC-B",
+            assetType = AssetType.STOCK,
+            symbol = "ERIC-B",
+            displayName = "Ericsson",
+            quoteCurrencyCode = "SEK",
             action = action,
             dateInMillis = date,
             unitPrice = BigDecimal(price),

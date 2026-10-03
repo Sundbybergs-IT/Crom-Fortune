@@ -179,8 +179,12 @@ class HomeViewModel(
                 continue
             }
             Log.d(TAG, "Adding $portfolioName portfolio")
+            val allHoldings = assetHoldings(context, portfolioName)
+            val visibleHoldings = allHoldings.filter { item -> showAll || item.quantity.signum() != 0 }
             portfolioViewStates[portfolioName] = ViewState(
-                items = assetHoldings(context, portfolioName), readOnly = false
+                items = visibleHoldings,
+                allItems = allHoldings,
+                readOnly = false
             )
             if (portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME) {
                 Log.d(TAG, "Adding Crom portfolio")
@@ -191,22 +195,27 @@ class HomeViewModel(
                     notification.portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME &&
                         notification.stockSymbol != null && notification.pricePerStock != null
                 }
+                val allCromStocks = stocks(
+                    context = context,
+                    portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+                    includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) },
+                    lambda = { stockEvents ->
+                        getCalculatedStockOrderAggregate(
+                            stockEvents = stockEvents,
+                            notifications = cromNotifications.filter { notification ->
+                                notification.stockSymbol == stockEvents.firstNotNullOfOrNull { it.stockOrder }?.name
+                            },
+                            recommendationAlgorithm = recommendationAlgorithm,
+                            cromCashWallet = cromCashWallet,
+                            userSimulatedCashWallet = userSimulatedCashWallet
+                        )
+                    }).map(PortfolioItem::fromStockCompatibility) + cromCryptoFirstPurchases(context)
+
+                val visibleCromStocks = allCromStocks.filter { item -> showAll || item.quantity.signum() != 0 }
+
                 portfolioViewStates[PortfolioRepository.CROM_PORTFOLIO_NAME] = ViewState(
-                    items = stocks(
-                        context = context,
-                        portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
-                        includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) },
-                        lambda = { stockEvents ->
-                            getCalculatedStockOrderAggregate(
-                                stockEvents = stockEvents,
-                                notifications = cromNotifications.filter { notification ->
-                                    notification.stockSymbol == stockEvents.firstNotNullOfOrNull { it.stockOrder }?.name
-                                },
-                                recommendationAlgorithm = recommendationAlgorithm,
-                                cromCashWallet = cromCashWallet,
-                               userSimulatedCashWallet =  userSimulatedCashWallet
-                            )
-                        }).map(PortfolioItem::fromStockCompatibility) + cromCryptoFirstPurchases(context),
+                    items = visibleCromStocks,
+                    allItems = allCromStocks,
                     readOnly = true,
                     cromCreditSek = cromCashWallet.creditSek
                 )
@@ -327,8 +336,7 @@ class HomeViewModel(
             )
             events.forEach(holding::aggregate)
             PortfolioItem.fromAssetHolding(holding)
-        }.filter { item -> showAll || item.quantity.signum() != 0 }
-            .sortedBy(PortfolioItem::displayName)
+        }.sortedBy(PortfolioItem::displayName)
     }
 
     private fun cromCryptoFirstPurchases(context: Context): List<PortfolioItem> {
@@ -505,6 +513,7 @@ class HomeViewModel(
 
     internal class ViewState(
         val items: List<PortfolioItem>,
+        val allItems: List<PortfolioItem> = items,
         val readOnly: Boolean,
         val cromCreditSek: BigDecimal? = null,
         val sortOrder: SortOrder = SortOrder.NAME_ASCENDING

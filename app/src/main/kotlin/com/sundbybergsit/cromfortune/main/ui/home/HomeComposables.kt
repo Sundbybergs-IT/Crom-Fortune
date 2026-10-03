@@ -316,7 +316,7 @@ fun Home(
                             StocksHeader(
                                 profile = portfolioName,
                                 onNavigateTo = onNavigateTo,
-                                stockOrderAggregates = portfolioState.items,
+                                stockOrderAggregates = portfolioState.allItems,
                                 assetPriceApi = assetPriceApi,
                                 currencyRates = currencyRates,
                                 simulatedCashBalanceSek = portfolioState.cromCreditSek,
@@ -576,6 +576,13 @@ private fun StockCard(
                                 color = valueColor
                             )
                         }
+                        if (item.realizedProfit.compareTo(BigDecimal.ZERO) != 0) {
+                            MetricCell(
+                                stringResource(R.string.home_realized_profit),
+                                currencyFormat.format(item.realizedProfit),
+                                Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 } else {
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -590,6 +597,15 @@ private fun StockCard(
                             StockValue(profit?.let(currencyFormat::format) ?: "—", color = valueColor)
                             growth?.let {
                                 StockValue(NumberFormat.getPercentInstance().format(it), color = valueColor)
+                            }
+                            if (item.realizedProfit.compareTo(BigDecimal.ZERO) != 0) {
+                                StockValue(
+                                    stringResource(
+                                        R.string.home_realized_profit_format,
+                                        currencyFormat.format(item.realizedProfit)
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }

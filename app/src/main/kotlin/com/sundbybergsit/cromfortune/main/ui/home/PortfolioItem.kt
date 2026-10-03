@@ -16,6 +16,7 @@ data class PortfolioItem(
     val currency: Currency,
     val quantity: BigDecimal,
     val acquisitionValue: BigDecimal,
+    val realizedProfit: BigDecimal = BigDecimal.ZERO,
     val assetEvents: List<AssetEvent> = emptyList(),
     val legacyStockEvents: List<StockEvent> = emptyList(),
     private val profitCalculator: (BigDecimal) -> BigDecimal
@@ -32,6 +33,7 @@ data class PortfolioItem(
             currency = holding.quoteCurrency,
             quantity = holding.quantity,
             acquisitionValue = holding.acquisitionValue(),
+            realizedProfit = holding.realizedProfit(),
             assetEvents = holding.events,
             profitCalculator = holding::profit
         )
@@ -44,6 +46,7 @@ data class PortfolioItem(
             currency = aggregate.currency,
             quantity = aggregate.getExactQuantity(),
             acquisitionValue = aggregate.getAcquisitionValue().toBigDecimal(),
+            realizedProfit = aggregate.getRealizedProfit().toBigDecimal(),
             legacyStockEvents = aggregate.events,
             profitCalculator = { price -> aggregate.getProfit(price.toDouble()).toBigDecimal() }
         )
