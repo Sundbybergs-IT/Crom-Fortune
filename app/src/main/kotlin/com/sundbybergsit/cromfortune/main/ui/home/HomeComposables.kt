@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -316,7 +315,7 @@ fun Home(
                             StocksHeader(
                                 profile = portfolioName,
                                 onNavigateTo = onNavigateTo,
-                                stockOrderAggregates = portfolioState.items,
+                                stockOrderAggregates = portfolioState.allItems,
                                 assetPriceApi = assetPriceApi,
                                 currencyRates = currencyRates,
                                 simulatedCashBalanceSek = portfolioState.cromCreditSek,
@@ -327,11 +326,11 @@ fun Home(
                             items = portfolioState.items,
                             key = { _, item -> item.assetId }
                         ) { _, item ->
-                            StockCard(
+                            AssetCard(
                                 portfolioName = portfolioName,
                                 item = item,
                                 assetPriceApi = assetPriceApi,
-                                onShowStock = { item, readOnly ->
+                                onAssetClicked = { item, readOnly ->
                                     Log.d(
                                         tag,
                                         "Opening asset events for [${item.assetId}], readOnly=$readOnly"
@@ -476,11 +475,11 @@ private fun HomeViewModel.SortOrder.label(): String = when (this) {
 }
 
 @Composable
-private fun StockCard(
+private fun AssetCard(
     portfolioName: String,
     item: PortfolioItem,
     assetPriceApi: AssetPriceApi,
-    onShowStock: (PortfolioItem, Boolean) -> Unit,
+    onAssetClicked: (PortfolioItem, Boolean) -> Unit,
     onNavigateTo: (String) -> Unit,
     readOnly: Boolean,
     noteText: String?
@@ -507,7 +506,7 @@ private fun StockCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            .clickable { onShowStock(item, readOnly) },
+            .clickable { onAssetClicked(item, readOnly) },
         shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -538,10 +537,9 @@ private fun StockCard(
                 }
             }
 
-            BoxWithConstraints(modifier = Modifier
+            Box(modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 14.dp)) {
-                if (maxWidth < 340.dp) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             MetricCell(
@@ -550,19 +548,14 @@ private fun StockCard(
                                 Modifier.weight(1f)
                             )
                             MetricCell(
-                                stringResource(R.string.home_acquisition_price),
-                                currencyFormat.format(item.acquisitionValue),
-                                Modifier.weight(1f)
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            MetricCell(
                                 stringResource(R.string.generic_title_latest),
                                 assetPrice?.let { currencyFormat.format(it.price) + if (stale) " (stale)" else "" }
                                     ?: "—",
                                 Modifier.weight(1f),
                                 fontWeight = FontWeight.Bold
                             )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             MetricCell(
                                 stringResource(R.string.generic_profit),
                                 buildString {
@@ -575,25 +568,20 @@ private fun StockCard(
                                 Modifier.weight(1f),
                                 color = valueColor
                             )
+                            MetricCell(
+                                stringResource(R.string.home_acquisition_price),
+                                currencyFormat.format(item.acquisitionValue),
+                                Modifier.weight(1f)
+                            )
+                        }
+                        if (item.realizedProfit.compareTo(BigDecimal.ZERO) != 0) {
+                            MetricCell(
+                                stringResource(R.string.home_realized_profit),
+                                currencyFormat.format(item.realizedProfit),
+                                Modifier.fillMaxWidth()
+                            )
                         }
                     }
-                } else {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        StockValue(item.quantity.stripTrailingZeros().toPlainString(), Modifier.weight(0.6f))
-                        StockValue(currencyFormat.format(item.acquisitionValue), Modifier.weight(1.1f))
-                        StockValue(
-                            assetPrice?.let { currencyFormat.format(it.price) + if (stale) " (stale)" else "" } ?: "—",
-                            Modifier.weight(1.1f),
-                            fontWeight = FontWeight.Bold
-                        )
-                        Column(modifier = Modifier.weight(1.6f)) {
-                            StockValue(profit?.let(currencyFormat::format) ?: "—", color = valueColor)
-                            growth?.let {
-                                StockValue(NumberFormat.getPercentInstance().format(it), color = valueColor)
-                            }
-                        }
-                    }
-                }
             }
 
             if (noteText != null) {

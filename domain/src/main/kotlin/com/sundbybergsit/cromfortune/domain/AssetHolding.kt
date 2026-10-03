@@ -19,6 +19,8 @@ class AssetHolding(
 
     private var purchases = BigDecimal.ZERO
     private var sales = BigDecimal.ZERO
+    private var holdingCost = BigDecimal.ZERO
+    private var accumulatedRealizedProfit = BigDecimal.ZERO
     private var boughtQuantity = BigDecimal.ZERO
     private var soldQuantity = BigDecimal.ZERO
     private val mutableEvents = mutableListOf<AssetEvent>()
@@ -39,13 +41,24 @@ class AssetHolding(
         val feeInQuoteCurrency = transaction.commissionFee.divide(rateInSek, MathContext.DECIMAL128)
         when (transaction.action) {
             TransactionAction.BUY -> {
+                val buyCost = grossValue + feeInQuoteCurrency
                 boughtQuantity += transaction.quantity
-                purchases += grossValue + feeInQuoteCurrency
+                holdingCost += buyCost
+                purchases += buyCost
             }
             TransactionAction.SELL -> {
                 require(transaction.quantity <= quantity) { "Sale exceeds available quantity" }
+                val netSaleIncome = grossValue - feeInQuoteCurrency
+                val currentGav = if (quantity.signum() > 0) holdingCost.divide(quantity, MathContext.DECIMAL128) else BigDecimal.ZERO
+                val costOfSold = currentGav.multiply(transaction.quantity)
+                accumulatedRealizedProfit += netSaleIncome - costOfSold
                 soldQuantity += transaction.quantity
-                sales += grossValue - feeInQuoteCurrency
+                if (quantity.signum() == 0) {
+                    holdingCost = BigDecimal.ZERO
+                } else {
+                    holdingCost = holdingCost.subtract(costOfSold)
+                }
+                sales += netSaleIncome
             }
         }
     }
@@ -63,9 +76,11 @@ class AssetHolding(
     fun acquisitionValue(): BigDecimal = if (quantity.signum() == 0) {
         BigDecimal.ZERO
     } else {
-        (purchases - sales).divide(quantity, MathContext.DECIMAL128)
+        holdingCost.divide(quantity, MathContext.DECIMAL128)
     }
 
+    fun realizedProfit(): BigDecimal = accumulatedRealizedProfit
+
     fun profit(currentUnitPrice: BigDecimal): BigDecimal =
-        sales - purchases + currentUnitPrice.multiply(quantity)
+        accumulatedRealizedProfit + currentUnitPrice.multiply(quantity) - holdingCost
 }
