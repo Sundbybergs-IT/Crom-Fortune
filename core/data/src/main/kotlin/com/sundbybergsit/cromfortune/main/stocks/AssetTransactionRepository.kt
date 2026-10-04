@@ -24,6 +24,7 @@ class AssetTransactionRepository(
         when (transaction.action) {
             TransactionAction.BUY -> quantity + transaction.quantity
             TransactionAction.SELL -> quantity - transaction.quantity
+            TransactionAction.DIVIDEND -> quantity
         }
     }
 
@@ -108,6 +109,7 @@ class AssetTransactionRepository(
             Triple(transaction.dateInMillis, transaction.action.validationPriority) { quantity = when (transaction.action) {
                 TransactionAction.BUY -> quantity + transaction.quantity
                 TransactionAction.SELL -> quantity - transaction.quantity
+                TransactionAction.DIVIDEND -> quantity
             } }
         } + stockSplits.map { split ->
             Triple(split.dateInMillis, STOCK_SPLIT_VALIDATION_PRIORITY) {
@@ -138,10 +140,11 @@ class AssetTransactionRepository(
     private val TransactionAction.validationPriority: Int
         get() = when (this) {
             TransactionAction.BUY -> 0
-            TransactionAction.SELL -> 2
+            TransactionAction.DIVIDEND -> 1
+            TransactionAction.SELL -> 3
         }
 
     private companion object {
-        const val STOCK_SPLIT_VALIDATION_PRIORITY = 1
+        const val STOCK_SPLIT_VALIDATION_PRIORITY = 2
     }
 }

@@ -60,4 +60,9 @@ class SimulatedCashWallet(initialCreditSek: BigDecimal = BigDecimal.ZERO) {
         creditSek += quantity * pricePerStock.toBigDecimal() * rateInSek.toBigDecimal() -
             commissionFeeSek.toBigDecimal()
     }
+
+    fun dividend(quantity: BigDecimal, pricePerStock: Double, rateInSek: Double, commissionFeeSek: Double = 0.0) {
+        creditSek += quantity * pricePerStock.toBigDecimal() * rateInSek.toBigDecimal() -
+            commissionFeeSek.toBigDecimal()
+    }
 }

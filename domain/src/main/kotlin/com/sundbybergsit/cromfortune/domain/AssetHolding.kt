@@ -21,12 +21,60 @@ class AssetHolding(
     private var sales = BigDecimal.ZERO
     private var holdingCost = BigDecimal.ZERO
     private var accumulatedRealizedProfit = BigDecimal.ZERO
+    private var accumulatedDividends = BigDecimal.ZERO
     private var boughtQuantity = BigDecimal.ZERO
     private var soldQuantity = BigDecimal.ZERO
     private val mutableEvents = mutableListOf<AssetEvent>()
 
     val events: List<AssetEvent> get() = mutableEvents.toList()
     val quantity: BigDecimal get() = boughtQuantity - soldQuantity
+    val totalDividends: BigDecimal get() = accumulatedDividends
+
+    fun quantityAt(dateInMillis: Long): BigDecimal {
+        var qty = BigDecimal.ZERO
+        mutableEvents.filter { it.dateInMillis <= dateInMillis }
+            .sortedWith(assetEventChronologicalComparator)
+            .forEach { event ->
+                event.transaction?.let { tx ->
+                    when (tx.action) {
+                        TransactionAction.BUY -> qty += tx.quantity
+                        TransactionAction.SELL -> qty -= tx.quantity
+                        TransactionAction.DIVIDEND -> { /* Dividends do not alter quantity */ }
+                    }
+                }
+                event.stockSplit?.let { split ->
+                    qty = if (split.reverse) {
+                        qty.divide(split.quantity.toBigDecimal(), 16, RoundingMode.DOWN)
+                    } else {
+                        qty.multiply(split.quantity.toBigDecimal())
+                    }
+                }
+            }
+        return qty
+    }
+
+    fun quantityAtExDate(dateInMillis: Long): BigDecimal {
+        var qty = BigDecimal.ZERO
+        mutableEvents.filter { it.dateInMillis < dateInMillis }
+            .sortedWith(assetEventChronologicalComparator)
+            .forEach { event ->
+                event.transaction?.let { tx ->
+                    when (tx.action) {
+                        TransactionAction.BUY -> qty += tx.quantity
+                        TransactionAction.SELL -> qty -= tx.quantity
+                        TransactionAction.DIVIDEND -> { /* Dividends do not alter quantity */ }
+                    }
+                }
+                event.stockSplit?.let { split ->
+                    qty = if (split.reverse) {
+                        qty.divide(split.quantity.toBigDecimal(), 16, RoundingMode.DOWN)
+                    } else {
+                        qty.multiply(split.quantity.toBigDecimal())
+                    }
+                }
+            }
+        return qty
+    }
 
     fun aggregate(event: AssetEvent) {
         require(event.assetId == assetId) { "Event belongs to ${event.assetId}, expected $assetId" }
@@ -60,6 +108,10 @@ class AssetHolding(
                 }
                 sales += netSaleIncome
             }
+            TransactionAction.DIVIDEND -> {
+                val netIncome = grossValue - feeInQuoteCurrency
+                accumulatedDividends += netIncome
+            }
         }
     }
 
@@ -82,5 +134,5 @@ class AssetHolding(
     fun realizedProfit(): BigDecimal = accumulatedRealizedProfit
 
     fun profit(currentUnitPrice: BigDecimal): BigDecimal =
-        accumulatedRealizedProfit + currentUnitPrice.multiply(quantity) - holdingCost
+        accumulatedRealizedProfit + accumulatedDividends + currentUnitPrice.multiply(quantity) - holdingCost
 }

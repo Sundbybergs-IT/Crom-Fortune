@@ -46,6 +46,7 @@ data class AssetTransaction(
                 action = when (order.orderAction) {
                     "Buy" -> TransactionAction.BUY
                     "Sell" -> TransactionAction.SELL
+                    "Dividend" -> TransactionAction.DIVIDEND
                     else -> error("Illegal order action: ${order.orderAction}")
                 },
                 dateInMillis = order.dateInMillis,
@@ -59,7 +60,11 @@ data class AssetTransaction(
     fun toStockOrder(): StockOrder {
         require(assetType == AssetType.STOCK) { "Only stock transactions can use the StockOrder adapter" }
         return StockOrder(
-            orderAction = if (action == TransactionAction.BUY) "Buy" else "Sell",
+            orderAction = when (action) {
+                TransactionAction.BUY -> "Buy"
+                TransactionAction.SELL -> "Sell"
+                TransactionAction.DIVIDEND -> "Dividend"
+            },
             currency = quoteCurrencyCode,
             dateInMillis = dateInMillis,
             name = symbol,

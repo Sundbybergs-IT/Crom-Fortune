@@ -3,6 +3,8 @@
     <string name="action_asset_buy_short">K</string>
     <string name="action_asset_sell">Registrera försäljning</string>
     <string name="action_asset_sell_short">S</string>
+    <string name="action_asset_dividend">Registrera utdelning</string>
+    <string name="action_asset_dividend_short">U</string>
     <string name="action_clear">Rensa</string>
     <string name="action_close">Stäng</string>
     <string name="action_configure_stock_retrieval_intervals">Schema för automatiska aktieuppdateringar</string>
@@ -15,6 +17,7 @@
     <string name="action_refresh">Uppdatera</string>
     <string name="action_save">Spara</string>
     <string name="action_install">Installera</string>
+    <string name="action_stock_add_dividend">Registrera utdelning</string>
     <string name="action_stock_add_split">Registrera aktiesplit</string>
     <string name="action_stocks_supported">Aktier som stöds</string>
 
@@ -23,12 +26,18 @@
     <string name="asset_transaction_asset_type">Tillgångstyp</string>
     <string name="asset_transaction_confirm_buy">Köp</string>
     <string name="asset_transaction_confirm_sell">Sälj</string>
+    <string name="asset_transaction_confirm_dividend">Utdelning</string>
     <string name="asset_transaction_price">Pris</string>
     <string name="asset_transaction_quantity_hint">Upp till %1$d decimaler</string>
     <string name="asset_transaction_title_buy">Köp tillgång</string>
     <string name="asset_transaction_title_sell">Sälj tillgång</string>
+    <string name="asset_transaction_title_dividend">Registrera utdelning</string>
     <string name="asset_transaction_title_edit">Redigera transaktion</string>
     <string name="asset_transaction_unit_price">Styckpris</string>
+    <string name="asset_transaction_ex_date">X-dag (Ex-datum)</string>
+    <string name="asset_transaction_dividend_per_share">Utdelning per aktie</string>
+    <string name="asset_transaction_shares_held_on_ex_date">Antal aktier dagen före X-dagen: %1$s</string>
+    <string name="generic_error_no_shares_on_day_x">Inga aktier innehades vid slutet av dagen före X-dagen.</string>
     <string name="asset_type_crypto">Kryptovaluta</string>
     <string name="asset_type_stock">Aktie</string>
 
@@ -109,6 +118,8 @@
     <string name="home_not_updated">Uppdatera</string>
     <string name="home_buy">Köp</string>
     <string name="home_sell">Sälj</string>
+    <string name="home_dividend">Utdelning</string>
+    <string name="home_total_dividends">Utdelningar: %1$s</string>
     <string name="home_acquisition_price">GAV</string>
     <string name="home_realized_profit">Avkastning</string>
     <string name="home_realized_profit_format">Avkastning: %1$s</string>

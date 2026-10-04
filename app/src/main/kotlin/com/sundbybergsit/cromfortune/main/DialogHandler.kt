@@ -97,6 +97,10 @@ object DialogHandler {
         _dialogViewState.value = DialogViewState.ShowSellStockDialog(stockSymbol = stockSymbol?.let(::assetId))
     }
 
+    fun showRegisterDividendDialog(stockSymbol: String? = null) {
+        _dialogViewState.value = DialogViewState.ShowRegisterDividendDialog(stockSymbol = stockSymbol?.let(::assetId))
+    }
+
     fun showSplitStockDialog(stockSymbol: String? = null) {
         _dialogViewState.value = DialogViewState.ShowRegisterSplitStockDialog(stockSymbol = stockSymbol)
     }
@@ -176,6 +180,8 @@ object DialogHandler {
         data class ShowBuyStockDialog(val stockSymbol: String? = null) : DialogViewState()
 
         data class ShowSellStockDialog(val stockSymbol: String? = null) : DialogViewState()
+
+        data class ShowRegisterDividendDialog(val stockSymbol: String? = null) : DialogViewState()
 
         data class ShowRegisterSplitStockDialog(val stockSymbol: String? = null) : DialogViewState()
 

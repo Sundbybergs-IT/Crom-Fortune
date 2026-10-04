@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material3.ButtonDefaults
@@ -608,7 +609,7 @@ private fun AssetCard(
                         modifier = Modifier.weight(1f),
                         onClick = { DialogHandler.showBuyStockDialog(stockSymbol = item.assetId) }
                     )
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(8.dp))
                     TradeButton(
                         text = stringResource(R.string.home_sell),
                         color = Color(0xFFD9293E),
@@ -616,7 +617,18 @@ private fun AssetCard(
                         onClick = { DialogHandler.showSellStockDialog(stockSymbol = item.assetId) }
                     )
                     if (item.assetType == AssetType.STOCK) {
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(8.dp))
+                        IconButton(
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface, CircleShape),
+                            onClick = { DialogHandler.showRegisterDividendDialog(stockSymbol = item.assetId) }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AttachMoney,
+                                contentDescription = stringResource(R.string.action_asset_dividend),
+                                tint = MaterialTheme.colorScheme.tertiary
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
                         val muted = stockMuteMuteSettings.collectAsState().value
                             .any { it.stockSymbol == item.symbol && it.muted }
                         IconButton(

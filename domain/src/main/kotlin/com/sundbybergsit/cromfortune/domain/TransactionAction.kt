@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class TransactionAction {
     BUY,
-    SELL
+    SELL,
+    DIVIDEND
 }

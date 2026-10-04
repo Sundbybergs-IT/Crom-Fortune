@@ -159,5 +159,35 @@ class StockOrderAggregateExtensionsKtTest {
         )
     }
 
+    @Test
+    fun `applyStockOrderForRecommendedEvent with Dividend credits user and Crom wallets`() {
+        val aggregate = aggregateWithOneShare()
+        val ticker = StockPrice.SYMBOLS[0].first
+        val dividendEvent = StockOrder(
+            "Dividend",
+            "SEK",
+            100L,
+            ticker,
+            5.0,
+            0.0,
+            1
+        ).toStockEvent()
+        val userWallet = SimulatedCashWallet()
+        val cromWallet = SimulatedCashWallet()
+
+        val result = aggregate.applyStockOrderForRecommendedEvent(
+            eventToConsider = dividendEvent,
+            existingEvents = aggregate.events,
+            recommendationAlgorithm = AlwaysBuyAlgorithm(),
+            cromCashWallet = cromWallet,
+            userSimulatedCashWallet = userWallet
+        )
+
+        assertNotNull(result)
+        assertEquals("Dividend", result.stockOrder?.orderAction)
+        assertEquals(0, BigDecimal("5.0").compareTo(userWallet.creditSek))
+        assertEquals(0, BigDecimal("5.0").compareTo(cromWallet.creditSek))
+    }
+
 }
 

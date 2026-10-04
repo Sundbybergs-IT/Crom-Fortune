@@ -15,6 +15,7 @@ data class StockOrderAggregate(
     private var aggregateAcquisitionValue: Double = 0.0,
     private var holdingCost: Double = 0.0,
     private var realizedProfit: Double = 0.0,
+    private var accumulatedDividends: Double = 0.0,
     val events: MutableList<StockEvent> = mutableListOf()
 ) {
 
@@ -42,6 +43,9 @@ data class StockOrderAggregate(
                 }
                 "Sell" -> {
                     sell()
+                }
+                "Dividend" -> {
+                    dividend()
                 }
                 else -> {
                     error("Invalid stock order action: $orderAction")
@@ -108,6 +112,11 @@ data class StockOrderAggregate(
         accumulatedSales += soldQty * this.pricePerStock
     }
 
+    private fun StockOrder.dividend() {
+        val dividendIncome = this.quantity.toDouble() * this.pricePerStock - this.commissionFee / rateInSek
+        accumulatedDividends += dividendIncome
+    }
+
     fun getExactQuantity(): BigDecimal = aggregateBuyQuantity - aggregateSellQuantity
 
     fun getAcquisitionValue(): Double {
@@ -120,11 +129,11 @@ data class StockOrderAggregate(
 
     fun getProfit(currentStockPrice: Double): Double {
         return if (aggregateBuyQuantity == BigDecimal.ZERO) {
-            0.0
+            accumulatedDividends
         } else {
             val currentQuantity = getExactQuantity().toDouble()
             val unrealizedProfit = (currentStockPrice * currentQuantity) - holdingCost
-            realizedProfit + unrealizedProfit
+            realizedProfit + accumulatedDividends + unrealizedProfit
         }
     }
 

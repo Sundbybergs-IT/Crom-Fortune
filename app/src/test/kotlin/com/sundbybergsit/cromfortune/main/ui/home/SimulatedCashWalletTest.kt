@@ -38,6 +38,15 @@ class SimulatedCashWalletTest {
     }
 
     @Test
+    fun `dividend adds income to credit`() {
+        val wallet = SimulatedCashWallet(initialCreditSek = BigDecimal("100"))
+
+        wallet.dividend(quantity = BigDecimal("10"), pricePerStock = 5.0, rateInSek = 1.0, commissionFeeSek = 0.0)
+
+        assertEquals(BigDecimal("150.00"), wallet.creditSek)
+    }
+
+    @Test
     fun `wallet rejects overspending`() {
         val wallet = SimulatedCashWallet(initialCreditSek = BigDecimal("99"))
 

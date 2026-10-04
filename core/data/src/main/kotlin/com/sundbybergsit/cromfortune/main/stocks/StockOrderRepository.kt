@@ -30,6 +30,9 @@ class StockOrderRepository(
                 "Sell" -> {
                     count -= stockOrder.quantity.intValueExact()
                 }
+                "Dividend" -> {
+                    // Dividends do not alter stock count
+                }
                 else -> {
                     throw IllegalStateException()
                 }

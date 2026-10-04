@@ -24,6 +24,7 @@ class StockEventRepository(
                 when (it.orderAction) {
                     "Buy" -> count += it.quantity.intValueExact()
                     "Sell" -> count -= it.quantity.intValueExact()
+                    "Dividend" -> { /* Dividends do not alter stock count */ }
                     else -> error("Illegal order action: [${it.orderAction}]")
                 }
             }

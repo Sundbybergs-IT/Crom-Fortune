@@ -56,9 +56,15 @@ internal fun buildAssetTransaction(
     unitPriceText: String,
     commissionFeeText: String
 ): AssetTransaction {
-    val quantity = quantityText.toBigDecimalOrNull() ?: throw IllegalArgumentException("Invalid quantity")
-    require(quantity.scale().coerceAtLeast(0) <= asset.quantityScale) {
-        "${asset.symbol} supports at most ${asset.quantityScale} decimal places"
+    val quantity = if (action == TransactionAction.DIVIDEND) {
+        quantityText.toBigDecimalOrNull() ?: BigDecimal.ZERO
+    } else {
+        quantityText.toBigDecimalOrNull() ?: throw IllegalArgumentException("Invalid quantity")
+    }
+    if (action != TransactionAction.DIVIDEND) {
+        require(quantity.scale().coerceAtLeast(0) <= asset.quantityScale) {
+            "${asset.symbol} supports at most ${asset.quantityScale} decimal places"
+        }
     }
     return AssetTransaction(
         assetId = asset.id,
@@ -69,8 +75,8 @@ internal fun buildAssetTransaction(
         action = action,
         dateInMillis = dateInMillis,
         unitPrice = unitPriceText.toBigDecimalOrNull() ?: throw IllegalArgumentException("Invalid price"),
-        commissionFee = commissionFeeText.ifBlank { "0" }.toBigDecimalOrNull()
-            ?: throw IllegalArgumentException("Invalid commission fee"),
+        commissionFee = if (action == TransactionAction.DIVIDEND) BigDecimal.ZERO else (commissionFeeText.ifBlank { "0" }.toBigDecimalOrNull()
+            ?: throw IllegalArgumentException("Invalid commission fee")),
         quantity = quantity
     )
 }
@@ -80,6 +86,7 @@ fun RegisterAssetTransactionDialog(
     action: TransactionAction,
     initialAssetId: String? = null,
     transactionToEdit: AssetTransaction? = null,
+    sharesHeldOnExDate: ((assetId: String, dateInMillis: Long) -> BigDecimal)? = null,
     onDismiss: () -> Unit,
     onDelete: (() -> Unit)? = null,
     onSave: (AssetTransaction) -> Unit
@@ -93,9 +100,6 @@ fun RegisterAssetTransactionDialog(
         mutableStateOf(initialAsset ?: AssetCatalog.activeAssets.first { it.type == selectedType })
     }
     var assetMenuExpanded by remember { mutableStateOf(false) }
-    var quantity by remember(transactionToEdit) {
-        mutableStateOf(transactionToEdit?.quantity?.toPlainString().orEmpty())
-    }
     var unitPrice by remember(transactionToEdit) {
         mutableStateOf(transactionToEdit?.unitPrice?.toPlainString().orEmpty())
     }
@@ -109,6 +113,39 @@ fun RegisterAssetTransactionDialog(
     val transactionDate: MutableState<TextFieldValue> = remember {
         mutableStateOf(TextFieldValue(dateFormat.format(initialDateInMillis)))
     }
+    val parsedDateInMillis = remember(transactionDate.value.text) {
+        try {
+            dateFormat.parse(transactionDate.value.text)?.time ?: initialDateInMillis
+        } catch (_: Exception) {
+            initialDateInMillis
+        }
+    }
+    val calculatedQuantity = remember(selectedAsset.id, parsedDateInMillis, selectedAction) {
+        if (selectedAction == TransactionAction.DIVIDEND) {
+            if (transactionToEdit != null && transactionToEdit.action == TransactionAction.DIVIDEND && transactionToEdit.assetId == selectedAsset.id && transactionToEdit.dateInMillis == parsedDateInMillis) {
+                transactionToEdit.quantity
+            } else {
+                sharesHeldOnExDate?.invoke(selectedAsset.id, parsedDateInMillis) ?: BigDecimal.ZERO
+            }
+        } else {
+            null
+        }
+    }
+    var quantity by remember(transactionToEdit, selectedAction) {
+        mutableStateOf(
+            if (transactionToEdit != null && selectedAction == transactionToEdit.action) {
+                transactionToEdit.quantity.toPlainString()
+            } else if (selectedAction == TransactionAction.DIVIDEND) {
+                calculatedQuantity?.toPlainString().orEmpty()
+            } else {
+                transactionToEdit?.quantity?.toPlainString().orEmpty()
+            }
+        )
+    }
+    if (selectedAction == TransactionAction.DIVIDEND && calculatedQuantity != null) {
+        quantity = calculatedQuantity.toPlainString()
+    }
+
     val datePickerState: DatePickerState = rememberDatePickerState(
         initialSelectedDateMillis = initialDateInMillis
     )
@@ -124,12 +161,16 @@ fun RegisterAssetTransactionDialog(
             }
         }
     val parsedQuantity = quantity.toBigDecimalOrNull()
-    val quantityIsValid = parsedQuantity != null && parsedQuantity > BigDecimal.ZERO &&
-        parsedQuantity.scale().coerceAtLeast(0) <= selectedAsset.quantityScale
+    val quantityIsValid = if (selectedAction == TransactionAction.DIVIDEND) {
+        parsedQuantity != null && parsedQuantity > BigDecimal.ZERO
+    } else {
+        parsedQuantity != null && parsedQuantity > BigDecimal.ZERO &&
+            parsedQuantity.scale().coerceAtLeast(0) <= selectedAsset.quantityScale
+    }
     val parsedUnitPrice = unitPrice.toBigDecimalOrNull()
     val unitPriceIsValid = parsedUnitPrice != null && parsedUnitPrice > BigDecimal.ZERO
     val parsedCommission = commissionFee.ifBlank { "0" }.toBigDecimalOrNull()
-    val commissionIsValid = parsedCommission != null && parsedCommission >= BigDecimal.ZERO
+    val commissionIsValid = selectedAction == TransactionAction.DIVIDEND || (parsedCommission != null && parsedCommission >= BigDecimal.ZERO)
     val formIsValid = quantityIsValid && unitPriceIsValid && commissionIsValid
 
     if (showDatePicker) {
@@ -168,7 +209,8 @@ fun RegisterAssetTransactionDialog(
                 stringResource(
                     if (transactionToEdit != null) R.string.asset_transaction_title_edit
                     else if (selectedAction == TransactionAction.BUY) R.string.asset_transaction_title_buy
-                    else R.string.asset_transaction_title_sell
+                    else if (selectedAction == TransactionAction.SELL) R.string.asset_transaction_title_sell
+                    else R.string.asset_transaction_title_dividend
                 )
             )
         },
@@ -177,24 +219,6 @@ fun RegisterAssetTransactionDialog(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                if (transactionToEdit != null) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TransactionAction.entries.forEach { transactionAction ->
-                            FilterChip(
-                                selected = selectedAction == transactionAction,
-                                onClick = { selectedAction = transactionAction; saveError = null },
-                                label = {
-                                    Text(
-                                        stringResource(
-                                            if (transactionAction == TransactionAction.BUY) R.string.asset_transaction_confirm_buy
-                                            else R.string.asset_transaction_confirm_sell
-                                        )
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
                 Text(
                     text = stringResource(R.string.asset_transaction_asset_type),
                     style = MaterialTheme.typography.labelMedium
@@ -207,10 +231,39 @@ fun RegisterAssetTransactionDialog(
                                 if (selectedType != type) {
                                     selectedType = type
                                     selectedAsset = AssetCatalog.activeAssets.first { it.type == type }
+                                    if (selectedType == AssetType.CRYPTO && selectedAction == TransactionAction.DIVIDEND) {
+                                        selectedAction = TransactionAction.BUY
+                                    }
                                 }
                             },
                             label = { Text(assetTypeName(type)) }
                         )
+                    }
+                }
+                if (transactionToEdit != null || action == TransactionAction.DIVIDEND) {
+                    val availableActions = if (selectedType == AssetType.STOCK) {
+                        TransactionAction.entries
+                    } else {
+                        listOf(TransactionAction.BUY, TransactionAction.SELL)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        availableActions.forEach { transactionAction ->
+                            FilterChip(
+                                selected = selectedAction == transactionAction,
+                                onClick = { selectedAction = transactionAction; saveError = null },
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            when (transactionAction) {
+                                                TransactionAction.BUY -> R.string.asset_transaction_confirm_buy
+                                                TransactionAction.SELL -> R.string.asset_transaction_confirm_sell
+                                                TransactionAction.DIVIDEND -> R.string.asset_transaction_confirm_dividend
+                                            }
+                                        )
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
                 Box(Modifier.fillMaxWidth()) {
@@ -233,39 +286,63 @@ fun RegisterAssetTransactionDialog(
                 Box(Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = transactionDate.value.text, onValueChange = {}, readOnly = true,
-                        label = { Text(stringResource(R.string.generic_date)) },
+                        label = { Text(stringResource(if (selectedAction == TransactionAction.DIVIDEND) R.string.asset_transaction_ex_date else R.string.generic_date)) },
                         trailingIcon = { Icon(Icons.Default.CalendarToday, null) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Box(Modifier.matchParentSize().clickable { showDatePicker = true })
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = quantity, onValueChange = { quantity = it; saveError = null }, singleLine = true,
-                        label = { Text(stringResource(R.string.home_add_stock_quantity_label)) },
-                        isError = quantity.isNotEmpty() && !quantityIsValid,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f)
+                if (selectedAction == TransactionAction.DIVIDEND) {
+                    Text(
+                        text = if (parsedQuantity != null && parsedQuantity > BigDecimal.ZERO) {
+                            stringResource(R.string.asset_transaction_shares_held_on_ex_date, quantity)
+                        } else {
+                            stringResource(R.string.generic_error_no_shares_on_day_x)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (parsedQuantity != null && parsedQuantity > BigDecimal.ZERO) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
                     )
                     OutlinedTextField(
                         value = unitPrice, onValueChange = { unitPrice = it; saveError = null }, singleLine = true,
-                        label = { Text(stringResource(R.string.asset_transaction_price)) },
+                        label = { Text(stringResource(R.string.asset_transaction_dividend_per_share)) },
                         suffix = { Text(selectedAsset.quoteCurrency.currencyCode) },
                         isError = unitPrice.isNotEmpty() && !unitPriceIsValid,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = quantity, onValueChange = { quantity = it; saveError = null }, singleLine = true,
+                            label = { Text(stringResource(R.string.home_add_stock_quantity_label)) },
+                            isError = quantity.isNotEmpty() && !quantityIsValid,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = unitPrice, onValueChange = { unitPrice = it; saveError = null }, singleLine = true,
+                            label = { Text(stringResource(R.string.asset_transaction_price)) },
+                            suffix = { Text(selectedAsset.quoteCurrency.currencyCode) },
+                            isError = unitPrice.isNotEmpty() && !unitPriceIsValid,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    OutlinedTextField(
+                        value = commissionFee, onValueChange = { commissionFee = it; saveError = null }, singleLine = true,
+                        label = { Text(stringResource(R.string.generic_commission_fee)) }, suffix = { Text("SEK") },
+                        isError = commissionFee.isNotEmpty() && !commissionIsValid,
+                        supportingText = saveError?.let { message -> ({ Text(message) }) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth()
                     )
                 }
-                OutlinedTextField(
-                    value = commissionFee, onValueChange = { commissionFee = it; saveError = null }, singleLine = true,
-                    label = { Text(stringResource(R.string.generic_commission_fee)) }, suffix = { Text("SEK") },
-                    isError = commissionFee.isNotEmpty() && !commissionIsValid,
-                    supportingText = saveError?.let { message -> ({ Text(message) }) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth()
-                )
             }
         },
         dismissButton = {
@@ -292,7 +369,8 @@ fun RegisterAssetTransactionDialog(
                     stringResource(
                         if (transactionToEdit != null) R.string.action_save
                         else if (selectedAction == TransactionAction.BUY) R.string.asset_transaction_confirm_buy
-                        else R.string.asset_transaction_confirm_sell
+                        else if (selectedAction == TransactionAction.SELL) R.string.asset_transaction_confirm_sell
+                        else R.string.asset_transaction_confirm_dividend
                     )
                 )
             }

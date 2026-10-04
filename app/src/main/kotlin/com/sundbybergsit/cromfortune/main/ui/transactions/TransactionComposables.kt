@@ -67,7 +67,12 @@ internal fun transactionRows(
                 portfolioName = portfolioName,
                 symbol = order.name,
                 displayName = item.displayName,
-                action = if (order.orderAction == "Buy") TransactionAction.BUY else TransactionAction.SELL,
+                action = when (order.orderAction) {
+                    "Buy" -> TransactionAction.BUY
+                    "Sell" -> TransactionAction.SELL
+                    "Dividend" -> TransactionAction.DIVIDEND
+                    else -> TransactionAction.BUY
+                },
                 dateInMillis = order.dateInMillis,
                 quantity = order.quantity,
                 unitPrice = order.pricePerStock.toBigDecimal(),
@@ -142,13 +147,17 @@ private fun TransactionRow(transaction: PortfolioTransactionRow, dateFormat: Sim
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = stringResource(
-                    if (transaction.action == TransactionAction.BUY) R.string.home_buy else R.string.home_sell
+                    when (transaction.action) {
+                        TransactionAction.BUY -> R.string.home_buy
+                        TransactionAction.SELL -> R.string.home_sell
+                        TransactionAction.DIVIDEND -> R.string.home_dividend
+                    }
                 ),
                 fontWeight = FontWeight.Bold,
-                color = if (transaction.action == TransactionAction.BUY) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.error
+                color = when (transaction.action) {
+                    TransactionAction.BUY -> MaterialTheme.colorScheme.primary
+                    TransactionAction.SELL -> MaterialTheme.colorScheme.error
+                    TransactionAction.DIVIDEND -> MaterialTheme.colorScheme.tertiary
                 }
             )
             Text("${transaction.quantity.stripTrailingZeros().toPlainString()} × ${currencyFormat.format(transaction.unitPrice)}")

@@ -18,21 +18,41 @@ fun StockOrderAggregate.applyStockOrderForRecommendedEvent(
     userSimulatedCashWallet: SimulatedCashWallet
 ) : StockEvent? {
     val stockOrder = checkNotNull(eventToConsider.stockOrder)
-    if (stockOrder.orderAction == "Buy") {
-        val outsideCapital = userSimulatedCashWallet.buyWithTopUp(
-            quantity = stockOrder.quantity,
-            pricePerStock = stockOrder.pricePerStock,
-            rateInSek = rateInSek,
-            commissionFeeSek = stockOrder.commissionFee
-        )
-        cromCashWallet.fund(amountSek = outsideCapital)
-    } else {
-        userSimulatedCashWallet.sell(
-            quantity = stockOrder.quantity,
-            pricePerStock = stockOrder.pricePerStock,
-            rateInSek = rateInSek,
-            commissionFeeSek = stockOrder.commissionFee
-        )
+    when (stockOrder.orderAction) {
+        "Buy" -> {
+            val outsideCapital = userSimulatedCashWallet.buyWithTopUp(
+                quantity = stockOrder.quantity,
+                pricePerStock = stockOrder.pricePerStock,
+                rateInSek = rateInSek,
+                commissionFeeSek = stockOrder.commissionFee
+            )
+            cromCashWallet.fund(amountSek = outsideCapital)
+        }
+        "Sell" -> {
+            userSimulatedCashWallet.sell(
+                quantity = stockOrder.quantity,
+                pricePerStock = stockOrder.pricePerStock,
+                rateInSek = rateInSek,
+                commissionFeeSek = stockOrder.commissionFee
+            )
+        }
+        "Dividend" -> {
+            userSimulatedCashWallet.dividend(
+                quantity = stockOrder.quantity,
+                pricePerStock = stockOrder.pricePerStock,
+                rateInSek = rateInSek,
+                commissionFeeSek = stockOrder.commissionFee
+            )
+            if (getExactQuantity().signum() > 0) {
+                cromCashWallet.dividend(
+                    quantity = getExactQuantity(),
+                    pricePerStock = stockOrder.pricePerStock,
+                    rateInSek = rateInSek,
+                    commissionFeeSek = stockOrder.commissionFee
+                )
+            }
+            return eventToConsider
+        }
     }
     return applyRecommendationAt(
         pricePerStock = stockOrder.pricePerStock,

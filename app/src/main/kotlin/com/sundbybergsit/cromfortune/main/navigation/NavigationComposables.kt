@@ -145,6 +145,7 @@ import com.sundbybergsit.cromfortune.main.ui.home.view.OpinionatedStockOrderWrap
 import com.sundbybergsit.cromfortune.main.ui.notifications.Notifications
 import com.sundbybergsit.cromfortune.main.ui.notifications.NotificationsViewModel
 import com.sundbybergsit.cromfortune.main.ui.notifications.NotificationsViewModelFactory
+import java.math.BigDecimal
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.time.DayOfWeek
@@ -357,6 +358,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                         onBuy = { DialogHandler.showBuyStockDialog() },
                         onSell = { DialogHandler.showSellStockDialog() },
                         onSplit = { DialogHandler.showSplitStockDialog() },
+                        onAddDividend = { DialogHandler.showRegisterDividendDialog() },
                         onAddPortfolio = { DialogHandler.showAddPortfolioDialog() },
                         onDeletePortfolio = { DialogHandler.showDeletePortfolioDialog(it) },
                     )
@@ -617,6 +619,9 @@ fun AddDialogs(
             })
             AssetEventsDialog(
                 state = dialogViewState,
+                sharesHeldOnExDate = { assetId, dateInMillis ->
+                    homeViewModel.getSharesHeldOnExDate(localContext, dialogViewState.portfolioName, assetId, dateInMillis)
+                },
                 onDismiss = { dialogHandler.dismissDialog() },
                 onUpdate = { original, updated ->
                     homeViewModel.update(
@@ -661,9 +666,16 @@ fun AddDialogs(
             val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                 HomeViewModelFactory(portfolioRepository = portfolioRepository)
             })
-            RegisterAssetTransactionDialog(action = TransactionAction.BUY, onDismiss = {
-                dialogHandler.dismissDialog()
-            }, initialAssetId = dialogViewState.stockSymbol) { transaction ->
+            RegisterAssetTransactionDialog(
+                action = TransactionAction.BUY,
+                initialAssetId = dialogViewState.stockSymbol,
+                sharesHeldOnExDate = { assetId, dateInMillis ->
+                    homeViewModel.getSharesHeldOnExDate(localContext, portfolioNameState.value, assetId, dateInMillis)
+                },
+                onDismiss = {
+                    dialogHandler.dismissDialog()
+                }
+            ) { transaction ->
                 homeViewModel.save(
                     context = localContext,
                     portfolioName = portfolioNameState.value,
@@ -681,18 +693,46 @@ fun AddDialogs(
             })
             RegisterAssetTransactionDialog(
                 action = TransactionAction.SELL,
+                initialAssetId = dialogViewState.stockSymbol,
+                sharesHeldOnExDate = { assetId, dateInMillis ->
+                    homeViewModel.getSharesHeldOnExDate(localContext, portfolioNameState.value, assetId, dateInMillis)
+                },
                 onDismiss = {
                     dialogHandler.dismissDialog()
                 },
-                initialAssetId = dialogViewState.stockSymbol,
                 onSave = { transaction ->
                     homeViewModel.save(
                         context = localContext,
                         portfolioName = portfolioNameState.value,
                         transaction = transaction
                     )
-                    Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+
+        is DialogHandler.DialogViewState.ShowRegisterDividendDialog -> {
+            val localContext = LocalContext.current
+            val savedText = stringResource(id = R.string.generic_saved)
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
+            })
+            RegisterAssetTransactionDialog(
+                action = TransactionAction.DIVIDEND,
+                initialAssetId = dialogViewState.stockSymbol,
+                sharesHeldOnExDate = { assetId, dateInMillis ->
+                    homeViewModel.getSharesHeldOnExDate(localContext, portfolioNameState.value, assetId, dateInMillis)
+                },
+                onDismiss = {
+                    dialogHandler.dismissDialog()
+                },
+                onSave = { transaction ->
+                    homeViewModel.save(
+                        context = localContext,
+                        portfolioName = portfolioNameState.value,
+                        transaction = transaction
+                    )
+                    Toast.makeText(localContext, savedText, Toast.LENGTH_SHORT).show()
                 }
             )
         }
@@ -1281,6 +1321,7 @@ internal fun AboutDialog(onDismiss: () -> Unit) {
 @Composable
 private fun AssetEventsDialog(
     state: DialogHandler.DialogViewState.ShowAssetEvents,
+    sharesHeldOnExDate: (String, Long) -> BigDecimal,
     onDismiss: () -> Unit,
     onUpdate: (AssetTransaction, AssetTransaction) -> Unit,
     onRemove: (AssetTransaction) -> Unit,
@@ -1294,6 +1335,7 @@ private fun AssetEventsDialog(
         RegisterAssetTransactionDialog(
             action = original.action,
             transactionToEdit = original,
+            sharesHeldOnExDate = sharesHeldOnExDate,
             onDismiss = { transactionToEdit = null },
             onDelete = { onRemove(original) },
             onSave = { updated -> onUpdate(original, updated) }
@@ -1466,7 +1508,11 @@ private fun TransactionTableHeader() {
 }
 
 private fun AssetTransaction.toRecommendationOrder() = StockOrder(
-    orderAction = if (action == TransactionAction.BUY) "Buy" else "Sell",
+    orderAction = when (action) {
+        TransactionAction.BUY -> "Buy"
+        TransactionAction.SELL -> "Sell"
+        TransactionAction.DIVIDEND -> "Dividend"
+    },
     currency = quoteCurrencyCode,
     dateInMillis = dateInMillis,
     name = symbol,
@@ -1487,11 +1533,14 @@ private fun AssetTransactionRow(
     val locale = LocalLocale.current.platformLocale
     val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
         currency = Currency.getInstance(transaction.quoteCurrencyCode)
-        maximumFractionDigits = if (transaction.unitPrice < java.math.BigDecimal.ONE) 8 else 2
+        maximumFractionDigits = if (transaction.unitPrice < BigDecimal.ONE) 8 else 2
     }
     val backgroundColor = colorResource(
-        if (transaction.action == TransactionAction.BUY) android.R.color.holo_green_light
-        else android.R.color.holo_red_light
+        when (transaction.action) {
+            TransactionAction.BUY -> android.R.color.holo_green_light
+            TransactionAction.SELL -> android.R.color.holo_red_light
+            TransactionAction.DIVIDEND -> android.R.color.holo_purple
+        }
     )
     Row(
         modifier = Modifier
@@ -1535,7 +1584,7 @@ private fun AssetTransactionRow(
             modifier = Modifier.width(STATUS_COLUMN_WIDTH),
             contentAlignment = Alignment.Center,
         ) {
-            if (opinionatedStockOrder != null) {
+            if (opinionatedStockOrder != null && transaction.action != TransactionAction.DIVIDEND) {
                 Icon(
                     imageVector = if (opinionatedStockOrder.isApprovedByAlgorithm()) {
                         Icons.Outlined.SentimentSatisfied
@@ -1605,11 +1654,11 @@ internal fun StockOrderRow(
     }
     nf.currency = Currency.getInstance(opinionatedStockOrder.stockOrder.currency)
     val backgroundColor = colorResource(
-        id =
-        if (stockOrder.orderAction == "Buy") {
-            android.R.color.holo_green_light
-        } else {
-            android.R.color.holo_red_light
+        id = when (stockOrder.orderAction) {
+            "Buy" -> android.R.color.holo_green_light
+            "Sell" -> android.R.color.holo_red_light
+            "Dividend" -> android.R.color.holo_purple
+            else -> android.R.color.holo_red_light
         }
     )
     val context = LocalContext.current
@@ -1717,15 +1766,17 @@ internal fun StockOrderRow(
             modifier = Modifier.width(STATUS_COLUMN_WIDTH),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = (if (opinionatedStockOrder.isApprovedByAlgorithm()) {
-                    Icons.Outlined.SentimentSatisfied
-                } else {
-                    Icons.Outlined.SentimentDissatisfied
-                }),
-                contentDescription = "Satisfaction",
-                tint = MaterialTheme.colorScheme.surfaceVariant
-            )
+            if (stockOrder.orderAction != "Dividend") {
+                Icon(
+                    imageVector = (if (opinionatedStockOrder.isApprovedByAlgorithm()) {
+                        Icons.Outlined.SentimentSatisfied
+                    } else {
+                        Icons.Outlined.SentimentDissatisfied
+                    }),
+                    contentDescription = "Satisfaction",
+                    tint = MaterialTheme.colorScheme.surfaceVariant
+                )
+            }
         }
     }
 }
@@ -1891,6 +1942,7 @@ private fun HomeItems(
     onBuy: () -> Unit,
     onSell: () -> Unit,
     onSplit: () -> Unit,
+    onAddDividend: () -> Unit,
     onAddPortfolio: () -> Unit,
     onDeletePortfolio: (String) -> Unit,
     homeViewModel: HomeViewModel
@@ -1905,6 +1957,11 @@ private fun HomeItems(
     BottomSheetMenuItem(
         onClick = onSell,
         text = stringResource(id = R.string.action_asset_sell),
+        enabled = portfoliosState.value[currentPortfolioNameState.value]?.readOnly == false
+    )
+    BottomSheetMenuItem(
+        onClick = onAddDividend,
+        text = stringResource(id = R.string.action_stock_add_dividend),
         enabled = portfoliosState.value[currentPortfolioNameState.value]?.readOnly == false
     )
     BottomSheetMenuItem(

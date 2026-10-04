@@ -102,4 +102,28 @@ class AssetHoldingTest {
         transaction = transaction,
         dateInMillis = transaction.dateInMillis
     )
+
+    @Test
+    fun `stock dividend calculates correct dividends and profit without changing quantity or GAV`() {
+        val holding = stockHolding()
+        holding.aggregate(event(stockTransaction(TransactionAction.BUY, "10", "50", date = 1L)))
+        holding.aggregate(event(stockTransaction(TransactionAction.DIVIDEND, "10", "2.50", date = 2L)))
+
+        assertEquals(BigDecimal("10"), holding.quantity)
+        assertEquals(BigDecimal("10"), holding.quantityAt(1L))
+        assertEquals(BigDecimal("10"), holding.quantityAt(2L))
+        assertEquals(0, BigDecimal("50").compareTo(holding.acquisitionValue()))
+        assertEquals(0, BigDecimal("25.00").compareTo(holding.totalDividends))
+        assertEquals(0, BigDecimal("25.00").compareTo(holding.profit(BigDecimal("50"))))
+    }
+
+    @Test
+    fun `quantityAtExDate excludes shares purchased on or after Ex-date`() {
+        val holding = stockHolding()
+        holding.aggregate(event(stockTransaction(TransactionAction.BUY, "10", "50", date = 1L)))
+        holding.aggregate(event(stockTransaction(TransactionAction.BUY, "5", "50", date = 2L)))
+
+        assertEquals(BigDecimal("10"), holding.quantityAtExDate(2L))
+        assertEquals(BigDecimal("15"), holding.quantityAt(2L))
+    }
 }

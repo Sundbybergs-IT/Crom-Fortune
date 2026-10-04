@@ -19,7 +19,8 @@ val assetEventChronologicalComparator: Comparator<AssetEvent> =
     compareBy(AssetEvent::dateInMillis).thenBy { event ->
         when (event.transaction?.action) {
             TransactionAction.BUY -> 0
-            null -> 1
-            TransactionAction.SELL -> 2
+            TransactionAction.DIVIDEND -> 1
+            null -> 2
+            TransactionAction.SELL -> 3
         }
     }

@@ -33,12 +33,18 @@ class PortfolioCalculator(
             if (stockOrder.name == stockName) {
                 val splitMultiplier = calculateSplitMultiplier(stockOrder, stockSplits)
 
-                if (stockOrder.orderAction == "Buy") {
-                    grossQuantity += (stockOrder.quantity.toDouble() * splitMultiplier).toInt()
-                    accumulatedCostInSek += rateInSek * stockOrder.pricePerStock * stockOrder.quantity.toDouble() +
-                            stockOrder.commissionFee
-                } else {
-                    soldQuantity += (stockOrder.quantity.toDouble() * splitMultiplier).toInt()
+                when (stockOrder.orderAction) {
+                    "Buy" -> {
+                        grossQuantity += (stockOrder.quantity.toDouble() * splitMultiplier).toInt()
+                        accumulatedCostInSek += rateInSek * stockOrder.pricePerStock * stockOrder.quantity.toDouble() +
+                                stockOrder.commissionFee
+                    }
+                    "Sell" -> {
+                        soldQuantity += (stockOrder.quantity.toDouble() * splitMultiplier).toInt()
+                    }
+                    "Dividend" -> {
+                        // Dividends do not alter stock quantity or cost basis
+                    }
                 }
 
                 if (grossQuantity - soldQuantity <= 0) {

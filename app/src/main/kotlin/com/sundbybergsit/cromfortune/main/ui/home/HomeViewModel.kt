@@ -146,17 +146,31 @@ class HomeViewModel(
                 cromSortedStockEvents.add(stockEvent)
                 stockOrderAggregate.aggregate(stockEvent)
             } else if (stockEvent.stockOrder != null) {
-                val possibleNewStockEvent: StockEvent? =
-                    stockOrderAggregate.applyStockOrderForRecommendedEvent(
-                        eventToConsider = stockEvent,
-                        existingEvents = cromSortedStockEvents,
-                        recommendationAlgorithm = recommendationAlgorithm,
-                        cromCashWallet = cromCashWallet,
-                        userSimulatedCashWallet = userSimulatedCashWallet
-                    )
-                if (possibleNewStockEvent != null) {
-                    cromSortedStockEvents.add(possibleNewStockEvent)
-                    stockOrderAggregate.aggregate(possibleNewStockEvent)
+                val stockOrder = stockEvent.stockOrder!!
+                if (stockOrder.orderAction == "Dividend") {
+                    cromSortedStockEvents.add(stockEvent)
+                    stockOrderAggregate.aggregate(stockEvent)
+                    if (stockOrderAggregate.getExactQuantity().signum() > 0) {
+                        cromCashWallet.dividend(
+                            quantity = stockOrderAggregate.getExactQuantity(),
+                            pricePerStock = stockOrder.pricePerStock,
+                            rateInSek = stockOrderAggregate.rateInSek,
+                            commissionFeeSek = stockOrder.commissionFee
+                        )
+                    }
+                } else {
+                    val possibleNewStockEvent: StockEvent? =
+                        stockOrderAggregate.applyStockOrderForRecommendedEvent(
+                            eventToConsider = stockEvent,
+                            existingEvents = cromSortedStockEvents,
+                            recommendationAlgorithm = recommendationAlgorithm,
+                            cromCashWallet = cromCashWallet,
+                            userSimulatedCashWallet = userSimulatedCashWallet
+                        )
+                    if (possibleNewStockEvent != null) {
+                        cromSortedStockEvents.add(possibleNewStockEvent)
+                        stockOrderAggregate.aggregate(possibleNewStockEvent)
+                    }
                 }
             } else {
                 cromSortedStockEvents.add(stockEvent)
@@ -337,6 +351,26 @@ class HomeViewModel(
             events.forEach(holding::aggregate)
             PortfolioItem.fromAssetHolding(holding)
         }.sortedBy(PortfolioItem::displayName)
+    }
+
+    fun getSharesHeldOnExDate(context: Context, portfolioName: String, assetId: String, dateInMillis: Long): BigDecimal {
+        val repository = AssetEventRepository(context, portfolioName)
+        val events = repository.list(assetId).sortedWith(assetEventChronologicalComparator)
+        val firstTransaction = events.firstNotNullOfOrNull { event -> event.transaction } ?: return BigDecimal.ZERO
+        val catalogAsset = AssetCatalog.findById(assetId)
+        val rate = CurrencyRateRepository.currencyRates.value
+            .find { it.iso4217CurrencySymbol == firstTransaction.quoteCurrencyCode }
+            ?.rateInSek?.toBigDecimal() ?: BigDecimal.ONE
+        val holding = AssetHolding(
+            assetId = assetId,
+            assetType = firstTransaction.assetType,
+            symbol = firstTransaction.symbol,
+            displayName = catalogAsset?.displayName ?: firstTransaction.displayName,
+            quoteCurrency = firstTransaction.quoteCurrency,
+            rateInSek = rate
+        )
+        events.forEach(holding::aggregate)
+        return holding.quantityAtExDate(dateInMillis)
     }
 
     private fun cromCryptoFirstPurchases(context: Context): List<PortfolioItem> {

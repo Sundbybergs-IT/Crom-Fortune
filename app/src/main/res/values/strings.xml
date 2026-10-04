@@ -1,7 +1,10 @@
 <resources>
+    <string name="action_asset_buy">Register asset purchase</string>
     <string name="action_asset_buy_short">B</string>
     <string name="action_asset_sell">Register asset sale</string>
     <string name="action_asset_sell_short">S</string>
+    <string name="action_asset_dividend">Register stock dividend</string>
+    <string name="action_asset_dividend_short">D</string>
     <string name="action_clear">Clear</string>
     <string name="action_close">Close</string>
     <string name="action_configure_stock_retrieval_intervals">Automatic stock update schedule</string>
@@ -14,7 +17,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_save">Save</string>
     <string name="action_install">Install</string>
-    <string name="action_asset_buy">Register asset purchase</string>
+    <string name="action_stock_add_dividend">Register dividend</string>
     <string name="action_stock_add_split">Register stock split</string>
     <string name="action_stocks_supported">Supported stocks</string>
     <string name="app_name">Crom Fortune</string>
@@ -22,12 +25,18 @@
     <string name="asset_transaction_asset_type">Asset type</string>
     <string name="asset_transaction_confirm_buy">Buy</string>
     <string name="asset_transaction_confirm_sell">Sell</string>
+    <string name="asset_transaction_confirm_dividend">Dividend</string>
     <string name="asset_transaction_price">Price</string>
     <string name="asset_transaction_quantity_hint">Up to %1$d decimal places</string>
     <string name="asset_transaction_title_buy">Buy asset</string>
     <string name="asset_transaction_title_sell">Sell asset</string>
+    <string name="asset_transaction_title_dividend">Register dividend</string>
     <string name="asset_transaction_title_edit">Edit transaction</string>
     <string name="asset_transaction_unit_price">Unit price</string>
+    <string name="asset_transaction_ex_date">Ex-dividend date (Day X)</string>
+    <string name="asset_transaction_dividend_per_share">Dividend per share</string>
+    <string name="asset_transaction_shares_held_on_ex_date">Shares held the day before Ex-date: %1$s</string>
+    <string name="generic_error_no_shares_on_day_x">No shares were held at the end of the day before Ex-date.</string>
     <string name="asset_type_crypto">Cryptocurrency</string>
     <string name="asset_type_stock">Stock</string>
 
@@ -109,6 +118,8 @@
     <string name="home_not_updated">Update</string>
     <string name="home_buy">Buy</string>
     <string name="home_sell">Sell</string>
+    <string name="home_dividend">Dividend</string>
+    <string name="home_total_dividends">Dividends: %1$s</string>
     <string name="home_acquisition_price">GAV</string>
     <string name="home_realized_profit">Return</string>
     <string name="home_realized_profit_format">Return: %1$s</string>
