@@ -28,7 +28,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
     ): ConformanceScore {
         var correctDecision = 0
         val stockOrders: List<StockOrder> = stockEvents
-            .filter { stockEvent -> stockEvent.stockOrder != null }
+            .filter { stockEvent -> stockEvent.stockOrder != null && stockEvent.stockOrder!!.orderAction != "Dividend" }
             .map { stockEvent -> stockEvent.stockOrder!! }
         val currencyRatesByCode = currencyRateApi.currencyRates.value.associateBy {
             currencyRate -> currencyRate.iso4217CurrencySymbol
@@ -82,6 +82,9 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                 } else if (stockEvent.stockOrder != null) {
                     stockOrderAggregate.aggregate(stockEvent)
                     val stockOrder = stockEvent.stockOrder!!
+                    if (stockOrder.orderAction == "Dividend") {
+                        return@forEachIndexed
+                    }
                     val recommendation = recommendationAlgorithm.getRecommendation(
                         stockPrice = StockPrice(
                             stockSymbol = stockOrder.name,

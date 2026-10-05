@@ -207,8 +207,40 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         assertScore(50, score)
     }
 
+    @Test
+    fun `getScore - when dividend orders are present - ignores them in score calculation`() = runBlocking {
+        val score = calculator.getScore(
+            SellRecommendationDummyAlgorithm(),
+            setOf(
+                newBuyStockEvent(1),
+                newDividendStockEvent(2),
+                newSellStockEvent(3)
+            ),
+            currencyRateApi
+        )
+
+        assertScore(100, score)
+    }
+
     private fun assertScore(expectedValue: Int, score: ConformanceScore) {
         assertTrue("Expected score $expectedValue but was ${score.score}", score.score == expectedValue)
+    }
+
+    private fun newDividendStockEvent(
+        dateInMillis: Long,
+        ticker: String = StockPrice.SYMBOLS[0].first,
+        price: Double = 1.0,
+        quantity: Int = 1
+    ): StockEvent {
+        return StockOrder(
+            "Dividend",
+            "SEK",
+            dateInMillis,
+            ticker,
+            price,
+            0.0,
+            quantity
+        ).toStockEvent()
     }
 
     private fun newSellStockEvent(
