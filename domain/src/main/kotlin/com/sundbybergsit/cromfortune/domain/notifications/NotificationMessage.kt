@@ -9,5 +9,6 @@ data class NotificationMessage(
     val portfolioName: String? = null,
     val stockSymbol: String? = null,
     val currencyCode: String? = null,
-    val pricePerStock: Double? = null
+    val pricePerStock: Double? = null,
+    val orderAction: String? = null
 )

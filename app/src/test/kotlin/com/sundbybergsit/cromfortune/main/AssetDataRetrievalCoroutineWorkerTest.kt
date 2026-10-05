@@ -85,6 +85,23 @@ class AssetDataRetrievalCoroutineWorkerTest {
         assertEquals(AssetCatalog.activeAssets.size - 1, StockPriceRepository.assetPricesStateFlow.value.assetPrices.size)
     }
 
+    @Test
+    fun `notification repository supports orderAction and deduplication logic`() {
+        val repository = com.sundbybergsit.cromfortune.main.notifications.NotificationsRepositoryImpl(context)
+        repository.clear()
+        val notificationBuy = com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage(
+            dateInMillis = System.currentTimeMillis(),
+            message = "Buy notification",
+            portfolioName = "Default",
+            stockSymbol = "AAPL",
+            orderAction = "Buy"
+        )
+        repository.add(notificationBuy)
+        val list = repository.list()
+        assertEquals(1, list.size)
+        assertEquals("Buy", list.first().orderAction)
+    }
+
     private class FakeMarketDataClient(
         private val failure: Throwable? = null,
         private val missingAssetId: String? = null

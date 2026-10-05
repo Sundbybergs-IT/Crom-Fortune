@@ -24,8 +24,10 @@ import com.sundbybergsit.cromfortune.main.stocks.StockEventRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import java.io.IOException
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import kotlin.math.roundToInt
 
 class AssetDataRetrievalCoroutineWorker(
@@ -59,6 +61,10 @@ class AssetDataRetrievalCoroutineWorker(
             marketDataResult.failures.forEach { (assetId, reason) ->
                 Log.w(TAG, "Price refresh failed for [$assetId]: $reason")
             }
+
+            val activePortfolios = portfolioRepository.portfolioNamesStateFlow.value
+                .filterNot { name -> name == PortfolioRepository.CROM_PORTFOLIO_NAME }
+
             for (asset in refreshableAssets.filter { asset -> asset.type == AssetType.STOCK }) {
                 val assetPrice = marketDataResult.prices[asset.id]
                 if (assetPrice == null) {
@@ -69,16 +75,17 @@ class AssetDataRetrievalCoroutineWorker(
                         currency = assetPrice.currency,
                         price = assetPrice.price.toDouble().roundTo(3)
                     )
-                    val allPortfolioNamesState = portfolioRepository.portfolioNamesStateFlow.value
-                    for (portfolioName in allPortfolioNamesState.filterNot { name -> name == PortfolioRepository.CROM_PORTFOLIO_NAME }) {
+                    val isStockMuted = StockMuteSettingsRepository.isMuted(asset.symbol)
+                    if (isStockMuted) {
+                        Log.i(
+                            TAG,
+                            "Skipping recommendation for stock [${asset.symbol}] as it has been muted."
+                        )
+                        continue
+                    }
+                    for (portfolioName in activePortfolios) {
                         val stockEvents = StockEventRepository(context, portfolioName).list(asset.symbol)
-                        val isStockMuted = StockMuteSettingsRepository.isMuted(asset.symbol)
-                        if (isStockMuted) {
-                            Log.i(
-                                TAG,
-                                "Skipping recommendation for portfolio [${portfolioName}] for stock [${asset.symbol}] as it has been muted."
-                            )
-                        } else if (stockEvents.isNotEmpty()) {
+                        if (stockEvents.isNotEmpty()) {
                             val recommendation = CromFortuneV1RecommendationAlgorithm()
                                 .getRecommendation(
                                     stockPrice = stockPrice,
@@ -97,8 +104,8 @@ class AssetDataRetrievalCoroutineWorker(
                                 } else {
                                     Log.i(
                                         TAG,
-                                            "Skipping recommendation notification for portfolio [$portfolioName] " +
-                                            "for stock [${asset.symbol}] outside configured time interval."
+                                        "Skipping recommendation notification for portfolio [$portfolioName] " +
+                                        "for stock [${asset.symbol}] outside configured time interval."
                                     )
                                 }
                             }
@@ -117,6 +124,21 @@ class AssetDataRetrievalCoroutineWorker(
         }
 
         private fun notifyRecommendation(context: Context, recommendation: Recommendation, portfolioName: String) {
+            val notificationsRepository = NotificationsRepositoryImpl(context)
+            val stockSymbol = recommendation.command.stockSymbol()
+            val orderAction = if (recommendation.command is BuyStockCommand) "Buy" else "Sell"
+            val today = LocalDate.now()
+            val hasAlreadyNotifiedToday = notificationsRepository.list().any { notification ->
+                notification.portfolioName == portfolioName &&
+                notification.stockSymbol == stockSymbol &&
+                notification.orderAction == orderAction &&
+                Instant.ofEpochMilli(notification.dateInMillis).atZone(ZoneId.systemDefault()).toLocalDate() == today
+            }
+            if (hasAlreadyNotifiedToday) {
+                Log.i(TAG, "Skipping duplicate recommendation notification for portfolio [$portfolioName] for stock [$stockSymbol] ($orderAction) already sent today.")
+                return
+            }
+
             val message = when (recommendation.command) {
                 is BuyStockCommand -> {
                     context.getString(
@@ -153,11 +175,11 @@ class AssetDataRetrievalCoroutineWorker(
                 portfolioName = portfolioName,
                 stockSymbol = recommendation.command.stockSymbol(),
                 currencyCode = recommendation.command.currency().currencyCode,
-                pricePerStock = recommendation.command.price()
+                pricePerStock = recommendation.command.price(),
+                orderAction = orderAction
             )
 
             // TODO: Move repository logic
-            val notificationsRepository = NotificationsRepositoryImpl(context)
             notificationsRepository.add(notification)
             val shortText: String =
                 when (recommendation.command) {
