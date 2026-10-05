@@ -22,7 +22,11 @@ class AssetEventRepository(
         var quantity = BigDecimal.ZERO
         list(assetId).sortedWith(assetEventChronologicalComparator).forEach { event ->
             event.transaction?.let { transaction ->
-                quantity += if (transaction.action == TransactionAction.BUY) transaction.quantity else -transaction.quantity
+                quantity = when (transaction.action) {
+                    TransactionAction.BUY -> quantity + transaction.quantity
+                    TransactionAction.SELL -> quantity - transaction.quantity
+                    TransactionAction.DIVIDEND -> quantity
+                }
                 require(quantity >= BigDecimal.ZERO) { "Sale exceeds available quantity for $assetId" }
             }
             event.stockSplit?.let { split ->
