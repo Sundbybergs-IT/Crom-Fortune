@@ -31,15 +31,15 @@ class NotificationsRepositoryImpl(context: Context, private val sharedPreference
     override fun add(notificationMessage : NotificationMessage) {
         sharedPreferences.edit()
             .putString(notificationMessage.dateInMillis.toString(), Json.encodeToString(notificationMessage))
-            .apply()
+            .commit()
     }
 
     override fun remove(notificationMessage: NotificationMessage) {
-        sharedPreferences.edit().remove(notificationMessage.dateInMillis.toString()).apply()
+        sharedPreferences.edit().remove(notificationMessage.dateInMillis.toString()).commit()
     }
 
     override fun clear() {
-        sharedPreferences.edit().clear().apply()
+        sharedPreferences.edit().clear().commit()
     }
 
 }

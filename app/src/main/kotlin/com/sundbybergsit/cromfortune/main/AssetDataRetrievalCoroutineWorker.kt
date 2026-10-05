@@ -72,7 +72,7 @@ class AssetDataRetrievalCoroutineWorker(
                 } else {
                     val stockPrice = StockPrice(
                         stockSymbol = asset.symbol,
-                        currency = assetPrice.currency,
+                        currency = asset.quoteCurrency,
                         price = assetPrice.price.toDouble().roundTo(3)
                     )
                     val isStockMuted = StockMuteSettingsRepository.isMuted(asset.symbol)
@@ -123,84 +123,88 @@ class AssetDataRetrievalCoroutineWorker(
             )
         }
 
+        private val notificationLock = Any()
+
         private fun notifyRecommendation(context: Context, recommendation: Recommendation, portfolioName: String) {
-            val notificationsRepository = NotificationsRepositoryImpl(context)
-            val stockSymbol = recommendation.command.stockSymbol()
-            val orderAction = if (recommendation.command is BuyStockCommand) "Buy" else "Sell"
-            val today = LocalDate.now()
-            val hasAlreadyNotifiedToday = notificationsRepository.list().any { notification ->
-                notification.portfolioName == portfolioName &&
-                notification.stockSymbol == stockSymbol &&
-                notification.orderAction == orderAction &&
-                Instant.ofEpochMilli(notification.dateInMillis).atZone(ZoneId.systemDefault()).toLocalDate() == today
+            synchronized(notificationLock) {
+                val notificationsRepository = NotificationsRepositoryImpl(context)
+                val stockSymbol = recommendation.command.stockSymbol()
+                val orderAction = if (recommendation.command is BuyStockCommand) "Buy" else "Sell"
+                val today = LocalDate.now()
+                val hasAlreadyNotifiedToday = notificationsRepository.list().any { notification ->
+                    notification.portfolioName == portfolioName &&
+                    notification.stockSymbol == stockSymbol &&
+                    notification.orderAction == orderAction &&
+                    Instant.ofEpochMilli(notification.dateInMillis).atZone(ZoneId.systemDefault()).toLocalDate() == today
+                }
+                if (hasAlreadyNotifiedToday) {
+                    Log.i(TAG, "Skipping duplicate recommendation notification for portfolio [$portfolioName] for stock [$stockSymbol] ($orderAction) already sent today.")
+                    return
+                }
+
+                val message = when (recommendation.command) {
+                    is BuyStockCommand -> {
+                        context.getString(
+                            R.string.notification_recommendation_body_buy,
+                            portfolioName,
+                            (recommendation.command as BuyStockCommand).quantity,
+                            (recommendation.command as BuyStockCommand).name,
+                            (recommendation.command as BuyStockCommand).pricePerStock.roundTo(3).toString(),
+                            (recommendation.command as BuyStockCommand).currency.currencyCode,
+                            (recommendation.command as BuyStockCommand).commissionFee.roundToInt()
+                        )
+                    }
+
+                    is SellStockCommand -> {
+                        context.getString(
+                            R.string.notification_recommendation_body_sell,
+                            portfolioName,
+                            (recommendation.command as SellStockCommand).quantity,
+                            (recommendation.command as SellStockCommand).name,
+                            (recommendation.command as SellStockCommand).pricePerStock.roundTo(3).toString(),
+                            (recommendation.command as SellStockCommand).currency.currencyCode,
+                            (recommendation.command as SellStockCommand).commissionFee.roundToInt()
+                        )
+                    }
+
+                    else -> {
+                        ""
+                    }
+                }
+
+                val notification = NotificationMessage(
+                    dateInMillis = System.currentTimeMillis(),
+                    message = message,
+                    portfolioName = portfolioName,
+                    stockSymbol = recommendation.command.stockSymbol(),
+                    currencyCode = recommendation.command.currency().currencyCode,
+                    pricePerStock = recommendation.command.price(),
+                    orderAction = orderAction
+                )
+
+                // TODO: Move repository logic
+                notificationsRepository.add(notification)
+                val shortText: String =
+                    when (recommendation.command) {
+                        is BuyStockCommand -> context.getString(
+                            R.string.generic_urge_buy,
+                            recommendation.command.stockSymbol()
+                        )
+
+                        is SellStockCommand -> context.getString(
+                            R.string.generic_urge_sell,
+                            recommendation.command.stockSymbol()
+                        )
+
+                        else -> ""
+                    }
+                NotificationUtil.doPostRegularNotification(
+                    context,
+                    context.getString(R.string.notification_recommendation_title),
+                    shortText,
+                    notification.message
+                )
             }
-            if (hasAlreadyNotifiedToday) {
-                Log.i(TAG, "Skipping duplicate recommendation notification for portfolio [$portfolioName] for stock [$stockSymbol] ($orderAction) already sent today.")
-                return
-            }
-
-            val message = when (recommendation.command) {
-                is BuyStockCommand -> {
-                    context.getString(
-                        R.string.notification_recommendation_body_buy,
-                        portfolioName,
-                        (recommendation.command as BuyStockCommand).quantity,
-                        (recommendation.command as BuyStockCommand).name,
-                        (recommendation.command as BuyStockCommand).pricePerStock.roundTo(3).toString(),
-                        (recommendation.command as BuyStockCommand).currency.currencyCode,
-                        (recommendation.command as BuyStockCommand).commissionFee.roundToInt()
-                    )
-                }
-
-                is SellStockCommand -> {
-                    context.getString(
-                        R.string.notification_recommendation_body_sell,
-                        portfolioName,
-                        (recommendation.command as SellStockCommand).quantity,
-                        (recommendation.command as SellStockCommand).name,
-                        (recommendation.command as SellStockCommand).pricePerStock.roundTo(3).toString(),
-                        (recommendation.command as SellStockCommand).currency.currencyCode,
-                        (recommendation.command as SellStockCommand).commissionFee.roundToInt()
-                    )
-                }
-
-                else -> {
-                    ""
-                }
-            }
-
-            val notification = NotificationMessage(
-                dateInMillis = System.currentTimeMillis(),
-                message = message,
-                portfolioName = portfolioName,
-                stockSymbol = recommendation.command.stockSymbol(),
-                currencyCode = recommendation.command.currency().currencyCode,
-                pricePerStock = recommendation.command.price(),
-                orderAction = orderAction
-            )
-
-            // TODO: Move repository logic
-            notificationsRepository.add(notification)
-            val shortText: String =
-                when (recommendation.command) {
-                    is BuyStockCommand -> context.getString(
-                        R.string.generic_urge_buy,
-                        recommendation.command.stockSymbol()
-                    )
-
-                    is SellStockCommand -> context.getString(
-                        R.string.generic_urge_sell,
-                        recommendation.command.stockSymbol()
-                    )
-
-                    else -> ""
-                }
-            NotificationUtil.doPostRegularNotification(
-                context,
-                context.getString(R.string.notification_recommendation_title),
-                shortText,
-                notification.message
-            )
         }
 
         internal fun isWithinNotificationWindow(
