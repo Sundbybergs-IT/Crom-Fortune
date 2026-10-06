@@ -1328,7 +1328,6 @@ private fun AssetEventsDialog(
     onUpdateSplit: (StockSplit, StockSplit) -> Unit,
     onRemoveSplit: (StockSplit) -> Unit
 ) {
-    val context = LocalContext.current
     var transactionToEdit by remember { mutableStateOf<AssetTransaction?>(null) }
     var splitToEdit by remember { mutableStateOf<StockSplit?>(null) }
     transactionToEdit?.let { original ->

@@ -4,38 +4,9 @@ import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.input.TextFieldValue
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
-import com.sundbybergsit.cromfortune.main.PortfolioRepository
 import com.sundbybergsit.cromfortune.main.R
-import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
-
-fun TextFieldValue.validateStockQuantity(
-    context: Context,
-    homeViewModel: HomeViewModel,
-    portfolioRepository: PortfolioRepository,
-    errorMutableState: MutableState<Boolean>,
-    errorMessageMutableState: MutableState<String>,
-    stockName: String
-) {
-    when {
-        !homeViewModel.hasNumberOfStocks(
-            context = context,
-            portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.value,
-            stockName = stockName,
-            quantity = text.toInt()
-        ) -> {
-            errorMutableState.value = true
-            errorMessageMutableState.value = context.getString(R.string.home_remove_stock_quantity_error_insufficient)
-            throw ValidatorException()
-        }
-
-        else -> {
-            errorMutableState.value = false
-            errorMessageMutableState.value = ""
-        }
-    }
-}
 
 fun TextFieldValue.validateMinQuantity(
     context: Context,
@@ -108,31 +79,6 @@ fun TextFieldValue.validateDate(
 
     errorMutableState.value = false
     errorMessageMutableState.value = ""
-}
-
-fun TextFieldValue.validateDouble(
-    context: Context,
-    errorMutableState: MutableState<Boolean>,
-    errorMessageMutableState: MutableState<String>
-) {
-    when {
-        text.isEmpty() -> {
-            errorMutableState.value = true
-            errorMessageMutableState.value = context.getString(R.string.generic_error_empty)
-            throw ValidatorException()
-        }
-
-        text.toDoubleOrNull() == null -> {
-            errorMutableState.value = true
-            errorMessageMutableState.value = context.getString(R.string.generic_error_invalid_number)
-            throw ValidatorException()
-        }
-
-        else -> {
-            errorMutableState.value = false
-            errorMessageMutableState.value = ""
-        }
-    }
 }
 
 fun TextFieldValue.validateStockName(
