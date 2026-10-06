@@ -676,24 +676,6 @@ private fun MetricCell(
 }
 
 @Composable
-private fun StockValue(
-    text: String,
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    fontWeight: FontWeight? = null
-) {
-    Text(
-        text = text,
-        modifier = modifier,
-        color = color,
-        style = MaterialTheme.typography.bodySmall,
-        fontWeight = fontWeight,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis
-    )
-}
-
-@Composable
 private fun TradeButton(text: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
     TextButton(
         modifier = modifier.height(42.dp),

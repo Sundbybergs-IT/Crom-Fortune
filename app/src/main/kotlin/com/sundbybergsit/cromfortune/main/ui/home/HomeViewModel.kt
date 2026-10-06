@@ -74,30 +74,6 @@ class HomeViewModel(
         _portfoliosStateFlow.value = portfolioViewStates
     }
 
-    private fun getCalculatedStockOrderAggregate(sortedStockEvents: List<StockEvent>): StockOrderAggregate {
-        var stockOrderAggregate: StockOrderAggregate? = null
-        for (stockEvent in sortedStockEvents) {
-            if (stockOrderAggregate == null && stockEvent.stockSplit != null) {
-                // Ignore splits before first stock order
-            } else if (stockOrderAggregate == null) {
-                val stockOrder = checkNotNull(stockEvent.stockOrder)
-                Log.d(TAG, "Creating aggregate for [${stockOrder.name}] with ${sortedStockEvents.size} event(s)")
-                val stockName = AssetCatalog.findById(stockOrder.assetId)?.displayName ?: stockOrder.name
-                stockOrderAggregate = StockOrderAggregate(
-                    CurrencyRateRepository.currencyRates.value
-                        .find { currencyRate -> currencyRate.iso4217CurrencySymbol == stockOrder.currency }?.rateInSek
-                        ?: 1.0,
-                    "$stockName (${stockOrder.name})", stockOrder.name,
-                    Currency.getInstance(stockOrder.currency)
-                )
-                stockOrderAggregate.aggregate(stockEvent)
-            } else {
-                stockOrderAggregate.aggregate(stockEvent)
-            }
-        }
-        return stockOrderAggregate!!
-    }
-
     private fun getCalculatedStockOrderAggregate(
         stockEvents: List<StockEvent>,
         notifications: List<NotificationMessage>,
@@ -394,43 +370,6 @@ class HomeViewModel(
             PortfolioItem.fromAssetHolding(holding)
         }.sortedBy(PortfolioItem::displayName)
     }
-
-    fun portfolioStockEvents(context: Context, portfolioName: String, stockSymbol: String): List<StockEvent> {
-        Log.d(TAG, "portfolioStockEvents(portfolio=[$portfolioName], stockSymbol=[$stockSymbol])")
-        return if (portfolioName == PortfolioRepository.CROM_PORTFOLIO_NAME) {
-            val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
-            val cromCashWallet = SimulatedCashWallet()
-            val userSimulatedCashWallet = SimulatedCashWallet()
-            val cromNotifications = NotificationsRepositoryImpl(context).list().filter { notification ->
-                notification.portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME &&
-                    notification.stockSymbol == stockSymbol && notification.pricePerStock != null
-            }
-            val aggregate = stocks(
-                context = context,
-                portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
-                includeAsset = { order -> recommendationAlgorithm.supports(order.assetType) }
-            ) { sortedStockEvents ->
-                getCalculatedStockOrderAggregate(
-                    stockEvents = sortedStockEvents,
-                    notifications = cromNotifications,
-                    recommendationAlgorithm = recommendationAlgorithm,
-                    cromCashWallet = cromCashWallet,
-                    userSimulatedCashWallet = userSimulatedCashWallet
-                )
-            }.find { stockOrderAggregate -> stockOrderAggregate.stockSymbol == stockSymbol }
-            if (aggregate == null) {
-                Log.e(TAG, "No aggregate found for [$stockSymbol] in Crom portfolio during click lookup")
-                emptyList()
-            } else {
-                aggregate.events.toList()
-            }
-        } else {
-            emptyList()
-        }
-    }
-
-    fun portfolioAssetEvents(context: Context, portfolioName: String, assetId: String): List<AssetEvent> =
-        AssetEventRepository(context, portfolioName).list(assetId).sortedBy(AssetEvent::dateInMillis)
 
     fun hasNumberOfStocks(context: Context, portfolioName: String, stockName: String, quantity: Int): Boolean {
         return StockEventRepository(context, portfolioName = portfolioName).countCurrent(stockName) >= quantity
