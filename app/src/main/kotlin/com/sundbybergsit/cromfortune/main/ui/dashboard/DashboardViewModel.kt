@@ -41,7 +41,7 @@ class DashboardViewModel : ViewModel() {
 
     fun refresh(context: Context, timestamp: Instant) {
         Log.i(TAG, "refresh($timestamp)")
-        if (timestamp.isAfter(lastUpdated)) {
+        if (!timestamp.isBefore(lastUpdated)) {
             lastUpdated = timestamp
             viewModelScope.launch {
                 val repository =

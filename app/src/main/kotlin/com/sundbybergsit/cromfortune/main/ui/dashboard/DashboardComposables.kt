@@ -31,6 +31,7 @@ import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import com.sundbybergsit.cromfortune.main.ui.home.HomeViewModel
 import com.sundbybergsit.cromfortune.main.ui.home.PortfolioItem
 import java.math.BigDecimal
+import java.time.Instant
 
 @Composable
 fun Dashboard(viewModel: DashboardViewModel, homeViewModel: HomeViewModel) {
@@ -44,6 +45,9 @@ fun Dashboard(viewModel: DashboardViewModel, homeViewModel: HomeViewModel) {
     val portfolioSummaryState = viewModel.portfolioSummaryStateFlow.collectAsState()
     val aiStonkMood by viewModel.aiCromMood.collectAsState()
     val portfolios by homeViewModel.portfoliosStateFlow.collectAsState()
+    LaunchedEffect(portfolios) {
+        viewModel.refresh(context, Instant.now())
+    }
     val userPortfolioValue = portfolios[PortfolioRepository.DEFAULT_PORTFOLIO_NAME]
         ?.items?.portfolioMarketValueSek() ?: BigDecimal.ZERO
     val cromPortfolio = portfolios[PortfolioRepository.CROM_PORTFOLIO_NAME]
