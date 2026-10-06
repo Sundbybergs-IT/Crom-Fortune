@@ -212,15 +212,21 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
         ),
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { hostData ->
-                Snackbar {
-                    val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
-                    val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
-                    val actionLabel = hostData.visuals.actionLabel
+                val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
+                val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
+                val actionLabel = hostData.visuals.actionLabel
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = backgroundColor,
+                    tonalElevation = 6.dp,
+                ) {
                     ConstraintLayout(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight()
-                            .background(backgroundColor),
+                            .wrapContentHeight(),
                     ) {
                         val (textRef, leftLineRef, actionRef) = createRefs()
                         Box(
@@ -237,7 +243,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                         Text(
                             text = hostData.visuals.message,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = lineColor,
                             modifier = Modifier
                                 .constrainAs(textRef) {
                                     top.linkTo(parent.top)
