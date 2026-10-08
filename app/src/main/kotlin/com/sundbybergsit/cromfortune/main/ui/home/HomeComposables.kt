@@ -502,6 +502,12 @@ private fun AssetCard(
         -1 -> Loss
         else -> MaterialTheme.colorScheme.onSurface
     }
+    val gavColor = when {
+        assetPrice == null -> MaterialTheme.colorScheme.onSurface
+        item.acquisitionValue.compareTo(assetPrice.price) < 0 -> Profit
+        item.acquisitionValue.compareTo(assetPrice.price) > 0 -> Loss
+        else -> MaterialTheme.colorScheme.onSurface
+    }
 
     Surface(
         modifier = Modifier
@@ -572,7 +578,8 @@ private fun AssetCard(
                             MetricCell(
                                 stringResource(R.string.home_acquisition_price),
                                 currencyFormat.format(item.acquisitionValue),
-                                Modifier.weight(1f)
+                                Modifier.weight(1f),
+                                color = gavColor
                             )
                         }
                         if (item.realizedProfit.compareTo(BigDecimal.ZERO) != 0) {
