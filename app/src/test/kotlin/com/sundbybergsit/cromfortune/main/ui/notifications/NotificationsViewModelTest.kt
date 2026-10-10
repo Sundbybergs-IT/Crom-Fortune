@@ -6,7 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
 import com.sundbybergsit.cromfortune.main.CoroutineScopeTestRule
 import com.sundbybergsit.cromfortune.main.notifications.NotificationsRepositoryImpl
-import com.sundbybergsit.cromfortune.main.notifications.PREFERENCES_NAME
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -29,8 +28,8 @@ class NotificationsViewModelTest {
 
     @Before
     fun setUp() {
-        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit()
         repository = NotificationsRepositoryImpl(context)
+        repository.clear()
     }
 
     @Test

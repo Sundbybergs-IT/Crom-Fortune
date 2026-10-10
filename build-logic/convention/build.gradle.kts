@@ -9,12 +9,12 @@ group = "com.sundbybergsit.cromfortune.buildlogic"
 
 // Build the convention plugins with the same Java version as the rest of the project.
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_25)
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 

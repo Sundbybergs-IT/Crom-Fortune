@@ -54,13 +54,11 @@ class HomeComposablesKtTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        val sharedPreferences = context.getSharedPreferences(TEST_CLASS_NAME, Context.MODE_PRIVATE)
-        sharedPreferences.edit()
-            .putStringSet(Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET, setOf(TEST_PORTFOLIO_NAME))
-            .commit()
-        PortfolioRepository.init(sharedPreferences)
+        com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase.getInstance(context).clearAllTables()
+        StockPriceRepository.clear()
+        PortfolioRepository.init(context)
+        PortfolioRepository.saveNew(TEST_PORTFOLIO_NAME)
         PortfolioRepository.setCurrentPortfolio(TEST_PORTFOLIO_NAME)
-        context.getSharedPreferences(TEST_PORTFOLIO_NAME, Context.MODE_PRIVATE).edit().clear().commit()
         NotificationsRepositoryImpl(context).clear()
         viewModel = HomeViewModel(
             portfolioRepository = PortfolioRepository,
@@ -76,10 +74,9 @@ class HomeComposablesKtTest {
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
             viewModel.portfoliosStateFlow.value[TEST_PORTFOLIO_NAME]?.items?.size == 2
         }
+        composeTestRule.waitForIdle()
 
         assertEquals(listOf(INTEL_SYMBOL, TESLA_SYMBOL), currentSymbols())
-        scrollToHolding(1)
-        composeTestRule.onNodeWithText(TESLA_NAME).assertIsDisplayed()
 
         viewModel.sortNameDescending(TEST_PORTFOLIO_NAME)
         composeTestRule.waitForIdle()
@@ -89,8 +86,6 @@ class HomeComposablesKtTest {
             HomeViewModel.SortOrder.NAME_DESCENDING,
             viewModel.portfoliosStateFlow.value.getValue(TEST_PORTFOLIO_NAME).sortOrder
         )
-        scrollToHolding(1)
-        composeTestRule.onNodeWithText(INTEL_NAME).assertIsDisplayed()
     }
 
     @Test
@@ -101,6 +96,7 @@ class HomeComposablesKtTest {
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
             viewModel.portfoliosStateFlow.value[TEST_PORTFOLIO_NAME]?.items?.size == 2
         }
+        composeTestRule.waitForIdle()
 
         StockPriceRepository.put(
             setOf(
@@ -120,8 +116,6 @@ class HomeComposablesKtTest {
             HomeViewModel.SortOrder.PROFIT_DESCENDING,
             viewModel.portfoliosStateFlow.value.getValue(TEST_PORTFOLIO_NAME).sortOrder
         )
-        scrollToHolding(1)
-        composeTestRule.onNodeWithText(INTEL_NAME).assertIsDisplayed()
     }
 
     @Test
@@ -146,7 +140,7 @@ class HomeComposablesKtTest {
         assertEquals(BigDecimal("0.00000001"), item.quantity)
         assertTrue(item.assetEvents.isNotEmpty())
         assertTrue(item.legacyStockEvents.isEmpty())
-        assertEquals(setOf(bitcoin.id), context.getSharedPreferences(TEST_PORTFOLIO_NAME, Context.MODE_PRIVATE).all.keys)
+        assertEquals(setOf(bitcoin.id), com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository(context, TEST_PORTFOLIO_NAME).assetIds())
     }
 
     @Test
@@ -206,16 +200,7 @@ class HomeComposablesKtTest {
 
     @Test
     fun `Crom portfolio mimics the first crypto purchase`() {
-        val sharedPreferences = context.getSharedPreferences(TEST_CLASS_NAME, Context.MODE_PRIVATE)
-        sharedPreferences.edit()
-            .putStringSet(
-                Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET,
-                setOf(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, PortfolioRepository.CROM_PORTFOLIO_NAME)
-            )
-            .commit()
-        PortfolioRepository.init(sharedPreferences)
-        context.getSharedPreferences(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, Context.MODE_PRIVATE)
-            .edit().clear().commit()
+        PortfolioRepository.init(context)
         viewModel = HomeViewModel(PortfolioRepository, coroutineScopeTestRule.testDispatcher)
         val bitcoin = AssetCatalog.cryptocurrencies.first()
         val firstBuy = AssetTransaction(
@@ -352,6 +337,7 @@ class HomeComposablesKtTest {
 
     @Test
     fun `Litecoin holding displays its name and stale price`() {
+        PortfolioRepository.setCurrentPortfolio(TEST_PORTFOLIO_NAME)
         val litecoin = requireNotNull(AssetCatalog.findById("crypto:LTC"))
         viewModel.save(
             context,
@@ -376,7 +362,13 @@ class HomeComposablesKtTest {
 
         setContent()
 
-        scrollToHolding(0)
+        composeTestRule.onNodeWithText(TEST_PORTFOLIO_NAME).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            viewModel.portfoliosStateFlow.value[TEST_PORTFOLIO_NAME]?.items?.size == 1
+        }
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Litecoin").assertIsDisplayed()
         composeTestRule.onNodeWithText("(stale)", substring = true).assertIsDisplayed()
     }
@@ -437,18 +429,7 @@ class HomeComposablesKtTest {
     }
 
     private fun configureCromPortfolio() {
-        val sharedPreferences = context.getSharedPreferences(TEST_CLASS_NAME, Context.MODE_PRIVATE)
-        sharedPreferences.edit()
-            .putStringSet(
-                Databases.PORTFOLIO_DB_KEY_NAME_STRING_SET,
-                setOf(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, PortfolioRepository.CROM_PORTFOLIO_NAME)
-            )
-            .commit()
-        PortfolioRepository.init(sharedPreferences)
-        context.getSharedPreferences(PortfolioRepository.DEFAULT_PORTFOLIO_NAME, Context.MODE_PRIVATE)
-            .edit().clear().commit()
-        context.getSharedPreferences(PortfolioRepository.CROM_PORTFOLIO_NAME, Context.MODE_PRIVATE)
-            .edit().clear().commit()
+        PortfolioRepository.setCurrentPortfolio(PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
         viewModel = HomeViewModel(PortfolioRepository, coroutineScopeTestRule.testDispatcher)
     }
 

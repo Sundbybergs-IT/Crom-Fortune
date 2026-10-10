@@ -4,6 +4,8 @@ rootProject.name = "crom-fortune"
 pluginManagement {
     includeBuild("build-logic")
     repositories {
+        google()
+        mavenCentral()
         gradlePluginPortal()
     }
 }

@@ -20,8 +20,8 @@ class NotificationsRepositoryImplTest {
 
     @Before
     fun setUp() {
-        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit()
         repository = NotificationsRepositoryImpl(context)
+        repository.clear()
     }
 
     @Test

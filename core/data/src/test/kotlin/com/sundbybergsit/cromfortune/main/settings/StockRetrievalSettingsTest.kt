@@ -17,8 +17,7 @@ class StockRetrievalSettingsTest {
 
     @Before
     fun clearSettings() {
-        context.getSharedPreferences(StockRetrievalSettings.PREFERENCES_NAME, Context.MODE_PRIVATE)
-            .edit().clear().commit()
+        StockRetrievalSettings(context).clear(context)
     }
 
     @Test

@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package com.sundbybergsit.cromfortune.main
 
 import android.app.Application
@@ -10,86 +8,44 @@ import com.sundbybergsit.cromfortune.main.notes.AssetNoteRepository
 import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
+import com.sundbybergsit.cromfortune.main.settings.ThemeSettingsRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderPersistenceMigration
 import java.net.CookieHandler
 import java.net.CookieManager
-import java.net.CookiePolicy
-import java.util.concurrent.Executors
 
 class CromFortuneApp : Application(), Configuration.Provider {
 
-    override val workManagerConfiguration: Configuration =
-        Configuration.Builder()
-            .setExecutor(Executors.newSingleThreadExecutor())
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
             .setMinimumLoggingLevel(Log.INFO)
-            .setWorkerFactory(StockRetrievalWorkerFactory())
             .build()
 
     override fun onCreate() {
         super.onCreate()
-        CookieHandler.setDefault(object : CookieManager(null, CookiePolicy.ACCEPT_ALL) {
-            override fun put(uri: java.net.URI, responseHeaders: Map<String, List<String>>) {
-                responseHeaders.forEach { (key, value) ->
-                    if (key != null && (key.equals("Set-Cookie", ignoreCase = true) ||
-                                key.equals("Set-Cookie2", ignoreCase = true))
-                    ) {
-                        value.forEach { cookieStr ->
-                            try {
-                                java.net.HttpCookie.parse(cookieStr).forEach { cookie ->
-                                    cookieStore.add(uri, cookie)
-                                }
-                            } catch (e: IllegalArgumentException) {
-                                val fixed = cookieStr
-                                    .replace(Regex("(?i)(Expires|Max-Age|Domain|Path)=DELETE;?"), "")
-                                    .replace(Regex("(?i)Path=;"), "Path=/;")
-                                    .trim()
-                                try {
-                                    java.net.HttpCookie.parse(fixed).forEach { cookie ->
-                                        cookieStore.add(uri, cookie)
-                                    }
-                                } catch (e2: IllegalArgumentException) {
-                                    // Final fallback: try to extract just the B cookie manually if present
-                                    val bCookieMatch = Regex("B=([^;]+)").find(cookieStr)
-                                    if (bCookieMatch != null) {
-                                        val bCookie = java.net.HttpCookie("B", bCookieMatch.groupValues[1])
-                                        bCookie.domain = ".yahoo.com"
-                                        bCookie.path = "/"
-                                        bCookie.secure = true
-                                        cookieStore.add(uri, bCookie)
-                                    } else {
-                                        Log.w("CromFortuneApp", "Skipping invalid cookie: $cookieStr")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        })
-        System.setProperty("yahoofinance.connection.timeout", "60000")
         System.setProperty("yahoofinance.scrapeurl.histquotes2", "https://fc.yahoo.com")
         System.setProperty("http.agent", "")
+        CookieHandler.setDefault(CookieManager())
         NotificationUtil.createChannel(applicationContext)
         StockMuteSettingsRepository.init(applicationContext)
         AssetNoteRepository.init(applicationContext)
+        ThemeSettingsRepository.init(applicationContext)
         AssetRefreshStatusRepository.init(applicationContext)
         migrateOldData(fromDb = "Stocks", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
         migrateOldData(fromDb = "SPLITS", toDb = PortfolioRepository.DEFAULT_PORTFOLIO_NAME + "-splits")
         createDataIfMissing(Databases.PORTFOLIO_DB_NAME)
         PortfolioRepository.init(
-            getSharedPreferences(
-                Databases.PORTFOLIO_DB_NAME,
-                MODE_PRIVATE
-            )
+            applicationContext
         )
         StockOrderPersistenceMigration.migrateToLatest(
             context = applicationContext,
             portfolioNames = PortfolioRepository.portfolioNamesStateFlow.value
         )
-        AssetRefreshScheduler.schedule(
-            applicationContext,
-            StockRetrievalSettings(applicationContext).timeInterval.value.refreshInterval
-        )
+        runCatching {
+            AssetRefreshScheduler.schedule(
+                applicationContext,
+                StockRetrievalSettings(applicationContext).timeInterval.value.refreshInterval
+            )
+        }
     }
 
     private fun createDataIfMissing(db: String) {

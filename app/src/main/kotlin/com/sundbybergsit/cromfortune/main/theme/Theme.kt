@@ -5,6 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import com.sundbybergsit.cromfortune.main.settings.ThemeSettingsRepository
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -71,7 +73,11 @@ private val DarkColors = darkColorScheme(
 )
 @Composable
 fun AppTheme(
-  useDarkTheme: Boolean = isSystemInDarkTheme(),
+  useDarkTheme: Boolean = when (ThemeSettingsRepository.themeMode.collectAsState().value) {
+      ThemeSettingsRepository.ThemeMode.SYSTEM -> isSystemInDarkTheme()
+      ThemeSettingsRepository.ThemeMode.LIGHT -> false
+      ThemeSettingsRepository.ThemeMode.DARK -> true
+  },
   content: @Composable() () -> Unit
 ) {
   val colors = if (!useDarkTheme) {

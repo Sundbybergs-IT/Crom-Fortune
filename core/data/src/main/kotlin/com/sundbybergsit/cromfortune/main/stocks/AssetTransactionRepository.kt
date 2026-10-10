@@ -1,22 +1,19 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.AssetTransactionApi
-import com.sundbybergsit.cromfortune.domain.AssetType
-import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
+import com.sundbybergsit.cromfortune.main.db.AssetTransactionDao
+import com.sundbybergsit.cromfortune.main.db.AssetTransactionEntity
+import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
 import java.math.BigDecimal
 
 class AssetTransactionRepository(
-    context: Context,
-    portfolioName: String,
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE),
+    private val context: Context,
+    private val portfolioName: String,
+    private val dao: AssetTransactionDao = CromFortuneDatabase.getInstance(context).assetTransactionDao(),
     private val stockSplitApi: StockSplitApi = StockSplitRepository(context, porfolioName = portfolioName)
 ) : AssetTransactionApi {
 
@@ -28,40 +25,69 @@ class AssetTransactionRepository(
         }
     }
 
-    override fun assetIds(): Set<String> = sharedPreferences.all.keys.mapTo(mutableSetOf()) { key ->
-        if (key.contains(':')) key else "stock:$key"
+    override fun assetIds(): Set<String> {
+        val list = dao.getTransactionsForPortfolio(portfolioName)
+        return list.map { it.assetId }.mapTo(mutableSetOf()) { key ->
+            if (key.contains(':')) key else "stock:$key"
+        }
     }
 
-    override fun isEmpty(): Boolean = sharedPreferences.all.isEmpty()
+    override fun isEmpty(): Boolean {
+        return dao.getTransactionsForPortfolio(portfolioName).isEmpty()
+    }
 
-    override fun list(assetId: String): Set<AssetTransaction> =
-        (sharedPreferences.getStringSet(assetId, null)
-            ?: assetId.takeIf { it.startsWith("stock:") }
-                ?.removePrefix("stock:")
-                ?.let { legacyKey -> sharedPreferences.getStringSet(legacyKey, emptySet()) }
-            ?: emptySet()).flatMapTo(mutableSetOf()) { serializedSet ->
-            decodeTransactions(serializedSet)
+    override fun list(assetId: String): Set<AssetTransaction> {
+        val entities = dao.getTransactionsForAsset(portfolioName, assetId)
+        val legacyKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:")
+        val legacyEntities = if (entities.isEmpty() && legacyKey != null) {
+            dao.getTransactionsForAsset(portfolioName, legacyKey)
+        } else {
+            emptyList()
         }
+        if (entities.isNotEmpty() || legacyEntities.isNotEmpty()) {
+            return (entities + legacyEntities).map { it.toDomain() }.toSet()
+        }
+
+        // Legacy SharedPreferences fallback & auto-migration
+        val legacyPreferences = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
+        val rawKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:") ?: assetId
+        val serializedSet = legacyPreferences.getStringSet(assetId, null)
+            ?: legacyPreferences.getStringSet(rawKey, null)
+        if (serializedSet != null) {
+            val decoded = serializedSet.flatMapTo(mutableSetOf()) { decodeTransactions(it) }
+            if (decoded.isNotEmpty()) {
+                putAll(assetId, decoded)
+                legacyPreferences.edit().remove(assetId).remove(rawKey).apply()
+                return decoded
+            }
+        }
+        return emptySet()
+    }
 
     override fun putAll(assetId: String, transactions: Set<AssetTransaction>) {
         require(transactions.all { transaction -> transaction.assetId == assetId }) {
             "Every transaction must match storage key $assetId"
         }
         validateChronologicalBalance(transactions)
-        val editor = sharedPreferences.edit().putStringSet(assetId, setOf(Json.encodeToString(transactions)))
-        legacyStockKey(assetId)?.let(editor::remove)
-        check(editor.commit()) {
-            "Failed to persist transactions for $assetId"
-        }
+        dao.deleteForAsset(portfolioName, assetId)
+        legacyStockKey(assetId)?.let { dao.deleteForAsset(portfolioName, it) }
+        val legacyPreferences = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
+        val rawKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:") ?: assetId
+        legacyPreferences.edit().remove(assetId).remove(rawKey).apply()
+
+        val entities = transactions.map { AssetTransactionEntity.fromDomain(portfolioName, it) }
+        dao.insertAll(entities)
     }
 
     override fun putReplacingAll(assetId: String, transaction: AssetTransaction) =
         putAll(assetId, setOf(transaction))
 
     override fun remove(assetId: String) {
-        val editor = sharedPreferences.edit().remove(assetId)
-        legacyStockKey(assetId)?.let(editor::remove)
-        check(editor.commit()) { "Failed to remove transactions for $assetId" }
+        dao.deleteForAsset(portfolioName, assetId)
+        legacyStockKey(assetId)?.let { dao.deleteForAsset(portfolioName, it) }
+        val legacyPreferences = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
+        val rawKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:") ?: assetId
+        legacyPreferences.edit().remove(assetId).remove(rawKey).apply()
     }
 
     override fun remove(transaction: AssetTransaction) {
@@ -86,65 +112,52 @@ class AssetTransactionRepository(
         validateChronologicalBalance(remainingOriginals)
         validateChronologicalBalance(updatedTransactions)
 
-        val editor = sharedPreferences.edit()
         if (remainingOriginals.isEmpty()) {
-            editor.remove(original.assetId)
+            remove(original.assetId)
         } else {
-            editor.putStringSet(original.assetId, setOf(Json.encodeToString(remainingOriginals)))
+            putAll(original.assetId, remainingOriginals)
         }
-        legacyStockKey(original.assetId)?.let(editor::remove)
-        editor.putStringSet(updated.assetId, setOf(Json.encodeToString(updatedTransactions)))
-        legacyStockKey(updated.assetId)?.let(editor::remove)
-        check(editor.commit()) { "Failed to update transaction" }
+        legacyStockKey(original.assetId)?.let { remove(it) }
+        putAll(updated.assetId, updatedTransactions)
+        legacyStockKey(updated.assetId)?.let { remove(it) }
     }
 
     private fun validateChronologicalBalance(transactions: Set<AssetTransaction>) {
-        var quantity = BigDecimal.ZERO
-        val assetId = transactions.firstOrNull()?.assetId.orEmpty()
-        val stockSplits = transactions.firstOrNull()
-            ?.takeIf { it.assetType == AssetType.STOCK }
-            ?.let { stockSplitApi.list(it.symbol) }
-            .orEmpty()
-        val events = transactions.map { transaction ->
-            Triple(transaction.dateInMillis, transaction.action.validationPriority) { quantity = when (transaction.action) {
-                TransactionAction.BUY -> quantity + transaction.quantity
-                TransactionAction.SELL -> quantity - transaction.quantity
-                TransactionAction.DIVIDEND -> quantity
-            } }
-        } + stockSplits.map { split ->
-            Triple(split.dateInMillis, STOCK_SPLIT_VALIDATION_PRIORITY) {
-                quantity = if (split.reverse) {
-                    quantity.divideToIntegralValue(split.quantity.toBigDecimal())
-                } else {
-                    quantity.multiply(split.quantity.toBigDecimal())
+        if (transactions.isEmpty()) return
+        val first = transactions.first()
+        val symbol = first.symbol
+        val splits = stockSplitApi.list(symbol).sortedBy { it.dateInMillis }
+        val allEvents = (transactions.map { Triple(it.dateInMillis, it.quantity, it.action) } +
+            splits.map { Triple(it.dateInMillis, it.quantity.toBigDecimal(), if (it.reverse) "REVERSE_SPLIT" else "SPLIT") })
+            .sortedWith(compareBy({ it.first }, { if (it.third == TransactionAction.BUY || it.third == "SPLIT" || it.third == "REVERSE_SPLIT") 0 else 1 }))
+
+        var balance = BigDecimal.ZERO
+        for (event in allEvents) {
+            when (event.third) {
+                TransactionAction.BUY -> balance += event.second
+                TransactionAction.SELL -> {
+                    balance -= event.second
+                    require(balance >= BigDecimal.ZERO) { "Negative balance detected" }
+                }
+                TransactionAction.DIVIDEND -> {}
+                "SPLIT" -> {
+                    balance = balance.multiply(event.second)
+                }
+                "REVERSE_SPLIT" -> {
+                    balance = balance.divide(event.second, 16, java.math.RoundingMode.DOWN)
                 }
             }
         }
-        events.sortedWith(compareBy({ it.first }, { it.second })).forEach { (_, _, applyEvent) ->
-            applyEvent()
-            require(quantity >= BigDecimal.ZERO) { "Sale exceeds available quantity for $assetId" }
-        }
     }
 
-    private fun decodeTransactions(serializedSet: String): Set<AssetTransaction> = try {
-        Json.decodeFromString(serializedSet)
-    } catch (_: SerializationException) {
-        Json.decodeFromString<Set<StockOrder>>(serializedSet).mapTo(mutableSetOf(), AssetTransaction::fromStockOrder)
-    } catch (_: IllegalArgumentException) {
-        Json.decodeFromString<Set<StockOrder>>(serializedSet).mapTo(mutableSetOf(), AssetTransaction::fromStockOrder)
+    private fun decodeTransactions(serialized: String): Set<AssetTransaction> {
+        return try {
+            kotlinx.serialization.json.Json.decodeFromString(serialized)
+        } catch (_: Exception) {
+            emptySet()
+        }
     }
 
     private fun legacyStockKey(assetId: String): String? =
         assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:")
-
-    private val TransactionAction.validationPriority: Int
-        get() = when (this) {
-            TransactionAction.BUY -> 0
-            TransactionAction.DIVIDEND -> 1
-            TransactionAction.SELL -> 3
-        }
-
-    private companion object {
-        const val STOCK_SPLIT_VALIDATION_PRIORITY = 2
-    }
 }

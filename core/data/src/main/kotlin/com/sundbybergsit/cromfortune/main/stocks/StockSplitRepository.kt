@@ -1,33 +1,33 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
-import kotlinx.serialization.json.Json
+import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
+import com.sundbybergsit.cromfortune.main.db.StockSplitDao
+import com.sundbybergsit.cromfortune.main.db.StockSplitEntity
 
-// FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
 class StockSplitRepository(
     context: Context,
-    porfolioName: String,
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("$porfolioName-splits", Context.MODE_PRIVATE),
+    private val porfolioName: String,
+    private val dao: StockSplitDao = CromFortuneDatabase.getInstance(context).stockSplitDao()
 ) : StockSplitApi {
 
     fun update(original: StockSplit, updated: StockSplit) {
         val originalSplits = list(original.name)
         require(original in originalSplits) { "Stock split to update no longer exists" }
 
-        val editor = sharedPreferences.edit()
         val remainingOriginals = originalSplits - original
         if (original.name == updated.name) {
-            editor.putString(original.name, Json.encodeToString(remainingOriginals + updated))
+            putAll(original.name, remainingOriginals + updated)
         } else {
-            if (remainingOriginals.isEmpty()) editor.remove(original.name)
-            else editor.putString(original.name, Json.encodeToString(remainingOriginals))
-            editor.putString(updated.name, Json.encodeToString(list(updated.name).toMutableSet() + updated))
+            if (remainingOriginals.isEmpty()) {
+                remove(original.name)
+            } else {
+                putAll(original.name, remainingOriginals)
+            }
+            putAll(updated.name, list(updated.name) + updated)
         }
-        check(editor.commit()) { "Failed to update stock split" }
     }
 
     override fun remove(stockSplit: StockSplit) {
@@ -36,25 +36,22 @@ class StockSplitRepository(
         if (stockSplits.isEmpty()) {
             remove(stockSplit.name)
         } else {
-            sharedPreferences.edit().putString(stockSplit.name, Json.encodeToString(stockSplits)).apply()
+            putAll(stockSplit.name, stockSplits)
         }
     }
 
     override fun remove(stockName: String) {
-        sharedPreferences.edit().remove(stockName).apply()
+        dao.deleteForStock(porfolioName, stockName)
     }
 
     override fun list(stockName: String): Set<StockSplit> {
-        val serializedStockSplits = sharedPreferences.getString(stockName, null)
-        return if (serializedStockSplits != null) {
-            Json.decodeFromString(serializedStockSplits)
-        } else {
-            setOf()
-        }
+        return dao.getSplitsForStock(porfolioName, stockName).map { it.toDomain() }.toSet()
     }
 
     override fun putAll(stockName: String, stockSplits: Set<StockSplit>) {
-        sharedPreferences.edit().putString(stockName, Json.encodeToString(stockSplits)).apply()
+        dao.deleteForStock(porfolioName, stockName)
+        val entities = stockSplits.map { StockSplitEntity.fromDomain(porfolioName, it) }
+        dao.insertAll(entities)
     }
 
     override fun putReplacingAll(stockName: String, stockSplit: StockSplit) {

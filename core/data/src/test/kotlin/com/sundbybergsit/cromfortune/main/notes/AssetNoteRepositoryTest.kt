@@ -3,6 +3,7 @@ package com.sundbybergsit.cromfortune.main.notes
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -17,7 +18,8 @@ class AssetNoteRepositoryTest {
 
     @Before
     fun setUp() {
-        context.getSharedPreferences(ASSET_NOTES_PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit()
+        val db = CromFortuneDatabase.getInstance(context)
+        db.assetNoteDao().getAllNotes().forEach { db.assetNoteDao().delete(it.assetId) }
         AssetNoteRepository.init(context)
     }
 

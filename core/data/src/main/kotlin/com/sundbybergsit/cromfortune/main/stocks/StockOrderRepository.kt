@@ -1,22 +1,20 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
-import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.main.Taggable
-import kotlinx.serialization.json.Json
+import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
+import com.sundbybergsit.cromfortune.main.db.StockOrderDao
+import com.sundbybergsit.cromfortune.main.db.StockOrderEntity
 
-// FIXME: Convert to datastore, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/21
 class StockOrderRepository(
     context: Context,
-    portfolioName: String,
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE),
+    private val portfolioName: String,
+    private val dao: StockOrderDao = CromFortuneDatabase.getInstance(context).stockOrderDao()
 ) : StockOrderApi, Taggable {
 
     override fun count(stockSymbol: String): Int {
@@ -44,46 +42,31 @@ class StockOrderRepository(
     override fun countAll(): Int = listOfAssetNames().count()
 
     override fun listOfAssetNames(): Iterable<String> {
-        return sharedPreferences.all.keys.mapNotNull { key ->
+        return dao.getOrdersForPortfolio(portfolioName).map { it.name }.distinct().mapNotNull { name ->
+            val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, name)?.id ?: "stock:$name"
             when {
-                key.startsWith("stock:") -> AssetCatalog.findById(key)?.symbol ?: key.removePrefix("stock:")
-                key.startsWith("crypto:") -> null
-                else -> key
+                assetId.startsWith("stock:") -> AssetCatalog.findById(assetId)?.symbol ?: name
+                assetId.startsWith("crypto:") -> null
+                else -> name
             }
         }
     }
 
-    override fun isEmpty(): Boolean = listOfAssetNames().none()
+    override fun isEmpty(): Boolean = dao.getOrdersForPortfolio(portfolioName).isEmpty()
 
     override fun list(stockSymbol: String): Set<StockOrder> {
         Log.i(TAG, "list([$stockSymbol])")
-        val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
-        val serializedOrders = sharedPreferences.getStringSet(assetId, null)
-            ?: sharedPreferences.getStringSet(stockSymbol, emptySet()).orEmpty()
-        val result = mutableSetOf<StockOrder>()
-        for (serializedOrder in serializedOrders) {
-            try {
-                val setOfStockOrders: Set<StockOrder> = Json.decodeFromString(serializedOrder)
-                result.addAll(setOfStockOrders)
-            } catch (e: Exception) {
-                try {
-                    val transactions: Set<AssetTransaction> = Json.decodeFromString(serializedOrder)
-                    result.addAll(transactions.filter { it.assetType == AssetType.STOCK }.map(AssetTransaction::toStockOrder))
-                } catch (transactionError: Exception) {
-                    Log.e(TAG, "Failed to decode $serializedOrder", transactionError)
-                }
-            }
-        }
-        return result
+        val entities = dao.getOrdersForAsset(portfolioName, stockSymbol)
+        return entities.map { it.toDomain() }.toSet()
     }
 
     override fun putAll(stockSymbol: String, stockOrders: Set<StockOrder>) {
         Log.i(TAG, "putAll([$stockSymbol], [$stockOrders])")
-        val serializedStockOrders = mutableSetOf<String>()
-        // TODO: Yes, accidentally wrapped a collection too much... Must make upgrade script
-        serializedStockOrders.add(Json.encodeToString(stockOrders))
         val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
-        sharedPreferences.edit().putStringSet(assetId, serializedStockOrders).remove(stockSymbol).apply()
+        dao.deleteForAsset(portfolioName, assetId)
+        dao.deleteForAsset(portfolioName, stockSymbol)
+        val entities = stockOrders.map { StockOrderEntity.fromDomain(portfolioName, it) }
+        dao.insertAll(entities)
     }
 
     override fun putReplacingAll(stockSymbol: String, stockOrder: StockOrder) {
@@ -94,19 +77,18 @@ class StockOrderRepository(
     override fun remove(stockSymbol: String) {
         Log.i(TAG, "remove([$stockSymbol])")
         val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
-        sharedPreferences.edit().remove(assetId).remove(stockSymbol).apply()
+        dao.deleteForAsset(portfolioName, assetId)
+        dao.deleteForAsset(portfolioName, stockSymbol)
     }
 
     override fun remove(stockOrder: StockOrder) {
         Log.i(TAG, "remove([$stockOrder])")
-        val stockOrders =  list(stockOrder.name).toMutableSet()
+        val stockOrders = list(stockOrder.name).toMutableSet()
         stockOrders.remove(stockOrder)
         if (stockOrders.isEmpty()) {
             remove(stockOrder.name)
         } else {
-            val serializedStockOrders = mutableSetOf<String>()
-            serializedStockOrders.add(Json.encodeToString(stockOrders))
-            sharedPreferences.edit().putStringSet(stockOrder.assetId, serializedStockOrders).remove(stockOrder.name).apply()
+            putAll(stockOrder.name, stockOrders)
         }
     }
 

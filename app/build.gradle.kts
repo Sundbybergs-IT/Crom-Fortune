@@ -30,7 +30,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 175
+        versionCode = 176
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LOGO_DEV_PUBLISHABLE_KEY", "\"$logoDevPublishableKey\"")
@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.coilNetworkOkhttp)
 
     implementation(libs.androidxWorkRuntime)
+    implementation(libs.roomRuntime)
+    implementation(libs.roomKtx)
     implementation(libs.kotlinxCoroutinesCore)
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)

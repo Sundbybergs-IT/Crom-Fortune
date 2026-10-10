@@ -237,6 +237,10 @@ class HomeViewModel(
         } else {
             stockOrderApi.putReplacingAll(stockOrder.name, stockOrder)
         }
+        val assetTransactionRepository = AssetTransactionRepository(context, portfolioName)
+        val transaction = AssetTransaction.fromStockOrder(stockOrder)
+        val existingTransactions = assetTransactionRepository.list(transaction.assetId)
+        assetTransactionRepository.putAll(transaction.assetId, existingTransactions + transaction)
         refresh(context)
     }
 
