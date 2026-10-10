@@ -25,7 +25,6 @@ object PortfolioRepository : Taggable {
     fun init(context: Context) {
         Log.i(TAG, "init()")
         appContext = context.applicationContext
-        com.sundbybergsit.cromfortune.main.db.LegacySharedPreferencesMigrator.migrate(appContext)
         val dao = CromFortuneDatabase.getInstance(appContext).portfolioDao()
         val list = dao.getAllPortfoliosList()
         if (list.isEmpty()) {

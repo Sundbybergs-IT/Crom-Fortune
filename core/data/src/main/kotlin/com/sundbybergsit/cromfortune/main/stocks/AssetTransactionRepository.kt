@@ -11,7 +11,7 @@ import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
 import java.math.BigDecimal
 
 class AssetTransactionRepository(
-    private val context: Context,
+    @Suppress("UNUSED_PARAMETER") context: Context,
     private val portfolioName: String,
     private val dao: AssetTransactionDao = CromFortuneDatabase.getInstance(context).assetTransactionDao(),
     private val stockSplitApi: StockSplitApi = StockSplitRepository(context, porfolioName = portfolioName)
@@ -27,9 +27,7 @@ class AssetTransactionRepository(
 
     override fun assetIds(): Set<String> {
         val list = dao.getTransactionsForPortfolio(portfolioName)
-        return list.map { it.assetId }.mapTo(mutableSetOf()) { key ->
-            if (key.contains(':')) key else "stock:$key"
-        }
+        return list.map { it.assetId }.toMutableSet()
     }
 
     override fun isEmpty(): Boolean {
@@ -38,30 +36,7 @@ class AssetTransactionRepository(
 
     override fun list(assetId: String): Set<AssetTransaction> {
         val entities = dao.getTransactionsForAsset(portfolioName, assetId)
-        val legacyKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:")
-        val legacyEntities = if (entities.isEmpty() && legacyKey != null) {
-            dao.getTransactionsForAsset(portfolioName, legacyKey)
-        } else {
-            emptyList()
-        }
-        if (entities.isNotEmpty() || legacyEntities.isNotEmpty()) {
-            return (entities + legacyEntities).map { it.toDomain() }.toSet()
-        }
-
-        // Legacy SharedPreferences fallback & auto-migration
-        val legacyPreferences = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
-        val rawKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:") ?: assetId
-        val serializedSet = legacyPreferences.getStringSet(assetId, null)
-            ?: legacyPreferences.getStringSet(rawKey, null)
-        if (serializedSet != null) {
-            val decoded = serializedSet.flatMapTo(mutableSetOf()) { decodeTransactions(it) }
-            if (decoded.isNotEmpty()) {
-                putAll(assetId, decoded)
-                legacyPreferences.edit().remove(assetId).remove(rawKey).apply()
-                return decoded
-            }
-        }
-        return emptySet()
+        return entities.map { it.toDomain() }.toSet()
     }
 
     override fun putAll(assetId: String, transactions: Set<AssetTransaction>) {
@@ -70,11 +45,6 @@ class AssetTransactionRepository(
         }
         validateChronologicalBalance(transactions)
         dao.deleteForAsset(portfolioName, assetId)
-        legacyStockKey(assetId)?.let { dao.deleteForAsset(portfolioName, it) }
-        val legacyPreferences = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
-        val rawKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:") ?: assetId
-        legacyPreferences.edit().remove(assetId).remove(rawKey).apply()
-
         val entities = transactions.map { AssetTransactionEntity.fromDomain(portfolioName, it) }
         dao.insertAll(entities)
     }
@@ -84,10 +54,6 @@ class AssetTransactionRepository(
 
     override fun remove(assetId: String) {
         dao.deleteForAsset(portfolioName, assetId)
-        legacyStockKey(assetId)?.let { dao.deleteForAsset(portfolioName, it) }
-        val legacyPreferences = context.getSharedPreferences(portfolioName, Context.MODE_PRIVATE)
-        val rawKey = assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:") ?: assetId
-        legacyPreferences.edit().remove(assetId).remove(rawKey).apply()
     }
 
     override fun remove(transaction: AssetTransaction) {
@@ -117,9 +83,7 @@ class AssetTransactionRepository(
         } else {
             putAll(original.assetId, remainingOriginals)
         }
-        legacyStockKey(original.assetId)?.let { remove(it) }
         putAll(updated.assetId, updatedTransactions)
-        legacyStockKey(updated.assetId)?.let { remove(it) }
     }
 
     private fun validateChronologicalBalance(transactions: Set<AssetTransaction>) {
@@ -149,15 +113,4 @@ class AssetTransactionRepository(
             }
         }
     }
-
-    private fun decodeTransactions(serialized: String): Set<AssetTransaction> {
-        return try {
-            kotlinx.serialization.json.Json.decodeFromString(serialized)
-        } catch (_: Exception) {
-            emptySet()
-        }
-    }
-
-    private fun legacyStockKey(assetId: String): String? =
-        assetId.takeIf { it.startsWith("stock:") }?.removePrefix("stock:")
 }

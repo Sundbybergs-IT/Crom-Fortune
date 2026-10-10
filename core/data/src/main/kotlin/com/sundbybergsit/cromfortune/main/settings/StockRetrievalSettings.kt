@@ -46,7 +46,6 @@ class StockRetrievalSettings(
     val timeInterval: StateFlow<ViewState> = _timeInterval.asStateFlow()
 
     init {
-        migrateFromSharedPreferencesIfNeeded()
         scope.launch {
             context.dataStore.data.collect { prefs ->
                 val fromTimeHours = prefs[FROM_TIME_HOURS] ?: 0
@@ -68,40 +67,10 @@ class StockRetrievalSettings(
         }
     }
 
-    private fun migrateFromSharedPreferencesIfNeeded() {
-        val sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-        if (sharedPreferences.all.isNotEmpty()) {
-            val fromTimeHours = sharedPreferences.getInt("fromTimeHours", 0)
-            val fromTimeMinutes = sharedPreferences.getInt("fromTimeMinutes", 0)
-            val toTimeHours = sharedPreferences.getInt("toTimeHours", 23)
-            val toTimeMinutes = sharedPreferences.getInt("toTimeMinutes", 59)
-            val weekDays = sharedPreferences.getStringSet(
-                "weekDays",
-                setOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
-            ) ?: setOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
-            val refreshInterval = sharedPreferences.getInt(REFRESH_INTERVAL_MINUTES, RefreshInterval.ONE_HOUR.minutes)
-
-            runBlocking {
-                context.dataStore.edit { prefs ->
-                    prefs[FROM_TIME_HOURS] = fromTimeHours
-                    prefs[FROM_TIME_MINUTES] = fromTimeMinutes
-                    prefs[TO_TIME_HOURS] = toTimeHours
-                    prefs[TO_TIME_MINUTES] = toTimeMinutes
-                    prefs[WEEK_DAYS] = weekDays
-                    prefs[REFRESH_INTERVAL] = refreshInterval
-                }
-            }
-            sharedPreferences.edit().clear().apply()
-            Log.i(TAG, "Migrated StockRetrievalSettings from SharedPreferences to DataStore")
-        }
-    }
-
     fun clear(context: Context) {
         runBlocking {
             context.dataStore.edit { it.clear() }
         }
-        val sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-        sharedPreferences.edit().clear().apply()
         _timeInterval.value = getValuesFromDb()
     }
 
