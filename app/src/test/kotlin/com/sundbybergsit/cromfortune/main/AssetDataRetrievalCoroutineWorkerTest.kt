@@ -9,14 +9,17 @@ import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetPrice
 import com.sundbybergsit.cromfortune.domain.TradableAsset
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
+import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.time.DayOfWeek
 import java.util.Currency
 
 @RunWith(AndroidJUnit4::class)
@@ -27,6 +30,17 @@ class AssetDataRetrievalCoroutineWorkerTest {
 
     @get:Rule
     val cromTestRule = CromTestRule()
+
+    @Before
+    fun setUp() {
+        StockRetrievalSettings(context).set(
+            fromTimeHours = 0,
+            fromTimeMinutes = 0,
+            toTimeHours = 23,
+            toTimeMinutes = 59,
+            weekDays = DayOfWeek.entries
+        )
+    }
 
     @Test
     fun `doWork - when market data retrieval succeeds - returns success`() {
