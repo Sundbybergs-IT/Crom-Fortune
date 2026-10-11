@@ -8,6 +8,7 @@ import com.sundbybergsit.cromfortune.main.notifications.NotificationUtil
 import com.sundbybergsit.cromfortune.main.settings.StockMuteSettingsRepository
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.settings.ThemeSettingsRepository
+import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import java.net.CookieHandler
 import java.net.CookieManager
 
@@ -28,6 +29,7 @@ class CromFortuneApp : Application(), Configuration.Provider {
         AssetNoteRepository.init(applicationContext)
         ThemeSettingsRepository.init(applicationContext)
         AssetRefreshStatusRepository.init(applicationContext)
+        StockPriceRepository.init(applicationContext)
         createDataIfMissing(Databases.PORTFOLIO_DB_NAME)
         PortfolioRepository.init(
             applicationContext

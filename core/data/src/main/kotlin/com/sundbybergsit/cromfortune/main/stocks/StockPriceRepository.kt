@@ -1,5 +1,6 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
+import android.content.Context
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
@@ -8,6 +9,8 @@ import com.sundbybergsit.cromfortune.domain.AssetPriceApi
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.StockPriceApi
+import com.sundbybergsit.cromfortune.main.db.AssetPriceEntity
+import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,11 +20,34 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
 
     private const val TAG = "StockPriceRepository"
 
+    private lateinit var appContext: Context
     private val _stockPricesStateFlow: MutableStateFlow<ViewState> = MutableStateFlow(getPristineViewState())
     private val _assetPricesStateFlow: MutableStateFlow<AssetViewState> = MutableStateFlow(getPristineAssetViewState())
 
     val stockPricesStateFlow: StateFlow<ViewState> = _stockPricesStateFlow.asStateFlow()
     val assetPricesStateFlow: StateFlow<AssetViewState> = _assetPricesStateFlow.asStateFlow()
+
+    fun init(context: Context) {
+        appContext = context.applicationContext
+        reload()
+    }
+
+    private fun reload() {
+        if (!::appContext.isInitialized) return
+        val dao = CromFortuneDatabase.getInstance(appContext).assetPriceDao()
+        val entities = dao.getAllAssetPrices()
+        if (entities.isNotEmpty()) {
+            val instant = entities.map { it.lastUpdatedAt }.maxOrNull()?.let { Instant.ofEpochMilli(it) } ?: Instant.now()
+            val statuses = entities.map { entity ->
+                AssetPriceStatus(
+                    assetPrice = entity.toDomain(),
+                    lastUpdatedAt = Instant.ofEpochMilli(entity.lastUpdatedAt),
+                    isStale = entity.isStale
+                )
+            }.toSet()
+            publishWithoutPersisting(instant, statuses)
+        }
+    }
 
     override fun put(stockPrice: Set<StockPrice>) {
         Log.v(TAG, "put(${stockPrice})")
@@ -69,7 +95,17 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
     }
 
     private fun publish(instant: Instant, statusesById: Map<String, AssetPriceStatus>) {
-        val statuses = statusesById.values.toSet()
+        publishWithoutPersisting(instant, statusesById.values.toSet())
+        if (::appContext.isInitialized) {
+            val dao = CromFortuneDatabase.getInstance(appContext).assetPriceDao()
+            val entities = statusesById.values.map { status ->
+                AssetPriceEntity.fromDomain(status.assetPrice, status.lastUpdatedAt.toEpochMilli(), status.isStale)
+            }
+            dao.insertAll(entities)
+        }
+    }
+
+    private fun publishWithoutPersisting(instant: Instant, statuses: Set<AssetPriceStatus>) {
         val assetPrices = statuses.map(AssetPriceStatus::assetPrice).toSet()
         _assetPricesStateFlow.value = AssetViewState(instant, assetPrices, statuses)
         _stockPricesStateFlow.value = ViewState(
@@ -89,6 +125,10 @@ object StockPriceRepository : StockPriceApi, AssetPriceApi {
 
     @VisibleForTesting
     fun clear() {
+        if (::appContext.isInitialized) {
+            val dao = CromFortuneDatabase.getInstance(appContext).assetPriceDao()
+            dao.deleteAll()
+        }
         _stockPricesStateFlow.value = getPristineViewState()
         _assetPricesStateFlow.value = getPristineAssetViewState()
     }

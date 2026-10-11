@@ -1,5 +1,7 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetPrice
@@ -7,6 +9,7 @@ import com.sundbybergsit.cromfortune.main.CromTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,8 +20,16 @@ import java.time.Instant
 @Config(sdk = [Config.OLDEST_SDK])
 class StockPriceRepositoryTest {
 
+    private val context: Context = ApplicationProvider.getApplicationContext()
+
     @get:Rule
     val cromTestRule = CromTestRule()
+
+    @Before
+    fun setUp() {
+        StockPriceRepository.init(context)
+        StockPriceRepository.clear()
+    }
 
     @Test
     fun `partial refresh updates successes and retains missing prices as stale`() {
@@ -48,5 +59,17 @@ class StockPriceRepositoryTest {
         assertEquals(initialCryptoPrice, statuses.getValue(crypto.id).assetPrice)
         assertEquals(initialTime, statuses.getValue(crypto.id).lastUpdatedAt)
         assertTrue(statuses.getValue(crypto.id).isStale)
+    }
+
+    @Test
+    fun `prices are persisted and reloaded on init`() {
+        val stock = AssetCatalog.stocks.first()
+        val price = AssetPrice(stock.id, stock.quoteCurrency, 150.0)
+        StockPriceRepository.putAssetPrices(setOf(price))
+
+        // Re-initialize repository to simulate app restart and verify prices are loaded from DB
+        StockPriceRepository.init(context)
+
+        assertEquals(price, StockPriceRepository.getAssetPrice(stock.id))
     }
 }

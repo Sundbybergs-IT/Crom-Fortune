@@ -13,7 +13,8 @@ import androidx.room.RoomDatabase
         StockSplitEntity::class,
         AssetNoteEntity::class,
         StockMuteSettingsEntity::class,
-        NotificationEntity::class
+        NotificationEntity::class,
+        AssetPriceEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -27,6 +28,7 @@ abstract class CromFortuneDatabase : RoomDatabase() {
     abstract fun assetNoteDao(): AssetNoteDao
     abstract fun stockMuteSettingsDao(): StockMuteSettingsDao
     abstract fun notificationDao(): NotificationDao
+    abstract fun assetPriceDao(): AssetPriceDao
 
     companion object {
         @Volatile
