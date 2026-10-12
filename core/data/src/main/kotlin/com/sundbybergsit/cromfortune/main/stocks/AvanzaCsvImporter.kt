@@ -19,10 +19,10 @@ class AvanzaCsvImporter {
             throw IllegalArgumentException("Invalid CSV file: empty file")
         }
 
-        var text = String(bytes, Charsets.UTF_8)
+        var text = String(bytes, Charsets.UTF_8).removePrefix("\uFEFF")
         var delimiter = if (text.contains(';')) ';' else ','
         var lines = text.lines()
-        var headers = parseCsvLine(lines.firstOrNull().orEmpty(), delimiter).map { it.trim() }
+        var headers = parseCsvLine(lines.firstOrNull().orEmpty(), delimiter).map { it.trim().removePrefix("\uFEFF") }
 
         var datumIndex = headers.indexOf("Datum")
         var typIndex = headers.indexOf("Typ av transaktion")
@@ -31,10 +31,10 @@ class AvanzaCsvImporter {
         var kursIndex = headers.indexOf("Kurs")
 
         if (datumIndex == -1 || typIndex == -1 || vardepapperIndex == -1 || antalIndex == -1 || kursIndex == -1) {
-            text = String(bytes, Charset.forName("Windows-1252"))
+            text = String(bytes, Charset.forName("Windows-1252")).removePrefix("\uFEFF")
             delimiter = if (text.contains(';')) ';' else ','
             lines = text.lines()
-            headers = parseCsvLine(lines.firstOrNull().orEmpty(), delimiter).map { it.trim() }
+            headers = parseCsvLine(lines.firstOrNull().orEmpty(), delimiter).map { it.trim().removePrefix("\uFEFF") }
 
             datumIndex = headers.indexOf("Datum")
             typIndex = headers.indexOf("Typ av transaktion")
