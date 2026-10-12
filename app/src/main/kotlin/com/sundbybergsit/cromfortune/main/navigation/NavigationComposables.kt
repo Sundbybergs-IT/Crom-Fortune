@@ -335,43 +335,91 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
             entry<Settings> {
                 val localContext = LocalContext.current
                 val portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState().value
+                var importReport by remember { mutableStateOf<Pair<Int, List<String>>?>(null) }
                 val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
                     contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
                 ) { uri ->
                     if (uri != null) {
                         try {
-                            val transactions = localContext.contentResolver.openInputStream(uri)?.use { inputStream ->
+                            val importResult = localContext.contentResolver.openInputStream(uri)?.use { inputStream ->
                                 com.sundbybergsit.cromfortune.main.stocks.AvanzaCsvImporter().import(inputStream)
-                            } ?: emptyList()
+                            } ?: com.sundbybergsit.cromfortune.main.stocks.ImportResult(emptyList(), emptyList())
+                            
+                            val transactions = importResult.transactions
+                            val importErrors = importResult.errors.toMutableList()
+
                             if (transactions.isNotEmpty()) {
                                 val repository = com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository(localContext, portfolioName)
                                 val grouped = transactions.groupBy { it.assetId }
+                                
+                                var isValid = true
                                 for ((assetId, assetTransactions) in grouped) {
                                     val existing = repository.list(assetId)
                                     val combined = (existing + assetTransactions).toSet()
-                                    repository.putAll(assetId, combined)
+                                    try {
+                                        repository.validate(assetId, combined)
+                                    } catch (e: Exception) {
+                                        isValid = false
+                                        importErrors.add("Valideringsfel för tillgång $assetId: ${e.message ?: "Ofullständig historik"}")
+                                    }
                                 }
-                                Toast.makeText(
-                                    localContext,
-                                    localContext.getString(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_success, transactions.size),
-                                    Toast.LENGTH_SHORT
-                                ).show()
+
+                                if (!isValid) {
+                                    importReport = Pair(0, importErrors)
+                                } else {
+                                    for ((assetId, assetTransactions) in grouped) {
+                                        val existing = repository.list(assetId)
+                                        val combined = (existing + assetTransactions).toSet()
+                                        repository.putAll(assetId, combined)
+                                    }
+                                    importReport = Pair(transactions.size, importErrors)
+                                }
                             } else {
-                                Toast.makeText(
-                                    localContext,
-                                    com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_error,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                importReport = Pair(0, importErrors.ifEmpty { listOf("Inga giltiga transaktioner hittades i filen") })
                             }
-                        } catch (_: Exception) {
-                            Toast.makeText(
-                                localContext,
-                                com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_error,
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        } catch (e: Exception) {
+                            importReport = Pair(0, listOf("Oväntat fel vid inläsning av fil: ${e.message ?: e.javaClass.simpleName}"))
                         }
                     }
                 }
+
+                if (importReport != null) {
+                    val (successCount, reportErrors) = importReport!!
+                    AlertDialog(
+                        onDismissRequest = { importReport = null },
+                        title = { Text(stringResource(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_report_title)) },
+                        text = {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = if (successCount > 0) {
+                                        localContext.resources.getString(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_success, successCount)
+                                    } else {
+                                        localContext.resources.getString(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_error)
+                                    }
+                                )
+                                if (reportErrors.isNotEmpty()) {
+                                    Text(
+                                        text = stringResource(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_warnings),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                    reportErrors.forEach { err ->
+                                        Text(text = "• $err", style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { importReport = null }) {
+                                Text(stringResource(android.R.string.ok))
+                            }
+                        }
+                    )
+                }
+
                 Settings(
                     onShowRetrievalIntervals = {
                         DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))

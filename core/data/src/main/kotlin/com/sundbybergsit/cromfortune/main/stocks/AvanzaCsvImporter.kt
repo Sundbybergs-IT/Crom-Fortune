@@ -11,10 +11,16 @@ import java.nio.charset.Charset
 import java.time.LocalDate
 import java.time.ZoneId
 
+data class ImportResult(
+    val transactions: List<AssetTransaction>,
+    val errors: List<String>
+)
+
 class AvanzaCsvImporter {
 
-    fun import(inputStream: InputStream): List<AssetTransaction> {
+    fun import(inputStream: InputStream): ImportResult {
         val bytes = inputStream.readBytes()
+        val errors = mutableListOf<String>()
         if (bytes.isEmpty()) {
             throw IllegalArgumentException("Invalid CSV file: empty file")
         }
@@ -68,43 +74,60 @@ class AvanzaCsvImporter {
             }
 
             val nameStr = columns[vardepapperIndex]
-            val matchedAsset = matchAsset(nameStr) ?: continue
+            val matchedAsset = matchAsset(nameStr)
+            if (matchedAsset == null) {
+                errors.add("Rad $i: Värdepapper '$nameStr' stöds inte")
+                continue
+            }
 
             val dateStr = columns[datumIndex]
             val dateInMillis = try {
                 LocalDate.parse(dateStr).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             } catch (_: Exception) {
+                errors.add("Rad $i: Ogiltigt datumformat '$dateStr'")
                 continue
             }
 
             val antalStr = columns[antalIndex].replace(',', '.')
             val rawQuantity = antalStr.toBigDecimalOrNull()
             if (rawQuantity == null) {
+                errors.add("Rad $i: Ogiltigt antal '$antalStr'")
                 continue
             }
             val quantity = when (action) {
                 TransactionAction.BUY -> {
-                    if (rawQuantity <= BigDecimal.ZERO) continue
+                    if (rawQuantity <= BigDecimal.ZERO) {
+                        errors.add("Rad $i: Ogiltigt köpantal")
+                        continue
+                    }
                     rawQuantity
                 }
                 TransactionAction.SELL -> {
                     val absQty = rawQuantity.abs()
-                    if (absQty <= BigDecimal.ZERO) continue
+                    if (absQty <= BigDecimal.ZERO) {
+                        errors.add("Rad $i: Ogiltigt säljantal")
+                        continue
+                    }
                     absQty
                 }
                 TransactionAction.DIVIDEND -> {
-                    if (rawQuantity < BigDecimal.ZERO) continue
+                    if (rawQuantity < BigDecimal.ZERO) {
+                        errors.add("Rad $i: Ogiltigt utdelningsantal")
+                        continue
+                    }
                     rawQuantity
                 }
             }
 
             if (action != TransactionAction.DIVIDEND && quantity.scale().coerceAtLeast(0) > matchedAsset.quantityScale) {
+                errors.add("Rad $i: För många decimaler för ${matchedAsset.symbol}")
                 continue
             }
 
             val kursStr = columns[kursIndex].replace(',', '.')
             val unitPrice = kursStr.toBigDecimalOrNull()
             if (unitPrice == null || unitPrice < BigDecimal.ZERO) {
+                errors.add("Rad $i: Ogiltig kurs '$kursStr'")
                 continue
             }
 
@@ -163,7 +186,7 @@ class AvanzaCsvImporter {
                 }
             }
 
-        return aggregatedTransactions
+        return ImportResult(aggregatedTransactions, errors)
     }
 
     private fun matchAsset(nameStr: String): TradableAsset? {

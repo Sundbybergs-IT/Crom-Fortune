@@ -9,6 +9,8 @@
     <string name="settings_import_avanza_description">Importera köp- och säljtransaktioner från en Avanza CSV-export</string>
     <string name="settings_import_success">Importerade %d transaktioner framgångsrikt</string>
     <string name="settings_import_error">Kunde inte importera transaktioner</string>
+    <string name="settings_import_report_title">Importrapport</string>
+    <string name="settings_import_warnings">Varningar och överhoppade rader:</string>
     <string name="settings_supported_stocks">Aktier som stöds</string>
     <string name="settings_supported_cryptocurrencies">Kryptovalutor som stöds</string>
     <string name="settings_issues">Problem och funktionsförslag</string>

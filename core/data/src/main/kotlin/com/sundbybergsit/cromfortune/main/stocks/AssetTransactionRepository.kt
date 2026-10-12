@@ -39,13 +39,23 @@ class AssetTransactionRepository(
         return entities.map { it.toDomain() }.toSet()
     }
 
-    override fun putAll(assetId: String, transactions: Set<AssetTransaction>) {
+    fun validate(assetId: String, transactions: Set<AssetTransaction>) {
         require(transactions.all { transaction -> transaction.assetId == assetId }) {
             "Every transaction must match storage key $assetId"
         }
         validateChronologicalBalance(transactions)
+    }
+
+    override fun putAll(assetId: String, transactions: Set<AssetTransaction>) {
+        val sortedTransactions = transactions.sortedWith(
+            compareBy<AssetTransaction>(
+                { it.dateInMillis },
+                { if (it.action == TransactionAction.BUY || it.action == TransactionAction.DIVIDEND) 0 else 1 }
+            )
+        ).toSet()
+        validate(assetId, sortedTransactions)
         dao.deleteForAsset(portfolioName, assetId)
-        val entities = transactions.map { AssetTransactionEntity.fromDomain(portfolioName, it) }
+        val entities = sortedTransactions.map { AssetTransactionEntity.fromDomain(portfolioName, it) }
         dao.insertAll(entities)
     }
 
@@ -93,17 +103,18 @@ class AssetTransactionRepository(
         val splits = stockSplitApi.list(symbol).sortedBy { it.dateInMillis }
         val allEvents = (transactions.map { Triple(it.dateInMillis, it.quantity, it.action) } +
             splits.map { Triple(it.dateInMillis, it.quantity.toBigDecimal(), if (it.reverse) "REVERSE_SPLIT" else "SPLIT") })
-            .sortedWith(compareBy({ it.first }, { if (it.third == TransactionAction.BUY || it.third == "SPLIT" || it.third == "REVERSE_SPLIT") 0 else 1 }))
+            .sortedWith(compareBy({ it.first }, { if (it.third == TransactionAction.BUY || it.third == TransactionAction.DIVIDEND || it.third == "SPLIT" || it.third == "REVERSE_SPLIT") 0 else 1 }))
 
         var balance = BigDecimal.ZERO
         for (event in allEvents) {
             when (event.third) {
-                TransactionAction.BUY -> balance += event.second
+                TransactionAction.BUY, TransactionAction.DIVIDEND -> {
+                    if (event.third == TransactionAction.BUY) balance += event.second
+                }
                 TransactionAction.SELL -> {
                     balance -= event.second
                     require(balance >= BigDecimal.ZERO) { "Negative balance detected" }
                 }
-                TransactionAction.DIVIDEND -> {}
                 "SPLIT" -> {
                     balance = balance.multiply(event.second)
                 }
