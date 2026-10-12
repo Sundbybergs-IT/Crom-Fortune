@@ -1,9 +1,11 @@
 package com.sundbybergsit.cromfortune.feature.settings
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
@@ -25,7 +27,8 @@ class SettingsTest {
                 onShowSupportedStocks = {},
                 onShowSupportedCryptocurrencies = {},
                 onShowIssues = {},
-                onShowAbout = {}
+                onShowAbout = {},
+                onImportAvanzaCsv = {}
             )
         }
 
@@ -33,8 +36,8 @@ class SettingsTest {
         composeTestRule.onNodeWithText(context.getString(R.string.settings_title)).assertIsDisplayed()
         composeTestRule.onNodeWithText(context.getString(R.string.settings_retrieval_intervals)).assertIsDisplayed()
         composeTestRule.onNodeWithText(context.getString(R.string.settings_supported_stocks)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(context.getString(R.string.settings_about))
-            .performScrollTo()
-            .assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction())
+            .performScrollToNode(hasText(context.getString(R.string.settings_about)))
+        composeTestRule.onNodeWithText(context.getString(R.string.settings_about)).assertIsDisplayed()
     }
 }

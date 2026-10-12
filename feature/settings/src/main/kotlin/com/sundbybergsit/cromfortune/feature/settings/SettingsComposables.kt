@@ -31,7 +31,8 @@ fun Settings(
     onShowSupportedStocks: () -> Unit,
     onShowSupportedCryptocurrencies: () -> Unit,
     onShowIssues: () -> Unit,
-    onShowAbout: () -> Unit
+    onShowAbout: () -> Unit,
+    onImportAvanzaCsv: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -66,6 +67,11 @@ fun Settings(
                     title = stringResource(R.string.settings_retrieval_intervals),
                     supportingText = stringResource(R.string.settings_retrieval_intervals_description),
                     onClick = onShowRetrievalIntervals
+                )
+                SettingsRow(
+                    title = stringResource(R.string.settings_import_avanza),
+                    supportingText = stringResource(R.string.settings_import_avanza_description),
+                    onClick = onImportAvanzaCsv
                 )
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }

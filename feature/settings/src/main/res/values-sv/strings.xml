@@ -5,6 +5,10 @@
     <string name="settings_section_application">Applikation</string>
     <string name="settings_retrieval_intervals">Uppdateringsintervall</string>
     <string name="settings_retrieval_intervals_description">Välj när marknadsdata ska uppdateras</string>
+    <string name="settings_import_avanza">Importera Avanza-transaktioner (CSV)</string>
+    <string name="settings_import_avanza_description">Importera köp- och säljtransaktioner från en Avanza CSV-export</string>
+    <string name="settings_import_success">Importerade %d transaktioner framgångsrikt</string>
+    <string name="settings_import_error">Kunde inte importera transaktioner</string>
     <string name="settings_supported_stocks">Aktier som stöds</string>
     <string name="settings_supported_cryptocurrencies">Kryptovalutor som stöds</string>
     <string name="settings_issues">Problem och funktionsförslag</string>
