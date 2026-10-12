@@ -334,6 +334,44 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
             entry<Settings> {
                 val localContext = LocalContext.current
+                val portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState().value
+                val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                    contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+                ) { uri ->
+                    if (uri != null) {
+                        try {
+                            val transactions = localContext.contentResolver.openInputStream(uri)?.use { inputStream ->
+                                com.sundbybergsit.cromfortune.main.stocks.AvanzaCsvImporter().import(inputStream)
+                            } ?: emptyList()
+                            if (transactions.isNotEmpty()) {
+                                val repository = com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository(localContext, portfolioName)
+                                val grouped = transactions.groupBy { it.assetId }
+                                for ((assetId, assetTransactions) in grouped) {
+                                    val existing = repository.list(assetId)
+                                    val combined = (existing + assetTransactions).toSet()
+                                    repository.putAll(assetId, combined)
+                                }
+                                Toast.makeText(
+                                    localContext,
+                                    localContext.getString(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_success, transactions.size),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    localContext,
+                                    com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_error,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } catch (_: Exception) {
+                            Toast.makeText(
+                                localContext,
+                                com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_error,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
                 Settings(
                     onShowRetrievalIntervals = {
                         DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))
@@ -349,7 +387,10 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                         )
                         localContext.startActivity(browserIntent)
                     },
-                    onShowAbout = { DialogHandler.showAboutDialog() }
+                    onShowAbout = { DialogHandler.showAboutDialog() },
+                    onImportAvanzaCsv = {
+                        importLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "*/*"))
+                    }
                 )
             }
 

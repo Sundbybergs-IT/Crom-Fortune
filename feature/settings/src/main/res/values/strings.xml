@@ -5,6 +5,10 @@
     <string name="settings_section_application">Application</string>
     <string name="settings_retrieval_intervals">Retrieval intervals</string>
     <string name="settings_retrieval_intervals_description">Choose when market data is refreshed</string>
+    <string name="settings_import_avanza">Import Avanza transactions (CSV)</string>
+    <string name="settings_import_avanza_description">Import buy and sell transactions from an Avanza CSV export</string>
+    <string name="settings_import_success">Successfully imported %d transactions</string>
+    <string name="settings_import_error">Failed to import transactions</string>
     <string name="settings_supported_stocks">Supported stocks</string>
     <string name="settings_supported_cryptocurrencies">Supported cryptocurrencies</string>
     <string name="settings_issues">Issues and feature requests</string>
