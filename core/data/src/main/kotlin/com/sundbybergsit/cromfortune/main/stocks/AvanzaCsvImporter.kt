@@ -4,32 +4,45 @@ import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.TradableAsset
 import com.sundbybergsit.cromfortune.domain.TransactionAction
-import java.io.BufferedReader
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.nio.charset.Charset
 import java.time.LocalDate
 import java.time.ZoneId
 
 class AvanzaCsvImporter {
 
     fun import(inputStream: InputStream): List<AssetTransaction> {
-        val reader = BufferedReader(InputStreamReader(inputStream))
-        val lines = reader.readLines()
-        if (lines.isEmpty()) {
+        val bytes = inputStream.readBytes()
+        if (bytes.isEmpty()) {
             throw IllegalArgumentException("Invalid CSV file: empty file")
         }
 
-        val headerLine = lines[0]
-        val delimiter = if (headerLine.contains(';')) ';' else ','
-        val headers = parseCsvLine(headerLine, delimiter).map { it.trim() }
+        var text = String(bytes, Charsets.UTF_8)
+        var delimiter = if (text.contains(';')) ';' else ','
+        var lines = text.lines()
+        var headers = parseCsvLine(lines.firstOrNull().orEmpty(), delimiter).map { it.trim() }
 
-        val datumIndex = headers.indexOf("Datum")
-        val typIndex = headers.indexOf("Typ av transaktion")
-        val vardepapperIndex = headers.indexOf("Värdepapper/beskrivning")
-        val antalIndex = headers.indexOf("Antal")
-        val kursIndex = headers.indexOf("Kurs")
+        var datumIndex = headers.indexOf("Datum")
+        var typIndex = headers.indexOf("Typ av transaktion")
+        var vardepapperIndex = headers.indexOf("Värdepapper/beskrivning")
+        var antalIndex = headers.indexOf("Antal")
+        var kursIndex = headers.indexOf("Kurs")
+
+        if (datumIndex == -1 || typIndex == -1 || vardepapperIndex == -1 || antalIndex == -1 || kursIndex == -1) {
+            text = String(bytes, Charset.forName("Windows-1252"))
+            delimiter = if (text.contains(';')) ';' else ','
+            lines = text.lines()
+            headers = parseCsvLine(lines.firstOrNull().orEmpty(), delimiter).map { it.trim() }
+
+            datumIndex = headers.indexOf("Datum")
+            typIndex = headers.indexOf("Typ av transaktion")
+            vardepapperIndex = headers.indexOf("Värdepapper/beskrivning")
+            antalIndex = headers.indexOf("Antal")
+            kursIndex = headers.indexOf("Kurs")
+        }
+
         val courtageIndex = headers.indexOf("Courtage")
 
         if (datumIndex == -1 || typIndex == -1 || vardepapperIndex == -1 || antalIndex == -1 || kursIndex == -1) {
@@ -157,14 +170,23 @@ class AvanzaCsvImporter {
         val normalizedQuery = normalize(nameStr)
         val symbol = when {
             normalizedQuery.contains("cereno scientific") -> "CRNO-B.ST"
-            normalizedQuery.contains("saltx technology") -> "SALT-B.ST"
+            normalizedQuery.contains("saltx technology") || normalizedQuery.contains("saltx") -> "SALT-B.ST"
             normalizedQuery.contains("investor") -> "INVE-B.ST"
             normalizedQuery.contains("ferroamp") -> "FERRO.ST"
-            normalizedQuery.contains("soltech energy") -> "SOLT.ST"
-            normalizedQuery.contains("occidental petroleum") -> "OXY"
+            normalizedQuery.contains("soltech energy") || normalizedQuery.contains("soltech") -> "SOLT.ST"
+            normalizedQuery.contains("occidental petroleum") || normalizedQuery.contains("oxy") -> "OXY"
             normalizedQuery.contains("intel") -> "INTC"
             normalizedQuery.contains("quantumscape") -> "QS"
             normalizedQuery.contains("himax") -> "HIMX"
+            normalizedQuery.contains("vuzix") -> "VUZI"
+            normalizedQuery.contains("assa abloy") -> "ASSA-B.ST"
+            normalizedQuery.contains("sbb") -> "SBB-B.ST"
+            normalizedQuery.contains("nokia") -> "NOKIA-SEK.ST"
+            normalizedQuery.contains("airbus") -> "AIR.PA"
+            normalizedQuery.contains("polygiene") -> "POLYG.ST"
+            normalizedQuery.contains("coinbase") -> "COIN"
+            normalizedQuery.contains("azelio") -> "AZELIO.ST"
+            normalizedQuery.contains("lvmh") -> "MC.PA"
             else -> null
         }
         if (symbol != null) {

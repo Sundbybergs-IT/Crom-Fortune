@@ -2,6 +2,7 @@ package com.sundbybergsit.cromfortune.main.stocks
 
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -34,6 +35,22 @@ class AvanzaCsvImporterTest {
         assertEquals(BigDecimal("100"), sellTx.quantity)
         assertTrue(BigDecimal("19.0").compareTo(sellTx.unitPrice) == 0)
         assertTrue(BigDecimal("10").compareTo(sellTx.commissionFee) == 0)
+    }
+
+    @Test
+    fun `import - when file with various stocks like Nokia SBB Investor - parses successfully`() {
+        val csvContent = """
+            Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
+            2024-12-19;5011017;Köp;Investor B;10;290,7;-2914;SEK;7,27;;SEK;SE0015811963;
+            2024-06-17;5011017;Sälj;Nokia;-360;38,335;13766;SEK;35;;SEK;FI0009000681;-3689,55493
+            2024-07-26;5011017;Sälj;SBB Norden B;-500;6,6;3292;SEK;8;;SEK;SE0009554454;146,334452
+        """.trimIndent()
+
+        val importer = AvanzaCsvImporter()
+        val transactions = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+
+        assertFalse(transactions.isEmpty())
+        assertEquals(3, transactions.size)
     }
 
     @Test
