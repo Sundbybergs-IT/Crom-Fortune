@@ -20,7 +20,8 @@ class AvanzaCsvImporterTest {
         """.trimIndent()
 
         val importer = AvanzaCsvImporter()
-        val transactions = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val transactions = result.transactions
 
         assertEquals(2, transactions.size)
 
@@ -47,10 +48,10 @@ class AvanzaCsvImporterTest {
         """.trimIndent()
 
         val importer = AvanzaCsvImporter()
-        val transactions = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
 
-        assertFalse(transactions.isEmpty())
-        assertEquals(3, transactions.size)
+        assertFalse(result.transactions.isEmpty())
+        assertEquals(3, result.transactions.size)
     }
 
     @Test
@@ -63,7 +64,8 @@ class AvanzaCsvImporterTest {
         """.trimIndent()
 
         val importer = AvanzaCsvImporter()
-        val transactions = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val transactions = result.transactions
 
         assertEquals(1, transactions.size)
 
@@ -82,7 +84,8 @@ class AvanzaCsvImporterTest {
         """.trimIndent()
 
         val importer = AvanzaCsvImporter()
-        val transactions = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val transactions = result.transactions
 
         assertEquals(1, transactions.size)
 
