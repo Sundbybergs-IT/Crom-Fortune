@@ -17,9 +17,12 @@ import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderAggregate
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.domain.StockSplit
+import com.sundbybergsit.cromfortune.domain.AssetTransactionApi
+import com.sundbybergsit.cromfortune.domain.StockSplitApi
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import com.sundbybergsit.cromfortune.domain.assetEventChronologicalComparator
 import com.sundbybergsit.cromfortune.domain.notifications.NotificationMessage
+import com.sundbybergsit.cromfortune.domain.notifications.NotificationsRepository
 import com.sundbybergsit.cromfortune.main.AssetRefreshCoordinator
 import com.sundbybergsit.cromfortune.main.AssetRefreshStatusRepository
 import com.sundbybergsit.cromfortune.main.DialogHandler
@@ -44,7 +47,11 @@ import java.util.Currency
 
 class HomeViewModel(
     private val portfolioRepository: PortfolioRepository,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
+    private val assetTransactionRepositoryFactory: (Context, String) -> AssetTransactionApi = { ctx, name -> AssetTransactionRepository(ctx, name) },
+    private val stockOrderRepositoryFactory: (Context, String) -> StockOrderApi = { ctx, name -> StockOrderRepository(ctx, name) },
+    private val stockSplitRepositoryFactory: (Context, String) -> StockSplitApi = { ctx, name -> StockSplitRepository(ctx, porfolioName = name) },
+    private val notificationsRepositoryFactory: (Context) -> NotificationsRepository = { ctx -> NotificationsRepositoryImpl(ctx) }
 ) : ViewModel() {
 
     companion object {
@@ -181,7 +188,7 @@ class HomeViewModel(
                 val recommendationAlgorithm = CromFortuneV1RecommendationAlgorithm()
                 val cromCashWallet = SimulatedCashWallet()
                 val userSimulatedCashWallet = SimulatedCashWallet()
-                val cromNotifications = NotificationsRepositoryImpl(context).list().filter { notification ->
+                val cromNotifications = notificationsRepositoryFactory(context).list().filter { notification ->
                     notification.portfolioName == PortfolioRepository.DEFAULT_PORTFOLIO_NAME &&
                         notification.stockSymbol != null && notification.pricePerStock != null
                 }
@@ -217,7 +224,7 @@ class HomeViewModel(
     fun save(context: Context, stockSplit: StockSplit) {
         Log.i(TAG, "save(stockSplit=[$stockSplit])")
         val selectedPorfolioName = PortfolioRepository.selectedPortfolioNameStateFlow.value
-        val stockSplitRepository = StockSplitRepository(context = context, porfolioName = selectedPorfolioName)
+        val stockSplitRepository = stockSplitRepositoryFactory(context, selectedPorfolioName)
         if (stockSplitRepository.list(stockSplit.name).isNotEmpty()) {
             val existingSplits = stockSplitRepository.list(stockSplit.name)
             stockSplitRepository.putAll(stockSplit.name, existingSplits.toMutableSet() + stockSplit)
@@ -229,15 +236,14 @@ class HomeViewModel(
 
     fun save(context: Context, portfolioName: String, stockOrder: StockOrder) {
         Log.i(TAG, "save(portfolioName=[$portfolioName], stockOrder=[$stockOrder])")
-        val stockOrderApi: StockOrderApi =
-            StockOrderRepository(context = context, portfolioName = portfolioName)
+        val stockOrderApi: StockOrderApi = stockOrderRepositoryFactory(context, portfolioName)
         if (stockOrderApi.list(stockOrder.name).isNotEmpty()) {
             val existingOrders = stockOrderApi.list(stockOrder.name)
             stockOrderApi.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
         } else {
             stockOrderApi.putReplacingAll(stockOrder.name, stockOrder)
         }
-        val assetTransactionRepository = AssetTransactionRepository(context, portfolioName)
+        val assetTransactionRepository = assetTransactionRepositoryFactory(context, portfolioName)
         val transaction = AssetTransaction.fromStockOrder(stockOrder)
         val existingTransactions = assetTransactionRepository.list(transaction.assetId)
         assetTransactionRepository.putAll(transaction.assetId, existingTransactions + transaction)
@@ -246,26 +252,36 @@ class HomeViewModel(
 
     fun save(context: Context, portfolioName: String, transaction: AssetTransaction) {
         Log.i(TAG, "save(portfolioName=[$portfolioName], transaction=[$transaction])")
-        val repository = AssetTransactionRepository(context, portfolioName)
+        val repository = assetTransactionRepositoryFactory(context, portfolioName)
         repository.putAll(transaction.assetId, repository.list(transaction.assetId) + transaction)
+        if (transaction.assetType == AssetType.STOCK) {
+            val stockOrder = transaction.toStockOrder()
+            val stockOrderApi: StockOrderApi = stockOrderRepositoryFactory(context, portfolioName)
+            val existingOrders = stockOrderApi.list(stockOrder.name)
+            stockOrderApi.putAll(stockOrder.name, existingOrders + stockOrder)
+        }
         refresh(context)
     }
 
     fun remove(context: Context, portfolioName: String, transaction: AssetTransaction) {
         Log.i(TAG, "remove(portfolioName=[$portfolioName], transaction=[$transaction])")
-        AssetTransactionRepository(context, portfolioName).remove(transaction)
+        assetTransactionRepositoryFactory(context, portfolioName).remove(transaction)
+        if (transaction.assetType == AssetType.STOCK) {
+            val stockOrder = transaction.toStockOrder()
+            stockOrderRepositoryFactory(context, portfolioName).remove(stockOrder)
+        }
         refresh(context)
     }
 
     fun update(context: Context, portfolioName: String, original: StockSplit, updated: StockSplit) {
         Log.i(TAG, "update(portfolioName=[$portfolioName], original=[$original], updated=[$updated])")
-        StockSplitRepository(context, porfolioName = portfolioName).update(original, updated)
+        stockSplitRepositoryFactory(context, portfolioName).update(original, updated)
         refresh(context)
     }
 
     fun remove(context: Context, portfolioName: String, stockSplit: StockSplit) {
         Log.i(TAG, "remove(portfolioName=[$portfolioName], stockSplit=[$stockSplit])")
-        StockSplitRepository(context, porfolioName = portfolioName).remove(stockSplit)
+        stockSplitRepositoryFactory(context, portfolioName).remove(stockSplit)
         refresh(context)
     }
 
@@ -276,7 +292,16 @@ class HomeViewModel(
         updated: AssetTransaction
     ) {
         Log.i(TAG, "update(portfolioName=[$portfolioName], original=[$original], updated=[$updated])")
-        AssetTransactionRepository(context, portfolioName).update(original, updated)
+        assetTransactionRepositoryFactory(context, portfolioName).update(original, updated)
+        if (original.assetType == AssetType.STOCK) {
+            stockOrderRepositoryFactory(context, portfolioName).remove(original.toStockOrder())
+        }
+        if (updated.assetType == AssetType.STOCK) {
+            val stockOrder = updated.toStockOrder()
+            val stockOrderApi: StockOrderApi = stockOrderRepositoryFactory(context, portfolioName)
+            val existingOrders = stockOrderApi.list(stockOrder.name)
+            stockOrderApi.putAll(stockOrder.name, existingOrders + stockOrder)
+        }
         refresh(context)
     }
 
@@ -287,7 +312,12 @@ class HomeViewModel(
         lambda: (List<StockEvent>) -> StockOrderAggregate
     ):
         List<StockOrderAggregate> {
-        val stockEventApi: StockEventApi = StockEventRepository(context, portfolioName = portfolioName)
+        val stockEventApi: StockEventApi = StockEventRepository(
+            context = context,
+            portfolioName = portfolioName,
+            stockOrderApi = stockOrderRepositoryFactory(context, portfolioName),
+            stockSplitApi = stockSplitRepositoryFactory(context, portfolioName)
+        )
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
         for (stockSymbol in stockEventApi.listOfStockNames().sorted()) {
             val stockEvents: Set<StockEvent> = stockEventApi.list(stockSymbol)
@@ -312,7 +342,12 @@ class HomeViewModel(
     }
 
     private fun assetHoldings(context: Context, portfolioName: String): List<PortfolioItem> {
-        val repository = AssetEventRepository(context, portfolioName)
+        val repository = AssetEventRepository(
+            context = context,
+            portfolioName = portfolioName,
+            transactionApi = assetTransactionRepositoryFactory(context, portfolioName),
+            stockSplitApi = stockSplitRepositoryFactory(context, portfolioName)
+        )
         return repository.assetIds().mapNotNull { assetId ->
             val events = repository.list(assetId).sortedWith(assetEventChronologicalComparator)
             val firstTransaction = events.firstNotNullOfOrNull { event -> event.transaction } ?: return@mapNotNull null
@@ -334,7 +369,12 @@ class HomeViewModel(
     }
 
     fun getSharesHeldOnExDate(context: Context, portfolioName: String, assetId: String, dateInMillis: Long): BigDecimal {
-        val repository = AssetEventRepository(context, portfolioName)
+        val repository = AssetEventRepository(
+            context = context,
+            portfolioName = portfolioName,
+            transactionApi = assetTransactionRepositoryFactory(context, portfolioName),
+            stockSplitApi = stockSplitRepositoryFactory(context, portfolioName)
+        )
         val events = repository.list(assetId).sortedWith(assetEventChronologicalComparator)
         val firstTransaction = events.firstNotNullOfOrNull { event -> event.transaction } ?: return BigDecimal.ZERO
         val catalogAsset = AssetCatalog.findById(assetId)
@@ -354,7 +394,12 @@ class HomeViewModel(
     }
 
     private fun cromCryptoFirstPurchases(context: Context): List<PortfolioItem> {
-        val repository = AssetEventRepository(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
+        val repository = AssetEventRepository(
+            context = context,
+            portfolioName = PortfolioRepository.DEFAULT_PORTFOLIO_NAME,
+            transactionApi = assetTransactionRepositoryFactory(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME),
+            stockSplitApi = stockSplitRepositoryFactory(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME)
+        )
         return repository.assetIds().mapNotNull { assetId ->
             val firstEvent = repository.list(assetId).firstCryptoPurchase() ?: return@mapNotNull null
             val transaction = checkNotNull(firstEvent.transaction)
@@ -373,10 +418,6 @@ class HomeViewModel(
             holding.aggregate(firstEvent)
             PortfolioItem.fromAssetHolding(holding)
         }.sortedBy(PortfolioItem::displayName)
-    }
-
-    fun hasNumberOfStocks(context: Context, portfolioName: String, stockName: String, quantity: Int): Boolean {
-        return StockEventRepository(context, portfolioName = portfolioName).countCurrent(stockName) >= quantity
     }
 
     fun refreshAutomatically(context: Context) {

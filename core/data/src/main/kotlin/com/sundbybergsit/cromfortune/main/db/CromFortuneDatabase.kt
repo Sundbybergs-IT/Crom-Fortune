@@ -37,6 +37,16 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         addColumnIfNotExists(db, "notifications", "currencyCode", "TEXT")
         addColumnIfNotExists(db, "notifications", "pricePerStock", "REAL")
         addColumnIfNotExists(db, "notifications", "orderAction", "TEXT")
+
+        db.execSQL(
+            """
+            INSERT OR IGNORE INTO `asset_transactions` (`portfolioName`, `assetId`, `assetType`, `symbol`, `displayName`, `quoteCurrencyCode`, `action`, `dateInMillis`, `unitPrice`, `commissionFee`, `quantity`, `schemaVersion`)
+            SELECT `portfolioName`, `assetId`, `assetType`, `name` AS `symbol`, `name` AS `displayName`, `currency` AS `quoteCurrencyCode`,
+                   CASE WHEN `orderAction` = 'Buy' THEN 'BUY' WHEN `orderAction` = 'Sell' THEN 'SELL' ELSE 'DIVIDEND' END AS `action`,
+                   `dateInMillis`, CAST(`pricePerStock` AS TEXT) AS `unitPrice`, CAST(`commissionFee` AS TEXT) AS `commissionFee`, `quantity`, `schemaVersion`
+            FROM `stock_orders`
+            """.trimIndent()
+        )
     }
 
     private fun addColumnIfNotExists(db: SupportSQLiteDatabase, table: String, column: String, typeAndConstraints: String) {
@@ -56,25 +66,29 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("DROP TABLE IF EXISTS `stock_orders`")
+    }
+}
+
 @Database(
     entities = [
         PortfolioEntity::class,
         AssetTransactionEntity::class,
-        StockOrderEntity::class,
         StockSplitEntity::class,
         AssetNoteEntity::class,
         StockMuteSettingsEntity::class,
         NotificationEntity::class,
         AssetPriceEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class CromFortuneDatabase : RoomDatabase() {
 
     abstract fun portfolioDao(): PortfolioDao
     abstract fun assetTransactionDao(): AssetTransactionDao
-    abstract fun stockOrderDao(): StockOrderDao
     abstract fun stockSplitDao(): StockSplitDao
     abstract fun assetNoteDao(): AssetNoteDao
     abstract fun stockMuteSettingsDao(): StockMuteSettingsDao
@@ -113,7 +127,7 @@ abstract class CromFortuneDatabase : RoomDatabase() {
                     "crom_fortune_database"
                 )
                     .allowMainThreadQueries()
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
             }
         }

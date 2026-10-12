@@ -243,6 +243,29 @@ class HomeComposablesKtTest {
     }
 
     @Test
+    fun `Crom portfolio reflects stock transaction saved in Default portfolio`() {
+        configureCromPortfolio()
+        val teslaAsset = requireNotNull(AssetCatalog.findBySymbol(com.sundbybergsit.cromfortune.domain.AssetType.STOCK, TESLA_SYMBOL))
+        val transaction = AssetTransaction(
+            assetId = teslaAsset.id,
+            assetType = teslaAsset.type,
+            symbol = teslaAsset.symbol,
+            displayName = teslaAsset.displayName,
+            quoteCurrencyCode = teslaAsset.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = 1L,
+            unitPrice = BigDecimal("100"),
+            quantity = BigDecimal("25")
+        )
+
+        viewModel.save(context, PortfolioRepository.DEFAULT_PORTFOLIO_NAME, transaction)
+
+        val item = cromItem(TESLA_SYMBOL)
+        assertEquals(TESLA_SYMBOL, item.symbol)
+        assertEquals(BigDecimal("25"), item.quantity)
+    }
+
+    @Test
     fun `Crom applies a Default notification only to its matching stock`() {
         configureCromPortfolio()
         NotificationsRepositoryImpl(context).add(

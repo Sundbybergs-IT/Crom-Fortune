@@ -3,18 +3,17 @@ package com.sundbybergsit.cromfortune.main.stocks
 import android.content.Context
 import android.util.Log
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.domain.AssetTransaction
+import com.sundbybergsit.cromfortune.domain.AssetTransactionApi
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockOrderApi
 import com.sundbybergsit.cromfortune.main.Taggable
-import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
-import com.sundbybergsit.cromfortune.main.db.StockOrderDao
-import com.sundbybergsit.cromfortune.main.db.StockOrderEntity
 
 class StockOrderRepository(
     context: Context,
     private val portfolioName: String,
-    private val dao: StockOrderDao = CromFortuneDatabase.getInstance(context).stockOrderDao()
+    private val assetTransactionApi: AssetTransactionApi = AssetTransactionRepository(context, portfolioName)
 ) : StockOrderApi, Taggable {
 
     override fun count(stockSymbol: String): Int {
@@ -42,31 +41,32 @@ class StockOrderRepository(
     override fun countAll(): Int = listOfAssetNames().count()
 
     override fun listOfAssetNames(): Iterable<String> {
-        return dao.getOrdersForPortfolio(portfolioName).map { it.name }.distinct().mapNotNull { name ->
-            val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, name)?.id ?: "stock:$name"
-            when {
-                assetId.startsWith("stock:") -> AssetCatalog.findById(assetId)?.symbol ?: name
-                assetId.startsWith("crypto:") -> null
-                else -> name
+        return assetTransactionApi.assetIds().mapNotNull { assetId ->
+            val asset = AssetCatalog.findById(assetId)
+            if (asset?.type == AssetType.STOCK || assetId.startsWith("stock:")) {
+                asset?.symbol ?: assetId.removePrefix("stock:")
+            } else {
+                null
             }
-        }
+        }.distinct()
     }
 
-    override fun isEmpty(): Boolean = dao.getOrdersForPortfolio(portfolioName).isEmpty()
+    override fun isEmpty(): Boolean = assetTransactionApi.isEmpty()
 
     override fun list(stockSymbol: String): Set<StockOrder> {
         Log.i(TAG, "list([$stockSymbol])")
-        val entities = dao.getOrdersForAsset(portfolioName, stockSymbol)
-        return entities.map { it.toDomain() }.toSet()
+        val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
+        return assetTransactionApi.list(assetId)
+            .filter { it.assetType == AssetType.STOCK }
+            .map { it.toStockOrder() }
+            .toSet()
     }
 
     override fun putAll(stockSymbol: String, stockOrders: Set<StockOrder>) {
         Log.i(TAG, "putAll([$stockSymbol], [$stockOrders])")
         val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
-        dao.deleteForAsset(portfolioName, assetId)
-        dao.deleteForAsset(portfolioName, stockSymbol)
-        val entities = stockOrders.map { StockOrderEntity.fromDomain(portfolioName, it) }
-        dao.insertAll(entities)
+        val transactions = stockOrders.map { AssetTransaction.fromStockOrder(it) }.toSet()
+        assetTransactionApi.putAll(assetId, transactions)
     }
 
     override fun putReplacingAll(stockSymbol: String, stockOrder: StockOrder) {
@@ -77,19 +77,13 @@ class StockOrderRepository(
     override fun remove(stockSymbol: String) {
         Log.i(TAG, "remove([$stockSymbol])")
         val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
-        dao.deleteForAsset(portfolioName, assetId)
-        dao.deleteForAsset(portfolioName, stockSymbol)
+        assetTransactionApi.remove(assetId)
     }
 
     override fun remove(stockOrder: StockOrder) {
         Log.i(TAG, "remove([$stockOrder])")
-        val stockOrders = list(stockOrder.name).toMutableSet()
-        stockOrders.remove(stockOrder)
-        if (stockOrders.isEmpty()) {
-            remove(stockOrder.name)
-        } else {
-            putAll(stockOrder.name, stockOrders)
-        }
+        val transaction = AssetTransaction.fromStockOrder(stockOrder)
+        assetTransactionApi.remove(transaction)
     }
 
 }

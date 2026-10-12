@@ -12,4 +12,8 @@ interface StockSplitApi {
 
     fun remove(stockSplit: StockSplit)
 
+    fun update(original: StockSplit, updated: StockSplit) {
+        throw UnsupportedOperationException()
+    }
+
 }

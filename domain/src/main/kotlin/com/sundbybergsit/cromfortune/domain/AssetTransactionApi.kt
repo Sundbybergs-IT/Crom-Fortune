@@ -11,4 +11,7 @@ interface AssetTransactionApi {
     fun putReplacingAll(assetId: String, transaction: AssetTransaction)
     fun remove(assetId: String)
     fun remove(transaction: AssetTransaction)
+    fun update(original: AssetTransaction, updated: AssetTransaction) {
+        throw UnsupportedOperationException()
+    }
 }

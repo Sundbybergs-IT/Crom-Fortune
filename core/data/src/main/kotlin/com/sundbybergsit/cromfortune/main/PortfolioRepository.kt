@@ -62,7 +62,6 @@ object PortfolioRepository : Taggable {
 
         portfolioDao.delete(portfolioName)
         db.assetTransactionDao().deleteAllForPortfolio(portfolioName)
-        db.stockOrderDao().deleteAllForPortfolio(portfolioName)
         db.stockSplitDao().deleteAllForPortfolio(portfolioName)
 
         val notificationsRepository = NotificationsRepositoryImpl(context)

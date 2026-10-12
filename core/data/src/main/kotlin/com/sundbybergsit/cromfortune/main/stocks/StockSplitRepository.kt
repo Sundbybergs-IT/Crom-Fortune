@@ -13,7 +13,7 @@ class StockSplitRepository(
     private val dao: StockSplitDao = CromFortuneDatabase.getInstance(context).stockSplitDao()
 ) : StockSplitApi {
 
-    fun update(original: StockSplit, updated: StockSplit) {
+    override fun update(original: StockSplit, updated: StockSplit) {
         val originalSplits = list(original.name)
         require(original in originalSplits) { "Stock split to update no longer exists" }
 

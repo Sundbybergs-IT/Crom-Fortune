@@ -61,7 +61,7 @@ class AssetTransactionRepository(
         if (remaining.isEmpty()) remove(transaction.assetId) else putAll(transaction.assetId, remaining)
     }
 
-    fun update(original: AssetTransaction, updated: AssetTransaction) {
+    override fun update(original: AssetTransaction, updated: AssetTransaction) {
         val originalTransactions = list(original.assetId)
         if (original !in originalTransactions) {
             if (updated in list(updated.assetId)) return
