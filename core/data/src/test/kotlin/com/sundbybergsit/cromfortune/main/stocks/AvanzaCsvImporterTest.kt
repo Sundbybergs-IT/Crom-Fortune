@@ -40,6 +40,7 @@ class AvanzaCsvImporterTest {
             2025-02-05;5011017;Köp;Cereno Scientific B;100;4,00;-400,00;SEK;2,00;;SEK;SE0008241558;
             2025-02-05;5011017;Köp;Cereno Scientific B;100;4,00;-400,00;SEK;2,00;;SEK;SE0008241558;
             2025-02-05;5011017;Köp;Cereno Scientific B;100;6,00;-600,00;SEK;3,00;;SEK;SE0008241558;
+            2025-01-16;5011017;Utdelning;Occidental Petroleum;6;0,22;14,72;SEK;;;USD;US6745991058;
         """.trimIndent()
 
         val importer = AvanzaCsvImporter()
