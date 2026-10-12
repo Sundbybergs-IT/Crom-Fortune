@@ -11,11 +11,11 @@ import java.math.BigDecimal
 class AvanzaCsvImporterTest {
 
     @Test
-    fun `import - when avanza csv with purchase and sale with negative quantity - parses correctly`() {
+    fun `import - when avanza csv with supported buy and sell transactions - parses correctly`() {
         val csvContent = """
             Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
             2025-02-05;5011017;Köp;Cereno Scientific B;204;4,89;-1000,05;SEK;2,49;;SEK;SE0008241558;
-            2025-01-30;5011017;Sälj;BEAR NVIDIA X10 SG3;-750;0,375;262;SEK;19;;SEK;DE000SY7CGC3;6,733377
+            2025-01-30;5011017;Sälj;SaltX Technology Holding B;-100;19,0;1900;SEK;10;;SEK;SE0005308541;100
         """.trimIndent()
 
         val importer = AvanzaCsvImporter()
@@ -30,7 +30,10 @@ class AvanzaCsvImporterTest {
         assertTrue(BigDecimal("2.49").compareTo(buyTx.commissionFee) == 0)
 
         val sellTx = transactions.find { it.action == TransactionAction.SELL }!!
-        assertEquals(BigDecimal("750"), sellTx.quantity)
+        assertEquals("SALT-B.ST", sellTx.symbol)
+        assertEquals(BigDecimal("100"), sellTx.quantity)
+        assertTrue(BigDecimal("19.0").compareTo(sellTx.unitPrice) == 0)
+        assertTrue(BigDecimal("10").compareTo(sellTx.commissionFee) == 0)
     }
 
     @Test
@@ -40,7 +43,6 @@ class AvanzaCsvImporterTest {
             2025-02-05;5011017;Köp;Cereno Scientific B;100;4,00;-400,00;SEK;2,00;;SEK;SE0008241558;
             2025-02-05;5011017;Köp;Cereno Scientific B;100;4,00;-400,00;SEK;2,00;;SEK;SE0008241558;
             2025-02-05;5011017;Köp;Cereno Scientific B;100;6,00;-600,00;SEK;3,00;;SEK;SE0008241558;
-            2025-01-16;5011017;Utdelning;Occidental Petroleum;6;0,22;14,72;SEK;;;USD;US6745991058;
         """.trimIndent()
 
         val importer = AvanzaCsvImporter()
