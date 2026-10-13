@@ -7,6 +7,8 @@
     <string name="settings_retrieval_intervals_description">Choose when market data is refreshed</string>
     <string name="settings_import_avanza">Import Avanza transactions (CSV)</string>
     <string name="settings_import_avanza_description">Import buy and sell transactions from an Avanza CSV export</string>
+    <string name="settings_import_montrose">Import Montrose transactions (CSV)</string>
+    <string name="settings_import_montrose_description">Import buy and sell transactions from a Montrose CSV export</string>
     <string name="settings_import_success">Successfully imported %d transactions</string>
     <string name="settings_import_error">Failed to import transactions</string>
     <string name="settings_import_report_title">Import Report</string>

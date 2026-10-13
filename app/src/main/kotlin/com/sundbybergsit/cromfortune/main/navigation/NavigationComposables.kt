@@ -336,13 +336,18 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 val localContext = LocalContext.current
                 val portfolioName = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState().value
                 var importReport by remember { mutableStateOf<Pair<Int, List<String>>?>(null) }
+                var selectedImporter by remember { mutableStateOf<String?>(null) }
                 val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
                     contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
                 ) { uri ->
                     if (uri != null) {
                         try {
                             val importResult = localContext.contentResolver.openInputStream(uri)?.use { inputStream ->
-                                com.sundbybergsit.cromfortune.main.stocks.AvanzaCsvImporter().import(inputStream)
+                                if (selectedImporter == "Montrose") {
+                                    com.sundbybergsit.cromfortune.main.stocks.MontroseCsvImporter().import(inputStream)
+                                } else {
+                                    com.sundbybergsit.cromfortune.main.stocks.AvanzaCsvImporter().import(inputStream)
+                                }
                             } ?: com.sundbybergsit.cromfortune.main.stocks.ImportResult(emptyList(), emptyList())
                             
                             val transactions = importResult.transactions
@@ -437,6 +442,11 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     },
                     onShowAbout = { DialogHandler.showAboutDialog() },
                     onImportAvanzaCsv = {
+                        selectedImporter = "Avanza"
+                        importLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "*/*"))
+                    },
+                    onImportMontroseCsv = {
+                        selectedImporter = "Montrose"
                         importLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "*/*"))
                     }
                 )

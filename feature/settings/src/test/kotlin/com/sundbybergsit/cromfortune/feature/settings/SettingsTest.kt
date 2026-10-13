@@ -28,7 +28,8 @@ class SettingsTest {
                 onShowSupportedCryptocurrencies = {},
                 onShowIssues = {},
                 onShowAbout = {},
-                onImportAvanzaCsv = {}
+                onImportAvanzaCsv = {},
+                onImportMontroseCsv = {}
             )
         }
 

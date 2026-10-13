@@ -7,6 +7,8 @@
     <string name="settings_retrieval_intervals_description">Välj när marknadsdata ska uppdateras</string>
     <string name="settings_import_avanza">Importera Avanza-transaktioner (CSV)</string>
     <string name="settings_import_avanza_description">Importera köp- och säljtransaktioner från en Avanza CSV-export</string>
+    <string name="settings_import_montrose">Importera Montrose-transaktioner (CSV)</string>
+    <string name="settings_import_montrose_description">Importera köp- och säljtransaktioner från en Montrose CSV-export</string>
     <string name="settings_import_success">Importerade %d transaktioner framgångsrikt</string>
     <string name="settings_import_error">Kunde inte importera transaktioner</string>
     <string name="settings_import_report_title">Importrapport</string>

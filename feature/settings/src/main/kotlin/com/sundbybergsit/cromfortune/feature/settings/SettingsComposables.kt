@@ -32,7 +32,8 @@ fun Settings(
     onShowSupportedCryptocurrencies: () -> Unit,
     onShowIssues: () -> Unit,
     onShowAbout: () -> Unit,
-    onImportAvanzaCsv: () -> Unit
+    onImportAvanzaCsv: () -> Unit,
+    onImportMontroseCsv: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -72,6 +73,11 @@ fun Settings(
                     title = stringResource(R.string.settings_import_avanza),
                     supportingText = stringResource(R.string.settings_import_avanza_description),
                     onClick = onImportAvanzaCsv
+                )
+                SettingsRow(
+                    title = stringResource(R.string.settings_import_montrose),
+                    supportingText = stringResource(R.string.settings_import_montrose_description),
+                    onClick = onImportMontroseCsv
                 )
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }
