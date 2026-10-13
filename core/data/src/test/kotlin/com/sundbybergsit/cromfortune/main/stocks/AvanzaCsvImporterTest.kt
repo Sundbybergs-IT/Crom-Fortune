@@ -16,6 +16,7 @@ class AvanzaCsvImporterTest {
         val csvContent = """
             Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
             2025-02-05;5011017;Köp;Cereno Scientific B;204;4,89;-1000,05;SEK;2,49;;SEK;SE0008241558;
+            2025-01-25;5011017;Köp;SaltX Technology Holding B;100;18,0;-1800;SEK;10;;SEK;SE0005308541;
             2025-01-30;5011017;Sälj;SaltX Technology Holding B;-100;19,0;1900;SEK;10;;SEK;SE0005308541;100
         """.trimIndent()
 
@@ -23,15 +24,15 @@ class AvanzaCsvImporterTest {
         val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
         val transactions = result.transactions
 
-        assertEquals(2, transactions.size)
+        assertEquals(3, transactions.size)
 
-        val buyTx = transactions.find { it.action == TransactionAction.BUY }!!
+        val buyTx = transactions.find { it.symbol == "CRNO-B.ST" && it.action == TransactionAction.BUY }!!
         assertEquals("CRNO-B.ST", buyTx.symbol)
         assertEquals(BigDecimal("204"), buyTx.quantity)
         assertTrue(BigDecimal("4.89").compareTo(buyTx.unitPrice) == 0)
         assertTrue(BigDecimal("2.49").compareTo(buyTx.commissionFee) == 0)
 
-        val sellTx = transactions.find { it.action == TransactionAction.SELL }!!
+        val sellTx = transactions.find { it.symbol == "SALT-B.ST" && it.action == TransactionAction.SELL }!!
         assertEquals("SALT-B.ST", sellTx.symbol)
         assertEquals(BigDecimal("100"), sellTx.quantity)
         assertTrue(BigDecimal("19.0").compareTo(sellTx.unitPrice) == 0)
@@ -43,7 +44,9 @@ class AvanzaCsvImporterTest {
         val csvContent = """
             Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
             2024-12-19;5011017;Köp;Investor B;10;290,7;-2914;SEK;7,27;;SEK;SE0015811963;
+            2024-01-01;5011017;Köp;Nokia;360;30,-10800;SEK;10;;SEK;FI0009000681;
             2024-06-17;5011017;Sälj;Nokia;-360;38,335;13766;SEK;35;;SEK;FI0009000681;-3689,55493
+            2024-01-01;5011017;Köp;SBB Norden B;500;5,-2500;SEK;10;;SEK;SE0009554454;
             2024-07-26;5011017;Sälj;SBB Norden B;-500;6,6;3292;SEK;8;;SEK;SE0009554454;146,334452
         """.trimIndent()
 
@@ -51,7 +54,7 @@ class AvanzaCsvImporterTest {
         val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
 
         assertFalse(result.transactions.isEmpty())
-        assertEquals(3, result.transactions.size)
+        assertEquals(5, result.transactions.size)
     }
 
     @Test
