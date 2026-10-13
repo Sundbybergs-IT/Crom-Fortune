@@ -115,6 +115,87 @@ class AvanzaCsvImporter {
                 continue
             }
 
+            if (typeStr == "Rensning av värdepapper") {
+                val nameStr = columns[vardepapperIndex]
+                val matchedAsset = matchAsset(nameStr)
+                if (matchedAsset == null) {
+                    continue
+                }
+
+                val dateStr = columns[datumIndex]
+                val dateInMillis = try {
+                    LocalDate.parse(dateStr).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                } catch (_: Exception) {
+                    errors.add("Rad $i: Ogiltigt datumformat '$dateStr'")
+                    continue
+                }
+
+                val antalStr = columns[antalIndex].replace(',', '.')
+                val rawQuantity = antalStr.toBigDecimalOrNull()
+                if (rawQuantity == null) {
+                    errors.add("Rad $i: Ogiltigt antal '$antalStr'")
+                    continue
+                }
+                val quantity = rawQuantity.abs()
+                if (quantity <= BigDecimal.ZERO) {
+                    errors.add("Rad $i: Ogiltigt antal för rensning")
+                    continue
+                }
+
+                if (quantity.scale().coerceAtLeast(0) > matchedAsset.quantityScale) {
+                    errors.add("Rad $i: För många decimaler för ${matchedAsset.symbol}")
+                    continue
+                }
+
+                val commissionFee = if (courtageIndex != -1 && courtageIndex < columns.size && columns[courtageIndex].isNotBlank()) {
+                    columns[courtageIndex].replace(',', '.').toBigDecimalOrNull() ?: BigDecimal.ZERO
+                } else {
+                    BigDecimal.ZERO
+                }
+
+                val currentBalance = rawTransactions.filter { it.assetId == matchedAsset.id }
+                    .fold(BigDecimal.ZERO) { acc, tx ->
+                        when (tx.action) {
+                            TransactionAction.BUY -> acc + tx.quantity
+                            TransactionAction.SELL -> acc - tx.quantity
+                            TransactionAction.DIVIDEND -> acc
+                        }
+                    }
+                if (currentBalance < quantity) {
+                    val deficit = quantity - currentBalance
+                    rawTransactions.add(
+                        AssetTransaction(
+                            assetId = matchedAsset.id,
+                            assetType = matchedAsset.type,
+                            symbol = matchedAsset.symbol,
+                            displayName = matchedAsset.displayName,
+                            quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+                            action = TransactionAction.BUY,
+                            dateInMillis = dateInMillis,
+                            unitPrice = BigDecimal.ZERO,
+                            commissionFee = BigDecimal.ZERO,
+                            quantity = deficit
+                        )
+                    )
+                }
+
+                rawTransactions.add(
+                    AssetTransaction(
+                        assetId = matchedAsset.id,
+                        assetType = matchedAsset.type,
+                        symbol = matchedAsset.symbol,
+                        displayName = matchedAsset.displayName,
+                        quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+                        action = TransactionAction.SELL,
+                        dateInMillis = dateInMillis,
+                        unitPrice = BigDecimal.ZERO,
+                        commissionFee = commissionFee,
+                        quantity = quantity
+                    )
+                )
+                continue
+            }
+
             if (columns.size <= maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex, kursIndex)) {
                 continue
             }
@@ -363,10 +444,13 @@ class AvanzaCsvImporter {
 
     private fun matchAsset(nameStr: String): TradableAsset? {
         val trimmed = nameStr.trim()
-        if (Regex("\\b(UR|BTU|BTA|IA|TO|TR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(trimmed)) {
+        if (Regex("\\b(UR|TR|TO\\d*)\\b", RegexOption.IGNORE_CASE).containsMatchIn(trimmed)) {
             return null
         }
-        val normalizedQuery = normalize(nameStr)
+        val cleanedName = trimmed
+            .replace(Regex("\\b(BTU|BTA|IA)\\b", RegexOption.IGNORE_CASE), "")
+            .trim()
+        val normalizedQuery = normalize(cleanedName)
         val symbol = when {
             normalizedQuery.contains("cereno scientific") -> "CRNO-B.ST"
             normalizedQuery.contains("saltx technology") || normalizedQuery.contains("saltx") -> "SALT-B.ST"
