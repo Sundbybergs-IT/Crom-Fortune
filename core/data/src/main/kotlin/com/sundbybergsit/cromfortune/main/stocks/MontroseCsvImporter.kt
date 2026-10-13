@@ -293,6 +293,7 @@ class MontroseCsvImporter {
             "SE0005308541" -> "SALT-B.ST"
             "SE0015811963" -> "INVE-B.ST"
             "SE0008241558" -> "CRNO-B.ST"
+            "SE0005392537" -> "SOLT.ST"
             "US6745991058" -> "OXY"
             "US43289P1066" -> "HIMX"
             "US4581401001" -> "INTC"
@@ -301,6 +302,8 @@ class MontroseCsvImporter {
             "SE0012229920" -> "FERRO.ST"
             "SE0012853455" -> "EQT.ST"
             "US74767V1098" -> "QS"
+            "US74768A1043" -> "QNT"
+            "US83587W1062" -> "SOS"
             "SE0023468194" -> "TANGI.ST"
             else -> when (normalizedTicker) {
                 "SALT B", "SALT" -> "SALT-B.ST"
@@ -315,9 +318,6 @@ class MontroseCsvImporter {
                 "EQT" -> "EQT.ST"
                 "QS" -> "QS"
                 "TANGI" -> "TANGI.ST"
-                "FERRO BTA" -> "FERRO.ST"
-                "SALT TR" -> "SALT-B.ST"
-                "SALT BTA" -> "SALT-B.ST"
                 else -> null
             }
         }
