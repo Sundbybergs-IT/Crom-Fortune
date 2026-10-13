@@ -136,7 +136,7 @@ class AvanzaCsvImporterTest {
     }
 
     @Test
-    fun `import - when avanza csv with rensning av vardepapper - parses correctly as sell transaction with zero price`() {
+    fun `import - when avanza csv with rensning av vardepapper - parses correctly with synthetic buy and sell transaction`() {
         val csvContent = """
             Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
             2025-02-05;5011017;Rensning av värdepapper;Azelio;-1000;;;;;;SEK;;SE0012229920;
@@ -146,13 +146,35 @@ class AvanzaCsvImporterTest {
         val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
         val transactions = result.transactions
 
-        assertEquals(1, transactions.size)
+        assertEquals(2, transactions.size)
 
-        val tx = transactions[0]
-        assertEquals(TransactionAction.SELL, tx.action)
-        assertEquals("AZELIO.ST", tx.symbol)
-        assertEquals(BigDecimal("1000"), tx.quantity)
-        assertTrue(BigDecimal.ZERO.compareTo(tx.unitPrice) == 0)
+        val buyTx = transactions.find { it.action == TransactionAction.BUY }!!
+        assertEquals("AZELIO.ST", buyTx.symbol)
+        assertEquals(BigDecimal("1000"), buyTx.quantity)
+        assertTrue(BigDecimal.ZERO.compareTo(buyTx.unitPrice) == 0)
+
+        val sellTx = transactions.find { it.action == TransactionAction.SELL }!!
+        assertEquals("AZELIO.ST", sellTx.symbol)
+        assertEquals(BigDecimal("1000"), sellTx.quantity)
+        assertTrue(BigDecimal.ZERO.compareTo(sellTx.unitPrice) == 0)
+    }
+
+    @Test
+    fun `import - when avanza csv with azelio corporate actions and rensning - parses correctly`() {
+        val csvContent = """
+            Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
+            2022-10-03;5011017;Tilldelning nyemission;AZELIO AB UR;500;;;;;;SEK;SE0018716573;
+            2022-10-18;5011017;Teckning inlägg;AZELIO AB BTU;125;10,36;;;;;SEK;SE0018716581;
+            2023-03-15;5011017;Byte;AZELIO AB;125;;;;;;SEK;SE0011973940;
+            2026-01-27;5011017;Rensning av värdepapper;Azelio AB i konkurs;-125;;;;;;;SE0011973940;
+        """.trimIndent()
+
+        val importer = AvanzaCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val transactions = result.transactions
+
+        assertFalse(transactions.isEmpty())
+        assertEquals("AZELIO.ST", transactions.first().symbol)
     }
 
 }

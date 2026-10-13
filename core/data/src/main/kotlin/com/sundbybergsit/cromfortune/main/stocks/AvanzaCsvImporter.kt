@@ -71,7 +71,7 @@ class AvanzaCsvImporter {
             }
 
             val typeStr = columns[typIndex]
-            if (typeStr == "Split nytt värdepapper") {
+            if (typeStr.contains("Split", ignoreCase = true)) {
                 val nameStr = columns[vardepapperIndex]
                 val matchedAsset = matchAsset(nameStr)
                 if (matchedAsset == null) {
@@ -155,6 +155,32 @@ class AvanzaCsvImporter {
                     BigDecimal.ZERO
                 }
 
+                val currentBalance = rawTransactions.filter { it.assetId == matchedAsset.id }
+                    .fold(BigDecimal.ZERO) { acc, tx ->
+                        when (tx.action) {
+                            TransactionAction.BUY -> acc + tx.quantity
+                            TransactionAction.SELL -> acc - tx.quantity
+                            TransactionAction.DIVIDEND -> acc
+                        }
+                    }
+                if (currentBalance < quantity) {
+                    val deficit = quantity - currentBalance
+                    rawTransactions.add(
+                        AssetTransaction(
+                            assetId = matchedAsset.id,
+                            assetType = matchedAsset.type,
+                            symbol = matchedAsset.symbol,
+                            displayName = matchedAsset.displayName,
+                            quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+                            action = TransactionAction.BUY,
+                            dateInMillis = dateInMillis,
+                            unitPrice = BigDecimal.ZERO,
+                            commissionFee = BigDecimal.ZERO,
+                            quantity = deficit
+                        )
+                    )
+                }
+
                 rawTransactions.add(
                     AssetTransaction(
                         assetId = matchedAsset.id,
@@ -176,10 +202,18 @@ class AvanzaCsvImporter {
                 continue
             }
 
+            val antalStr = columns[antalIndex].replace(',', '.')
+            val rawQuantity = antalStr.toBigDecimalOrNull()
+            if (rawQuantity == null) {
+                continue
+            }
+
             val action = when (typeStr) {
-                "Köp" -> TransactionAction.BUY
-                "Sälj" -> TransactionAction.SELL
-                "Utdelning" -> TransactionAction.DIVIDEND
+                "Köp", "Nyemission" -> TransactionAction.BUY
+                "Sälj", "Inlösen", "Värdepappersuttag" -> TransactionAction.SELL
+                "Utdelning", "Utdelning värdepapper" -> TransactionAction.DIVIDEND
+                "Teckning inlägg", "Tilldelning nyemission", "Värdepappersinsättning" -> TransactionAction.BUY
+                "Byte", "Byte värdepapper" -> if (rawQuantity >= BigDecimal.ZERO) TransactionAction.BUY else TransactionAction.SELL
                 else -> continue
             }
 
@@ -198,19 +232,14 @@ class AvanzaCsvImporter {
                 continue
             }
 
-            val antalStr = columns[antalIndex].replace(',', '.')
-            val rawQuantity = antalStr.toBigDecimalOrNull()
-            if (rawQuantity == null) {
-                errors.add("Rad $i: Ogiltigt antal '$antalStr'")
-                continue
-            }
             val quantity = when (action) {
                 TransactionAction.BUY -> {
-                    if (rawQuantity <= BigDecimal.ZERO) {
+                    val absQty = rawQuantity.abs()
+                    if (absQty <= BigDecimal.ZERO) {
                         errors.add("Rad $i: Ogiltigt köpantal")
                         continue
                     }
-                    rawQuantity
+                    absQty
                 }
                 TransactionAction.SELL -> {
                     val absQty = rawQuantity.abs()
@@ -235,7 +264,11 @@ class AvanzaCsvImporter {
             }
 
             val kursStr = columns[kursIndex].replace(',', '.')
-            val unitPrice = kursStr.toBigDecimalOrNull()
+            val unitPrice = if (kursStr.isBlank()) {
+                BigDecimal.ZERO
+            } else {
+                kursStr.toBigDecimalOrNull()
+            }
             if (unitPrice == null || unitPrice < BigDecimal.ZERO) {
                 errors.add("Rad $i: Ogiltig kurs '$kursStr'")
                 continue
@@ -305,6 +338,10 @@ class AvanzaCsvImporter {
     }
 
     private fun matchAsset(nameStr: String): TradableAsset? {
+        val trimmed = nameStr.trim()
+        if (Regex("\\b(UR|BTU|IA|TO|TR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(trimmed)) {
+            return null
+        }
         val normalizedQuery = normalize(nameStr)
         val symbol = when {
             normalizedQuery.contains("cereno scientific") -> "CRNO-B.ST"
