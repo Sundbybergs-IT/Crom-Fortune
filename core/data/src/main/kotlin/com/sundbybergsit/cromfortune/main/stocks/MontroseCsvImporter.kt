@@ -79,7 +79,7 @@ class MontroseCsvImporter {
 
             val matchedAsset = matchAsset(isinStr, tickerStr, nameStr)
             if (matchedAsset == null) {
-                errors.add("Rad $i: Värdepapper '$nameStr' (Ticker: '$tickerStr', ISIN: '$isinStr') stöds inte")
+                // Ignore unmapped or rights/BTU/BTA/IA/TO/TR assets
                 continue
             }
 
@@ -192,10 +192,99 @@ class MontroseCsvImporter {
                 }
             }
 
-        return ImportResult(aggregatedTransactions, errors)
+        val balancedTransactions = ensureChronologicalBalance(aggregatedTransactions)
+
+        return ImportResult(balancedTransactions, errors)
+    }
+
+    private fun ensureChronologicalBalance(
+        transactions: List<AssetTransaction>
+    ): List<AssetTransaction> {
+        val mutableTransactions = transactions.toMutableList()
+
+        val assetIds = transactions.map { it.assetId }.distinct()
+        for (assetId in assetIds) {
+            var changed = true
+            while (changed) {
+                changed = false
+                val currentAssetTransactions = mutableTransactions.filter { it.assetId == assetId }
+                val allEvents = currentAssetTransactions.map { Triple(it.dateInMillis, it.quantity, it) }
+                    .sortedWith(compareBy(
+                        { it.first },
+                        { if (it.third.action == TransactionAction.BUY || it.third.action == TransactionAction.DIVIDEND) 0 else 1 }
+                    ))
+
+                var balance = BigDecimal.ZERO
+                for (event in allEvents) {
+                    val obj = event.third
+                    when (obj.action) {
+                        TransactionAction.BUY -> balance += obj.quantity
+                        TransactionAction.DIVIDEND -> {}
+                        TransactionAction.SELL -> {
+                            if (balance < obj.quantity) {
+                                val deficit = obj.quantity - balance
+                                val syntheticBuy = AssetTransaction(
+                                    assetId = obj.assetId,
+                                    assetType = obj.assetType,
+                                    symbol = obj.symbol,
+                                    displayName = obj.displayName,
+                                    quoteCurrencyCode = obj.quoteCurrencyCode,
+                                    action = TransactionAction.BUY,
+                                    dateInMillis = obj.dateInMillis,
+                                    unitPrice = BigDecimal.ZERO,
+                                    commissionFee = BigDecimal.ZERO,
+                                    quantity = deficit
+                                )
+                                mutableTransactions.add(syntheticBuy)
+                                changed = true
+                                break
+                            }
+                            balance -= obj.quantity
+                        }
+                    }
+                }
+            }
+        }
+
+        return mutableTransactions.groupBy { Triple(it.assetId, it.action, it.dateInMillis) }
+            .map { (_, group) ->
+                val first = group.first()
+                if (first.action == TransactionAction.DIVIDEND) {
+                    if (group.size == 1) {
+                        first
+                    } else {
+                        val totalQuantity = group.sumOf { it.quantity }
+                        val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
+                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP).stripTrailingZeros()
+                        } else {
+                            first.unitPrice
+                        }
+                        first.copy(quantity = totalQuantity, unitPrice = avgPrice)
+                    }
+                } else {
+                    val totalQuantity = group.sumOf { it.quantity }
+                    val totalCost = group.sumOf { it.quantity * it.unitPrice }
+                    val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
+                        totalCost.divide(totalQuantity, 8, RoundingMode.HALF_UP).stripTrailingZeros()
+                    } else {
+                        BigDecimal.ZERO
+                    }
+                    val totalCommission = group.sumOf { it.commissionFee }
+                    first.copy(
+                        quantity = totalQuantity,
+                        unitPrice = avgPrice,
+                        commissionFee = totalCommission
+                    )
+                }
+            }
     }
 
     private fun matchAsset(isinStr: String, tickerStr: String, nameStr: String): TradableAsset? {
+        val combined = "$isinStr $tickerStr $nameStr"
+        if (Regex("\\b(UR|BTU|BTA|IA|TO|TR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(combined)) {
+            return null
+        }
+
         val normalizedIsin = isinStr.trim().uppercase()
         val normalizedTicker = tickerStr.trim().uppercase()
         val normalizedName = normalize(nameStr)

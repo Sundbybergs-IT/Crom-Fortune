@@ -15,6 +15,7 @@ class MontroseCsvImporterTest {
         val csvContent = """
             Datum,Typ,Konto,Värdepapper / Beskr.,Ticker,ISIN,Antal,Kurs,Kursvaluta,Totalt,Totalvaluta,Courtage,Courtagevaluta
             2026-10-12,Köp,2149201,SaltX Technology Holding B,SALT B,SE0005308541,1000,4.345,SEK,-4352,SEK,6.52,SEK
+            2026-09-01,Köp,2149201,Investor B,INVE B,SE0015811963,10,400.0,SEK,-4000,SEK,1.0,SEK
             2026-10-02,Sälj,2149201,Investor B,INVE B,SE0015811963,-2,403.35,SEK,805,SEK,1.21,SEK
         """.trimIndent()
 
@@ -22,15 +23,15 @@ class MontroseCsvImporterTest {
         val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
         val transactions = result.transactions
 
-        assertEquals(2, transactions.size)
+        assertEquals(3, transactions.size)
 
-        val buyTx = transactions.find { it.action == TransactionAction.BUY }!!
+        val buyTx = transactions.find { it.symbol == "SALT-B.ST" && it.action == TransactionAction.BUY }!!
         assertEquals("SALT-B.ST", buyTx.symbol)
         assertEquals(BigDecimal("1000"), buyTx.quantity)
         assertTrue(BigDecimal("4.345").compareTo(buyTx.unitPrice) == 0)
         assertTrue(BigDecimal("6.52").compareTo(buyTx.commissionFee) == 0)
 
-        val sellTx = transactions.find { it.action == TransactionAction.SELL }!!
+        val sellTx = transactions.find { it.symbol == "INVE-B.ST" && it.action == TransactionAction.SELL }!!
         assertEquals("INVE-B.ST", sellTx.symbol)
         assertEquals(BigDecimal("2"), sellTx.quantity)
         assertTrue(BigDecimal("403.35").compareTo(sellTx.unitPrice) == 0)
@@ -83,7 +84,9 @@ class MontroseCsvImporterTest {
     fun `import - when various stock transactions including foreign stocks - parses successfully`() {
         val csvContent = """
             Datum,Typ,Konto,Värdepapper / Beskr.,Ticker,ISIN,Antal,Kurs,Kursvaluta,Totalt,Totalvaluta,Courtage,Courtagevaluta
+            2025-01-01,Köp,2149201,Intel,INTC,US4581401001,200,20.0,USD,4000,SEK,10,SEK
             2025-08-21,Sälj,2149201,Intel,INTC,US4581401001,-150,23.05,USD,33145.76,SEK,49.79,SEK
+            2025-01-01,Köp,2149201,LVMH Moët Hennessy Louis Vuitton,MC,FR0000121014,10,400.0,EUR,4000,SEK,10,SEK
             2025-08-20,Sälj,2149201,LVMH Moët Hennessy Louis Vuitton,MC,FR0000121014,-7,495.2,EUR,38634.64,SEK,58.04,SEK
             2025-04-16,Utdelning,2149201,Occidental Petroleum Corp,OXY,US6745991058,6,0.24,USD,14.11,SEK,,
         """.trimIndent()
@@ -92,7 +95,7 @@ class MontroseCsvImporterTest {
         val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
         val transactions = result.transactions
 
-        assertEquals(3, transactions.size)
+        assertEquals(5, transactions.size)
         assertTrue(transactions.any { it.symbol == "INTC" && it.action == TransactionAction.SELL })
         assertTrue(transactions.any { it.symbol == "MC.PA" && it.action == TransactionAction.SELL })
         assertTrue(transactions.any { it.symbol == "OXY" && it.action == TransactionAction.DIVIDEND })
