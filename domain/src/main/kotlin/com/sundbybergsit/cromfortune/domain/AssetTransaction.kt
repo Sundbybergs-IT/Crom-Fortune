@@ -26,7 +26,7 @@ data class AssetTransaction(
         require(symbol.isNotBlank()) { "Asset symbol must not be blank" }
         require(quoteCurrencyCode.isNotBlank()) { "Quote currency must not be blank" }
         require(quantity > BigDecimal.ZERO) { "Quantity must be positive" }
-        require(unitPrice > BigDecimal.ZERO) { "Unit price must be positive" }
+        require(unitPrice >= BigDecimal.ZERO) { "Unit price must not be negative" }
         require(commissionFee >= BigDecimal.ZERO) { "Commission fee must not be negative" }
     }
 
