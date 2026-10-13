@@ -6,6 +6,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import java.math.BigDecimal
 
 class MontroseCsvImporterTest {

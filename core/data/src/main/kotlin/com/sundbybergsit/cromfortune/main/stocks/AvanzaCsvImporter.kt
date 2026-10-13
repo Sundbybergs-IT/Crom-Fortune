@@ -201,10 +201,8 @@ class AvanzaCsvImporter {
 
             val action = when (typeStr) {
                 "Köp", "Nyemission" -> TransactionAction.BUY
-                "Sälj", "Inlösen", "Värdepappersuttag", "Rensning av värdepapper" -> TransactionAction.SELL
+                "Sälj", "Inlösen", "Rensning av värdepapper" -> TransactionAction.SELL
                 "Utdelning", "Utdelning värdepapper" -> TransactionAction.DIVIDEND
-                "Teckning inlägg", "Tilldelning nyemission", "Värdepappersinsättning" -> TransactionAction.BUY
-                "Byte", "Byte värdepapper" -> if (rawQuantity >= BigDecimal.ZERO) TransactionAction.BUY else TransactionAction.SELL
                 else -> continue
             }
 
@@ -339,7 +337,7 @@ class AvanzaCsvImporter {
                     val absQty = single.quantity.abs()
                     if (absQty >= BigDecimal(StockSplit.MIN_QUANTITY)) {
                         StockSplit(
-                            reverse = single.quantity < BigDecimal.ZERO,
+                            reverse = single.quantity > BigDecimal.ZERO,
                             dateInMillis = dateInMillis,
                             name = symbol,
                             quantity = absQty.toInt()
@@ -483,6 +481,7 @@ class AvanzaCsvImporter {
             normalizedQuery.contains("himax") -> "HIMX"
             normalizedQuery.contains("vuzix") -> "VUZI"
             normalizedQuery.contains("assa abloy") -> "ASSA-B.ST"
+            normalizedQuery.contentEquals("norwegian air shuttle") || normalizedQuery.contentEquals("nas")  -> "NAS.OL"
             normalizedQuery.contains("sbb") -> "SBB-B.ST"
             normalizedQuery.contains("nokia") -> "NOKIA-SEK.ST"
             normalizedQuery.contains("airbus") -> "AIR.PA"
