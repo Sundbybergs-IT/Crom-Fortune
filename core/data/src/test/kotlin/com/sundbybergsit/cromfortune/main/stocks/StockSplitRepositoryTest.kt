@@ -52,4 +52,40 @@ class StockSplitRepositoryTest {
             StockSplit(true, 2L, "TEST", 3)
         )
     }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `putAll rejects split when subsequent sale exceeds available quantity`() {
+        val transactionRepository = AssetTransactionRepository(context, portfolio)
+        val buy = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            "stock:TEST", com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "TEST", "Test Stock", "SEK",
+            com.sundbybergsit.cromfortune.domain.TransactionAction.BUY, 10L, java.math.BigDecimal("10"), java.math.BigDecimal.ZERO, java.math.BigDecimal("100")
+        )
+        val sell = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            "stock:TEST", com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "TEST", "Test Stock", "SEK",
+            com.sundbybergsit.cromfortune.domain.TransactionAction.SELL, 30L, java.math.BigDecimal("10"), java.math.BigDecimal.ZERO, java.math.BigDecimal("50")
+        )
+        transactionRepository.putAll("stock:TEST", setOf(buy, sell))
+
+        val invalidReverseSplit = StockSplit(reverse = true, dateInMillis = 20L, name = "TEST", quantity = 10)
+        repository.putAll("TEST", setOf(invalidReverseSplit))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `remove rejects removing split when remaining transactions and splits lead to negative balance`() {
+        val transactionRepository = AssetTransactionRepository(context, portfolio)
+        val buy = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            "stock:TEST", com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "TEST", "Test Stock", "SEK",
+            com.sundbybergsit.cromfortune.domain.TransactionAction.BUY, 10L, java.math.BigDecimal("10"), java.math.BigDecimal.ZERO, java.math.BigDecimal("50")
+        )
+        val sell = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            "stock:TEST", com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "TEST", "Test Stock", "SEK",
+            com.sundbybergsit.cromfortune.domain.TransactionAction.SELL, 30L, java.math.BigDecimal("10"), java.math.BigDecimal.ZERO, java.math.BigDecimal("80")
+        )
+        transactionRepository.putAll("stock:TEST", setOf(buy, sell))
+
+        val split = StockSplit(reverse = false, dateInMillis = 20L, name = "TEST", quantity = 2)
+        repository.putAll("TEST", setOf(split))
+
+        repository.remove(split)
+    }
 }

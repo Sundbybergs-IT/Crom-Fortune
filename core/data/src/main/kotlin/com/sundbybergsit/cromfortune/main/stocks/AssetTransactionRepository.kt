@@ -100,28 +100,7 @@ class AssetTransactionRepository(
         if (transactions.isEmpty()) return
         val first = transactions.first()
         val symbol = first.symbol
-        val splits = stockSplitApi.list(symbol).sortedBy { it.dateInMillis }
-        val allEvents = (transactions.map { Triple(it.dateInMillis, it.quantity, it.action) } +
-            splits.map { Triple(it.dateInMillis, it.quantity.toBigDecimal(), if (it.reverse) "REVERSE_SPLIT" else "SPLIT") })
-            .sortedWith(compareBy({ it.first }, { if (it.third == TransactionAction.BUY || it.third == TransactionAction.DIVIDEND || it.third == "SPLIT" || it.third == "REVERSE_SPLIT") 0 else 1 }))
-
-        var balance = BigDecimal.ZERO
-        for (event in allEvents) {
-            when (event.third) {
-                TransactionAction.BUY, TransactionAction.DIVIDEND -> {
-                    if (event.third == TransactionAction.BUY) balance += event.second
-                }
-                TransactionAction.SELL -> {
-                    balance -= event.second
-                    require(balance >= BigDecimal.ZERO) { "Negative balance detected" }
-                }
-                "SPLIT" -> {
-                    balance = balance.multiply(event.second)
-                }
-                "REVERSE_SPLIT" -> {
-                    balance = balance.divide(event.second, 16, java.math.RoundingMode.DOWN)
-                }
-            }
-        }
+        val splits = stockSplitApi.list(symbol)
+        ChronologicalBalanceValidator.validate(transactions, splits)
     }
 }

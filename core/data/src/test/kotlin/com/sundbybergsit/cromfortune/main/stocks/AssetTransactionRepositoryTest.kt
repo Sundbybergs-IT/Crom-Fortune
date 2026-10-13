@@ -120,6 +120,34 @@ class AssetTransactionRepositoryTest {
         assertEquals(setOf(buy, sell), repository.list(buy.assetId))
     }
 
+    @Test
+    fun `remove - when removing a buy transaction causes a subsequent sell to exceed available quantity - throws exception and leaves transactions intact`() {
+        val repository = AssetTransactionRepository(context, "asset-remove-oversell-${System.nanoTime()}")
+        val buy1 = stockTransaction(TransactionAction.BUY, "50", 1L)
+        val buy2 = stockTransaction(TransactionAction.BUY, "50", 2L)
+        val sell = stockTransaction(TransactionAction.SELL, "80", 3L)
+        repository.putAll(buy1.assetId, setOf(buy1, buy2, sell))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            repository.remove(buy1)
+        }
+
+        assertEquals(setOf(buy1, buy2, sell), repository.list(buy1.assetId))
+    }
+
+    @Test
+    fun `remove - when removing a buy transaction leaves sufficient quantity for subsequent sell - succeeds`() {
+        val repository = AssetTransactionRepository(context, "asset-remove-valid-${System.nanoTime()}")
+        val buy1 = stockTransaction(TransactionAction.BUY, "50", 1L)
+        val buy2 = stockTransaction(TransactionAction.BUY, "50", 2L)
+        val sell = stockTransaction(TransactionAction.SELL, "30", 3L)
+        repository.putAll(buy1.assetId, setOf(buy1, buy2, sell))
+
+        repository.remove(buy1)
+
+        assertEquals(setOf(buy2, sell), repository.list(buy1.assetId))
+    }
+
     private fun transaction(action: TransactionAction, quantity: String, date: Long = 1L) = AssetTransaction(
         assetId = "crypto:OLD",
         assetType = AssetType.CRYPTO,

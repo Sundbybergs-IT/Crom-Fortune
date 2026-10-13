@@ -31,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -182,6 +183,7 @@ fun RegisterAssetTransactionDialog(
         )
     }
 
+    val localContext = LocalContext.current
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
@@ -189,8 +191,13 @@ fun RegisterAssetTransactionDialog(
             text = { Text(stringResource(R.string.home_delete_stock_order, transactionDate.value.text)) },
             confirmButton = {
                 TextButton(onClick = {
-                    showDeleteConfirmation = false
-                    onDelete?.invoke()
+                    try {
+                        onDelete?.invoke()
+                        showDeleteConfirmation = false
+                    } catch (e: Exception) {
+                        showDeleteConfirmation = false
+                        android.widget.Toast.makeText(localContext, e.message ?: localContext.resources.getString(R.string.generic_error_invalid_quantity), android.widget.Toast.LENGTH_LONG).show()
+                    }
                 }) { Text(stringResource(R.string.action_delete).uppercase()) }
             },
             dismissButton = {

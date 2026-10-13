@@ -309,11 +309,17 @@ fun RegisterSplitStockAlertDialog(
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
                 }) {
+                val context = LocalContext.current
                 onDelete?.let { delete ->
-                    DialogButton(text = stringResource(id = R.string.action_delete), onClick = delete)
+                    DialogButton(text = stringResource(id = R.string.action_delete), onClick = {
+                        try {
+                            delete.invoke()
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, e.message ?: context.resources.getString(R.string.generic_error_invalid_quantity), android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    })
                 }
                 DialogButton(text = stringResource(id = android.R.string.cancel), onClick = onDismiss)
-                val context = LocalContext.current
                 DialogButton(text = stringResource(id = android.R.string.ok), onClick = {
                     try {
                         dateMutableState.value.validateDate(
@@ -353,6 +359,12 @@ fun RegisterSplitStockAlertDialog(
                         onDismiss.invoke()
                     } catch (e: ValidatorException) {
                         // Shit happens ...
+                    } catch (e: IllegalArgumentException) {
+                        stockQuantityErrorMutableState.value = true
+                        stockQuantityErrorMessageMutableState.value = e.message ?: context.getString(R.string.generic_error_invalid_quantity)
+                    } catch (e: IllegalStateException) {
+                        stockQuantityErrorMutableState.value = true
+                        stockQuantityErrorMessageMutableState.value = e.message ?: context.getString(R.string.generic_error_invalid_quantity)
                     }
                 })
             }

@@ -1,8 +1,10 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
 import android.content.Context
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.StockSplitApi
+import com.sundbybergsit.cromfortune.main.db.AssetTransactionDao
 import com.sundbybergsit.cromfortune.main.db.CromFortuneDatabase
 import com.sundbybergsit.cromfortune.main.db.StockSplitDao
 import com.sundbybergsit.cromfortune.main.db.StockSplitEntity
@@ -10,7 +12,8 @@ import com.sundbybergsit.cromfortune.main.db.StockSplitEntity
 class StockSplitRepository(
     context: Context,
     private val porfolioName: String,
-    private val dao: StockSplitDao = CromFortuneDatabase.getInstance(context).stockSplitDao()
+    private val dao: StockSplitDao = CromFortuneDatabase.getInstance(context).stockSplitDao(),
+    private val transactionDao: AssetTransactionDao = CromFortuneDatabase.getInstance(context).assetTransactionDao()
 ) : StockSplitApi {
 
     override fun update(original: StockSplit, updated: StockSplit) {
@@ -49,6 +52,9 @@ class StockSplitRepository(
     }
 
     override fun putAll(stockName: String, stockSplits: Set<StockSplit>) {
+        val assetId = AssetCatalog.stocks.find { it.symbol.equals(stockName, ignoreCase = true) }?.id ?: "stock:$stockName"
+        val transactions = transactionDao.getTransactionsForAsset(porfolioName, assetId).map { it.toDomain() }.toSet()
+        ChronologicalBalanceValidator.validate(transactions, stockSplits)
         dao.deleteForStock(porfolioName, stockName)
         val entities = stockSplits.map { StockSplitEntity.fromDomain(porfolioName, it) }
         dao.insertAll(entities)
