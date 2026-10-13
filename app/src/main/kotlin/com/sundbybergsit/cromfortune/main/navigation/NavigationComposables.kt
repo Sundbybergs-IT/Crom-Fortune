@@ -100,11 +100,13 @@ import androidx.core.net.toUri
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.sundbybergsit.cromfortune.feature.settings.R as SettingsR
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.core.ui.BottomSheetContent
 import com.sundbybergsit.cromfortune.core.ui.BottomSheetMenuItem
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
 import com.sundbybergsit.cromfortune.domain.StockEvent
@@ -129,6 +131,11 @@ import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import com.sundbybergsit.cromfortune.main.notes.AssetNoteRepository
 import com.sundbybergsit.cromfortune.main.notes.MAX_ASSET_NOTE_LENGTH
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
+import com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository
+import com.sundbybergsit.cromfortune.main.stocks.AvanzaCsvImporter
+import com.sundbybergsit.cromfortune.main.stocks.ChronologicalBalanceValidator
+import com.sundbybergsit.cromfortune.main.stocks.ImportResult
+import com.sundbybergsit.cromfortune.main.stocks.MontroseCsvImporter
 import com.sundbybergsit.cromfortune.main.stocks.StockOrderRepository
 import com.sundbybergsit.cromfortune.main.stocks.StockSplitRepository
 import com.sundbybergsit.cromfortune.main.ui.DayPicker
@@ -344,43 +351,66 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                         try {
                             val importResult = localContext.contentResolver.openInputStream(uri)?.use { inputStream ->
                                 if (selectedImporter == "Montrose") {
-                                    com.sundbybergsit.cromfortune.main.stocks.MontroseCsvImporter().import(inputStream)
+                                    MontroseCsvImporter().import(inputStream)
                                 } else {
-                                    com.sundbybergsit.cromfortune.main.stocks.AvanzaCsvImporter().import(inputStream)
+                                    AvanzaCsvImporter().import(inputStream)
                                 }
-                            } ?: com.sundbybergsit.cromfortune.main.stocks.ImportResult(emptyList(), emptyList())
+                            } ?: ImportResult(emptyList(), emptyList())
                             
                             val transactions = importResult.transactions
+                            val splits = importResult.splits
                             val importErrors = importResult.errors.toMutableList()
 
-                            if (transactions.isNotEmpty()) {
-                                val repository = com.sundbybergsit.cromfortune.main.stocks.AssetTransactionRepository(localContext, portfolioName)
-                                val grouped = transactions.groupBy { it.assetId }
+                            if (transactions.isNotEmpty() || splits.isNotEmpty()) {
+                                val transactionRepository = AssetTransactionRepository(localContext, portfolioName)
+                                val splitRepository = StockSplitRepository(localContext, portfolioName)
+                                
+                                val groupedTransactions = transactions.groupBy { it.assetId }
+                                val groupedSplits = splits.groupBy { it.name }
                                 
                                 var isValid = true
-                                for ((assetId, assetTransactions) in grouped) {
-                                    val existing = repository.list(assetId)
+                                for ((assetId, assetTransactions) in groupedTransactions) {
+                                    val existing = transactionRepository.list(assetId)
                                     val combined = (existing + assetTransactions).toSet()
                                     try {
-                                        repository.validate(assetId, combined)
+                                        transactionRepository.validate(assetId, combined)
                                     } catch (e: Exception) {
                                         isValid = false
                                         importErrors.add("Valideringsfel för tillgång $assetId: ${e.message ?: "Ofullständig historik"}")
                                     }
                                 }
 
+                                for ((symbol, assetSplits) in groupedSplits) {
+                                    val existingSplits = splitRepository.list(symbol)
+                                    val combinedSplits = (existingSplits + assetSplits).toSet()
+                                    val assetId = AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }?.id ?: "stock:$symbol"
+                                    val existingTransactions = transactionRepository.list(assetId)
+                                    try {
+                                        ChronologicalBalanceValidator.validate(existingTransactions, combinedSplits)
+                                    } catch (e: Exception) {
+                                        isValid = false
+                                        importErrors.add("Valideringsfel för split för $symbol: ${e.message ?: "Ogiltig historik"}")
+                                    }
+                                }
+
                                 if (!isValid) {
                                     importReport = Pair(0, importErrors)
                                 } else {
-                                    for ((assetId, assetTransactions) in grouped) {
-                                        val existing = repository.list(assetId)
+                                    for ((assetId, assetTransactions) in groupedTransactions) {
+                                        val existing = transactionRepository.list(assetId)
                                         val combined = (existing + assetTransactions).toSet()
-                                        repository.putAll(assetId, combined)
+                                        transactionRepository.putAll(assetId, combined)
                                     }
-                                    importReport = Pair(transactions.size, importErrors)
+                                    for ((symbol, assetSplits) in groupedSplits) {
+                                        val existingSplits = splitRepository.list(symbol)
+                                        val combinedSplits = (existingSplits + assetSplits).toSet()
+                                        splitRepository.putAll(symbol, combinedSplits)
+                                    }
+                                    val totalCount = transactions.size + splits.size
+                                    importReport = Pair(totalCount, importErrors)
                                 }
                             } else {
-                                importReport = Pair(0, importErrors.ifEmpty { listOf("Inga giltiga transaktioner hittades i filen") })
+                                importReport = Pair(0, importErrors.ifEmpty { listOf("Inga giltiga transaktioner eller splittar hittades i filen") })
                             }
                         } catch (e: Exception) {
                             importReport = Pair(0, listOf("Oväntat fel vid inläsning av fil: ${e.message ?: e.javaClass.simpleName}"))
@@ -400,9 +430,9 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                             ) {
                                 Text(
                                     text = if (successCount > 0) {
-                                        localContext.resources.getString(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_success, successCount)
+                                        localContext.resources.getString(SettingsR.string.settings_import_success, successCount)
                                     } else {
-                                        localContext.resources.getString(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_error)
+                                        localContext.resources.getString(SettingsR.string.settings_import_error)
                                     }
                                 )
                                 if (reportErrors.isNotEmpty()) {

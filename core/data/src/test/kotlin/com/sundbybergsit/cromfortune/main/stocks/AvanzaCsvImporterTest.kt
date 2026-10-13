@@ -110,4 +110,29 @@ class AvanzaCsvImporterTest {
         }
     }
 
+    @Test
+    fun `import - when avanza csv with split and reverse split transactions - parses correctly`() {
+        val csvContent = """
+            Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
+            2025-02-05;5011017;Split nytt värdepapper;Cereno Scientific B;2;;;;;;SEK;SE0008241558;
+            2025-02-06;5011017;Split nytt värdepapper;Cereno Scientific B;-5;;;;;;SEK;SE0008241558;
+        """.trimIndent()
+
+        val importer = AvanzaCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val splits = result.splits
+
+        assertEquals(2, splits.size)
+
+        val split1 = splits[0]
+        assertFalse(split1.reverse)
+        assertEquals("CRNO-B.ST", split1.name)
+        assertEquals(2, split1.quantity)
+
+        val split2 = splits[1]
+        assertTrue(split2.reverse)
+        assertEquals("CRNO-B.ST", split2.name)
+        assertEquals(5, split2.quantity)
+    }
+
 }

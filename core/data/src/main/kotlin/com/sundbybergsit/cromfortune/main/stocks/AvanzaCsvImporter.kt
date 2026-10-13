@@ -2,6 +2,8 @@ package com.sundbybergsit.cromfortune.main.stocks
 
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
+import com.sundbybergsit.cromfortune.domain.AssetType
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.TradableAsset
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import java.io.InputStream
@@ -13,7 +15,8 @@ import java.time.ZoneId
 
 data class ImportResult(
     val transactions: List<AssetTransaction>,
-    val errors: List<String>
+    val errors: List<String>,
+    val splits: List<StockSplit> = emptyList()
 )
 
 class AvanzaCsvImporter {
@@ -56,16 +59,67 @@ class AvanzaCsvImporter {
         }
 
         val rawTransactions = mutableListOf<AssetTransaction>()
+        val rawSplits = mutableListOf<StockSplit>()
 
         for (i in 1 until lines.size) {
             val line = lines[i]
             if (line.isBlank()) continue
             val columns = parseCsvLine(line, delimiter).map { it.trim() }
-            if (columns.size <= maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex, kursIndex)) {
+            val minIndexForType = maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex)
+            if (columns.size <= minIndexForType) {
                 continue
             }
 
             val typeStr = columns[typIndex]
+            if (typeStr == "Split nytt värdepapper") {
+                val nameStr = columns[vardepapperIndex]
+                val matchedAsset = matchAsset(nameStr)
+                if (matchedAsset == null) {
+                    errors.add("Rad $i: Värdepapper '$nameStr' stöds inte")
+                    continue
+                }
+                if (matchedAsset.type != AssetType.STOCK) {
+                    errors.add("Rad $i: Splittar stöds endast för aktier")
+                    continue
+                }
+
+                val dateStr = columns[datumIndex]
+                val dateInMillis = try {
+                    LocalDate.parse(dateStr).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                } catch (_: Exception) {
+                    errors.add("Rad $i: Ogiltigt datumformat '$dateStr'")
+                    continue
+                }
+
+                val antalStr = columns[antalIndex].replace(',', '.')
+                val rawQuantity = antalStr.toBigDecimalOrNull()
+                if (rawQuantity == null) {
+                    errors.add("Rad $i: Ogiltigt antal '$antalStr'")
+                    continue
+                }
+                if (rawQuantity.abs() < BigDecimal(StockSplit.MIN_QUANTITY)) {
+                    errors.add("Rad $i: Ogiltigt antal för split '$antalStr'")
+                    continue
+                }
+
+                val reverse = rawQuantity < BigDecimal.ZERO
+                val quantityInt = rawQuantity.abs().toInt()
+
+                rawSplits.add(
+                    StockSplit(
+                        reverse = reverse,
+                        dateInMillis = dateInMillis,
+                        name = matchedAsset.symbol,
+                        quantity = quantityInt
+                    )
+                )
+                continue
+            }
+
+            if (columns.size <= maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex, kursIndex)) {
+                continue
+            }
+
             val action = when (typeStr) {
                 "Köp" -> TransactionAction.BUY
                 "Sälj" -> TransactionAction.SELL
@@ -186,7 +240,12 @@ class AvanzaCsvImporter {
                 }
             }
 
-        return ImportResult(aggregatedTransactions, errors)
+        val aggregatedSplits = rawSplits.groupBy { Triple(it.name, it.dateInMillis, it.reverse) }
+            .map { (_, group) ->
+                group.first()
+            }
+
+        return ImportResult(aggregatedTransactions, errors, aggregatedSplits)
     }
 
     private fun matchAsset(nameStr: String): TradableAsset? {
