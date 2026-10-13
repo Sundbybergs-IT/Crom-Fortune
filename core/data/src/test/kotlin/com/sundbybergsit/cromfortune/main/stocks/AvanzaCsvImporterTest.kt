@@ -135,4 +135,24 @@ class AvanzaCsvImporterTest {
         assertEquals(5, split2.quantity)
     }
 
+    @Test
+    fun `import - when avanza csv with rensning av vardepapper - parses correctly as sell transaction with zero price`() {
+        val csvContent = """
+            Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
+            2025-02-05;5011017;Rensning av värdepapper;Azelio;-1000;;;;;;SEK;;SE0012229920;
+        """.trimIndent()
+
+        val importer = AvanzaCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val transactions = result.transactions
+
+        assertEquals(1, transactions.size)
+
+        val tx = transactions[0]
+        assertEquals(TransactionAction.SELL, tx.action)
+        assertEquals("AZELIO.ST", tx.symbol)
+        assertEquals(BigDecimal("1000"), tx.quantity)
+        assertTrue(BigDecimal.ZERO.compareTo(tx.unitPrice) == 0)
+    }
+
 }

@@ -116,6 +116,62 @@ class AvanzaCsvImporter {
                 continue
             }
 
+            if (typeStr == "Rensning av värdepapper") {
+                val nameStr = columns[vardepapperIndex]
+                val matchedAsset = matchAsset(nameStr)
+                if (matchedAsset == null) {
+                    errors.add("Rad $i: Värdepapper '$nameStr' stöds inte")
+                    continue
+                }
+
+                val dateStr = columns[datumIndex]
+                val dateInMillis = try {
+                    LocalDate.parse(dateStr).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                } catch (_: Exception) {
+                    errors.add("Rad $i: Ogiltigt datumformat '$dateStr'")
+                    continue
+                }
+
+                val antalStr = columns[antalIndex].replace(',', '.')
+                val rawQuantity = antalStr.toBigDecimalOrNull()
+                if (rawQuantity == null) {
+                    errors.add("Rad $i: Ogiltigt antal '$antalStr'")
+                    continue
+                }
+                val quantity = rawQuantity.abs()
+                if (quantity <= BigDecimal.ZERO) {
+                    errors.add("Rad $i: Ogiltigt antal för rensning")
+                    continue
+                }
+
+                if (quantity.scale().coerceAtLeast(0) > matchedAsset.quantityScale) {
+                    errors.add("Rad $i: För många decimaler för ${matchedAsset.symbol}")
+                    continue
+                }
+
+                val commissionFee = if (courtageIndex != -1 && courtageIndex < columns.size && columns[courtageIndex].isNotBlank()) {
+                    columns[courtageIndex].replace(',', '.').toBigDecimalOrNull() ?: BigDecimal.ZERO
+                } else {
+                    BigDecimal.ZERO
+                }
+
+                rawTransactions.add(
+                    AssetTransaction(
+                        assetId = matchedAsset.id,
+                        assetType = matchedAsset.type,
+                        symbol = matchedAsset.symbol,
+                        displayName = matchedAsset.displayName,
+                        quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+                        action = TransactionAction.SELL,
+                        dateInMillis = dateInMillis,
+                        unitPrice = BigDecimal.ZERO,
+                        commissionFee = commissionFee,
+                        quantity = quantity
+                    )
+                )
+                continue
+            }
+
             if (columns.size <= maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex, kursIndex)) {
                 continue
             }
