@@ -315,13 +315,13 @@ class MontroseCsvImporter {
         }
 
         val symbol = when (val normalizedTicker = tickerStr.trim().uppercase()) {
-            "SALT B", "SALT" -> "SALT-B.ST"
-            "INVE B", "INVE", "INVESTOR B" -> "INVE-B.ST"
-            "CRNO B", "CRNO" -> "CRNO-B.ST"
+            "ASSA B" -> "ASSA-B.ST"
+            "SALT B" -> "SALT-B.ST"
+            "INVE B" -> "INVE-B.ST"
+            "CRNO B" -> "CRNO-B.ST"
             "MC" -> "MC.PA"
             "FERRO" -> "FERRO.ST"
             "EQT" -> "EQT.ST"
-            "QS" -> "QS"
             "TANGI" -> "TANGI.ST"
             "QNT.NAS" -> "QNT"
             "SPACEX" -> "SPCX"

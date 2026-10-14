@@ -320,15 +320,15 @@ class AvanzaCsvImporter {
                     })
                     .sortedWith(
                         compareBy(
-                        { it.first },
-                        {
-                            val obj = it.third
-                            when (obj) {
-                                is AssetTransaction -> if (obj.action == TransactionAction.BUY || obj.action == TransactionAction.DIVIDEND) 0 else 1
-                                else -> 0
+                            { it.first },
+                            {
+                                val obj = it.third
+                                when (obj) {
+                                    is AssetTransaction -> if (obj.action == TransactionAction.BUY || obj.action == TransactionAction.DIVIDEND) 0 else 1
+                                    else -> 0
+                                }
                             }
-                        }
-                    ))
+                        ))
 
                 var balance = BigDecimal.ZERO
                 for (event in allEvents) {
@@ -414,37 +414,38 @@ class AvanzaCsvImporter {
 
         val normalizedQuery = normalize(trimmed)
         val symbol = when {
-            normalizedQuery=="air canada inc." -> "AC.TO"
-            normalizedQuery=="airbus" -> "AIR.PA"
-            normalizedQuery=="assa abloy" || normalizedQuery=="assa abloy b" -> "ASSA-B.ST"
-            normalizedQuery=="azelio" || normalizedQuery == "azelio ab" -> "AZELIO.ST"
-            normalizedQuery=="cereno scientific" || normalizedQuery=="cereno scientific b" -> "CRNO-B.ST"
-            normalizedQuery=="cloudberry clean energy" -> "CLOUD.OL"
-            normalizedQuery=="coinbase" -> "COIN"
-            normalizedQuery=="deutsche lufthansa ag" -> "LHA.F"
-            normalizedQuery=="eolus b" -> "EOLU-B.ST"
-            normalizedQuery=="ferroamp" -> "FERRO.ST"
-            normalizedQuery=="goodbye kansas group" -> "GBK.ST"
-            normalizedQuery=="Grace Therapeutics, Inc." -> "GRCE"
-            normalizedQuery=="himax" -> "HIMX"
-            normalizedQuery=="intel" -> "INTC"
-            normalizedQuery=="international petroleum corp." -> "IPCO.ST"
-            normalizedQuery=="investor" -> "INVE-B.ST"
-            normalizedQuery=="lvmh" -> "MC.PA"
-            normalizedQuery=="mips" -> "MIPS.ST"
+            normalizedQuery == "air canada inc." -> "AC.TO"
+            normalizedQuery == "airbus" -> "AIR.PA"
+            normalizedQuery == "assa abloy" || normalizedQuery == "assa abloy b" -> "ASSA-B.ST"
+            normalizedQuery == "azelio" || normalizedQuery == "azelio ab" -> "AZELIO.ST"
+            normalizedQuery == "cereno scientific" || normalizedQuery == "cereno scientific b" -> "CRNO-B.ST"
+            normalizedQuery == "cloudberry clean energy" -> "CLOUD.OL"
+            normalizedQuery == "coinbase" -> "COIN"
+            normalizedQuery == "deutsche lufthansa ag" -> "LHA.F"
+            normalizedQuery == "eolus b" -> "EOLU-B.ST"
+            normalizedQuery == "ferroamp" -> "FERRO.ST"
+            normalizedQuery == "goodbye kansas group" -> "GBK.ST"
+            normalizedQuery == "Grace Therapeutics, Inc." -> "GRCE"
+            normalizedQuery == "himax" -> "HIMX"
+            normalizedQuery == "intel" -> "INTC"
+            normalizedQuery == "international petroleum corp." -> "IPCO.ST"
+            normalizedQuery == "investor" -> "INVE-B.ST"
+            normalizedQuery == "lvmh" -> "MC.PA"
+            normalizedQuery == "mips" -> "MIPS.ST"
             normalizedQuery == "nas" -> "NAS.OL"
-            normalizedQuery=="nokia" -> "NOKIA-SEK.ST"
-            normalizedQuery=="occidental petroleum" || normalizedQuery=="oxy" -> "OXY"
-            normalizedQuery=="polygiene" -> "POLYG.ST"
-            normalizedQuery=="quantumscape" -> "QS"
-            normalizedQuery=="rocket companies" -> "RKT"
-            normalizedQuery=="saltx technology" || normalizedQuery=="saltx" -> "SALT-B.ST"
-            normalizedQuery=="sas" -> "SAS.ST"
-            normalizedQuery=="sbb" -> "SBB-B.ST"
-            normalizedQuery=="scandic hotels group" -> "SHOT.ST"
-            normalizedQuery=="soltech energy" || normalizedQuery=="soltech" || normalizedQuery==
+            normalizedQuery == "nokia" -> "NOKIA-SEK.ST"
+            normalizedQuery == "occidental petroleum" || normalizedQuery == "oxy" -> "OXY"
+            normalizedQuery == "polygiene" -> "POLYG.ST"
+            normalizedQuery == "quantumscape" -> "QS"
+            normalizedQuery == "rocket companies" -> "RKT"
+            normalizedQuery == "saltx technology holding b" -> "SALT-B.ST"
+            normalizedQuery == "sas" -> "SAS.ST"
+            normalizedQuery == "sbb" -> "SBB-B.ST"
+            normalizedQuery == "scandic hotels group" -> "SHOT.ST"
+            normalizedQuery == "soltech energy" || normalizedQuery == "soltech" || normalizedQuery ==
                 "soltech energy sweden"
-             -> "SOLT.ST"
+                -> "SOLT.ST"
+
             normalizedQuery == "tesla" -> "TSLA"
             normalizedQuery == "vuzix" -> "VUZI"
             else -> null
