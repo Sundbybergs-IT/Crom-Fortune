@@ -27,6 +27,7 @@ object AssetCatalog {
         stock("GGG.V", "G6 Materials Corp.", "CAD", AssetStatus.DELISTED),
         stock("GIGSEK.ST", "Gaming Innovation Group Inc.", "SEK", AssetStatus.DELISTED),
         stock("GOOGL", "Alphabet Inc. Class A", "USD"),
+        stock("GRCE", "Grace Therapeutics, Inc. (GRCE)", "USD"),
         stock("SHB-A.ST", "Svenska Handelsbanken AB (publ)", "SEK"),
         stock("HIMX", "Himax Technologies ADR", "USD"),
         stock("IBM", "International Business Machines Corporation", "USD"),
