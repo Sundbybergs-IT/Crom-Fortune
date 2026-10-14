@@ -238,9 +238,9 @@ class MontroseCsvImporter {
                 val allEvents = currentAssetTransactions.map { Triple(it.dateInMillis, it.quantity, it) }
                     .sortedWith(
                         compareBy(
-                        { it.first },
-                        { if (it.third.action == TransactionAction.BUY || it.third.action == TransactionAction.DIVIDEND) 0 else 1 }
-                    ))
+                            { it.first },
+                            { if (it.third.action == TransactionAction.BUY || it.third.action == TransactionAction.DIVIDEND) 0 else 1 }
+                        ))
 
                 var balance = BigDecimal.ZERO
                 for (event in allEvents) {
@@ -314,10 +314,7 @@ class MontroseCsvImporter {
             return null
         }
 
-        val normalizedTicker = tickerStr.trim().uppercase()
-        val normalizedName = normalize(nameStr)
-
-        val symbol = when (normalizedTicker) {
+        val symbol = when (val normalizedTicker = tickerStr.trim().uppercase()) {
             "SALT B", "SALT" -> "SALT-B.ST"
             "INVE B", "INVE", "INVESTOR B" -> "INVE-B.ST"
             "CRNO B", "CRNO" -> "CRNO-B.ST"
@@ -326,60 +323,12 @@ class MontroseCsvImporter {
             "EQT" -> "EQT.ST"
             "QS" -> "QS"
             "TANGI" -> "TANGI.ST"
+            "QNT.NAS" -> "QNT"
             "SPACEX" -> "SPCX"
-            else -> null
+            else -> normalizedTicker
         }
 
-        if (symbol != null) {
-            return AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }
-        }
-
-        val nameSymbol = when {
-            normalizedName.contentEquals("cereno scientific") -> "CRNO-B.ST"
-            normalizedName.contentEquals("saltx technology") || normalizedName.contentEquals("saltx") -> "SALT-B.ST"
-            normalizedName.contentEquals("investor") || normalizedName.contentEquals("investor b") -> "INVE-B.ST"
-            normalizedName.contentEquals("ferroamp") -> "FERRO.ST"
-            normalizedName.contentEquals("himax technologies") -> "HIMX"
-            normalizedName.contentEquals("soltech energy") || normalizedName.contentEquals("soltech") -> "SOLT.ST"
-            normalizedName.contentEquals("occidental petroleum") || normalizedName.contentEquals("oxy") -> "OXY"
-            normalizedName.contentEquals("intel") -> "INTC"
-            normalizedName.contentEquals("quantumscape") -> "QS"
-            normalizedName.contentEquals("himax") -> "HIMX"
-            normalizedName.contentEquals("vuzix") -> "VUZI"
-            normalizedName.contentEquals("assa abloy") -> "ASSA-B.ST"
-            normalizedName.contentEquals("sbb") -> "SBB-B.ST"
-            normalizedName.contentEquals("nokia") -> "NOKIA-SEK.ST"
-            normalizedName.contentEquals("airbus") -> "AIR.PA"
-            normalizedName.contentEquals("polygiene") -> "POLYG.ST"
-            normalizedName.contentEquals("coinbase") -> "COIN"
-            normalizedName.contentEquals("azelio") -> "AZELIO.ST"
-            normalizedName.contentEquals("lvmh") -> "MC.PA"
-            else -> null
-        }
-        if (nameSymbol != null) {
-            return AssetCatalog.stocks.find { it.symbol.equals(nameSymbol, ignoreCase = true) }
-        }
-
-        for (asset in AssetCatalog.stocks) {
-            val normalizedDisplayName = normalize(asset.displayName)
-            val normalizedSymbol = normalize(asset.symbol)
-            if (normalizedDisplayName == normalizedName ||
-                normalizedDisplayName.startsWith(normalizedName) ||
-                normalizedName.startsWith(normalizedDisplayName) ||
-                normalizedSymbol == normalizedName
-            ) {
-                return asset
-            }
-        }
-        return null
-    }
-
-    private fun normalize(str: String): String {
-        return str.lowercase()
-            .replace("(publ)", "")
-            .replace("(publ.)", "")
-            .replace(Regex("\\s+"), " ")
-            .trim()
+        return AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }
     }
 
     private fun parseCsvLine(line: String, delimiter: Char): List<String> {
