@@ -462,13 +462,10 @@ class AvanzaCsvImporter {
 
     private fun matchAsset(nameStr: String): TradableAsset? {
         val trimmed = nameStr.trim()
-        if (Regex("\\b(UR|TR|TO\\d*)\\b", RegexOption.IGNORE_CASE).containsMatchIn(trimmed)) {
+        if (Regex("\\b(UR|TR|TO\\d*|BTU|BTA|IA|IR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(trimmed)) {
             return null
         }
-        val cleanedName = trimmed
-            .replace(Regex("\\b(BTU|BTA|IA)\\b", RegexOption.IGNORE_CASE), "")
-            .trim()
-        val normalizedQuery = normalize(cleanedName)
+        val normalizedQuery = normalize(trimmed)
         val symbol = when {
             normalizedQuery.contains("cereno scientific") -> "CRNO-B.ST"
             normalizedQuery.contains("saltx technology") || normalizedQuery.contains("saltx") -> "SALT-B.ST"

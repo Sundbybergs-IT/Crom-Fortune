@@ -200,4 +200,21 @@ class AvanzaCsvImporterTest {
         assertEquals("AZELIO.ST", transactions.first().symbol)
     }
 
+    @Test
+    fun `import - when avanza csv with paired split for norwegian air shuttle - parses correctly`() {
+        val csvContent = """
+            Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
+            2020-11-24;5011017;Köp;Norwegian Air Shuttle;7000;0,48;-3360;SEK;38;0,96;NOK;NO0010196140;
+            2020-12-17;5011017;Split inlägg värdepapper;Norwegian Air Shuttle;70;48,32;;;;;SEK;NO0010196140;
+            2020-12-17;5011017;Split uttag värdepapper;NAS;-7000;0,48;;;;;SEK;NO9990196140;
+            2020-12-22;5011017;Sälj;Norwegian Air Shuttle;-70;62,8;-4396;SEK;37;0,95;NOK;NO0010196140;
+        """.trimIndent()
+
+        val importer = AvanzaCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        assertEquals(1, result.splits.size)
+        assertTrue(result.splits[0].reverse)
+        assertEquals(100, result.splits[0].quantity)
+    }
+
 }
