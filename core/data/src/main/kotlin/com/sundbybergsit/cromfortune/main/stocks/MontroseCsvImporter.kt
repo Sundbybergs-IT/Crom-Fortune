@@ -27,7 +27,12 @@ class MontroseCsvImporter {
 
         var datumIndex = headers.indexOf("Datum")
         var typIndex = headers.indexOf("Typ")
-        var vardepapperIndex = headers.indexOfFirst { it.contains("Värdepapper", ignoreCase = true) || it.contains("Beskr", ignoreCase = true) }
+        var vardepapperIndex = headers.indexOfFirst {
+            it.contains("Värdepapper", ignoreCase = true) || it.contains(
+                "Beskr",
+                ignoreCase = true
+            )
+        }
         var tickerIndex = headers.indexOf("Ticker")
         var isinIndex = headers.indexOf("ISIN")
         var antalIndex = headers.indexOf("Antal")
@@ -41,7 +46,12 @@ class MontroseCsvImporter {
 
             datumIndex = headers.indexOf("Datum")
             typIndex = headers.indexOf("Typ")
-            vardepapperIndex = headers.indexOfFirst { it.contains("Värdepapper", ignoreCase = true) || it.contains("Beskr", ignoreCase = true) }
+            vardepapperIndex = headers.indexOfFirst {
+                it.contains("Värdepapper", ignoreCase = true) || it.contains(
+                    "Beskr",
+                    ignoreCase = true
+                )
+            }
             tickerIndex = headers.indexOf("Ticker")
             isinIndex = headers.indexOf("ISIN")
             antalIndex = headers.indexOf("Antal")
@@ -60,7 +70,16 @@ class MontroseCsvImporter {
             val line = lines[i]
             if (line.isBlank()) continue
             val columns = parseCsvLine(line, delimiter).map { it.trim() }
-            val maxIndex = maxOf(datumIndex, typIndex, antalIndex, kursIndex, vardepapperIndex, tickerIndex, isinIndex, courtageIndex)
+            val maxIndex = maxOf(
+                datumIndex,
+                typIndex,
+                antalIndex,
+                kursIndex,
+                vardepapperIndex,
+                tickerIndex,
+                isinIndex,
+                courtageIndex
+            )
             if (columns.size <= maxIndex) {
                 continue
             }
@@ -70,12 +89,13 @@ class MontroseCsvImporter {
                 "Köp" -> TransactionAction.BUY
                 "Sälj" -> TransactionAction.SELL
                 "Utdelning" -> TransactionAction.DIVIDEND
-                else -> continue
+                else -> continue // Strictly ignore Insättning, Uttag, VP-överföring, Övrigt, etc.
             }
 
             val isinStr = if (isinIndex != -1 && isinIndex < columns.size) columns[isinIndex] else ""
             val tickerStr = if (tickerIndex != -1 && tickerIndex < columns.size) columns[tickerIndex] else ""
-            val nameStr = if (vardepapperIndex != -1 && vardepapperIndex < columns.size) columns[vardepapperIndex] else ""
+            val nameStr =
+                if (vardepapperIndex != -1 && vardepapperIndex < columns.size) columns[vardepapperIndex] else ""
 
             val matchedAsset = matchAsset(isinStr, tickerStr, nameStr)
             if (matchedAsset == null) {
@@ -99,12 +119,14 @@ class MontroseCsvImporter {
             }
             val quantity = when (action) {
                 TransactionAction.BUY -> {
-                    if (rawQuantity <= BigDecimal.ZERO) {
+                    val absQty = rawQuantity.abs()
+                    if (absQty <= BigDecimal.ZERO) {
                         errors.add("Rad $i: Ogiltigt köpantal")
                         continue
                     }
-                    rawQuantity
+                    absQty
                 }
+
                 TransactionAction.SELL -> {
                     val absQty = rawQuantity.abs()
                     if (absQty <= BigDecimal.ZERO) {
@@ -113,6 +135,7 @@ class MontroseCsvImporter {
                     }
                     absQty
                 }
+
                 TransactionAction.DIVIDEND -> {
                     if (rawQuantity < BigDecimal.ZERO) {
                         errors.add("Rad $i: Ogiltigt utdelningsantal")
@@ -122,7 +145,9 @@ class MontroseCsvImporter {
                 }
             }
 
-            if (action != TransactionAction.DIVIDEND && quantity.scale().coerceAtLeast(0) > matchedAsset.quantityScale) {
+            if (action != TransactionAction.DIVIDEND && quantity.scale()
+                    .coerceAtLeast(0) > matchedAsset.quantityScale
+            ) {
                 errors.add("Rad $i: För många decimaler för ${matchedAsset.symbol}")
                 continue
             }
@@ -138,11 +163,12 @@ class MontroseCsvImporter {
                 continue
             }
 
-            val commissionFee = if (courtageIndex != -1 && courtageIndex < columns.size && columns[courtageIndex].isNotBlank()) {
-                columns[courtageIndex].replace(',', '.').toBigDecimalOrNull() ?: BigDecimal.ZERO
-            } else {
-                BigDecimal.ZERO
-            }
+            val commissionFee =
+                if (courtageIndex != -1 && courtageIndex < columns.size && columns[courtageIndex].isNotBlank()) {
+                    columns[courtageIndex].replace(',', '.').toBigDecimalOrNull() ?: BigDecimal.ZERO
+                } else {
+                    BigDecimal.ZERO
+                }
 
             rawTransactions.add(
                 AssetTransaction(
@@ -169,7 +195,8 @@ class MontroseCsvImporter {
                     } else {
                         val totalQuantity = group.sumOf { it.quantity }
                         val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
-                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP).stripTrailingZeros()
+                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP)
+                                .stripTrailingZeros()
                         } else {
                             first.unitPrice
                         }
@@ -209,7 +236,8 @@ class MontroseCsvImporter {
                 changed = false
                 val currentAssetTransactions = mutableTransactions.filter { it.assetId == assetId }
                 val allEvents = currentAssetTransactions.map { Triple(it.dateInMillis, it.quantity, it) }
-                    .sortedWith(compareBy(
+                    .sortedWith(
+                        compareBy(
                         { it.first },
                         { if (it.third.action == TransactionAction.BUY || it.third.action == TransactionAction.DIVIDEND) 0 else 1 }
                     ))
@@ -228,7 +256,7 @@ class MontroseCsvImporter {
                                     assetType = obj.assetType,
                                     symbol = obj.symbol,
                                     displayName = obj.displayName,
-                                    quoteCurrencyCode = obj.quoteCurrencyCode,
+                                    quoteCurrencyCode = obj.quoteCurrency.currencyCode,
                                     action = TransactionAction.BUY,
                                     dateInMillis = obj.dateInMillis,
                                     unitPrice = BigDecimal.ZERO,
@@ -255,7 +283,8 @@ class MontroseCsvImporter {
                     } else {
                         val totalQuantity = group.sumOf { it.quantity }
                         val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
-                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP).stripTrailingZeros()
+                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP)
+                                .stripTrailingZeros()
                         } else {
                             first.unitPrice
                         }
@@ -281,45 +310,24 @@ class MontroseCsvImporter {
 
     private fun matchAsset(isinStr: String, tickerStr: String, nameStr: String): TradableAsset? {
         val combined = "$isinStr $tickerStr $nameStr"
-        if (Regex("\\b(UR|BTU|BTA|IA|TO|TR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(combined)) {
+        if (Regex("\\b(UR|TR|TO\\d*|BTU|BTA|IA|IR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(combined)) {
             return null
         }
 
-        val normalizedIsin = isinStr.trim().uppercase()
         val normalizedTicker = tickerStr.trim().uppercase()
         val normalizedName = normalize(nameStr)
 
-        val symbol = when (normalizedIsin) {
-            "SE0005308541" -> "SALT-B.ST"
-            "SE0015811963" -> "INVE-B.ST"
-            "SE0008241558" -> "CRNO-B.ST"
-            "SE0005392537" -> "SOLT.ST"
-            "US6745991058" -> "OXY"
-            "US43289P1066" -> "HIMX"
-            "US4581401001" -> "INTC"
-            "US92921W3007" -> "VUZI"
-            "FR0000121014" -> "MC.PA"
-            "SE0012229920" -> "FERRO.ST"
-            "SE0012853455" -> "EQT.ST"
-            "US74767V1098" -> "QS"
-            "US74768A1043" -> "QNT"
-            "US83587W1062" -> "SOS"
-            "SE0023468194" -> "TANGI.ST"
-            else -> when (normalizedTicker) {
-                "SALT B", "SALT" -> "SALT-B.ST"
-                "INVE B", "INVE" -> "INVE-B.ST"
-                "CRNO B", "CRNO" -> "CRNO-B.ST"
-                "OXY" -> "OXY"
-                "HIMX" -> "HIMX"
-                "INTC" -> "INTC"
-                "VUZI" -> "VUZI"
-                "MC" -> "MC.PA"
-                "FERRO" -> "FERRO.ST"
-                "EQT" -> "EQT.ST"
-                "QS" -> "QS"
-                "TANGI" -> "TANGI.ST"
-                else -> null
-            }
+        val symbol = when (normalizedTicker) {
+            "SALT B", "SALT" -> "SALT-B.ST"
+            "INVE B", "INVE", "INVESTOR B" -> "INVE-B.ST"
+            "CRNO B", "CRNO" -> "CRNO-B.ST"
+            "MC" -> "MC.PA"
+            "FERRO" -> "FERRO.ST"
+            "EQT" -> "EQT.ST"
+            "QS" -> "QS"
+            "TANGI" -> "TANGI.ST"
+            "SPACEX" -> "SPCX"
+            else -> null
         }
 
         if (symbol != null) {
@@ -327,24 +335,25 @@ class MontroseCsvImporter {
         }
 
         val nameSymbol = when {
-            normalizedName.contains("cereno scientific") -> "CRNO-B.ST"
-            normalizedName.contains("saltx technology") || normalizedName.contains("saltx") -> "SALT-B.ST"
-            normalizedName.contains("investor") -> "INVE-B.ST"
-            normalizedName.contains("ferroamp") -> "FERRO.ST"
-            normalizedName.contains("soltech energy") || normalizedName.contains("soltech") -> "SOLT.ST"
-            normalizedName.contains("occidental petroleum") || normalizedName.contains("oxy") -> "OXY"
-            normalizedName.contains("intel") -> "INTC"
-            normalizedName.contains("quantumscape") -> "QS"
-            normalizedName.contains("himax") -> "HIMX"
-            normalizedName.contains("vuzix") -> "VUZI"
-            normalizedName.contains("assa abloy") -> "ASSA-B.ST"
-            normalizedName.contains("sbb") -> "SBB-B.ST"
-            normalizedName.contains("nokia") -> "NOKIA-SEK.ST"
-            normalizedName.contains("airbus") -> "AIR.PA"
-            normalizedName.contains("polygiene") -> "POLYG.ST"
-            normalizedName.contains("coinbase") -> "COIN"
-            normalizedName.contains("azelio") -> "AZELIO.ST"
-            normalizedName.contains("lvmh") -> "MC.PA"
+            normalizedName.contentEquals("cereno scientific") -> "CRNO-B.ST"
+            normalizedName.contentEquals("saltx technology") || normalizedName.contentEquals("saltx") -> "SALT-B.ST"
+            normalizedName.contentEquals("investor") || normalizedName.contentEquals("investor b") -> "INVE-B.ST"
+            normalizedName.contentEquals("ferroamp") -> "FERRO.ST"
+            normalizedName.contentEquals("himax technologies") -> "HIMX"
+            normalizedName.contentEquals("soltech energy") || normalizedName.contentEquals("soltech") -> "SOLT.ST"
+            normalizedName.contentEquals("occidental petroleum") || normalizedName.contentEquals("oxy") -> "OXY"
+            normalizedName.contentEquals("intel") -> "INTC"
+            normalizedName.contentEquals("quantumscape") -> "QS"
+            normalizedName.contentEquals("himax") -> "HIMX"
+            normalizedName.contentEquals("vuzix") -> "VUZI"
+            normalizedName.contentEquals("assa abloy") -> "ASSA-B.ST"
+            normalizedName.contentEquals("sbb") -> "SBB-B.ST"
+            normalizedName.contentEquals("nokia") -> "NOKIA-SEK.ST"
+            normalizedName.contentEquals("airbus") -> "AIR.PA"
+            normalizedName.contentEquals("polygiene") -> "POLYG.ST"
+            normalizedName.contentEquals("coinbase") -> "COIN"
+            normalizedName.contentEquals("azelio") -> "AZELIO.ST"
+            normalizedName.contentEquals("lvmh") -> "MC.PA"
             else -> null
         }
         if (nameSymbol != null) {
@@ -353,11 +362,12 @@ class MontroseCsvImporter {
 
         for (asset in AssetCatalog.stocks) {
             val normalizedDisplayName = normalize(asset.displayName)
-            val normalizedAssetSymbol = normalize(asset.symbol)
+            val normalizedSymbol = normalize(asset.symbol)
             if (normalizedDisplayName == normalizedName ||
                 normalizedDisplayName.startsWith(normalizedName) ||
                 normalizedName.startsWith(normalizedDisplayName) ||
-                normalizedAssetSymbol == normalizedName) {
+                normalizedSymbol == normalizedName
+            ) {
                 return asset
             }
         }
@@ -388,6 +398,7 @@ class MontroseCsvImporter {
                         inQuotes = !inQuotes
                     }
                 }
+
                 delimiter -> {
                     if (inQuotes) {
                         cur.append(c)
@@ -396,6 +407,7 @@ class MontroseCsvImporter {
                         cur.setLength(0)
                     }
                 }
+
                 else -> {
                     cur.append(c)
                 }

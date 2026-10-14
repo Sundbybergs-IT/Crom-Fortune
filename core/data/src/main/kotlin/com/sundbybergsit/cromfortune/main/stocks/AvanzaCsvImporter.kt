@@ -107,81 +107,6 @@ class AvanzaCsvImporter {
                 continue
             }
 
-            if (typeStr == "Rensning av värdepapper") {
-                val nameStr = columns[vardepapperIndex]
-                val matchedAsset = matchAsset(nameStr)
-                if (matchedAsset == null) {
-                    continue
-                }
-
-                val dateStr = columns[datumIndex]
-                val dateInMillis = try {
-                    LocalDate.parse(dateStr).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                } catch (_: Exception) {
-                    errors.add("Rad $i: Ogiltigt datumformat '$dateStr'")
-                    continue
-                }
-
-                val antalStr = columns[antalIndex].replace(',', '.')
-                val rawQuantity = antalStr.toBigDecimalOrNull()
-                if (rawQuantity == null) {
-                    errors.add("Rad $i: Ogiltigt antal '$antalStr'")
-                    continue
-                }
-                val quantity = rawQuantity.abs()
-                if (quantity <= BigDecimal.ZERO) {
-                    errors.add("Rad $i: Ogiltigt antal för rensning")
-                    continue
-                }
-
-                if (quantity.scale().coerceAtLeast(0) > matchedAsset.quantityScale) {
-                    errors.add("Rad $i: För många decimaler för ${matchedAsset.symbol}")
-                    continue
-                }
-
-                val currentBalance = rawTransactions.filter { it.assetId == matchedAsset.id }
-                    .fold(BigDecimal.ZERO) { acc, tx ->
-                        when (tx.action) {
-                            TransactionAction.BUY -> acc + tx.quantity
-                            TransactionAction.SELL -> acc - tx.quantity
-                            TransactionAction.DIVIDEND -> acc
-                        }
-                    }
-                if (currentBalance < quantity) {
-                    val deficit = quantity - currentBalance
-                    rawTransactions.add(
-                        AssetTransaction(
-                            assetId = matchedAsset.id,
-                            assetType = matchedAsset.type,
-                            symbol = matchedAsset.symbol,
-                            displayName = matchedAsset.displayName,
-                            quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
-                            action = TransactionAction.BUY,
-                            dateInMillis = dateInMillis,
-                            unitPrice = BigDecimal.ZERO,
-                            commissionFee = BigDecimal.ZERO,
-                            quantity = deficit
-                        )
-                    )
-                }
-
-                rawTransactions.add(
-                    AssetTransaction(
-                        assetId = matchedAsset.id,
-                        assetType = matchedAsset.type,
-                        symbol = matchedAsset.symbol,
-                        displayName = matchedAsset.displayName,
-                        quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
-                        action = TransactionAction.SELL,
-                        dateInMillis = dateInMillis,
-                        unitPrice = BigDecimal.ZERO,
-                        commissionFee = BigDecimal.ZERO,
-                        quantity = quantity
-                    )
-                )
-                continue
-            }
-
             if (columns.size <= maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex, kursIndex)) {
                 continue
             }
@@ -203,6 +128,9 @@ class AvanzaCsvImporter {
                 "Köp", "Nyemission" -> TransactionAction.BUY
                 "Sälj", "Inlösen", "Rensning av värdepapper" -> TransactionAction.SELL
                 "Utdelning", "Utdelning värdepapper" -> TransactionAction.DIVIDEND
+                "Teckning inlägg", "Tilldelning nyemission", "Värdepappersinsättning" -> TransactionAction.BUY
+                "Värdepappersuttag" -> TransactionAction.SELL
+                "Byte", "Byte värdepapper" -> if (rawQuantity >= BigDecimal.ZERO) TransactionAction.BUY else TransactionAction.SELL
                 else -> continue
             }
 
@@ -312,7 +240,7 @@ class AvanzaCsvImporter {
             }
 
         val aggregatedSplits = rawSplitItems.groupBy { Pair(it.symbol, it.dateInMillis) }
-            .mapNotNull { (_, group) ->
+            .flatMap { (_, group) ->
                 val negativeSum = group.filter { it.quantity < BigDecimal.ZERO }.sumOf { it.quantity }.abs()
                 val positiveSum = group.filter { it.quantity >= BigDecimal.ZERO }.sumOf { it.quantity }
                 val symbol = group.first().symbol
@@ -326,24 +254,20 @@ class AvanzaCsvImporter {
                         positiveSum.divide(negativeSum, 0, RoundingMode.HALF_UP)
                     }
                     val factorInt = factorDecimal.toInt().coerceAtLeast(StockSplit.MIN_QUANTITY)
-                    StockSplit(
-                        reverse = reverse,
-                        dateInMillis = dateInMillis,
-                        name = symbol,
-                        quantity = factorInt
-                    )
+                    listOf(StockSplit(reverse = reverse, dateInMillis = dateInMillis, name = symbol, quantity = factorInt))
                 } else {
-                    val single = group.first()
-                    val absQty = single.quantity.abs()
-                    if (absQty >= BigDecimal(StockSplit.MIN_QUANTITY)) {
-                        StockSplit(
-                            reverse = single.quantity > BigDecimal.ZERO,
-                            dateInMillis = dateInMillis,
-                            name = symbol,
-                            quantity = absQty.toInt()
-                        )
-                    } else {
-                        null
+                    group.mapNotNull { single ->
+                        val absQty = single.quantity.abs()
+                        if (absQty >= BigDecimal(StockSplit.MIN_QUANTITY)) {
+                            StockSplit(
+                                reverse = single.quantity > BigDecimal.ZERO,
+                                dateInMillis = dateInMillis,
+                                name = symbol,
+                                quantity = absQty.toInt()
+                            )
+                        } else {
+                            null
+                        }
                     }
                 }
             }
@@ -401,7 +325,7 @@ class AvanzaCsvImporter {
                                             assetType = obj.assetType,
                                             symbol = obj.symbol,
                                             displayName = obj.displayName,
-                                            quoteCurrencyCode = obj.quoteCurrencyCode,
+                                            quoteCurrencyCode = obj.quoteCurrency.currencyCode,
                                             action = TransactionAction.BUY,
                                             dateInMillis = obj.dateInMillis,
                                             unitPrice = BigDecimal.ZERO,
@@ -467,25 +391,25 @@ class AvanzaCsvImporter {
         }
         val normalizedQuery = normalize(trimmed)
         val symbol = when {
-            normalizedQuery.contains("cereno scientific") -> "CRNO-B.ST"
-            normalizedQuery.contains("saltx technology") || normalizedQuery.contains("saltx") -> "SALT-B.ST"
-            normalizedQuery.contains("investor") -> "INVE-B.ST"
-            normalizedQuery.contains("ferroamp") -> "FERRO.ST"
-            normalizedQuery.contains("soltech energy") || normalizedQuery.contains("soltech") -> "SOLT.ST"
-            normalizedQuery.contains("occidental petroleum") || normalizedQuery.contains("oxy") -> "OXY"
-            normalizedQuery.contains("intel") -> "INTC"
-            normalizedQuery.contains("quantumscape") -> "QS"
-            normalizedQuery.contains("himax") -> "HIMX"
-            normalizedQuery.contains("vuzix") -> "VUZI"
-            normalizedQuery.contains("assa abloy") -> "ASSA-B.ST"
-            normalizedQuery.contentEquals("norwegian air shuttle") || normalizedQuery.contentEquals("nas")  -> "NAS.OL"
-            normalizedQuery.contains("sbb") -> "SBB-B.ST"
-            normalizedQuery.contains("nokia") -> "NOKIA-SEK.ST"
-            normalizedQuery.contains("airbus") -> "AIR.PA"
-            normalizedQuery.contains("polygiene") -> "POLYG.ST"
-            normalizedQuery.contains("coinbase") -> "COIN"
-            normalizedQuery.contains("azelio") -> "AZELIO.ST"
-            normalizedQuery.contains("lvmh") -> "MC.PA"
+            normalizedQuery.contentEquals("cereno scientific") || normalizedQuery.contentEquals("cereno scientific b") -> "CRNO-B.ST"
+            normalizedQuery.contentEquals("saltx technology") || normalizedQuery.contentEquals("saltx") -> "SALT-B.ST"
+            normalizedQuery.contentEquals("investor") -> "INVE-B.ST"
+            normalizedQuery.contentEquals("ferroamp") -> "FERRO.ST"
+            normalizedQuery.contentEquals("soltech energy") || normalizedQuery.contentEquals("soltech") || normalizedQuery.contentEquals("soltech energy sweden") -> "SOLT.ST"
+            normalizedQuery.contentEquals("occidental petroleum") || normalizedQuery.contentEquals("oxy") -> "OXY"
+            normalizedQuery.contentEquals("intel") -> "INTC"
+            normalizedQuery.contentEquals("quantumscape") -> "QS"
+            normalizedQuery.contentEquals("himax") -> "HIMX"
+            normalizedQuery.contentEquals("vuzix") -> "VUZI"
+            normalizedQuery.contentEquals("assa abloy") -> "ASSA-B.ST"
+            normalizedQuery == "nas" -> "NAS.OL"
+            normalizedQuery.contentEquals("sbb") -> "SBB-B.ST"
+            normalizedQuery.contentEquals("nokia") -> "NOKIA-SEK.ST"
+            normalizedQuery.contentEquals("airbus") -> "AIR.PA"
+            normalizedQuery.contentEquals("polygiene") -> "POLYG.ST"
+            normalizedQuery.contentEquals("coinbase") -> "COIN"
+            normalizedQuery.contentEquals("azelio") -> "AZELIO.ST"
+            normalizedQuery.contentEquals("lvmh") -> "MC.PA"
             else -> null
         }
         if (symbol != null) {
@@ -511,7 +435,7 @@ class AvanzaCsvImporter {
             .replace("(publ.)", "")
             .replace(Regex("\\s+"), " ")
             .trim()
-    }
+        }
 
     private fun parseCsvLine(line: String, delimiter: Char): List<String> {
         val result = mutableListOf<String>()
