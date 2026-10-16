@@ -60,7 +60,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -68,6 +67,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -100,7 +100,6 @@ import androidx.core.net.toUri
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.sundbybergsit.cromfortune.feature.settings.R as SettingsR
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1RecommendationAlgorithm
@@ -160,6 +159,7 @@ import java.util.Currency
 import java.util.Date
 import kotlin.math.roundToInt
 import androidx.navigation3.runtime.NavKey as androidxNavKey
+import com.sundbybergsit.cromfortune.feature.settings.R as SettingsR
 import com.sundbybergsit.cromfortune.main.ui.transactions.Transactions as TransactionsScreen
 
 private const val DATE_COLUMN_WEIGHT = 1.25f
@@ -619,7 +619,11 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
             )
 
             if (lastKey.isBottomSheet()) {
-                ModalBottomSheet(onDismissRequest = onBack) {
+                val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+                ModalBottomSheet(
+                    sheetState = sheetState,
+                    onDismissRequest = onBack
+                ) {
                     entryProvider(lastKey).Content()
                 }
             }
