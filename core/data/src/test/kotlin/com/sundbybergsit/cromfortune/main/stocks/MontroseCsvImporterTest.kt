@@ -1,6 +1,7 @@
+package com.sundbybergsit.cromfortune.main.stocks
+
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.TransactionAction
-import com.sundbybergsit.cromfortune.main.stocks.MontroseCsvImporter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
