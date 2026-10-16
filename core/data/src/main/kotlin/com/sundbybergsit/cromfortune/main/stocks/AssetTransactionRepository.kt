@@ -39,7 +39,7 @@ class AssetTransactionRepository(
         return entities.map { it.toDomain() }.toSet()
     }
 
-    fun validate(assetId: String, transactions: Set<AssetTransaction>) {
+    fun validate(assetId: String, transactions: Collection<AssetTransaction>) {
         require(transactions.all { transaction -> transaction.assetId == assetId }) {
             "Every transaction must match storage key $assetId"
         }
@@ -52,7 +52,7 @@ class AssetTransactionRepository(
                 { it.dateInMillis },
                 { if (it.action == TransactionAction.BUY || it.action == TransactionAction.DIVIDEND) 0 else 1 }
             )
-        ).toSet()
+        )
         validate(assetId, sortedTransactions)
         dao.deleteForAsset(portfolioName, assetId)
         val entities = sortedTransactions.map { AssetTransactionEntity.fromDomain(portfolioName, it) }
@@ -96,11 +96,11 @@ class AssetTransactionRepository(
         putAll(updated.assetId, updatedTransactions)
     }
 
-    private fun validateChronologicalBalance(transactions: Set<AssetTransaction>) {
+    private fun validateChronologicalBalance(transactions: Collection<AssetTransaction>) {
         if (transactions.isEmpty()) return
         val first = transactions.first()
         val symbol = first.symbol
         val splits = stockSplitApi.list(symbol)
-        ChronologicalBalanceValidator.validate(transactions, splits)
+        ChronologicalBalanceValidator.validate(transactions.toSet(), splits)
     }
 }

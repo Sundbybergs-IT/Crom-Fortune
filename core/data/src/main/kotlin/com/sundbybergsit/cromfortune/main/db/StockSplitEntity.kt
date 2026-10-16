@@ -45,6 +45,9 @@ interface StockSplitDao {
     @Query("SELECT * FROM stock_splits WHERE portfolioName = :portfolioName AND name = :stockName")
     fun getSplitsForStock(portfolioName: String, stockName: String): List<StockSplitEntity>
 
+    @Query("SELECT * FROM stock_splits WHERE portfolioName = :portfolioName")
+    fun getSplitsForPortfolio(portfolioName: String): List<StockSplitEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(splits: List<StockSplitEntity>)
 

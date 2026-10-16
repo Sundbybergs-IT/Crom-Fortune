@@ -2,6 +2,7 @@ package com.sundbybergsit.cromfortune.main.stocks
 
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetTransaction
+import com.sundbybergsit.cromfortune.domain.StockSplit
 import com.sundbybergsit.cromfortune.domain.TradableAsset
 import com.sundbybergsit.cromfortune.domain.TransactionAction
 import java.io.InputStream
@@ -13,7 +14,11 @@ import java.time.ZoneId
 
 class MontroseCsvImporter {
 
-    fun import(inputStream: InputStream): ImportResult {
+    fun import(
+        inputStream: InputStream,
+        existingTransactions: Collection<AssetTransaction> = emptyList(),
+        existingSplits: Collection<StockSplit> = emptyList()
+    ): ImportResult {
         val bytes = inputStream.readBytes()
         val errors = mutableListOf<String>()
         if (bytes.isEmpty()) {
@@ -64,10 +69,10 @@ class MontroseCsvImporter {
             throw IllegalArgumentException("Invalid Montrose CSV format: missing required columns")
         }
 
-        val rawTransactions = mutableListOf<AssetTransaction>()
+        val rawTransactions = existingTransactions.toMutableList()
 
         for (i in 1 until lines.size) {
-            val line = lines[i]
+            val line = lines[lines.size-i]
             if (line.isBlank()) continue
             val columns = parseCsvLine(line, delimiter).map { it.trim() }
             val maxIndex = maxOf(
@@ -89,7 +94,7 @@ class MontroseCsvImporter {
                 "Köp" -> TransactionAction.BUY
                 "Sälj" -> TransactionAction.SELL
                 "Utdelning" -> TransactionAction.DIVIDEND
-                else -> continue // Strictly ignore Insättning, Uttag, VP-överföring, Övrigt, etc.
+                else -> continue
             }
 
             val isinStr = if (isinIndex != -1 && isinIndex < columns.size) columns[isinIndex] else ""
@@ -219,99 +224,39 @@ class MontroseCsvImporter {
                 }
             }
 
-        val balancedTransactions = ensureChronologicalBalance(aggregatedTransactions)
+        val combined = existingTransactions + aggregatedTransactions
+        val balancedCombined = ChronologicalBalanceValidator.ensureChronologicalBalance(combined, existingSplits)
+        val syntheticTransactions = balancedCombined.drop(combined.size)
+        val newTransactions = aggregatedTransactions + syntheticTransactions
 
-        return ImportResult(balancedTransactions, errors)
-    }
-
-    private fun ensureChronologicalBalance(
-        transactions: List<AssetTransaction>
-    ): List<AssetTransaction> {
-        val mutableTransactions = transactions.toMutableList()
-
-        val assetIds = transactions.map { it.assetId }.distinct()
-        for (assetId in assetIds) {
-            var changed = true
-            while (changed) {
-                changed = false
-                val currentAssetTransactions = mutableTransactions.filter { it.assetId == assetId }
-                val allEvents = currentAssetTransactions.map { Triple(it.dateInMillis, it.quantity, it) }
-                    .sortedWith(
-                        compareBy(
-                            { it.first },
-                            { if (it.third.action == TransactionAction.BUY || it.third.action == TransactionAction.DIVIDEND) 0 else 1 }
-                        ))
-
-                var balance = BigDecimal.ZERO
-                for (event in allEvents) {
-                    val obj = event.third
-                    when (obj.action) {
-                        TransactionAction.BUY -> balance += obj.quantity
-                        TransactionAction.DIVIDEND -> {}
-                        TransactionAction.SELL -> {
-                            if (balance < obj.quantity) {
-                                val deficit = obj.quantity - balance
-                                val syntheticBuy = AssetTransaction(
-                                    assetId = obj.assetId,
-                                    assetType = obj.assetType,
-                                    symbol = obj.symbol,
-                                    displayName = obj.displayName,
-                                    quoteCurrencyCode = obj.quoteCurrency.currencyCode,
-                                    action = TransactionAction.BUY,
-                                    dateInMillis = obj.dateInMillis,
-                                    unitPrice = BigDecimal.ZERO,
-                                    commissionFee = BigDecimal.ZERO,
-                                    quantity = deficit
-                                )
-                                mutableTransactions.add(syntheticBuy)
-                                changed = true
-                                break
-                            }
-                            balance -= obj.quantity
-                        }
-                    }
-                }
-            }
-        }
-
-        return mutableTransactions.groupBy { Triple(it.assetId, it.action, it.dateInMillis) }
-            .map { (_, group) ->
-                val first = group.first()
-                if (first.action == TransactionAction.DIVIDEND) {
-                    if (group.size == 1) {
-                        first
-                    } else {
-                        val totalQuantity = group.sumOf { it.quantity }
-                        val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
-                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP)
-                                .stripTrailingZeros()
-                        } else {
-                            first.unitPrice
-                        }
-                        first.copy(quantity = totalQuantity, unitPrice = avgPrice)
-                    }
-                } else {
-                    val totalQuantity = group.sumOf { it.quantity }
-                    val totalCost = group.sumOf { it.quantity * it.unitPrice }
-                    val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
-                        totalCost.divide(totalQuantity, 8, RoundingMode.HALF_UP).stripTrailingZeros()
-                    } else {
-                        BigDecimal.ZERO
-                    }
-                    val totalCommission = group.sumOf { it.commissionFee }
-                    first.copy(
-                        quantity = totalQuantity,
-                        unitPrice = avgPrice,
-                        commissionFee = totalCommission
-                    )
-                }
-            }
+        return ImportResult(newTransactions, errors)
     }
 
     private fun matchAsset(isinStr: String, tickerStr: String, nameStr: String): TradableAsset? {
         val combined = "$isinStr $tickerStr $nameStr"
         if (Regex("\\b(UR|TR|TO\\d*|BTU|BTA|IA|IR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(combined)) {
             return null
+        }
+
+        if (isinStr.isNotBlank()) {
+            val symbolByIsin = when (isinStr.trim().uppercase()) {
+                "SE0005308541" -> "SALT-B.ST"
+                "US4581401001" -> "INTC"
+                "SE0015811963" -> "INVE-B.ST"
+                "SE0008241558" -> "CRNO-B.ST"
+                "US74767V1098" -> "QS"
+                "US6745991058" -> "OXY"
+                "US92921W3007" -> "VUZI"
+                "US43289P1066" -> "HIMX"
+                "FR0000121014" -> "MC.PA"
+                "SE0012229920" -> "FERRO.ST"
+                "SE0005392537" -> "SOLT.ST"
+                else -> null
+            }
+            if (symbolByIsin != null) {
+                val found = AssetCatalog.stocks.find { it.symbol.equals(symbolByIsin, ignoreCase = true) }
+                if (found != null) return found
+            }
         }
 
         val symbol = when (val normalizedTicker = tickerStr.trim().uppercase()) {
@@ -325,10 +270,97 @@ class MontroseCsvImporter {
             "TANGI" -> "TANGI.ST"
             "QNT.NAS" -> "QNT"
             "SPACEX" -> "SPCX"
+            "SOLT" -> "SOLT.ST"
+            "SOLTECH" -> "SOLT.ST"
+            "AZELIO" -> "AZELIO.ST"
+            "POLYG" -> "POLYG.ST"
+            "SHOT" -> "SHOT.ST"
+            "GBK" -> "GBK.ST"
+            "IPCO" -> "IPCO.ST"
+            "SAND" -> "SAND.ST"
+            "SAS" -> "SAS.ST"
+            "SBB B" -> "SBB-B.ST"
+            "SHB A" -> "SHB-A.ST"
             else -> normalizedTicker
         }
 
-        return AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }
+        val directMatch = AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }
+        if (directMatch != null) {
+            return directMatch
+        }
+
+        val stMatch = AssetCatalog.stocks.find { it.symbol.equals("$symbol.ST", ignoreCase = true) }
+        if (stMatch != null) {
+            return stMatch
+        }
+
+        return matchAssetByName(nameStr)
+    }
+
+    private fun matchAssetByName(nameStr: String): TradableAsset? {
+        val trimmed = nameStr.trim()
+        if (trimmed.isBlank()) return null
+        val normalizedQuery = normalize(trimmed)
+        val symbol = when {
+            normalizedQuery == "air canada inc." -> "AC.TO"
+            normalizedQuery == "airbus" -> "AIR.PA"
+            normalizedQuery == "assa abloy" || normalizedQuery == "assa abloy b" -> "ASSA-B.ST"
+            normalizedQuery == "azelio" || normalizedQuery == "azelio ab" -> "AZELIO.ST"
+            normalizedQuery == "cereno scientific" || normalizedQuery == "cereno scientific b" -> "CRNO-B.ST"
+            normalizedQuery == "cloudberry clean energy" -> "CLOUD.OL"
+            normalizedQuery == "coinbase" -> "COIN"
+            normalizedQuery == "deutsche lufthansa ag" -> "LHA.F"
+            normalizedQuery == "eolus b" -> "EOLU-B.ST"
+            normalizedQuery == "ferroamp" -> "FERRO.ST"
+            normalizedQuery == "goodbye kansas group" -> "GBK.ST"
+            normalizedQuery == "Grace Therapeutics, Inc." -> "GRCE"
+            normalizedQuery == "himax" -> "HIMX"
+            normalizedQuery == "intel" -> "INTC"
+            normalizedQuery == "international petroleum corp." -> "IPCO.ST"
+            normalizedQuery == "investor" || normalizedQuery == "investor b" -> "INVE-B.ST"
+            normalizedQuery == "lvmh" || normalizedQuery == "lvmh moet hennessy louis vuitton" -> "MC.PA"
+            normalizedQuery == "mips" -> "MIPS.ST"
+            normalizedQuery == "nas" -> "NAS.OL"
+            normalizedQuery == "nokia" -> "NOKIA-SEK.ST"
+            normalizedQuery == "occidental petroleum" || normalizedQuery == "oxy" || normalizedQuery == "occidental petroleum corp" -> "OXY"
+            normalizedQuery == "polygiene" -> "POLYG.ST"
+            normalizedQuery == "quantumscape" -> "QS"
+            normalizedQuery == "rocket companies" -> "RKT"
+            normalizedQuery == "saltx technology holding b" -> "SALT-B.ST"
+            normalizedQuery == "sas" -> "SAS.ST"
+            normalizedQuery == "sbb" || normalizedQuery.startsWith("sbb") -> "SBB-B.ST"
+            normalizedQuery == "scandic hotels group" -> "SHOT.ST"
+            normalizedQuery == "soltech energy" || normalizedQuery == "soltech" || normalizedQuery ==
+                "soltech energy sweden" || normalizedQuery == "soltech energy sweden ab"
+                -> "SOLT.ST"
+            normalizedQuery == "tesla" -> "TSLA"
+            normalizedQuery == "vuzix" -> "VUZI"
+            else -> null
+        }
+        if (symbol != null) {
+            return AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }
+        }
+
+        for (asset in AssetCatalog.stocks) {
+            val normalizedDisplayName = normalize(asset.displayName)
+            val normalizedSymbol = normalize(asset.symbol)
+            if (normalizedDisplayName == normalizedQuery ||
+                normalizedDisplayName.startsWith(normalizedQuery) ||
+                normalizedQuery.startsWith(normalizedDisplayName) ||
+                normalizedSymbol == normalizedQuery
+            ) {
+                return asset
+            }
+        }
+        return null
+    }
+
+    private fun normalize(str: String): String {
+        return str.lowercase()
+            .replace("(publ)", "")
+            .replace("(publ.)", "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
     }
 
     private fun parseCsvLine(line: String, delimiter: Char): List<String> {

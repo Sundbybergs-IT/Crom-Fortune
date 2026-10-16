@@ -1,13 +1,17 @@
-package com.sundbybergsit.cromfortune.main.stocks
-
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sundbybergsit.cromfortune.domain.TransactionAction
+import com.sundbybergsit.cromfortune.main.stocks.MontroseCsvImporter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
 
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [Config.OLDEST_SDK])
 class MontroseCsvImporterTest {
 
     @Test
@@ -60,6 +64,35 @@ class MontroseCsvImporterTest {
     }
 
     @Test
+    fun `import - when multiple buy and sell on same day - aggregates quantity weighted average price and courtage`() {
+        val csvContent = """
+            Datum,Typ,Konto,Värdepapper / Beskr.,Ticker,ISIN,Antal,Kurs,Kursvaluta,Totalt,Totalvaluta,Courtage,Courtagevaluta
+            2025-08-21,Köp,2364560,Intel,INTC,US4581401001,150,22.95,USD,-33194.94,SEK,49.72,SEK
+            2025-08-21,Sälj,2149201,Intel,INTC,US4581401001,-150,23.05,USD,33145.76,SEK,49.79,SEK
+            2025-08-21,Köp,2149201,Intel,INTC,US4581401001,150,22.99,USD,-33256.78,SEK,49.81,SEK
+        """.trimIndent()
+
+        val importer = MontroseCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val transactions = result.transactions
+
+        assertEquals(2, transactions.size)
+
+        val buyTx = transactions[0]
+        assertEquals(TransactionAction.BUY, buyTx.action)
+        assertEquals("INTC", buyTx.symbol)
+        assertEquals(BigDecimal("300"), buyTx.quantity)
+        assertEquals(BigDecimal("22.97"), buyTx.unitPrice)
+        assertEquals(BigDecimal("99.53").toDouble(), buyTx.commissionFee.toDouble(), 0.1)
+        val sellTx = transactions[1]
+        assertEquals(TransactionAction.SELL, sellTx.action)
+        assertEquals("INTC", sellTx.symbol)
+        assertEquals(BigDecimal("150"), sellTx.quantity)
+        assertEquals(BigDecimal("23.05"), sellTx.unitPrice)
+        assertEquals(BigDecimal("49.79").toDouble(), sellTx.commissionFee.toDouble(), 0.1)
+    }
+
+    @Test
     fun `import - when multiple purchases on same day - aggregates quantity weighted average price and courtage`() {
         val csvContent = """
             Datum,Typ,Konto,Värdepapper / Beskr.,Ticker,ISIN,Antal,Kurs,Kursvaluta,Totalt,Totalvaluta,Courtage,Courtagevaluta
@@ -99,6 +132,24 @@ class MontroseCsvImporterTest {
         assertTrue(transactions.any { it.symbol == "INTC" && it.action == TransactionAction.SELL })
         assertTrue(transactions.any { it.symbol == "MC.PA" && it.action == TransactionAction.SELL })
         assertTrue(transactions.any { it.symbol == "OXY" && it.action == TransactionAction.DIVIDEND })
+    }
+
+    @Test
+    fun `import - when montrose csv with intel sell on 2025-03-17 - parses action and price correctly`() {
+        val csvContent = """
+            Datum,Typ,Konto,Värdepapper / Beskr.,Ticker,ISIN,Antal,Kurs,Kursvaluta,Totalt,Totalvaluta,Courtage,Courtagevaluta
+            2025-03-17,Sälj,2149201,Intel,INTC,US4581401001,-40,26.03,USD,10498.86,SEK,10.51,SEK
+        """.trimIndent()
+
+        val importer = MontroseCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
+        val transactions = result.transactions
+
+        assertEquals(2, transactions.size)
+        val sellTx = transactions.find { it.action == TransactionAction.SELL }!!
+        assertEquals(TransactionAction.SELL, sellTx.action)
+        assertEquals(BigDecimal("40"), sellTx.quantity)
+        assertEquals(BigDecimal("26.03"), sellTx.unitPrice)
     }
 
     @Test

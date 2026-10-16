@@ -4,6 +4,8 @@ interface StockSplitApi {
 
     fun list(stockName: String): Set<StockSplit>
 
+    fun listAll(): Set<StockSplit> = emptySet()
+
     fun putAll(stockName: String, stockSplits: Set<StockSplit>)
 
     fun putReplacingAll(stockName: String, stockSplit: StockSplit)

@@ -51,6 +51,10 @@ class StockSplitRepository(
         return dao.getSplitsForStock(porfolioName, stockName).map { it.toDomain() }.toSet()
     }
 
+    override fun listAll(): Set<StockSplit> {
+        return dao.getSplitsForPortfolio(porfolioName).map { it.toDomain() }.toSet()
+    }
+
     override fun putAll(stockName: String, stockSplits: Set<StockSplit>) {
         val assetId = AssetCatalog.stocks.find { it.symbol.equals(stockName, ignoreCase = true) }?.id ?: "stock:$stockName"
         val transactions = transactionDao.getTransactionsForAsset(porfolioName, assetId).map { it.toDomain() }.toSet()

@@ -349,11 +349,16 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 ) { uri ->
                     if (uri != null) {
                         try {
+                            val transactionRepository = AssetTransactionRepository(localContext, portfolioName)
+                            val splitRepository = StockSplitRepository(localContext, portfolioName)
+                            val existingTransactions = transactionRepository.assetIds().flatMap { transactionRepository.list(it) }
+                            val existingSplits = splitRepository.listAll()
+
                             val importResult = localContext.contentResolver.openInputStream(uri)?.use { inputStream ->
                                 if (selectedImporter == "Montrose") {
-                                    MontroseCsvImporter().import(inputStream)
+                                    MontroseCsvImporter().import(inputStream, existingTransactions, existingSplits)
                                 } else {
-                                    AvanzaCsvImporter().import(inputStream)
+                                    AvanzaCsvImporter().import(inputStream, existingTransactions, existingSplits)
                                 }
                             } ?: ImportResult(emptyList(), emptyList())
                             
@@ -362,9 +367,6 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                             val importErrors = importResult.errors.toMutableList()
 
                             if (transactions.isNotEmpty() || splits.isNotEmpty()) {
-                                val transactionRepository = AssetTransactionRepository(localContext, portfolioName)
-                                val splitRepository = StockSplitRepository(localContext, portfolioName)
-                                
                                 val groupedTransactions = transactions.groupBy { it.assetId }
                                 val groupedSplits = splits.groupBy { it.name }
                                 

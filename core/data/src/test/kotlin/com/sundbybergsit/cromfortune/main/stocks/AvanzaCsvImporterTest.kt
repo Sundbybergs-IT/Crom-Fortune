@@ -44,9 +44,9 @@ class AvanzaCsvImporterTest {
         val csvContent = """
             Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
             2024-12-19;5011017;Köp;Investor B;10;290,7;-2914;SEK;7,27;;SEK;SE0015811963;
-            2024-01-01;5011017;Köp;Nokia;360;30,-10800;SEK;10;;SEK;FI0009000681;
+            2024-01-01;5011017;Köp;Nokia;360;30;-10800;SEK;10;;SEK;FI0009000681;
             2024-06-17;5011017;Sälj;Nokia;-360;38,335;13766;SEK;35;;SEK;FI0009000681;-3689,55493
-            2024-01-01;5011017;Köp;SBB Norden B;500;5,-2500;SEK;10;;SEK;SE0009554454;
+            2024-01-01;5011017;Köp;SBB Norden B;500;5;-2500;SEK;10;;SEK;SE0009554454;
             2024-07-26;5011017;Sälj;SBB Norden B;-500;6,6;3292;SEK;8;;SEK;SE0009554454;146,334452
         """.trimIndent()
 
@@ -147,15 +147,13 @@ class AvanzaCsvImporterTest {
 
         assertEquals(2, splits.size)
 
-        val split1 = splits[0]
+        val split1 = splits.find { it.quantity == 2 }!!
         assertTrue(split1.reverse)
         assertEquals("CRNO-B.ST", split1.name)
-        assertEquals(2, split1.quantity)
 
-        val split2 = splits[1]
+        val split2 = splits.find { it.quantity == 5 }!!
         assertFalse(split2.reverse)
         assertEquals("CRNO-B.ST", split2.name)
-        assertEquals(5, split2.quantity)
     }
 
     @Test
@@ -167,7 +165,7 @@ class AvanzaCsvImporterTest {
 
         val importer = AvanzaCsvImporter()
         val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()))
-        val transactions = result.transactions
+        val transactions = ChronologicalBalanceValidator.ensureChronologicalBalance(result.transactions)
 
         assertEquals(2, transactions.size)
 

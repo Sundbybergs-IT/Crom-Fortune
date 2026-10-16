@@ -8,6 +8,119 @@ import java.math.RoundingMode
 
 object ChronologicalBalanceValidator {
 
+    fun ensureChronologicalBalance(
+        transactions: Collection<AssetTransaction>,
+        splits: Collection<StockSplit> = emptyList()
+    ): List<AssetTransaction> {
+        if (transactions.isEmpty()) return emptyList()
+        val mutableTransactions = transactions.toMutableList()
+        val splitsBySymbol = splits.groupBy { it.name }
+
+        val assetIds = transactions.map { it.assetId }.distinct()
+        for (assetId in assetIds) {
+            var changed = true
+            while (changed) {
+                changed = false
+                val currentAssetTransactions = mutableTransactions.filter { it.assetId == assetId }
+                if (currentAssetTransactions.isEmpty()) continue
+                val symbol = currentAssetTransactions.first().symbol
+                val assetSplits = splitsBySymbol[symbol] ?: emptyList()
+
+                val allEvents = (currentAssetTransactions.map { Triple(it.dateInMillis, it.quantity, it as Any) } +
+                    assetSplits.map {
+                        Triple(
+                            it.dateInMillis,
+                            it.quantity.toBigDecimal(),
+                            if (it.reverse) "REVERSE_SPLIT" else "SPLIT" as Any
+                        )
+                    })
+                    .sortedWith(
+                        compareBy(
+                            { it.first },
+                            {
+                                val obj = it.third
+                                when (obj) {
+                                    is AssetTransaction -> if (obj.action == TransactionAction.BUY || obj.action == TransactionAction.DIVIDEND) 0 else 1
+                                    else -> 0
+                                }
+                            }
+                        ))
+
+                var balance = BigDecimal.ZERO
+                for (event in allEvents) {
+                    when (val obj = event.third) {
+                        is AssetTransaction -> {
+                            when (obj.action) {
+                                TransactionAction.BUY -> balance += obj.quantity
+                                TransactionAction.DIVIDEND -> {}
+                                TransactionAction.SELL -> {
+                                    if (balance < obj.quantity) {
+                                        val deficit = obj.quantity - balance
+                                        val syntheticBuy = AssetTransaction(
+                                            assetId = obj.assetId,
+                                            assetType = obj.assetType,
+                                            symbol = obj.symbol,
+                                            displayName = obj.displayName,
+                                            quoteCurrencyCode = obj.quoteCurrency.currencyCode,
+                                            action = TransactionAction.BUY,
+                                            dateInMillis = obj.dateInMillis,
+                                            unitPrice = BigDecimal.ZERO,
+                                            commissionFee = BigDecimal.ZERO,
+                                            quantity = deficit
+                                        )
+                                        mutableTransactions.add(syntheticBuy)
+                                        changed = true
+                                        break
+                                    }
+                                    balance -= obj.quantity
+                                }
+                            }
+                        }
+                        "SPLIT" -> {
+                            balance = balance.multiply(event.second)
+                        }
+                        "REVERSE_SPLIT" -> {
+                            balance = balance.divide(event.second, 16, RoundingMode.DOWN)
+                        }
+                    }
+                }
+            }
+        }
+
+        return mutableTransactions.groupBy { Triple(it.assetId, it.action, it.dateInMillis) }
+            .map { (_, group) ->
+                val first = group.first()
+                if (first.action == TransactionAction.DIVIDEND) {
+                    if (group.size == 1) {
+                        first
+                    } else {
+                        val totalQuantity = group.sumOf { it.quantity }
+                        val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
+                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP)
+                                .stripTrailingZeros()
+                        } else {
+                            first.unitPrice
+                        }
+                        first.copy(quantity = totalQuantity, unitPrice = avgPrice)
+                    }
+                } else {
+                    val totalQuantity = group.sumOf { it.quantity }
+                    val totalCost = group.sumOf { it.quantity * it.unitPrice }
+                    val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
+                        totalCost.divide(totalQuantity, 8, RoundingMode.HALF_UP).stripTrailingZeros()
+                    } else {
+                        BigDecimal.ZERO
+                    }
+                    val totalCommission = group.sumOf { it.commissionFee }
+                    first.copy(
+                        quantity = totalQuantity,
+                        unitPrice = avgPrice,
+                        commissionFee = totalCommission
+                    )
+                }
+            }
+    }
+
     fun validate(transactions: Set<AssetTransaction>, splits: Set<StockSplit>) {
         if (transactions.isEmpty()) return
 

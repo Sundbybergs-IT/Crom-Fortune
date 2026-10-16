@@ -27,7 +27,11 @@ private data class RawSplitItem(
 
 class AvanzaCsvImporter {
 
-    fun import(inputStream: InputStream): ImportResult {
+    fun import(
+        inputStream: InputStream,
+        existingTransactions: Collection<AssetTransaction> = emptyList(),
+        existingSplits: Collection<StockSplit> = emptyList()
+    ): ImportResult {
         val bytes = inputStream.readBytes()
         val errors = mutableListOf<String>()
         if (bytes.isEmpty()) {
@@ -68,7 +72,7 @@ class AvanzaCsvImporter {
         val rawSplitItems = mutableListOf<RawSplitItem>()
 
         for (i in 1 until lines.size) {
-            val line = lines[i]
+            val line = lines[lines.size-i]
             if (line.isBlank()) continue
             val columns = parseCsvLine(line, delimiter).map { it.trim() }
             val minIndexForType = maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex)
@@ -111,8 +115,10 @@ class AvanzaCsvImporter {
                 continue
             }
 
+            val isinIndex = headers.indexOf("ISIN")
+            val isinStr = if (isinIndex != -1 && isinIndex < columns.size) columns[isinIndex] else ""
             val nameStr = columns[vardepapperIndex]
-            val matchedAsset = matchAsset(nameStr)
+            val matchedAsset = matchAsset(nameStr, isinStr)
             if (matchedAsset == null) {
                 // Ignore rights / BTU / BTA / IA / TO / TR / unmapped assets
                 continue
@@ -125,12 +131,9 @@ class AvanzaCsvImporter {
             }
 
             val action = when (typeStr) {
-                "Köp", "Nyemission" -> TransactionAction.BUY
-                "Sälj", "Inlösen", "Rensning av värdepapper" -> TransactionAction.SELL
+                "Köp", -> TransactionAction.BUY
+                "Sälj",  "Rensning av värdepapper" -> TransactionAction.SELL
                 "Utdelning", "Utdelning värdepapper" -> TransactionAction.DIVIDEND
-                "Teckning inlägg", "Tilldelning nyemission", "Värdepappersinsättning" -> TransactionAction.BUY
-                "Värdepappersuttag" -> TransactionAction.SELL
-                "Byte", "Byte värdepapper" -> if (rawQuantity >= BigDecimal.ZERO) TransactionAction.BUY else TransactionAction.SELL
                 else -> continue
             }
 
@@ -287,127 +290,38 @@ class AvanzaCsvImporter {
             .groupBy { Triple(it.name, it.dateInMillis, it.reverse) }
             .map { (_, group) -> group.first() }
 
-        val balancedTransactions = ensureChronologicalBalance(aggregatedTransactions, aggregatedSplits)
+        val combinedTransactions = existingTransactions + aggregatedTransactions
+        val combinedSplits = existingSplits + aggregatedSplits
+        val balancedCombined = ChronologicalBalanceValidator.ensureChronologicalBalance(combinedTransactions, combinedSplits)
+        val syntheticTransactions = balancedCombined.drop(combinedTransactions.size)
+        val newTransactions = aggregatedTransactions + syntheticTransactions
 
-        return ImportResult(balancedTransactions, errors, aggregatedSplits)
+        return ImportResult(newTransactions, errors, aggregatedSplits)
     }
 
-    private fun ensureChronologicalBalance(
-        transactions: List<AssetTransaction>,
-        splits: List<StockSplit>
-    ): List<AssetTransaction> {
-        val mutableTransactions = transactions.toMutableList()
-        val splitsBySymbol = splits.groupBy { it.name }
-
-        val assetIds = transactions.map { it.assetId }.distinct()
-        for (assetId in assetIds) {
-            val assetTransactions = mutableTransactions.filter { it.assetId == assetId }
-            if (assetTransactions.isEmpty()) continue
-            val symbol = assetTransactions.first().symbol
-            val assetSplits = splitsBySymbol[symbol] ?: emptyList()
-
-            var changed = true
-            while (changed) {
-                changed = false
-                val currentAssetTransactions = mutableTransactions.filter { it.assetId == assetId }
-                val allEvents = (currentAssetTransactions.map { Triple(it.dateInMillis, it.quantity, it as Any) } +
-                    assetSplits.map {
-                        Triple(
-                            it.dateInMillis,
-                            it.quantity.toBigDecimal(),
-                            if (it.reverse) "REVERSE_SPLIT" else "SPLIT" as Any
-                        )
-                    })
-                    .sortedWith(
-                        compareBy(
-                            { it.first },
-                            {
-                                val obj = it.third
-                                when (obj) {
-                                    is AssetTransaction -> if (obj.action == TransactionAction.BUY || obj.action == TransactionAction.DIVIDEND) 0 else 1
-                                    else -> 0
-                                }
-                            }
-                        ))
-
-                var balance = BigDecimal.ZERO
-                for (event in allEvents) {
-                    when (val obj = event.third) {
-                        is AssetTransaction -> {
-                            when (obj.action) {
-                                TransactionAction.BUY -> balance += obj.quantity
-                                TransactionAction.DIVIDEND -> {}
-                                TransactionAction.SELL -> {
-                                    if (balance < obj.quantity) {
-                                        val deficit = obj.quantity - balance
-                                        val syntheticBuy = AssetTransaction(
-                                            assetId = obj.assetId,
-                                            assetType = obj.assetType,
-                                            symbol = obj.symbol,
-                                            displayName = obj.displayName,
-                                            quoteCurrencyCode = obj.quoteCurrency.currencyCode,
-                                            action = TransactionAction.BUY,
-                                            dateInMillis = obj.dateInMillis,
-                                            unitPrice = BigDecimal.ZERO,
-                                            commissionFee = BigDecimal.ZERO,
-                                            quantity = deficit
-                                        )
-                                        mutableTransactions.add(syntheticBuy)
-                                        changed = true
-                                        break
-                                    }
-                                    balance -= obj.quantity
-                                }
-                            }
-                        }
-
-                        is String -> {
-                            when (obj) {
-                                "SPLIT" -> balance = balance.multiply(event.second)
-                                "REVERSE_SPLIT" -> balance = balance.divide(event.second, 16, RoundingMode.DOWN)
-                            }
-                        }
-                    }
-                }
+    private fun matchAsset(nameStr: String, isinStr: String = ""): TradableAsset? {
+        if (isinStr.isNotBlank()) {
+            val symbolByIsin = when (isinStr.trim().uppercase()) {
+                "SE0005308541" -> "SALT-B.ST"
+                "US4581401001" -> "INTC"
+                "SE0015811963" -> "INVE-B.ST"
+                "SE0008241558" -> "CRNO-B.ST"
+                "US74767V1098" -> "QS"
+                "US6745991058" -> "OXY"
+                "US92921W3007" -> "VUZI"
+                "US43289P1066" -> "HIMX"
+                "FR0000121014" -> "MC.PA"
+                "SE0012229920" -> "FERRO.ST"
+                "SE0005392537" -> "SOLT.ST"
+                else -> null
+            }
+            if (symbolByIsin != null) {
+                val found = AssetCatalog.stocks.find { it.symbol.equals(symbolByIsin, ignoreCase = true) }
+                if (found != null) return found
             }
         }
-
-        return mutableTransactions.groupBy { Triple(it.assetId, it.action, it.dateInMillis) }
-            .map { (_, group) ->
-                val first = group.first()
-                if (first.action == TransactionAction.DIVIDEND) {
-                    if (group.size == 1) {
-                        first
-                    } else {
-                        val totalQuantity = group.sumOf { it.quantity }
-                        val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
-                            group.sumOf { it.quantity * it.unitPrice }.divide(totalQuantity, 8, RoundingMode.HALF_UP)
-                                .stripTrailingZeros()
-                        } else {
-                            first.unitPrice
-                        }
-                        first.copy(quantity = totalQuantity, unitPrice = avgPrice)
-                    }
-                } else {
-                    val totalQuantity = group.sumOf { it.quantity }
-                    val totalCost = group.sumOf { it.quantity * it.unitPrice }
-                    val avgPrice = if (totalQuantity > BigDecimal.ZERO) {
-                        totalCost.divide(totalQuantity, 8, RoundingMode.HALF_UP).stripTrailingZeros()
-                    } else {
-                        BigDecimal.ZERO
-                    }
-                    val totalCommission = group.sumOf { it.commissionFee }
-                    first.copy(
-                        quantity = totalQuantity,
-                        unitPrice = avgPrice,
-                        commissionFee = totalCommission
-                    )
-                }
-            }
-    }
-
-    private fun matchAsset(nameStr: String): TradableAsset? {
         val trimmed = nameStr.trim()
+        if (trimmed.isBlank()) return null
         if (Regex("\\b(UR|TR|TO\\d*|BTU|BTA|IA|IR)\\b", RegexOption.IGNORE_CASE).containsMatchIn(trimmed)) {
             return null
         }
@@ -429,7 +343,7 @@ class AvanzaCsvImporter {
             normalizedQuery == "himax" -> "HIMX"
             normalizedQuery == "intel" -> "INTC"
             normalizedQuery == "international petroleum corp." -> "IPCO.ST"
-            normalizedQuery == "investor" -> "INVE-B.ST"
+            normalizedQuery == "investor" || normalizedQuery == "investor b" -> "INVE-B.ST"
             normalizedQuery == "lvmh" -> "MC.PA"
             normalizedQuery == "mips" -> "MIPS.ST"
             normalizedQuery == "nas" -> "NAS.OL"
@@ -440,7 +354,7 @@ class AvanzaCsvImporter {
             normalizedQuery == "rocket companies" -> "RKT"
             normalizedQuery == "saltx technology holding b" -> "SALT-B.ST"
             normalizedQuery == "sas" -> "SAS.ST"
-            normalizedQuery == "sbb" -> "SBB-B.ST"
+            normalizedQuery == "sbb" || normalizedQuery.startsWith("sbb") -> "SBB-B.ST"
             normalizedQuery == "scandic hotels group" -> "SHOT.ST"
             normalizedQuery == "soltech energy" || normalizedQuery == "soltech" || normalizedQuery ==
                 "soltech energy sweden"
