@@ -367,49 +367,28 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                             val importErrors = importResult.errors.toMutableList()
 
                             if (transactions.isNotEmpty() || splits.isNotEmpty()) {
-                                val groupedTransactions = transactions.groupBy { it.assetId }
-                                val groupedSplits = splits.groupBy { it.name }
-                                
-                                var isValid = true
-                                for ((assetId, assetTransactions) in groupedTransactions) {
-                                    val existing = transactionRepository.list(assetId)
-                                    val combined = (existing + assetTransactions).toSet()
-                                    try {
-                                        transactionRepository.validate(assetId, combined)
-                                    } catch (e: Exception) {
-                                        isValid = false
-                                        importErrors.add("Valideringsfel för tillgång $assetId: ${e.message ?: "Ofullständig historik"}")
-                                    }
-                                }
+                                try {
+                                    val allTransactions = existingTransactions + transactions
+                                    val allSplits = existingSplits + splits
+                                    val balancedTransactions = ChronologicalBalanceValidator.ensureChronologicalBalance(allTransactions, allSplits)
 
-                                for ((symbol, assetSplits) in groupedSplits) {
-                                    val existingSplits = splitRepository.list(symbol)
-                                    val combinedSplits = (existingSplits + assetSplits).toSet()
-                                    val assetId = AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }?.id ?: "stock:$symbol"
-                                    val existingTransactions = transactionRepository.list(assetId)
-                                    try {
-                                        ChronologicalBalanceValidator.validate(existingTransactions, combinedSplits)
-                                    } catch (e: Exception) {
-                                        isValid = false
-                                        importErrors.add("Valideringsfel för split för $symbol: ${e.message ?: "Ogiltig historik"}")
-                                    }
-                                }
-
-                                if (!isValid) {
-                                    importReport = Pair(0, importErrors)
-                                } else {
-                                    for ((assetId, assetTransactions) in groupedTransactions) {
-                                        val existing = transactionRepository.list(assetId)
-                                        val combined = (existing + assetTransactions).toSet()
-                                        transactionRepository.putAll(assetId, combined)
-                                    }
+                                    val groupedSplits = splits.groupBy { it.name }
                                     for ((symbol, assetSplits) in groupedSplits) {
-                                        val existingSplits = splitRepository.list(symbol)
-                                        val combinedSplits = (existingSplits + assetSplits).toSet()
+                                        val existingStockSplits = splitRepository.list(symbol)
+                                        val combinedSplits = (existingStockSplits + assetSplits).toSet()
                                         splitRepository.putAll(symbol, combinedSplits)
                                     }
+
+                                    val groupedTransactions = balancedTransactions.groupBy { it.assetId }
+                                    for ((assetId, assetTransactions) in groupedTransactions) {
+                                        transactionRepository.putAll(assetId, assetTransactions.toSet())
+                                    }
+
                                     val totalCount = transactions.size + splits.size
                                     importReport = Pair(totalCount, importErrors)
+                                } catch (e: Exception) {
+                                    importErrors.add("Valideringsfel vid import: ${e.message ?: e.javaClass.simpleName}")
+                                    importReport = Pair(0, importErrors)
                                 }
                             } else {
                                 importReport = Pair(0, importErrors.ifEmpty { listOf("Inga giltiga transaktioner eller splittar hittades i filen") })
