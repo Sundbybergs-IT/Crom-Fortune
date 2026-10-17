@@ -148,6 +148,30 @@ class AssetTransactionRepositoryTest {
         assertEquals(setOf(buy2, sell), repository.list(buy1.assetId))
     }
 
+    @Test
+    fun `remove - handles BigDecimal scale differences correctly`() {
+        val repository = AssetTransactionRepository(context, "asset-remove-scale-${System.nanoTime()}")
+        val storedBuy = stockTransaction(TransactionAction.BUY, "10", 1L).copy(unitPrice = BigDecimal("10.25000000"))
+        repository.putReplacingAll(storedBuy.assetId, storedBuy)
+
+        val targetToRemove = storedBuy.copy(unitPrice = BigDecimal("10.25"))
+        repository.remove(targetToRemove)
+
+        assertEquals(emptySet<AssetTransaction>(), repository.list(storedBuy.assetId))
+    }
+
+    @Test
+    fun `remove - removes only one instance when duplicate transactions exist on same date`() {
+        val repository = AssetTransactionRepository(context, "asset-remove-duplicate-${System.nanoTime()}")
+        val buy1 = stockTransaction(TransactionAction.BUY, "10", 1L)
+        val buy2 = stockTransaction(TransactionAction.BUY, "5", 2L)
+        repository.putAll(buy1.assetId, setOf(buy1, buy2))
+
+        repository.remove(buy1)
+
+        assertEquals(setOf(buy2), repository.list(buy1.assetId))
+    }
+
     private fun transaction(action: TransactionAction, quantity: String, date: Long = 1L) = AssetTransaction(
         assetId = "crypto:OLD",
         assetType = AssetType.CRYPTO,

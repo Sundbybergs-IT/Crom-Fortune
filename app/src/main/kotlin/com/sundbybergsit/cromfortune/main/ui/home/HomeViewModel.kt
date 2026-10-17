@@ -273,6 +273,15 @@ class HomeViewModel(
         refresh(context)
     }
 
+    fun removeStock(context: Context, portfolioName: String, stockSymbol: String) {
+        Log.i(TAG, "removeStock(portfolioName=[$portfolioName], stockSymbol=[$stockSymbol])")
+        val assetEventRepository = AssetEventRepository(context = context, portfolioName = portfolioName)
+        assetEventRepository.remove(stockSymbol)
+        val stockEventRepository = StockEventRepository(context = context, portfolioName = portfolioName)
+        stockEventRepository.remove(stockSymbol)
+        refresh(context)
+    }
+
     fun update(context: Context, portfolioName: String, original: StockSplit, updated: StockSplit) {
         Log.i(TAG, "update(portfolioName=[$portfolioName], original=[$original], updated=[$updated])")
         stockSplitRepositoryFactory(context, portfolioName).update(original, updated)

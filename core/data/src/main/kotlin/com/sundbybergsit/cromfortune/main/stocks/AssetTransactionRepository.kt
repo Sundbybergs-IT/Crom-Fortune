@@ -67,33 +67,45 @@ class AssetTransactionRepository(
     }
 
     override fun remove(transaction: AssetTransaction) {
-        val remaining = list(transaction.assetId) - transaction
-        if (remaining.isEmpty()) remove(transaction.assetId) else putAll(transaction.assetId, remaining)
+        val remaining = list(transaction.assetId).toMutableList()
+        val index = remaining.indexOfFirst { it.isSameTransaction(transaction) }
+        if (index != -1) {
+            remaining.removeAt(index)
+        }
+        if (remaining.isEmpty()) remove(transaction.assetId) else putAll(transaction.assetId, remaining.toSet())
     }
 
     override fun update(original: AssetTransaction, updated: AssetTransaction) {
-        val originalTransactions = list(original.assetId)
-        if (original !in originalTransactions) {
-            if (updated in list(updated.assetId)) return
+        val originalTransactions = list(original.assetId).toMutableList()
+        val index = originalTransactions.indexOfFirst { it.isSameTransaction(original) }
+        if (index == -1) {
+            if (list(updated.assetId).any { it.isSameTransaction(updated) }) return
             throw IllegalArgumentException("Transaction to update no longer exists")
         }
 
         if (original.assetId == updated.assetId) {
-            putAll(original.assetId, originalTransactions - original + updated)
+            originalTransactions[index] = updated
+            putAll(original.assetId, originalTransactions.toSet())
             return
         }
 
-        val remainingOriginals = originalTransactions - original
-        val updatedTransactions = list(updated.assetId) + updated
-        validateChronologicalBalance(remainingOriginals)
+        originalTransactions.removeAt(index)
+        val updatedTransactions = list(updated.assetId).toMutableList()
+        val updatedIndex = updatedTransactions.indexOfFirst { it.isSameTransaction(updated) }
+        if (updatedIndex != -1) {
+            updatedTransactions[updatedIndex] = updated
+        } else {
+            updatedTransactions.add(updated)
+        }
+        validateChronologicalBalance(originalTransactions)
         validateChronologicalBalance(updatedTransactions)
 
-        if (remainingOriginals.isEmpty()) {
+        if (originalTransactions.isEmpty()) {
             remove(original.assetId)
         } else {
-            putAll(original.assetId, remainingOriginals)
+            putAll(original.assetId, originalTransactions.toSet())
         }
-        putAll(updated.assetId, updatedTransactions)
+        putAll(updated.assetId, updatedTransactions.toSet())
     }
 
     private fun validateChronologicalBalance(transactions: Collection<AssetTransaction>) {

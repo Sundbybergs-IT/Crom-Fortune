@@ -69,7 +69,7 @@ class MontroseCsvImporter {
             throw IllegalArgumentException("Invalid Montrose CSV format: missing required columns")
         }
 
-        val rawTransactions = existingTransactions.toMutableList()
+        val rawTransactions = mutableListOf<AssetTransaction>()
 
         for (i in 1 until lines.size) {
             val line = lines[lines.size-i]

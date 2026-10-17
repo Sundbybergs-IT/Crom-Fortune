@@ -436,10 +436,8 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
             }
 
             entry<BottomSheetsHomeStock> { key ->
-                val localContext = LocalContext.current
                 val onDelete = {
                     DialogHandler.showDeleteDialog(
-                        context = localContext,
                         portfolioName = key.portfolioName,
                         stockName = key.stockSymbol
                     )
@@ -665,7 +663,22 @@ fun AddDialogs(
     val portfolioNameState = portfolioRepository.selectedPortfolioNameStateFlow.collectAsState()
     when (val dialogViewState = dialogHandler.dialogViewState.collectAsState().value) {
         is DialogHandler.DialogViewState.ShowDeleteDialog -> {
-            DeleteDialog(dialogViewState, onDismiss = { dialogHandler.dismissDialog() })
+            val localContext = LocalContext.current
+            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                HomeViewModelFactory(portfolioRepository = portfolioRepository)
+            })
+            DeleteDialog(
+                state = dialogViewState,
+                onConfirm = {
+                    homeViewModel.removeStock(
+                        context = localContext,
+                        portfolioName = dialogViewState.portfolioName,
+                        stockSymbol = dialogViewState.stockName
+                    )
+                    dialogHandler.dismissDialog()
+                },
+                onDismiss = { dialogHandler.dismissDialog() }
+            )
         }
 
         is DialogHandler.DialogViewState.ShowDeletePortfolio -> {
@@ -940,9 +953,9 @@ private fun AssetNoteDialog(
 @Composable
 private fun DeleteDialog(
     state: DialogHandler.DialogViewState.ShowDeleteDialog,
+    onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val context: Context = LocalContext.current
     AlertDialog(
         modifier = Modifier,
         title = {
@@ -959,10 +972,7 @@ private fun DeleteDialog(
         },
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
-                state.onClickRemove(context = context, stockSymbol = state.stockName)
-                onDismiss()
-            }) {
+            TextButton(onClick = onConfirm) {
                 Text(stringResource(id = R.string.action_delete))
             }
         },

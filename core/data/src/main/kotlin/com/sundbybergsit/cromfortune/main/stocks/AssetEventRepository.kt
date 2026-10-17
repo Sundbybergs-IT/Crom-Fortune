@@ -62,11 +62,23 @@ class AssetEventRepository(
     }
 
     override fun remove(assetId: String) {
-        val asset = AssetCatalog.findById(assetId)
-        val persistedTransaction = transactionApi.list(assetId).firstOrNull()
-        transactionApi.remove(assetId)
-        val assetType = asset?.type ?: persistedTransaction?.assetType
-        val symbol = asset?.symbol ?: persistedTransaction?.symbol
-        if (assetType == AssetType.STOCK && symbol != null) stockSplitApi.remove(symbol)
+        val resolvedAsset = AssetCatalog.findById(assetId)
+            ?: AssetCatalog.findBySymbol(AssetType.STOCK, assetId)
+            ?: AssetCatalog.findBySymbol(AssetType.CRYPTO, assetId)
+        val resolvedAssetId = resolvedAsset?.id
+            ?: if (assetId.contains(":")) assetId else "stock:$assetId"
+
+        val persistedTransaction = transactionApi.list(resolvedAssetId).firstOrNull()
+            ?: transactionApi.list(assetId).firstOrNull()
+
+        transactionApi.remove(resolvedAssetId)
+        if (resolvedAssetId != assetId) {
+            transactionApi.remove(assetId)
+        }
+
+        val assetType = resolvedAsset?.type ?: persistedTransaction?.assetType
+        val symbol = resolvedAsset?.symbol ?: persistedTransaction?.symbol
+            ?: assetId.removePrefix("stock:").removePrefix("crypto:")
+        if (assetType == AssetType.STOCK && symbol.isNotBlank()) stockSplitApi.remove(symbol)
     }
 }
