@@ -212,94 +212,8 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
     AddDialogs(dialogHandler = DialogHandler, portfolioRepository = portfolioRepository)
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.safeDrawing.only(
-            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
-        ),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { hostData ->
-                val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
-                val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
-                val actionLabel = hostData.visuals.actionLabel
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = backgroundColor,
-                    tonalElevation = 6.dp,
-                ) {
-                    ConstraintLayout(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                    ) {
-                        val (textRef, leftLineRef, actionRef) = createRefs()
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .background(lineColor)
-                                .constrainAs(leftLineRef) {
-                                    top.linkTo(parent.top)
-                                    bottom.linkTo(parent.bottom)
-                                    height = Dimension.fillToConstraints
-                                }
-                                .contentDescription("Left Line"),
-                        )
-                        Text(
-                            text = hostData.visuals.message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = lineColor,
-                            modifier = Modifier
-                                .constrainAs(textRef) {
-                                    top.linkTo(parent.top)
-                                    bottom.linkTo(parent.bottom)
-                                    start.linkTo(leftLineRef.end, 18.dp)
-                                    if (actionLabel != null) {
-                                        end.linkTo(actionRef.start)
-                                        width = Dimension.fillToConstraints
-                                    }
-                                }
-                                .padding(end = if (actionLabel == null) 18.dp else 0.dp)
-                                .contentDescription("Snackbar Message"),
-                        )
-                        if (actionLabel != null) {
-                            TextButton(
-                                onClick = hostData::performAction,
-                                modifier = Modifier.constrainAs(actionRef) {
-                                    top.linkTo(parent.top)
-                                    bottom.linkTo(parent.bottom)
-                                    end.linkTo(parent.end, 6.dp)
-                                },
-                            ) {
-                                Text(
-                                    text = actionLabel,
-                                    color = lineColor,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        bottomBar = {
-            BottomNavigation(
-                currentTab = currentTab,
-                onNavigationSelected = { selectedTab ->
-                    if (currentTab == selectedTab) {
-                        if (currentBackStack.size > 1) {
-                            currentBackStack.retainAll(listOf(currentBackStack.first()))
-                        }
-                    } else {
-                        currentTabRoute = selectedTab.toRoute()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    ) { innerPadding ->
-        val entryProvider = entryProvider<androidxNavKey> {
+    val entryProvider = remember {
+        entryProvider<androidxNavKey> {
             entry<Home> {
                 val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                     HomeViewModelFactory(portfolioRepository = portfolioRepository)
@@ -403,7 +317,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     val (successCount, reportErrors) = importReport!!
                     AlertDialog(
                         onDismissRequest = { importReport = null },
-                        title = { Text(stringResource(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_report_title)) },
+                        title = { Text(stringResource(SettingsR.string.settings_import_report_title)) },
                         text = {
                             Column(
                                 modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(rememberScrollState()),
@@ -418,7 +332,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                                 )
                                 if (reportErrors.isNotEmpty()) {
                                     Text(
-                                        text = stringResource(com.sundbybergsit.cromfortune.feature.settings.R.string.settings_import_warnings),
+                                        text = stringResource(SettingsR.string.settings_import_warnings),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.error
                                     )
@@ -581,30 +495,121 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 }
             }
         }
+    }
 
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
-            val lastKey = currentBackStack.last()
-            val visibleBackStack =
-                if (lastKey.isBottomSheet()) currentBackStack.dropLast(1) else currentBackStack
-
-            NavDisplay(
-                backStack = visibleBackStack,
-                onBack = onBack,
-                entryProvider = entryProvider
-            )
-
-            if (lastKey.isBottomSheet()) {
-                val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-                ModalBottomSheet(
-                    sheetState = sheetState,
-                    onDismissRequest = onBack
-                ) {
-                    entryProvider(lastKey).Content()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+            ),
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState) { hostData ->
+                    val lineColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
+                    val backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer
+                    val actionLabel = hostData.visuals.actionLabel
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = backgroundColor,
+                        tonalElevation = 6.dp,
+                    ) {
+                        ConstraintLayout(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                        ) {
+                            val (textRef, leftLineRef, actionRef) = createRefs()
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .background(lineColor)
+                                    .constrainAs(leftLineRef) {
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                        height = Dimension.fillToConstraints
+                                    }
+                                    .contentDescription("Left Line"),
+                            )
+                            Text(
+                                text = hostData.visuals.message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = lineColor,
+                                modifier = Modifier
+                                    .constrainAs(textRef) {
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                        start.linkTo(leftLineRef.end, 18.dp)
+                                        if (actionLabel != null) {
+                                            end.linkTo(actionRef.start)
+                                            width = Dimension.fillToConstraints
+                                        }
+                                    }
+                                    .padding(end = if (actionLabel == null) 18.dp else 0.dp)
+                                    .contentDescription("Snackbar Message"),
+                            )
+                            if (actionLabel != null) {
+                                TextButton(
+                                    onClick = hostData::performAction,
+                                    modifier = Modifier.constrainAs(actionRef) {
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                        end.linkTo(parent.end, 6.dp)
+                                    },
+                                ) {
+                                    Text(
+                                        text = actionLabel,
+                                        color = lineColor,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
+            },
+            bottomBar = {
+                BottomNavigation(
+                    currentTab = currentTab,
+                    onNavigationSelected = { selectedTab ->
+                        if (currentTab == selectedTab) {
+                            if (currentBackStack.size > 1) {
+                                currentBackStack.retainAll(listOf(currentBackStack.first()))
+                            }
+                        } else {
+                            currentTabRoute = selectedTab.toRoute()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+            ) {
+                val lastKey = currentBackStack.last()
+                val visibleBackStack =
+                    if (lastKey.isBottomSheet()) currentBackStack.dropLast(1) else currentBackStack
+
+                NavDisplay(
+                    backStack = visibleBackStack,
+                    onBack = onBack,
+                    entryProvider = entryProvider
+                )
+            }
+        }
+
+        val lastKey = currentBackStack.last()
+        if (lastKey.isBottomSheet()) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+            ModalBottomSheet(
+                sheetState = sheetState,
+                onDismissRequest = onBack
+            ) {
+                entryProvider(lastKey).Content()
             }
         }
     }
