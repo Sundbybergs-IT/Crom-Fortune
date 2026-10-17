@@ -7,7 +7,6 @@ import com.sundbybergsit.cromfortune.domain.AssetEvent
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
-import com.sundbybergsit.cromfortune.main.stocks.AssetEventRepository
 import com.sundbybergsit.cromfortune.main.ui.home.PortfolioItem
 import com.sundbybergsit.cromfortune.main.ui.home.view.StockRemoveClickListener
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,9 +40,9 @@ object DialogHandler {
         _snackbarFlow.value = null
     }
 
-    fun showDeleteDialog(context: Context, portfolioName: String, stockName: String) {
+    fun showDeleteDialog(portfolioName: String, stockName: String) {
         _dialogViewState.value = DialogViewState.ShowDeleteDialog(
-            assetEventApi = AssetEventRepository(context = context, portfolioName = portfolioName),
+            portfolioName = portfolioName,
             stockName = stockName
         )
     }
@@ -138,15 +137,9 @@ object DialogHandler {
         data object Dismissed : DialogViewState()
 
         data class ShowDeleteDialog(
-            val assetEventApi: com.sundbybergsit.cromfortune.domain.AssetEventApi,
+            val portfolioName: String,
             val stockName: String
-        ) : DialogViewState(), StockRemoveClickListener {
-
-            override fun onClickRemove(context: Context, stockSymbol: String) {
-                assetEventApi.remove(stockSymbol)
-            }
-
-        }
+        ) : DialogViewState()
 
         class ShowStockRetrievalTimeIntervalsDialog(val stockRetrievalSettings: StockRetrievalSettings) :
             DialogViewState() {

@@ -32,6 +32,17 @@ data class AssetTransaction(
 
     val quoteCurrency: Currency get() = Currency.getInstance(quoteCurrencyCode)
 
+    fun isSameTransaction(other: AssetTransaction): Boolean {
+        return assetId == other.assetId &&
+            action == other.action &&
+            dateInMillis == other.dateInMillis &&
+            quantity.compareTo(other.quantity) == 0 &&
+            unitPrice.compareTo(other.unitPrice) == 0 &&
+            commissionFee.compareTo(other.commissionFee) == 0 &&
+            quoteCurrencyCode == other.quoteCurrencyCode &&
+            symbol == other.symbol
+    }
+
     companion object {
         const val CURRENT_SCHEMA_VERSION = 3
 

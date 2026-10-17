@@ -33,6 +33,20 @@ class AssetEventRepositoryTest {
         assertEquals(BigDecimal("6"), eventRepository.currentQuantity(buy.assetId))
     }
 
+    @Test
+    fun `remove - when passed stock symbol - deletes transactions and splits for resolved assetId`() {
+        val portfolio = "asset-event-remove-symbol-${System.nanoTime()}"
+        val transactionRepository = AssetTransactionRepository(context, portfolio)
+        val eventRepository = AssetEventRepository(context, portfolio)
+
+        val buy = stockTransaction(TransactionAction.BUY, "10", 1L)
+        transactionRepository.putAll(buy.assetId, setOf(buy))
+
+        eventRepository.remove("ASSA-B.ST")
+
+        assertEquals(emptySet<AssetTransaction>(), transactionRepository.list("stock:ASSA-B.ST"))
+    }
+
     private fun stockTransaction(action: TransactionAction, quantity: String, date: Long) = AssetTransaction(
         assetId = "stock:ASSA-B.ST",
         assetType = AssetType.STOCK,
