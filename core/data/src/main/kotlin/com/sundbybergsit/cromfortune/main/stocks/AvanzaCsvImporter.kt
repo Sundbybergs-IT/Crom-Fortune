@@ -130,10 +130,10 @@ class AvanzaCsvImporter {
                 continue
             }
 
-            val action = when (typeStr) {
-                "Köp", -> TransactionAction.BUY
-                "Sälj",  "Rensning av värdepapper" -> TransactionAction.SELL
-                "Utdelning", "Utdelning värdepapper" -> TransactionAction.DIVIDEND
+            val action = when {
+                typeStr == "Köp" || (typeStr in setOf("Byte värdepapper", "Teckning inlägg", "Inlösen") && rawQuantity > BigDecimal.ZERO) -> TransactionAction.BUY
+                typeStr in setOf("Sälj", "Rensning av värdepapper") || (typeStr in setOf("Byte värdepapper", "Inlösen", "Utbokning") && rawQuantity < BigDecimal.ZERO) -> TransactionAction.SELL
+                typeStr in setOf("Utdelning", "Utdelning värdepapper") -> TransactionAction.DIVIDEND
                 else -> continue
             }
 
@@ -214,7 +214,80 @@ class AvanzaCsvImporter {
             )
         }
 
-        // Aggregate multiple transactions (including duplicates/similar transactions) of the same asset and action on the same day
+        val aggregatedSplits = rawSplitItems.groupBy { Pair(it.symbol, it.dateInMillis) }
+            .flatMap { (_, group) ->
+                val negativeSum = group.filter { it.quantity < BigDecimal.ZERO }.sumOf { it.quantity }.abs()
+                val positiveSum = group.filter { it.quantity >= BigDecimal.ZERO }.sumOf { it.quantity }
+                val symbol = group.first().symbol
+                val dateInMillis = group.first().dateInMillis
+
+                if (negativeSum > BigDecimal.ZERO && positiveSum > BigDecimal.ZERO) {
+                    val reverse = positiveSum < negativeSum
+                    val factorDecimal = if (reverse) {
+                        negativeSum.divide(positiveSum, 0, RoundingMode.HALF_UP)
+                    } else {
+                        (positiveSum + negativeSum).divide(negativeSum, 0, RoundingMode.HALF_UP)
+                    }
+                    val factorInt = factorDecimal.toInt().coerceAtLeast(StockSplit.MIN_QUANTITY)
+
+                    if (!reverse) {
+                        val matchedAsset = AssetCatalog.stocks.find { it.symbol.equals(symbol, ignoreCase = true) }
+                        if (matchedAsset != null) {
+                            val preBalance = rawTransactions.filter { it.symbol.equals(symbol, ignoreCase = true) && it.dateInMillis < dateInMillis }
+                                .fold(BigDecimal.ZERO) { acc, tx ->
+                                    if (tx.action == TransactionAction.BUY) acc + tx.quantity
+                                    else if (tx.action == TransactionAction.SELL) acc - tx.quantity
+                                    else acc
+                                }
+                            if (preBalance < negativeSum) {
+                                val deficit = negativeSum - preBalance
+                                rawTransactions.add(
+                                    AssetTransaction(
+                                        assetId = matchedAsset.id,
+                                        assetType = matchedAsset.type,
+                                        symbol = matchedAsset.symbol,
+                                        displayName = matchedAsset.displayName,
+                                        quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+                                        action = TransactionAction.BUY,
+                                        dateInMillis = dateInMillis - 86400000L,
+                                        unitPrice = BigDecimal.ZERO,
+                                        commissionFee = BigDecimal.ZERO,
+                                        quantity = deficit
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    listOf(
+                        StockSplit(
+                            reverse = reverse,
+                            dateInMillis = dateInMillis,
+                            name = symbol,
+                            quantity = factorInt
+                        )
+                    )
+                } else {
+                    group.mapNotNull { single ->
+                        val absQty = single.quantity.abs()
+                        if (absQty >= BigDecimal(StockSplit.MIN_QUANTITY)) {
+                            StockSplit(
+                                reverse = single.quantity > BigDecimal.ZERO,
+                                dateInMillis = dateInMillis,
+                                name = symbol,
+                                quantity = absQty.toInt()
+                            )
+                        } else {
+                            null
+                        }
+                    }
+                }
+            }
+            .groupBy { Triple(it.name, it.dateInMillis, it.reverse) }
+            .map { (_, group) -> group.first() }
+            .toList()
+
+        // Aggregate multiple transactions of the same asset and action on the same day
         val aggregatedTransactions = rawTransactions.groupBy { Triple(it.assetId, it.action, it.dateInMillis) }
             .map { (_, group) ->
                 val first = group.first()
@@ -247,48 +320,6 @@ class AvanzaCsvImporter {
                     )
                 }
             }
-
-        val aggregatedSplits = rawSplitItems.groupBy { Pair(it.symbol, it.dateInMillis) }
-            .flatMap { (_, group) ->
-                val negativeSum = group.filter { it.quantity < BigDecimal.ZERO }.sumOf { it.quantity }.abs()
-                val positiveSum = group.filter { it.quantity >= BigDecimal.ZERO }.sumOf { it.quantity }
-                val symbol = group.first().symbol
-                val dateInMillis = group.first().dateInMillis
-
-                if (negativeSum > BigDecimal.ZERO && positiveSum > BigDecimal.ZERO) {
-                    val reverse = positiveSum < negativeSum
-                    val factorDecimal = if (reverse) {
-                        negativeSum.divide(positiveSum, 0, RoundingMode.HALF_UP)
-                    } else {
-                        positiveSum.divide(negativeSum, 0, RoundingMode.HALF_UP)
-                    }
-                    val factorInt = factorDecimal.toInt().coerceAtLeast(StockSplit.MIN_QUANTITY)
-                    listOf(
-                        StockSplit(
-                            reverse = reverse,
-                            dateInMillis = dateInMillis,
-                            name = symbol,
-                            quantity = factorInt
-                        )
-                    )
-                } else {
-                    group.mapNotNull { single ->
-                        val absQty = single.quantity.abs()
-                        if (absQty >= BigDecimal(StockSplit.MIN_QUANTITY)) {
-                            StockSplit(
-                                reverse = single.quantity > BigDecimal.ZERO,
-                                dateInMillis = dateInMillis,
-                                name = symbol,
-                                quantity = absQty.toInt()
-                            )
-                        } else {
-                            null
-                        }
-                    }
-                }
-            }
-            .groupBy { Triple(it.name, it.dateInMillis, it.reverse) }
-            .map { (_, group) -> group.first() }
 
         val combinedTransactions = existingTransactions + aggregatedTransactions
         val combinedSplits = existingSplits + aggregatedSplits

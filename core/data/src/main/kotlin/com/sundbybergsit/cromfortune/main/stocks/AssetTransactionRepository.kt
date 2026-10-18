@@ -46,7 +46,7 @@ class AssetTransactionRepository(
         validateChronologicalBalance(transactions)
     }
 
-    override fun putAll(assetId: String, transactions: Set<AssetTransaction>) {
+    override fun putAll(assetId: String, transactions: Collection<AssetTransaction>) {
         val sortedTransactions = transactions.sortedWith(
             compareBy<AssetTransaction>(
                 { it.dateInMillis },

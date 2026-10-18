@@ -28,6 +28,7 @@ object AssetCatalog {
         stock("GIGSEK.ST", "Gaming Innovation Group Inc.", "SEK", AssetStatus.DELISTED),
         stock("GOOGL", "Alphabet Inc. Class A", "USD"),
         stock("GRCE", "Grace Therapeutics, Inc. (GRCE)", "USD"),
+        stock("RMS.PA", "Hermès International Société en commandite par actions (RMS.PA)", "EUR"),
         stock("SHB-A.ST", "Svenska Handelsbanken AB (publ)", "SEK"),
         stock("HIMX", "Himax Technologies ADR", "USD"),
         stock("IBM", "International Business Machines Corporation", "USD"),

@@ -40,7 +40,12 @@ object ChronologicalBalanceValidator {
                             {
                                 val obj = it.third
                                 when (obj) {
-                                    is AssetTransaction -> if (obj.action == TransactionAction.BUY || obj.action == TransactionAction.DIVIDEND) 0 else 1
+                                    "SPLIT", "REVERSE_SPLIT" -> -1
+                                    is AssetTransaction -> when (obj.action) {
+                                        TransactionAction.BUY -> 0
+                                        TransactionAction.DIVIDEND -> 1
+                                        TransactionAction.SELL -> 2
+                                    }
                                     else -> 0
                                 }
                             }
@@ -56,6 +61,7 @@ object ChronologicalBalanceValidator {
                                 TransactionAction.SELL -> {
                                     if (balance < obj.quantity) {
                                         val deficit = obj.quantity - balance
+                                        val firstEventDate = allEvents.firstOrNull()?.first ?: obj.dateInMillis
                                         val syntheticBuy = AssetTransaction(
                                             assetId = obj.assetId,
                                             assetType = obj.assetType,
@@ -63,7 +69,7 @@ object ChronologicalBalanceValidator {
                                             displayName = obj.displayName,
                                             quoteCurrencyCode = obj.quoteCurrency.currencyCode,
                                             action = TransactionAction.BUY,
-                                            dateInMillis = obj.dateInMillis,
+                                            dateInMillis = minOf(obj.dateInMillis, firstEventDate),
                                             unitPrice = BigDecimal.ZERO,
                                             commissionFee = BigDecimal.ZERO,
                                             quantity = deficit
@@ -130,7 +136,13 @@ object ChronologicalBalanceValidator {
                 { it.first },
                 {
                     val type = it.third
-                    if (type == TransactionAction.BUY || type == TransactionAction.DIVIDEND || type == "SPLIT" || type == "REVERSE_SPLIT") 0 else 1
+                    when (type) {
+                        "SPLIT", "REVERSE_SPLIT" -> -1
+                        TransactionAction.BUY -> 0
+                        TransactionAction.DIVIDEND -> 1
+                        TransactionAction.SELL -> 2
+                        else -> 0
+                    }
                 }
             ))
 

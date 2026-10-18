@@ -90,11 +90,24 @@ class MontroseCsvImporter {
             }
 
             val typeStr = columns[typIndex]
-            val action = when (typeStr) {
-                "Köp" -> TransactionAction.BUY
-                "Sälj" -> TransactionAction.SELL
-                "Utdelning" -> TransactionAction.DIVIDEND
+            val antalStr = columns[antalIndex].replace(',', '.')
+            val rawQuantity = antalStr.toBigDecimalOrNull()
+            val kursStr = if (kursIndex != -1 && kursIndex < columns.size) columns[kursIndex].replace(',', '.') else ""
+            val unitPrice = if (kursStr.isBlank()) BigDecimal.ZERO else (kursStr.toBigDecimalOrNull() ?: BigDecimal.ZERO)
+
+            val action = when {
+                typeStr == "Köp" -> TransactionAction.BUY
+                typeStr == "Sälj" -> TransactionAction.SELL
+                typeStr == "Utdelning" -> TransactionAction.DIVIDEND
+                typeStr == "Övrigt" && rawQuantity != null && rawQuantity > BigDecimal.ZERO && unitPrice == BigDecimal.ZERO -> TransactionAction.BUY
                 else -> continue
+            }
+
+            if (rawQuantity == null) {
+                if (typeStr != "Övrigt") {
+                    errors.add("Rad $i: Ogiltigt antal '$antalStr'")
+                }
+                continue
             }
 
             val isinStr = if (isinIndex != -1 && isinIndex < columns.size) columns[isinIndex] else ""
@@ -116,12 +129,6 @@ class MontroseCsvImporter {
                 continue
             }
 
-            val antalStr = columns[antalIndex].replace(',', '.')
-            val rawQuantity = antalStr.toBigDecimalOrNull()
-            if (rawQuantity == null) {
-                errors.add("Rad $i: Ogiltigt antal '$antalStr'")
-                continue
-            }
             val quantity = when (action) {
                 TransactionAction.BUY -> {
                     val absQty = rawQuantity.abs()
@@ -157,13 +164,7 @@ class MontroseCsvImporter {
                 continue
             }
 
-            val kursStr = columns[kursIndex].replace(',', '.')
-            val unitPrice = if (kursStr.isBlank()) {
-                BigDecimal.ZERO
-            } else {
-                kursStr.toBigDecimalOrNull()
-            }
-            if (unitPrice == null || unitPrice < BigDecimal.ZERO) {
+            if (unitPrice < BigDecimal.ZERO) {
                 errors.add("Rad $i: Ogiltig kurs '$kursStr'")
                 continue
             }
@@ -267,6 +268,7 @@ class MontroseCsvImporter {
             "MC" -> "MC.PA"
             "FERRO" -> "FERRO.ST"
             "EQT" -> "EQT.ST"
+            "RMS" -> "RMS.PA"
             "TANGI" -> "TANGI.ST"
             "QNT.NAS" -> "QNT"
             "SPACEX" -> "SPCX"
@@ -324,6 +326,7 @@ class MontroseCsvImporter {
             normalizedQuery == "nokia" -> "NOKIA-SEK.ST"
             normalizedQuery == "occidental petroleum" || normalizedQuery == "oxy" || normalizedQuery == "occidental petroleum corp" -> "OXY"
             normalizedQuery == "polygiene" -> "POLYG.ST"
+            normalizedQuery == "hermes international" -> "RMS.PA"
             normalizedQuery == "quantumscape" -> "QS"
             normalizedQuery == "rocket companies" -> "RKT"
             normalizedQuery == "saltx technology holding b" -> "SALT-B.ST"
