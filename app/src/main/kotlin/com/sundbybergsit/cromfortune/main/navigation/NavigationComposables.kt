@@ -295,7 +295,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
                                     val groupedTransactions = balancedTransactions.groupBy { it.assetId }
                                     for ((assetId, assetTransactions) in groupedTransactions) {
-                                        transactionRepository.putAll(assetId, assetTransactions.toSet())
+                                        transactionRepository.putAll(assetId, assetTransactions)
                                     }
 
                                     val totalCount = transactions.size + splits.size
