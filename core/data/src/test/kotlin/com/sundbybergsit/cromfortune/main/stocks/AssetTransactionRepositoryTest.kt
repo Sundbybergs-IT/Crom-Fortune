@@ -29,7 +29,7 @@ class AssetTransactionRepositoryTest {
         repository.putReplacingAll(transaction.assetId, transaction)
 
         assertEquals(setOf("crypto:OLD"), repository.assetIds())
-        assertEquals(setOf(transaction), repository.list(transaction.assetId))
+        assertEquals(listOf(transaction), repository.list(transaction.assetId))
         assertEquals(BigDecimal("0.00000001"), repository.currentQuantity(transaction.assetId))
     }
 
@@ -57,7 +57,7 @@ class AssetTransactionRepositoryTest {
 
         repository.putAll(buy.assetId, setOf(buy, sell))
 
-        assertEquals(setOf(buy, sell), repository.list(buy.assetId))
+        assertEquals(listOf(buy, sell), repository.list(buy.assetId))
     }
 
     @Test
@@ -76,7 +76,7 @@ class AssetTransactionRepositoryTest {
 
         repository.update(original, updated)
 
-        assertEquals(setOf(earlierBuy, updated), repository.list(original.assetId))
+        assertEquals(listOf(earlierBuy, updated), repository.list(original.assetId))
     }
 
     @Test
@@ -89,7 +89,7 @@ class AssetTransactionRepositoryTest {
 
         repository.update(original, updated)
 
-        assertEquals(setOf(updated), repository.list(original.assetId))
+        assertEquals(listOf(updated), repository.list(original.assetId))
     }
 
     @Test
@@ -101,8 +101,8 @@ class AssetTransactionRepositoryTest {
 
         repository.update(original, updated)
 
-        assertEquals(emptySet<AssetTransaction>(), repository.list(original.assetId))
-        assertEquals(setOf(updated), repository.list(updated.assetId))
+        assertEquals(emptyList<AssetTransaction>(), repository.list(original.assetId))
+        assertEquals(listOf(updated), repository.list(updated.assetId))
         assertEquals(setOf(updated.assetId), repository.assetIds())
     }
 
@@ -117,7 +117,7 @@ class AssetTransactionRepositoryTest {
             repository.update(buy, buy.copy(quantity = BigDecimal("0.5")))
         }
 
-        assertEquals(setOf(buy, sell), repository.list(buy.assetId))
+        assertEquals(listOf(buy, sell), repository.list(buy.assetId))
     }
 
     @Test
@@ -132,7 +132,7 @@ class AssetTransactionRepositoryTest {
             repository.remove(buy1)
         }
 
-        assertEquals(setOf(buy1, buy2, sell), repository.list(buy1.assetId))
+        assertEquals(listOf(buy1, buy2, sell), repository.list(buy1.assetId))
     }
 
     @Test
@@ -145,7 +145,7 @@ class AssetTransactionRepositoryTest {
 
         repository.remove(buy1)
 
-        assertEquals(setOf(buy2, sell), repository.list(buy1.assetId))
+        assertEquals(listOf(buy2, sell), repository.list(buy1.assetId))
     }
 
     @Test
@@ -157,7 +157,7 @@ class AssetTransactionRepositoryTest {
         val targetToRemove = storedBuy.copy(unitPrice = BigDecimal("10.25"))
         repository.remove(targetToRemove)
 
-        assertEquals(emptySet<AssetTransaction>(), repository.list(storedBuy.assetId))
+        assertEquals(emptyList<AssetTransaction>(), repository.list(storedBuy.assetId))
     }
 
     @Test
@@ -169,7 +169,7 @@ class AssetTransactionRepositoryTest {
 
         repository.remove(buy1)
 
-        assertEquals(setOf(buy2), repository.list(buy1.assetId))
+        assertEquals(listOf(buy2), repository.list(buy1.assetId))
     }
 
     private fun transaction(action: TransactionAction, quantity: String, date: Long = 1L) = AssetTransaction(

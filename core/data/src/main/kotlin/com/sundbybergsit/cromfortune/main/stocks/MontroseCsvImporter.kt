@@ -93,23 +93,6 @@ class MontroseCsvImporter {
             val antalStr = columns[antalIndex].replace(',', '.')
             val rawQuantity = antalStr.toBigDecimalOrNull()
             val kursStr = if (kursIndex != -1 && kursIndex < columns.size) columns[kursIndex].replace(',', '.') else ""
-            val unitPrice = if (kursStr.isBlank()) BigDecimal.ZERO else (kursStr.toBigDecimalOrNull() ?: BigDecimal.ZERO)
-
-            val action = when {
-                typeStr == "Köp" -> TransactionAction.BUY
-                typeStr == "Sälj" -> TransactionAction.SELL
-                typeStr == "Utdelning" -> TransactionAction.DIVIDEND
-                typeStr == "Övrigt" && rawQuantity != null && rawQuantity > BigDecimal.ZERO && unitPrice == BigDecimal.ZERO -> TransactionAction.BUY
-                else -> continue
-            }
-
-            if (rawQuantity == null) {
-                if (typeStr != "Övrigt") {
-                    errors.add("Rad $i: Ogiltigt antal '$antalStr'")
-                }
-                continue
-            }
-
             val isinStr = if (isinIndex != -1 && isinIndex < columns.size) columns[isinIndex] else ""
             val tickerStr = if (tickerIndex != -1 && tickerIndex < columns.size) columns[tickerIndex] else ""
             val nameStr =
@@ -121,12 +104,37 @@ class MontroseCsvImporter {
                 continue
             }
 
+            val action = when {
+                typeStr == "Köp" -> TransactionAction.BUY
+                typeStr == "Sälj" -> TransactionAction.SELL
+                typeStr == "Utdelning" -> TransactionAction.DIVIDEND
+                (typeStr == "Övrigt" || typeStr == "Omvandling") && rawQuantity != null && rawQuantity > BigDecimal.ZERO && matchedAsset.symbol == "SALT-B.ST" -> TransactionAction.BUY
+                else -> continue
+            }
+
+            if (rawQuantity == null) {
+                if (typeStr != "Övrigt" && typeStr != "Omvandling") {
+                    errors.add("Rad $i: Ogiltigt antal '$antalStr'")
+                }
+                continue
+            }
+
             val dateStr = columns[datumIndex]
             val dateInMillis = try {
                 LocalDate.parse(dateStr).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             } catch (_: Exception) {
                 errors.add("Rad $i: Ogiltigt datumformat '$dateStr'")
                 continue
+            }
+
+            val unitPrice = if (kursStr.isBlank()) {
+                if (action == TransactionAction.BUY && rawQuantity != null && rawQuantity > BigDecimal.ZERO) {
+                    calculateAverageUnitPrice(matchedAsset.symbol, dateInMillis, rawTransactions)
+                } else {
+                    BigDecimal.ZERO
+                }
+            } else {
+                kursStr.toBigDecimalOrNull() ?: BigDecimal.ZERO
             }
 
             val quantity = when (action) {
@@ -400,6 +408,17 @@ class MontroseCsvImporter {
         }
         result.add(cur.toString())
         return result
+    }
+
+    private fun calculateAverageUnitPrice(symbol: String, dateInMillis: Long, transactions: List<AssetTransaction>): BigDecimal {
+        val preceding = transactions.filter { it.symbol.equals(symbol, ignoreCase = true) && it.dateInMillis <= dateInMillis && it.action == TransactionAction.BUY && it.unitPrice > BigDecimal.ZERO }
+        val totalQty = preceding.fold(BigDecimal.ZERO) { acc, tx -> acc + tx.quantity }
+        val totalCost = preceding.fold(BigDecimal.ZERO) { acc, tx -> acc + (tx.quantity * tx.unitPrice) }
+        return if (totalQty > BigDecimal.ZERO) {
+            totalCost.divide(totalQty, 8, RoundingMode.HALF_UP).stripTrailingZeros()
+        } else {
+            BigDecimal.ZERO
+        }
     }
 
 }
