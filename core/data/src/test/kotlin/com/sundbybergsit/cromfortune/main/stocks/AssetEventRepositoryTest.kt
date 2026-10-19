@@ -44,7 +44,7 @@ class AssetEventRepositoryTest {
 
         eventRepository.remove("ASSA-B.ST")
 
-        assertEquals(emptySet<AssetTransaction>(), transactionRepository.list("stock:ASSA-B.ST"))
+        assertEquals(emptyList<AssetTransaction>(), transactionRepository.list("stock:ASSA-B.ST"))
     }
 
     private fun stockTransaction(action: TransactionAction, quantity: String, date: Long) = AssetTransaction(

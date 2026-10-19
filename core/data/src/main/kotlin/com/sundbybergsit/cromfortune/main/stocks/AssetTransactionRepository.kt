@@ -34,9 +34,9 @@ class AssetTransactionRepository(
         return dao.getTransactionsForPortfolio(portfolioName).isEmpty()
     }
 
-    override fun list(assetId: String): Set<AssetTransaction> {
+    override fun list(assetId: String): List<AssetTransaction> {
         val entities = dao.getTransactionsForAsset(portfolioName, assetId)
-        return entities.map { it.toDomain() }.toSet()
+        return entities.map { it.toDomain() }
     }
 
     fun validate(assetId: String, transactions: Collection<AssetTransaction>) {

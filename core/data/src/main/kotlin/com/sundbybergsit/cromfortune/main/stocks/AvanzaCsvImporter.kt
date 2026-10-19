@@ -71,6 +71,33 @@ class AvanzaCsvImporter {
         val rawTransactions = mutableListOf<AssetTransaction>()
         val rawSplitItems = mutableListOf<RawSplitItem>()
 
+        val btaCosts = mutableMapOf<String, Pair<BigDecimal, BigDecimal>>()
+        for (i in 1 until lines.size) {
+            val line = lines[lines.size - i]
+            if (line.isBlank()) continue
+            val columns = parseCsvLine(line, delimiter).map { it.trim() }
+            val minIndexForType = maxOf(datumIndex, typIndex, vardepapperIndex, antalIndex)
+            if (columns.size <= minIndexForType) continue
+            val nameStr = columns[vardepapperIndex]
+            if (Regex("\\b(TR|BTU|BTA)\\b", RegexOption.IGNORE_CASE).containsMatchIn(nameStr)) {
+                val antalStr = columns[antalIndex].replace(',', '.')
+                val qty = antalStr.toBigDecimalOrNull()?.abs() ?: BigDecimal.ZERO
+                val beloppIndex = headers.indexOf("Belopp")
+                val beloppStr = if (beloppIndex != -1 && beloppIndex < columns.size) columns[beloppIndex].replace(',', '.') else ""
+                val cost = beloppStr.toBigDecimalOrNull()?.abs() ?: (qty * (columns.getOrNull(kursIndex)?.replace(',', '.')?.toBigDecimalOrNull() ?: BigDecimal.ZERO))
+                if (qty > BigDecimal.ZERO && cost > BigDecimal.ZERO) {
+                    val symbol = if (nameStr.contains("SaltX", ignoreCase = true)) "SALT-B.ST" else null
+                    if (symbol != null) {
+                        val current = btaCosts[symbol] ?: (BigDecimal.ZERO to BigDecimal.ZERO)
+                        btaCosts[symbol] = (current.first + qty) to (current.second + cost)
+                    }
+                }
+            }
+        }
+        val btaAvgPrice = btaCosts.mapValues { (_, pair) ->
+            if (pair.first > BigDecimal.ZERO) pair.second.divide(pair.first, 8, RoundingMode.HALF_UP).stripTrailingZeros() else BigDecimal.ZERO
+        }
+
         for (i in 1 until lines.size) {
             val line = lines[lines.size-i]
             if (line.isBlank()) continue
@@ -131,9 +158,10 @@ class AvanzaCsvImporter {
             }
 
             val action = when {
-                typeStr == "Köp" || (typeStr in setOf("Byte värdepapper", "Teckning inlägg", "Inlösen") && rawQuantity > BigDecimal.ZERO) -> TransactionAction.BUY
-                typeStr in setOf("Sälj", "Rensning av värdepapper") || (typeStr in setOf("Byte värdepapper", "Inlösen", "Utbokning") && rawQuantity < BigDecimal.ZERO) -> TransactionAction.SELL
+                typeStr == "Köp" -> TransactionAction.BUY
+                typeStr in setOf("Sälj", "Rensning av värdepapper") -> TransactionAction.SELL
                 typeStr in setOf("Utdelning", "Utdelning värdepapper") -> TransactionAction.DIVIDEND
+                typeStr == "Byte värdepapper" && rawQuantity > BigDecimal.ZERO -> TransactionAction.BUY
                 else -> continue
             }
 
@@ -182,7 +210,13 @@ class AvanzaCsvImporter {
 
             val kursStr = columns[kursIndex].replace(',', '.')
             val unitPrice = if (kursStr.isBlank()) {
-                BigDecimal.ZERO
+                if (typeStr == "Byte värdepapper" && rawQuantity > BigDecimal.ZERO) {
+                    btaAvgPrice[matchedAsset.symbol] ?: BigDecimal.ZERO
+                } else if (action == TransactionAction.BUY && rawQuantity > BigDecimal.ZERO) {
+                    calculateAverageUnitPrice(matchedAsset.symbol, dateInMillis, rawTransactions)
+                } else {
+                    BigDecimal.ZERO
+                }
             } else {
                 kursStr.toBigDecimalOrNull()
             }
@@ -451,6 +485,17 @@ class AvanzaCsvImporter {
         }
         result.add(cur.toString())
         return result
+    }
+
+    private fun calculateAverageUnitPrice(symbol: String, dateInMillis: Long, transactions: List<AssetTransaction>): BigDecimal {
+        val preceding = transactions.filter { it.symbol.equals(symbol, ignoreCase = true) && it.dateInMillis <= dateInMillis && it.action == TransactionAction.BUY && it.unitPrice > BigDecimal.ZERO }
+        val totalQty = preceding.fold(BigDecimal.ZERO) { acc, tx -> acc + tx.quantity }
+        val totalCost = preceding.fold(BigDecimal.ZERO) { acc, tx -> acc + (tx.quantity * tx.unitPrice) }
+        return if (totalQty > BigDecimal.ZERO) {
+            totalCost.divide(totalQty, 8, RoundingMode.HALF_UP).stripTrailingZeros()
+        } else {
+            BigDecimal.ZERO
+        }
     }
 
 }
