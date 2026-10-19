@@ -23,7 +23,7 @@ fun OverflowMenu(
     menuColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     enabled: Boolean = true
 ) {
-    var lastShownMenu by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var lastShownMenu by remember { mutableLongStateOf(0L) }
 
     IconButton(
         modifier = modifier,

@@ -325,9 +325,9 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                             ) {
                                 Text(
                                     text = if (successCount > 0) {
-                                        localContext.resources.getString(SettingsR.string.settings_import_success, successCount)
+                                        stringResource(SettingsR.string.settings_import_success, successCount)
                                     } else {
-                                        localContext.resources.getString(SettingsR.string.settings_import_error)
+                                        stringResource(SettingsR.string.settings_import_error)
                                     }
                                 )
                                 if (reportErrors.isNotEmpty()) {
@@ -385,12 +385,30 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     HomeItems(
                         portfolioRepository = portfolioRepository,
                         homeViewModel = homeViewModel,
-                        onBuy = { DialogHandler.showBuyStockDialog() },
-                        onSell = { DialogHandler.showSellStockDialog() },
-                        onSplit = { DialogHandler.showSplitStockDialog() },
-                        onAddDividend = { DialogHandler.showRegisterDividendDialog() },
-                        onAddPortfolio = { DialogHandler.showAddPortfolioDialog() },
-                        onDeletePortfolio = { DialogHandler.showDeletePortfolioDialog(it) },
+                        onBuy = {
+                            onBack()
+                            DialogHandler.showBuyStockDialog()
+                        },
+                        onSell = {
+                            onBack()
+                            DialogHandler.showSellStockDialog()
+                        },
+                        onSplit = {
+                            onBack()
+                            DialogHandler.showSplitStockDialog()
+                        },
+                        onAddDividend = {
+                            onBack()
+                            DialogHandler.showRegisterDividendDialog()
+                        },
+                        onAddPortfolio = {
+                            onBack()
+                            DialogHandler.showAddPortfolioDialog()
+                        },
+                        onDeletePortfolio = {
+                            onBack()
+                            DialogHandler.showDeletePortfolioDialog(it)
+                        },
                     )
                 }
             }
@@ -437,6 +455,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
             entry<BottomSheetsHomeStock> { key ->
                 val onDelete = {
+                    onBack()
                     DialogHandler.showDeleteDialog(
                         portfolioName = key.portfolioName,
                         stockName = key.stockSymbol
@@ -445,6 +464,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 BottomSheetContent {
                     BottomSheetMenuItem(
                         onClick = {
+                            onBack()
                             DialogHandler.showAssetNoteDialog(key.portfolioName, key.stockSymbol)
                         },
                         text = stringResource(
@@ -602,7 +622,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
         val lastKey = currentBackStack.last()
         if (lastKey.isBottomSheet()) {
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             ModalBottomSheet(
                 sheetState = sheetState,
                 onDismissRequest = onBack
