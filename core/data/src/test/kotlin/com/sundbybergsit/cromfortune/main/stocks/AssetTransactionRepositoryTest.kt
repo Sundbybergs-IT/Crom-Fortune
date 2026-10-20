@@ -172,6 +172,19 @@ class AssetTransactionRepositoryTest {
         assertEquals(listOf(buy2), repository.list(buy1.assetId))
     }
 
+    @Test
+    fun `remove - removes only one instance when multiple identical transactions exist`() {
+        val repository = AssetTransactionRepository(context, "asset-remove-identical-${System.nanoTime()}")
+        val buy1 = stockTransaction(TransactionAction.BUY, "10", 1L)
+        val buy2 = stockTransaction(TransactionAction.BUY, "10", 1L)
+        val buy3 = stockTransaction(TransactionAction.BUY, "10", 1L)
+        repository.putAll(buy1.assetId, listOf(buy1, buy2, buy3))
+
+        repository.remove(buy1)
+
+        assertEquals(2, repository.list(buy1.assetId).size)
+    }
+
     private fun transaction(action: TransactionAction, quantity: String, date: Long = 1L) = AssetTransaction(
         assetId = "crypto:OLD",
         assetType = AssetType.CRYPTO,

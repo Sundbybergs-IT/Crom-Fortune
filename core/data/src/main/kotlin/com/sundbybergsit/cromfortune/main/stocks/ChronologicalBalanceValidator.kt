@@ -127,7 +127,7 @@ object ChronologicalBalanceValidator {
             }
     }
 
-    fun validate(transactions: Set<AssetTransaction>, splits: Set<StockSplit>) {
+    fun validate(transactions: Collection<AssetTransaction>, splits: Collection<StockSplit>) {
         if (transactions.isEmpty()) return
 
         val allEvents = (transactions.map { Triple(it.dateInMillis, it.quantity, it.action as Any) } +

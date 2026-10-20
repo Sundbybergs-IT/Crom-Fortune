@@ -236,13 +236,6 @@ class HomeViewModel(
 
     fun save(context: Context, portfolioName: String, stockOrder: StockOrder) {
         Log.i(TAG, "save(portfolioName=[$portfolioName], stockOrder=[$stockOrder])")
-        val stockOrderApi: StockOrderApi = stockOrderRepositoryFactory(context, portfolioName)
-        if (stockOrderApi.list(stockOrder.name).isNotEmpty()) {
-            val existingOrders = stockOrderApi.list(stockOrder.name)
-            stockOrderApi.putAll(stockOrder.name, existingOrders.toMutableSet() + stockOrder)
-        } else {
-            stockOrderApi.putReplacingAll(stockOrder.name, stockOrder)
-        }
         val assetTransactionRepository = assetTransactionRepositoryFactory(context, portfolioName)
         val transaction = AssetTransaction.fromStockOrder(stockOrder)
         val existingTransactions = assetTransactionRepository.list(transaction.assetId)
@@ -254,22 +247,12 @@ class HomeViewModel(
         Log.i(TAG, "save(portfolioName=[$portfolioName], transaction=[$transaction])")
         val repository = assetTransactionRepositoryFactory(context, portfolioName)
         repository.putAll(transaction.assetId, repository.list(transaction.assetId) + transaction)
-        if (transaction.assetType == AssetType.STOCK) {
-            val stockOrder = transaction.toStockOrder()
-            val stockOrderApi: StockOrderApi = stockOrderRepositoryFactory(context, portfolioName)
-            val existingOrders = stockOrderApi.list(stockOrder.name)
-            stockOrderApi.putAll(stockOrder.name, existingOrders + stockOrder)
-        }
         refresh(context)
     }
 
     fun remove(context: Context, portfolioName: String, transaction: AssetTransaction) {
         Log.i(TAG, "remove(portfolioName=[$portfolioName], transaction=[$transaction])")
         assetTransactionRepositoryFactory(context, portfolioName).remove(transaction)
-        if (transaction.assetType == AssetType.STOCK) {
-            val stockOrder = transaction.toStockOrder()
-            stockOrderRepositoryFactory(context, portfolioName).remove(stockOrder)
-        }
         refresh(context)
     }
 
@@ -277,8 +260,6 @@ class HomeViewModel(
         Log.i(TAG, "removeStock(portfolioName=[$portfolioName], stockSymbol=[$stockSymbol])")
         val assetEventRepository = AssetEventRepository(context = context, portfolioName = portfolioName)
         assetEventRepository.remove(stockSymbol)
-        val stockEventRepository = StockEventRepository(context = context, portfolioName = portfolioName)
-        stockEventRepository.remove(stockSymbol)
         refresh(context)
     }
 
@@ -302,15 +283,6 @@ class HomeViewModel(
     ) {
         Log.i(TAG, "update(portfolioName=[$portfolioName], original=[$original], updated=[$updated])")
         assetTransactionRepositoryFactory(context, portfolioName).update(original, updated)
-        if (original.assetType == AssetType.STOCK) {
-            stockOrderRepositoryFactory(context, portfolioName).remove(original.toStockOrder())
-        }
-        if (updated.assetType == AssetType.STOCK) {
-            val stockOrder = updated.toStockOrder()
-            val stockOrderApi: StockOrderApi = stockOrderRepositoryFactory(context, portfolioName)
-            val existingOrders = stockOrderApi.list(stockOrder.name)
-            stockOrderApi.putAll(stockOrder.name, existingOrders + stockOrder)
-        }
         refresh(context)
     }
 

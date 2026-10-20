@@ -57,7 +57,7 @@ class StockSplitRepository(
 
     override fun putAll(stockName: String, stockSplits: Set<StockSplit>) {
         val assetId = AssetCatalog.stocks.find { it.symbol.equals(stockName, ignoreCase = true) }?.id ?: "stock:$stockName"
-        val transactions = transactionDao.getTransactionsForAsset(porfolioName, assetId).map { it.toDomain() }.toSet()
+        val transactions = transactionDao.getTransactionsForAsset(porfolioName, assetId).map { it.toDomain() }
         ChronologicalBalanceValidator.validate(transactions, stockSplits)
         dao.deleteForStock(porfolioName, stockName)
         val entities = stockSplits.map { StockSplitEntity.fromDomain(porfolioName, it) }

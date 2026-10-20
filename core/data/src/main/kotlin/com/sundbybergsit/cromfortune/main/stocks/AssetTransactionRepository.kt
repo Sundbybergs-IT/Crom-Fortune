@@ -72,7 +72,7 @@ class AssetTransactionRepository(
         if (index != -1) {
             remaining.removeAt(index)
         }
-        if (remaining.isEmpty()) remove(transaction.assetId) else putAll(transaction.assetId, remaining.toSet())
+        if (remaining.isEmpty()) remove(transaction.assetId) else putAll(transaction.assetId, remaining)
     }
 
     override fun update(original: AssetTransaction, updated: AssetTransaction) {
@@ -85,7 +85,7 @@ class AssetTransactionRepository(
 
         if (original.assetId == updated.assetId) {
             originalTransactions[index] = updated
-            putAll(original.assetId, originalTransactions.toSet())
+            putAll(original.assetId, originalTransactions)
             return
         }
 
@@ -103,9 +103,9 @@ class AssetTransactionRepository(
         if (originalTransactions.isEmpty()) {
             remove(original.assetId)
         } else {
-            putAll(original.assetId, originalTransactions.toSet())
+            putAll(original.assetId, originalTransactions)
         }
-        putAll(updated.assetId, updatedTransactions.toSet())
+        putAll(updated.assetId, updatedTransactions)
     }
 
     private fun validateChronologicalBalance(transactions: Collection<AssetTransaction>) {
@@ -113,6 +113,6 @@ class AssetTransactionRepository(
         val first = transactions.first()
         val symbol = first.symbol
         val splits = stockSplitApi.list(symbol)
-        ChronologicalBalanceValidator.validate(transactions.toSet(), splits)
+        ChronologicalBalanceValidator.validate(transactions, splits)
     }
 }
