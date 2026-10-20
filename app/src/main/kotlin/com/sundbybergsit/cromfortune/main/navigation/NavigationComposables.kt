@@ -617,17 +617,16 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     onBack = onBack,
                     entryProvider = entryProvider
                 )
-            }
-        }
 
-        val lastKey = currentBackStack.last()
-        if (lastKey.isBottomSheet()) {
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            ModalBottomSheet(
-                sheetState = sheetState,
-                onDismissRequest = onBack
-            ) {
-                entryProvider(lastKey).Content()
+                if (lastKey.isBottomSheet()) {
+                    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                    ModalBottomSheet(
+                        sheetState = sheetState,
+                        onDismissRequest = onBack
+                    ) {
+                        entryProvider(lastKey).Content()
+                    }
+                }
             }
         }
     }
