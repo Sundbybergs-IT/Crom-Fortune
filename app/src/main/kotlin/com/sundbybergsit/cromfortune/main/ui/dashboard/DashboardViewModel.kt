@@ -23,8 +23,8 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
 
-private const val STONK_HAPPINESS_CONFORMITY_THRESHOLD = 90
-private const val STONK_NEUTRAL_CONFORMITY_THRESHOLD = 70
+private const val STONK_HAPPINESS_CONFORMITY_THRESHOLD = 75
+private const val STONK_NEUTRAL_CONFORMITY_THRESHOLD = 50
 
 class DashboardViewModel : ViewModel() {
 
