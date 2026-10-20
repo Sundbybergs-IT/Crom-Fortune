@@ -71,6 +71,11 @@ class AvanzaCsvImporter {
         val rawTransactions = mutableListOf<AssetTransaction>()
         val rawSplitItems = mutableListOf<RawSplitItem>()
 
+        val latestDateByAssetId = existingTransactions.groupBy { it.assetId }
+            .mapValues { (_, txs) -> txs.maxOfOrNull { it.dateInMillis } ?: 0L }
+        val latestDateBySplitName = existingSplits.groupBy { it.name }
+            .mapValues { (_, splits) -> splits.maxOfOrNull { it.dateInMillis } ?: 0L }
+
         val btaCosts = mutableMapOf<String, Pair<BigDecimal, BigDecimal>>()
         for (i in 1 until lines.size) {
             val line = lines[lines.size - i]
@@ -134,7 +139,10 @@ class AvanzaCsvImporter {
                     continue
                 }
 
-                rawSplitItems.add(RawSplitItem(matchedAsset.symbol, dateInMillis, rawQuantity))
+                val latestSplitDate = latestDateBySplitName[matchedAsset.symbol] ?: 0L
+                if (dateInMillis > latestSplitDate) {
+                    rawSplitItems.add(RawSplitItem(matchedAsset.symbol, dateInMillis, rawQuantity))
+                }
                 continue
             }
 
@@ -232,20 +240,23 @@ class AvanzaCsvImporter {
                     BigDecimal.ZERO
                 }
 
-            rawTransactions.add(
-                AssetTransaction(
-                    assetId = matchedAsset.id,
-                    assetType = matchedAsset.type,
-                    symbol = matchedAsset.symbol,
-                    displayName = matchedAsset.displayName,
-                    quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
-                    action = action,
-                    dateInMillis = dateInMillis,
-                    unitPrice = unitPrice,
-                    commissionFee = commissionFee,
-                    quantity = quantity
+            val latestDate = latestDateByAssetId[matchedAsset.id] ?: 0L
+            if (dateInMillis > latestDate) {
+                rawTransactions.add(
+                    AssetTransaction(
+                        assetId = matchedAsset.id,
+                        assetType = matchedAsset.type,
+                        symbol = matchedAsset.symbol,
+                        displayName = matchedAsset.displayName,
+                        quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+                        action = action,
+                        dateInMillis = dateInMillis,
+                        unitPrice = unitPrice,
+                        commissionFee = commissionFee,
+                        quantity = quantity
+                    )
                 )
-            )
+            }
         }
 
         val aggregatedSplits = rawSplitItems.groupBy { Pair(it.symbol, it.dateInMillis) }

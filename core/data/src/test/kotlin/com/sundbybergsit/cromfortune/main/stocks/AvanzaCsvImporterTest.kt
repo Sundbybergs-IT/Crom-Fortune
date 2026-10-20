@@ -215,4 +215,61 @@ class AvanzaCsvImporterTest {
         assertEquals(100, result.splits[0].quantity)
     }
 
+    @Test
+    fun `import - when existing transactions up to date - filters out existing transactions and prevents duplicates`() {
+        val csvContent = """
+            Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
+            2025-02-05;5011017;Köp;Cereno Scientific B;204;4,89;-1000,05;SEK;2,49;;SEK;SE0008241558;
+            2025-02-10;5011017;Köp;Cereno Scientific B;100;5,00;-500,00;SEK;1,00;;SEK;SE0008241558;
+        """.trimIndent()
+
+        val matchedAsset = com.sundbybergsit.cromfortune.domain.AssetCatalog.findBySymbol(com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "CRNO-B.ST")!!
+        val existingTx = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            assetId = matchedAsset.id,
+            assetType = matchedAsset.type,
+            symbol = matchedAsset.symbol,
+            displayName = matchedAsset.displayName,
+            quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = java.time.LocalDate.parse("2025-02-05").atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            unitPrice = BigDecimal("4.89"),
+            quantity = BigDecimal("204")
+        )
+
+        val importer = AvanzaCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()), existingTransactions = listOf(existingTx))
+        val transactions = result.transactions
+
+        assertEquals(1, transactions.size)
+        assertEquals(java.time.LocalDate.parse("2025-02-10").atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(), transactions[0].dateInMillis)
+    }
+
+    @Test
+    fun `import - when stock does not exist in app at all - all transactions are imported`() {
+        val csvContent = """
+            Datum;Konto;Typ av transaktion;Värdepapper/beskrivning;Antal;Kurs;Belopp;Transaktionsvaluta;Courtage;Valutakurs;Instrumentvaluta;ISIN;Resultat
+            2025-02-05;5011017;Köp;Cereno Scientific B;204;4,89;-1000,05;SEK;2,49;;SEK;SE0008241558;
+            2025-02-10;5011017;Köp;Cereno Scientific B;100;5,00;-500,00;SEK;1,00;;SEK;SE0008241558;
+        """.trimIndent()
+
+        val otherAsset = com.sundbybergsit.cromfortune.domain.AssetCatalog.findBySymbol(com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "ASSA-B.ST")!!
+        val existingTx = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            assetId = otherAsset.id,
+            assetType = otherAsset.type,
+            symbol = otherAsset.symbol,
+            displayName = otherAsset.displayName,
+            quoteCurrencyCode = otherAsset.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = java.time.LocalDate.parse("2025-02-05").atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            unitPrice = BigDecimal("30"),
+            quantity = BigDecimal("100")
+        )
+
+        val importer = AvanzaCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()), existingTransactions = listOf(existingTx))
+        val transactions = result.transactions
+
+        assertEquals(2, transactions.size)
+    }
+
 }

@@ -71,6 +71,9 @@ class MontroseCsvImporter {
 
         val rawTransactions = mutableListOf<AssetTransaction>()
 
+        val latestDateByAssetId = existingTransactions.groupBy { it.assetId }
+            .mapValues { (_, txs) -> txs.maxOfOrNull { it.dateInMillis } ?: 0L }
+
         val conversionDates = mutableSetOf<String>()
         for (line in lines) {
             if (line.contains("omvandling", ignoreCase = true) || line.contains("konvertering", ignoreCase = true)) {
@@ -194,20 +197,23 @@ class MontroseCsvImporter {
                     BigDecimal.ZERO
                 }
 
-            rawTransactions.add(
-                AssetTransaction(
-                    assetId = matchedAsset.id,
-                    assetType = matchedAsset.type,
-                    symbol = matchedAsset.symbol,
-                    displayName = matchedAsset.displayName,
-                    quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
-                    action = action,
-                    dateInMillis = dateInMillis,
-                    unitPrice = unitPrice,
-                    commissionFee = commissionFee,
-                    quantity = quantity,
+            val latestDate = latestDateByAssetId[matchedAsset.id] ?: 0L
+            if (dateInMillis > latestDate) {
+                rawTransactions.add(
+                    AssetTransaction(
+                        assetId = matchedAsset.id,
+                        assetType = matchedAsset.type,
+                        symbol = matchedAsset.symbol,
+                        displayName = matchedAsset.displayName,
+                        quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+                        action = action,
+                        dateInMillis = dateInMillis,
+                        unitPrice = unitPrice,
+                        commissionFee = commissionFee,
+                        quantity = quantity,
+                    )
                 )
-            )
+            }
         }
 
         val aggregatedTransactions = rawTransactions.groupBy { Triple(it.assetId, it.action, it.dateInMillis) }

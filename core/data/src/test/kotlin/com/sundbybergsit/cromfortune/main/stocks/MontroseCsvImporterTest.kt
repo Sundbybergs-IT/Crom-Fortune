@@ -166,4 +166,61 @@ class MontroseCsvImporterTest {
         }
     }
 
+    @Test
+    fun `import - when existing transactions up to date - filters out existing transactions and prevents duplicates`() {
+        val csvContent = """
+            Datum,Typ,Konto,Värdepapper / Beskr.,Ticker,ISIN,Antal,Kurs,Kursvaluta,Totalt,Totalvaluta,Courtage,Courtagevaluta
+            2026-09-01,Köp,2149201,Investor B,INVE B,SE0015811963,10,400.0,SEK,-4000,SEK,1.0,SEK
+            2026-10-02,Sälj,2149201,Investor B,INVE B,SE0015811963,-2,403.35,SEK,805,SEK,1.21,SEK
+        """.trimIndent()
+
+        val matchedAsset = com.sundbybergsit.cromfortune.domain.AssetCatalog.findBySymbol(com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "INVE-B.ST")!!
+        val existingTx = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            assetId = matchedAsset.id,
+            assetType = matchedAsset.type,
+            symbol = matchedAsset.symbol,
+            displayName = matchedAsset.displayName,
+            quoteCurrencyCode = matchedAsset.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = java.time.LocalDate.parse("2026-09-01").atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            unitPrice = BigDecimal("400.0"),
+            quantity = BigDecimal("10")
+        )
+
+        val importer = MontroseCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()), existingTransactions = listOf(existingTx))
+        val transactions = result.transactions
+
+        assertEquals(1, transactions.size)
+        assertEquals(java.time.LocalDate.parse("2026-10-02").atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(), transactions[0].dateInMillis)
+    }
+
+    @Test
+    fun `import - when stock does not exist in app at all - all transactions are imported`() {
+        val csvContent = """
+            Datum,Typ,Konto,Värdepapper / Beskr.,Ticker,ISIN,Antal,Kurs,Kursvaluta,Totalt,Totalvaluta,Courtage,Courtagevaluta
+            2026-09-01,Köp,2149201,Investor B,INVE B,SE0015811963,10,400.0,SEK,-4000,SEK,1.0,SEK
+            2026-10-02,Sälj,2149201,Investor B,INVE B,SE0015811963,-2,403.35,SEK,805,SEK,1.21,SEK
+        """.trimIndent()
+
+        val otherAsset = com.sundbybergsit.cromfortune.domain.AssetCatalog.findBySymbol(com.sundbybergsit.cromfortune.domain.AssetType.STOCK, "ASSA-B.ST")!!
+        val existingTx = com.sundbybergsit.cromfortune.domain.AssetTransaction(
+            assetId = otherAsset.id,
+            assetType = otherAsset.type,
+            symbol = otherAsset.symbol,
+            displayName = otherAsset.displayName,
+            quoteCurrencyCode = otherAsset.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = java.time.LocalDate.parse("2026-09-01").atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            unitPrice = BigDecimal("250.0"),
+            quantity = BigDecimal("10")
+        )
+
+        val importer = MontroseCsvImporter()
+        val result = importer.import(ByteArrayInputStream(csvContent.toByteArray()), existingTransactions = listOf(existingTx))
+        val transactions = result.transactions
+
+        assertEquals(2, transactions.size)
+    }
+
 }
