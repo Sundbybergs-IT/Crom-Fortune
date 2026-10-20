@@ -10,9 +10,9 @@ interface StockOrderApi {
 
     fun isEmpty(): Boolean
 
-    fun list(stockSymbol: String): Set<StockOrder>
+    fun list(stockSymbol: String): List<StockOrder>
 
-    fun putAll(stockSymbol: String, stockOrders: Set<StockOrder>)
+    fun putAll(stockSymbol: String, stockOrders: Collection<StockOrder>)
 
     fun putReplacingAll(stockSymbol: String, stockOrder: StockOrder)
 

@@ -8,7 +8,7 @@ interface StockEventApi {
 
     fun isEmpty(): Boolean
 
-    fun list(stockName: String): Set<StockEvent>
+    fun list(stockName: String): List<StockEvent>
 
     fun remove(stockName: String)
 

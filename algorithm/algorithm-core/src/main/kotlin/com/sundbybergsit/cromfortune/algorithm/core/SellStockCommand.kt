@@ -27,7 +27,7 @@ class SellStockCommand(
 
     override fun execute(item: StockOrderApi) {
         if (item.count(name) > 0) {
-            val stockOrders: MutableSet<StockOrder> = item.list(name).toMutableSet()
+            val stockOrders: MutableList<StockOrder> = item.list(name).toMutableList()
             stockOrders.add(
                 StockOrder(
                     orderAction = "Sell", currency = currency.toString(),

@@ -77,14 +77,14 @@ class StockEventRepositoryTest {
             TODO("Not yet implemented")
         }
 
-        override fun list(stockSymbol: String): Set<StockOrder> {
-            return setOf(
+        override fun list(stockSymbol: String): List<StockOrder> {
+            return listOf(
                 StockOrder("Buy", "SEK", 0L, stockSymbol, 1.0, 0.0, 1),
                 StockOrder("Sell", "SEK", 5L, stockSymbol, 1.0, 0.0, 2),
             )
         }
 
-        override fun putAll(stockSymbol: String, stockOrders: Set<StockOrder>) {
+        override fun putAll(stockSymbol: String, stockOrders: Collection<StockOrder>) {
             TODO("Not yet implemented")
         }
 

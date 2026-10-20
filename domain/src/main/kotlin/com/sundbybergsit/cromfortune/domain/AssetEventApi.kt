@@ -6,6 +6,6 @@ interface AssetEventApi {
     fun currentQuantity(assetId: String): BigDecimal
     fun assetIds(): Set<String>
     fun isEmpty(): Boolean
-    fun list(assetId: String): Set<AssetEvent>
+    fun list(assetId: String): List<AssetEvent>
     fun remove(assetId: String)
 }

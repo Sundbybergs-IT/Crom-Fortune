@@ -44,12 +44,12 @@ class AssetEventRepository(
 
     override fun isEmpty(): Boolean = transactionApi.isEmpty()
 
-    override fun list(assetId: String): Set<AssetEvent> {
+    override fun list(assetId: String): List<AssetEvent> {
         val transactions = transactionApi.list(assetId)
-        val type = transactions.firstOrNull()?.assetType ?: AssetCatalog.findById(assetId)?.type ?: return emptySet()
-        val events = transactions.mapTo(mutableSetOf()) { transaction ->
+        val type = transactions.firstOrNull()?.assetType ?: AssetCatalog.findById(assetId)?.type ?: return emptyList()
+        val events = transactions.map { transaction ->
             AssetEvent(assetId, type, transaction = transaction, dateInMillis = transaction.dateInMillis)
-        }
+        }.toMutableList()
         if (type == AssetType.STOCK) {
             val symbol = transactions.firstOrNull()?.symbol ?: AssetCatalog.findById(assetId)?.symbol
             symbol?.let {

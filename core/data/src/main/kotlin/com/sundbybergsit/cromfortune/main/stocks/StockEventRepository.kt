@@ -46,11 +46,9 @@ class StockEventRepository(
         return stockOrderApi.isEmpty()
     }
 
-    override fun list(stockName: String): Set<StockEvent> {
-        return (stockOrderApi.list(stockName).stream().map { StockEvent(it, null, it.dateInMillis) }
-            .toList() +
-            stockSplitApi.list(stockName).stream().map { StockEvent(null, it, it.dateInMillis) }.toList())
-            .toSet()
+    override fun list(stockName: String): List<StockEvent> {
+        return stockOrderApi.list(stockName).map { StockEvent(it, null, it.dateInMillis) } +
+            stockSplitApi.list(stockName).map { StockEvent(null, it, it.dateInMillis) }
     }
 
     override fun remove(stockName: String) {

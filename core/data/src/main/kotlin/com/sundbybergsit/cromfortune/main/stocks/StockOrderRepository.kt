@@ -17,7 +17,7 @@ class StockOrderRepository(
 ) : StockOrderApi, Taggable {
 
     override fun count(stockSymbol: String): Int {
-        val list: Set<StockOrder> = list(stockSymbol)
+        val list: List<StockOrder> = list(stockSymbol)
         var count = 0
         for (stockOrder in list) {
             when (stockOrder.orderAction) {
@@ -53,19 +53,18 @@ class StockOrderRepository(
 
     override fun isEmpty(): Boolean = assetTransactionApi.isEmpty()
 
-    override fun list(stockSymbol: String): Set<StockOrder> {
+    override fun list(stockSymbol: String): List<StockOrder> {
         Log.i(TAG, "list([$stockSymbol])")
         val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
         return assetTransactionApi.list(assetId)
             .filter { it.assetType == AssetType.STOCK }
             .map { it.toStockOrder() }
-            .toSet()
     }
 
-    override fun putAll(stockSymbol: String, stockOrders: Set<StockOrder>) {
+    override fun putAll(stockSymbol: String, stockOrders: Collection<StockOrder>) {
         Log.i(TAG, "putAll([$stockSymbol], [$stockOrders])")
         val assetId = AssetCatalog.findBySymbol(AssetType.STOCK, stockSymbol)?.id ?: "stock:$stockSymbol"
-        val transactions = stockOrders.map { AssetTransaction.fromStockOrder(it) }.toSet()
+        val transactions = stockOrders.map { AssetTransaction.fromStockOrder(it) }
         assetTransactionApi.putAll(assetId, transactions)
     }
 

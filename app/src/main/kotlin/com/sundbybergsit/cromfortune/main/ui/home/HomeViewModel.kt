@@ -329,7 +329,7 @@ class HomeViewModel(
         )
         val stockOrderAggregates: MutableList<StockOrderAggregate> = mutableListOf()
         for (stockSymbol in stockEventApi.listOfStockNames().sorted()) {
-            val stockEvents: Set<StockEvent> = stockEventApi.list(stockSymbol)
+            val stockEvents: List<StockEvent> = stockEventApi.list(stockSymbol)
             if (stockEvents.isEmpty()) {
                 // Preventive cleanup, https://github.com/Sundbybergs-IT/Crom-Fortune/issues/20
                 stockEventApi.remove(stockSymbol)

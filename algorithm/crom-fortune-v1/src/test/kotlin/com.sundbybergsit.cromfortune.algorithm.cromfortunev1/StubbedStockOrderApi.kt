@@ -14,10 +14,10 @@ class StubbedStockOrderApi(private val stockOrders: MutableSet<StockOrder> = mut
 
     override fun isEmpty(): Boolean = stockOrders.isEmpty()
 
-    override fun list(stockSymbol: String): Set<StockOrder> =
-        stockOrders.filter { stockOrder -> stockOrder.name == stockSymbol }.toSet()
+    override fun list(stockSymbol: String): List<StockOrder> =
+        stockOrders.filter { stockOrder -> stockOrder.name == stockSymbol }
 
-    override fun putAll(stockSymbol: String, stockOrders: Set<StockOrder>) {
+    override fun putAll(stockSymbol: String, stockOrders: Collection<StockOrder>) {
         this.stockOrders.addAll(stockOrders)
     }
 

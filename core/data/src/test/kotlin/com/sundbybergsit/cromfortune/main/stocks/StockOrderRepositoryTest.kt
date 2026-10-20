@@ -63,4 +63,27 @@ class StockOrderRepositoryTest {
         assertEquals(150.0, order.pricePerStock, 0.001)
         assertEquals(BigDecimal("5"), order.quantity)
     }
+
+    @Test
+    fun `saving identical transactions retains all transactions in stockOrderRepository`() {
+        val teslaAsset = requireNotNull(AssetCatalog.findBySymbol(AssetType.STOCK, "TSLA"))
+        val transactionRepository = AssetTransactionRepository(context, portfolioName)
+        val stockOrderRepository = StockOrderRepository(context, portfolioName)
+
+        val transaction = AssetTransaction(
+            assetId = teslaAsset.id,
+            assetType = teslaAsset.type,
+            symbol = teslaAsset.symbol,
+            displayName = teslaAsset.displayName,
+            quoteCurrencyCode = teslaAsset.quoteCurrency.currencyCode,
+            action = TransactionAction.BUY,
+            dateInMillis = 1000L,
+            unitPrice = BigDecimal("150.0"),
+            quantity = BigDecimal("5")
+        )
+        transactionRepository.putAll(teslaAsset.id, listOf(transaction, transaction))
+
+        val orders = stockOrderRepository.list("TSLA")
+        assertEquals(2, orders.size)
+    }
 }

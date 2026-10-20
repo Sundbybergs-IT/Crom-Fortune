@@ -84,7 +84,7 @@ class AssetDataRetrievalCoroutineWorker(
                         continue
                     }
                     for (portfolioName in activePortfolios) {
-                        val stockEvents = StockEventRepository(context, portfolioName).list(asset.symbol)
+                        val stockEvents = StockEventRepository(context, portfolioName).list(asset.symbol).toSet()
                         if (stockEvents.isNotEmpty()) {
                             val recommendation = CromFortuneV1RecommendationAlgorithm()
                                 .getRecommendation(
