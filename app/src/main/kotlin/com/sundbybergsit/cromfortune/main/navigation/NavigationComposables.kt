@@ -195,13 +195,23 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
     var currentTabRoute by rememberSaveable { mutableStateOf(Home.toRoute()) }
     val currentTab = currentTabRoute.toNavKey()
     val currentBackStack = backStacks[currentTab]!!
+    var activeBottomSheet by remember { mutableStateOf<androidxNavKey?>(null) }
 
     val onNavigate: (NavKey) -> Unit = { key ->
-        currentBackStack.add(key)
+        if (key.isBottomSheet()) {
+            activeBottomSheet = key
+        } else {
+            currentBackStack.add(key)
+        }
     }
 
     val onBack: () -> Unit = {
-        if (currentBackStack.size > 1) {
+        if (activeBottomSheet != null) {
+            scope.launch {
+                sheetState.hide()
+                activeBottomSheet = null
+            }
+        } else if (currentBackStack.size > 1) {
             currentBackStack.removeAt(currentBackStack.size - 1)
         }
     }
@@ -482,30 +492,29 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     .padding(innerPadding)
                     .fillMaxSize()
             ) {
-                val lastKey = currentBackStack.last()
-                val visibleBackStack =
-                    if (lastKey.isBottomSheet()) currentBackStack.dropLast(1) else currentBackStack
-
                 NavDisplay(
-                    backStack = visibleBackStack,
+                    backStack = currentBackStack,
                     onBack = onBack,
                     entryProvider = entryProvider
                 )
+            }
+        }
 
-                if (lastKey.isBottomSheet()) {
-                    LaunchedEffect(lastKey) {
-                        sheetState.show()
+        if (activeBottomSheet != null) {
+            val sheetKey = activeBottomSheet!!
+            LaunchedEffect(sheetKey) {
+                sheetState.show()
+            }
+            ModalBottomSheet(
+                sheetState = sheetState,
+                onDismissRequest = {
+                    scope.launch {
+                        sheetState.hide()
+                        activeBottomSheet = null
                     }
-                    ModalBottomSheet(
-                        sheetState = sheetState,
-                        onDismissRequest = {
-                            scope.launch {
-                                sheetState.hide()
-                                onBack()
-                            }
-                        }
-                    ) {
-                        when (lastKey) {
+                }
+            ) {
+                when (sheetKey) {
                             is BottomSheetsHome -> {
                                 val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                                     HomeViewModelFactory(portfolioRepository = portfolioRepository)
@@ -548,28 +557,28 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                                 BottomSheetContent {
                                     BottomSheetMenuItem(
                                         onClick = {
-                                            homeViewModel.sortNameAscending(lastKey.profile)
+                                            homeViewModel.sortNameAscending(sheetKey.profile)
                                             onBack()
                                         },
                                         text = stringResource(id = R.string.home_sort_alphabetical_down)
                                     )
                                     BottomSheetMenuItem(
                                         onClick = {
-                                            homeViewModel.sortNameDescending(lastKey.profile)
+                                            homeViewModel.sortNameDescending(sheetKey.profile)
                                             onBack()
                                         },
                                         text = stringResource(id = R.string.home_sort_alphabetical_up)
                                     )
                                     BottomSheetMenuItem(
                                         onClick = {
-                                            homeViewModel.sortProfitAscending(lastKey.profile)
+                                            homeViewModel.sortProfitAscending(sheetKey.profile)
                                             onBack()
                                         },
                                         text = stringResource(id = R.string.home_sort_profit_down)
                                     )
                                     BottomSheetMenuItem(
                                         onClick = {
-                                            homeViewModel.sortProfitDescending(lastKey.profile)
+                                            homeViewModel.sortProfitDescending(sheetKey.profile)
                                             onBack()
                                         },
                                         text = stringResource(id = R.string.home_sort_profit_up)
@@ -581,10 +590,10 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                                     BottomSheetMenuItem(
                                         onClick = {
                                             onBack()
-                                            DialogHandler.showAssetNoteDialog(lastKey.portfolioName, lastKey.stockSymbol)
+                                            DialogHandler.showAssetNoteDialog(sheetKey.portfolioName, sheetKey.stockSymbol)
                                         },
                                         text = stringResource(
-                                            if (AssetNoteRepository.get(lastKey.portfolioName, lastKey.stockSymbol) == null) {
+                                            if (AssetNoteRepository.get(sheetKey.portfolioName, sheetKey.stockSymbol) == null) {
                                                 R.string.action_note_add
                                             } else {
                                                 R.string.action_note_edit
@@ -595,8 +604,8 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                                         onClick = {
                                             onBack()
                                             DialogHandler.showDeleteDialog(
-                                                portfolioName = lastKey.portfolioName,
-                                                stockName = lastKey.stockSymbol
+                                                portfolioName = sheetKey.portfolioName,
+                                                stockName = sheetKey.stockSymbol
                                             )
                                         },
                                         text = stringResource(id = R.string.action_delete)
@@ -638,8 +647,6 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 }
             }
         }
-    }
-}
 
 private fun androidxNavKey.isBottomSheet(): Boolean = this::class.simpleName?.startsWith("BottomSheets") == true
 
