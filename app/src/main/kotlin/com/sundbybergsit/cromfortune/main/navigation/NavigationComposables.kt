@@ -376,6 +376,12 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     }
                 )
             }
+
+            entry<BottomSheetsHome> {}
+            entry<BottomSheetsHomeAllStocks> {}
+            entry<BottomSheetsHomeStock> {}
+            entry<BottomSheetsNotifications> {}
+            entry<BottomSheetsSettings> {}
         }
     }
 
