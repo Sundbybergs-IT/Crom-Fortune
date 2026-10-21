@@ -26,7 +26,7 @@ class CromFortuneV1RecommendationAlgorithm(
     override val supportedAssetTypes: Set<AssetType> = setOf(AssetType.STOCK, AssetType.CRYPTO)
 
     override fun getRecommendation(
-        stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Set<StockEvent>,
+        stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Collection<StockEvent>,
         timeInMillis: Long,
     ): Recommendation? {
         if (!supports(stockEvents)) return null
@@ -38,7 +38,7 @@ class CromFortuneV1RecommendationAlgorithm(
 
     private fun getRecommendation(
         stockName: String, currency: Currency, rateInSek: Double,
-        stockEvents: Set<StockEvent>,
+        stockEvents: Collection<StockEvent>,
         currentStockPriceInStockCurrency: Double, commissionFeeInSek: Double,
         timeInMillis: Long,
     ): Recommendation? {
@@ -79,6 +79,9 @@ class CromFortuneV1RecommendationAlgorithm(
             }
         }
         val netQuantity = grossQuantity - soldQuantity
+        if (netQuantity <= 0) {
+            return null
+        }
         val averageCostInSek = accumulatedCostInSek / grossQuantity
         val costToExcludeInSek = averageCostInSek * soldQuantity
 

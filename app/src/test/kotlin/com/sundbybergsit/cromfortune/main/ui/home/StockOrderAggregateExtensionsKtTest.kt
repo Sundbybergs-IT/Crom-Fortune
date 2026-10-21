@@ -152,7 +152,7 @@ class StockOrderAggregateExtensionsKtTest {
             stockPrice: StockPrice,
             currencyRateInSek: Double,
             commissionFee: Double,
-            stockEvents: Set<StockEvent>,
+            stockEvents: Collection<StockEvent>,
             timeInMillis: Long
         ) = Recommendation(
             BuyStockCommand(timeInMillis, stockPrice.currency, stockPrice.stockSymbol, stockPrice.price, 1, commissionFee)

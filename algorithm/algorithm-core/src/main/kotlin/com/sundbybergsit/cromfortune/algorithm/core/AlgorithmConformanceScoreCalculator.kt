@@ -8,7 +8,7 @@ abstract class AlgorithmConformanceScoreCalculator {
 
     abstract suspend fun getScore(
         recommendationAlgorithm: RecommendationAlgorithm,
-        stockEvents: Set<StockEvent>,
+        stockEvents: Collection<StockEvent>,
         currencyRateApi: CurrencyRateApi
     ): ConformanceScore
 

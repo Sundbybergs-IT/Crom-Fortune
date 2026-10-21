@@ -823,6 +823,31 @@ class CromFortuneV1RecommendationAlgorithmTest {
             assertEquals(sellStockCommand.currency, currency)
         }
 
+    @Test
+    fun `getRecommendation - when net quantity is 0 and stock price increases - returns null`() = runBlocking {
+        val currency = Currency.getInstance("SEK")
+        val buyOrder = StockOrder("Buy", currency.toString(), 0L, DOMESTIC_STOCK_NAME, 100.0, 39.0, 10)
+        val sellOrder1 = StockOrder("Sell", currency.toString(), 1L, DOMESTIC_STOCK_NAME, 110.0, 39.0, 3)
+        val sellOrder2 = StockOrder("Sell", currency.toString(), 2L, DOMESTIC_STOCK_NAME, 120.0, 39.0, 3)
+        val sellOrder3 = StockOrder("Sell", currency.toString(), 3L, DOMESTIC_STOCK_NAME, 130.0, 39.0, 2)
+        val sellOrder4 = StockOrder("Sell", currency.toString(), 4L, DOMESTIC_STOCK_NAME, 140.0, 39.0, 2)
+        val stockEvents = listOf(
+            buyOrder.toStockEvent(),
+            sellOrder1.toStockEvent(),
+            sellOrder2.toStockEvent(),
+            sellOrder3.toStockEvent(),
+            sellOrder4.toStockEvent()
+        )
+
+        val recommendation = algorithm.getRecommendation(
+            StockPrice(DOMESTIC_STOCK_NAME, currency, 200.0),
+            1.0, 39.0, stockEvents,
+            TimeUnit.MILLISECONDS.convert(CromFortuneV1RecommendationAlgorithm.MIN_FREEZE_PERIOD_IN_DAYS, TimeUnit.DAYS) + 10L
+        )
+
+        assertNull(recommendation)
+    }
+
     private fun assertStockPrice(expected: Double, actual: Double) {
         assertTrue(message = "Expected stock price to be $expected but was $actual", block = { actual == expected })
     }

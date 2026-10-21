@@ -23,7 +23,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
 
     override suspend fun getScore(
         recommendationAlgorithm: RecommendationAlgorithm,
-        stockEvents: Set<StockEvent>,
+        stockEvents: Collection<StockEvent>,
         currencyRateApi: CurrencyRateApi,
     ): ConformanceScore {
         var correctDecision = 0

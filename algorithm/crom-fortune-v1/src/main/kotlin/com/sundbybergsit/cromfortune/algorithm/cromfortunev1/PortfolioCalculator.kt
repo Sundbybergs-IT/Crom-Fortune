@@ -3,10 +3,9 @@ package com.sundbybergsit.cromfortune.algorithm.cromfortunev1
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockSplit
-import java.util.SortedSet
 
 class PortfolioCalculator(
-    private val stockEvents: Set<StockEvent>,
+    private val stockEvents: Collection<StockEvent>,
     private val stockName: String,
     private val rateInSek: Double
 ) {
@@ -21,9 +20,12 @@ class PortfolioCalculator(
 
     fun calculate(): PortfolioState {
         val orders = stockEvents.filter { it.stockOrder != null }.map { it.stockOrder!! }
-            .toSortedSet { s1, s2 -> s1.dateInMillis.compareTo(s2.dateInMillis) }
+            .sortedWith(
+                compareBy<StockOrder> { it.dateInMillis }
+                    .thenBy { if (it.orderAction == "Buy") 0 else 1 }
+            )
         val stockSplits = stockEvents.filter { it.stockSplit != null }.map { it.stockSplit!! }
-            .toSortedSet { s1, s2 -> s1.dateInMillis.compareTo(s2.dateInMillis) }
+            .sortedBy { it.dateInMillis }
 
         var grossQuantity = 0
         var soldQuantity = 0
@@ -57,7 +59,7 @@ class PortfolioCalculator(
         return PortfolioState(grossQuantity, soldQuantity, accumulatedCostInSek)
     }
 
-    private fun calculateSplitMultiplier(stockOrder: StockOrder, sortedSplits: SortedSet<StockSplit>): Double {
+    private fun calculateSplitMultiplier(stockOrder: StockOrder, sortedSplits: List<StockSplit>): Double {
         var splitMultiplier = 1.0
         for (sortedSplit in sortedSplits) {
             if (sortedSplit.dateInMillis > stockOrder.dateInMillis) {

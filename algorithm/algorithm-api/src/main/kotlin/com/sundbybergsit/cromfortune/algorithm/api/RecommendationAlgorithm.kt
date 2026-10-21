@@ -15,7 +15,7 @@ abstract class RecommendationAlgorithm {
         .all(::supports)
 
     abstract fun getRecommendation(
-        stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Set<StockEvent>,
+        stockPrice: StockPrice, currencyRateInSek: Double, commissionFee: Double, stockEvents: Collection<StockEvent>,
         timeInMillis: Long,
     ): Recommendation?
 

@@ -65,4 +65,16 @@ class PortfolioCalculatorTest {
         assertEquals(0, state.soldQuantity)
         assertEquals(1010.0, state.accumulatedCostInSek, 0.001)
     }
+
+    @Test
+    fun `calculate - when multiple orders have identical timestamps - processes all orders without dropping any`() {
+        val buyOrder = StockOrder("Buy", currency.toString(), 1000L, "Stock", 100.0, 10.0, 100)
+        val sellOrder1 = StockOrder("Sell", currency.toString(), 1000L, "Stock", 110.0, 10.0, 50)
+        val sellOrder2 = StockOrder("Sell", currency.toString(), 1000L, "Stock", 120.0, 10.0, 50)
+        val calculator = PortfolioCalculator(listOf(buyOrder.toStockEvent(), sellOrder1.toStockEvent(), sellOrder2.toStockEvent()), "Stock", 1.0)
+        val state = calculator.calculate()
+        assertEquals(0, state.netQuantity)
+        assertEquals(0, state.grossQuantity)
+        assertEquals(0, state.soldQuantity)
+    }
 }
