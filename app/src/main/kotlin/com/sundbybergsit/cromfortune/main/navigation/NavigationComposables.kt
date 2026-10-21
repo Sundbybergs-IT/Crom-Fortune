@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import kotlinx.coroutines.launch
 import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
@@ -75,6 +76,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -173,6 +175,8 @@ private val STATUS_COLUMN_WIDTH = 40.dp
 internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
     val context = LocalContext.current
     val appUpdateManager = remember { AppUpdateManagerFactory.create(context) }
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val homeBackStack = rememberNavBackStack(Home)
     val dashboardBackStack = rememberNavBackStack(Dashboard)
@@ -492,10 +496,17 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
 
         val lastKey = currentBackStack.last()
         if (lastKey.isBottomSheet()) {
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            LaunchedEffect(lastKey) {
+                sheetState.show()
+            }
             ModalBottomSheet(
                 sheetState = sheetState,
-                onDismissRequest = onBack
+                onDismissRequest = {
+                    scope.launch {
+                        sheetState.hide()
+                        onBack()
+                    }
+                }
             ) {
                 when (lastKey) {
                     is BottomSheetsHome -> {
