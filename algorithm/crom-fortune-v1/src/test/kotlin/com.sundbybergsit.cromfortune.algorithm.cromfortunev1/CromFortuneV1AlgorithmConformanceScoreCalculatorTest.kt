@@ -5,6 +5,7 @@ import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.core.ConformanceScore
 import com.sundbybergsit.cromfortune.algorithm.core.SellStockCommand
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
 import com.sundbybergsit.cromfortune.domain.StockPrice
@@ -37,7 +38,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         currencyRateApi.addAll(setOf(CurrencyRate("SEK", 1.0)))
         stockPriceApi.put(
             setOf(
-                StockPrice(StockPrice.SYMBOLS[0].first, Currency.getInstance("SEK"), 1.0)
+                StockPrice(AssetCatalog.stocks[0].symbol, Currency.getInstance("SEK"), 1.0)
             )
         )
         ShadowLooper.runUiThreadTasks()
@@ -66,7 +67,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     fun `getScore - when initial split order - returns 100`() = runBlocking {
         val score = calculator.getScore(
             SellRecommendationDummyAlgorithm(),
-            setOf(StockSplit(false, 1L, StockPrice.SYMBOLS[0].first, 2).toStockEvent()),
+            setOf(StockSplit(false, 1L, AssetCatalog.stocks[0].symbol, 2).toStockEvent()),
             currencyRateApi
         )
 
@@ -115,7 +116,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     @Test
     fun `getScore - when 1 out of 2 correct decisions with splits that should not affect - returns 50`() = runBlocking {
-        val ticker = StockPrice.SYMBOLS[0].first
+        val ticker = AssetCatalog.stocks[0].symbol
         val score = calculator.getScore(
             SellRecommendationDummyAlgorithm(),
             setOf(
@@ -132,7 +133,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     @Test
     fun `getScore - when 2 out of 2 correct decisions with split that should affect - returns 100`() = runBlocking {
-        val ticker = StockPrice.SYMBOLS[0].first
+        val ticker = AssetCatalog.stocks[0].symbol
         val score = calculator.getScore(
             CromFortuneV1RecommendationAlgorithm(),
             setOf(
@@ -148,7 +149,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     @Test
     fun `getScore - when 1 out of 2 correct decisions with split that should affect - returns 50`() = runBlocking {
-        val ticker = StockPrice.SYMBOLS[0].first
+        val ticker = AssetCatalog.stocks[0].symbol
         val score = calculator.getScore(
             CromFortuneV1RecommendationAlgorithm(),
             setOf(
@@ -228,7 +229,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     private fun newDividendStockEvent(
         dateInMillis: Long,
-        ticker: String = StockPrice.SYMBOLS[0].first,
+        ticker: String = AssetCatalog.stocks[0].symbol,
         price: Double = 1.0,
         quantity: Int = 1
     ): StockEvent {
@@ -245,7 +246,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     private fun newSellStockEvent(
         dateInMillis: Long,
-        ticker: String = StockPrice.SYMBOLS[0].first,
+        ticker: String = AssetCatalog.stocks[0].symbol,
         price: Double = 1.0,
         quantity: Int = 1
     ): StockEvent {
@@ -262,7 +263,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
 
     private fun newBuyStockEvent(
         dateInMillis: Long,
-        ticker: String = StockPrice.SYMBOLS[0].first,
+        ticker: String = AssetCatalog.stocks[0].symbol,
         price: Double = 1.0,
         quantity: Int = 1
     ): StockEvent {
@@ -288,7 +289,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             return Recommendation(
                 SellStockCommand(
                     timeInMillis, Currency.getInstance("SEK"),
-                    StockPrice.SYMBOLS[0].first,
+                    AssetCatalog.stocks[0].symbol,
                     0.0, 1, 0.0
                 )
             )

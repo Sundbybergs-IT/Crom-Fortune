@@ -1,8 +1,8 @@
 package com.sundbybergsit.cromfortune.main.stocks
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.StockOrder
-import com.sundbybergsit.cromfortune.domain.StockPrice
 import com.sundbybergsit.cromfortune.domain.currencies.CurrencyRate
 import com.sundbybergsit.cromfortune.main.currencies.CurrencyRateRepository
 import org.junit.Assert.assertEquals
@@ -28,7 +28,7 @@ class StockOrderTest {
     @Test
     fun `getAcquisitionValue - when buy a stock without commission fee - returns correct value`() {
         val acquisitionValue = StockOrder(
-            "Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+            "Buy", currency.toString(), 0L, AssetCatalog.stocks[0].symbol,
             100.099, 0.0, 1
         ).getAcquisitionValue(1.0)
 
@@ -38,7 +38,7 @@ class StockOrderTest {
     @Test
     fun `getAcquisitionValue - when buy a stock with commission fee - returns correct value`() {
         val acquisitionValue = StockOrder(
-            "Buy", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+            "Buy", currency.toString(), 0L, AssetCatalog.stocks[0].symbol,
             100.099, 10.0, 1
         ).getAcquisitionValue(1.0)
 
@@ -48,7 +48,7 @@ class StockOrderTest {
     @Test
     fun `getAcquisitionValue - when sell a stock - returns correct value`() {
         val acquisitionValue = StockOrder(
-            "Sell", currency.toString(), 0L, StockPrice.SYMBOLS[0].first,
+            "Sell", currency.toString(), 0L, AssetCatalog.stocks[0].symbol,
             100.099, 10.0, 1
         ).getAcquisitionValue(1.0)
 

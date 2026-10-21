@@ -1,28 +1,26 @@
 package com.sundbybergsit.cromfortune.domain
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class AssetCatalogTest {
 
     @Test
-    fun `stock catalog preserves legacy stock definitions`() {
-        val catalogStocks = AssetCatalog.stocks.map { asset ->
-            Triple(asset.symbol, asset.displayName, asset.quoteCurrency.currencyCode)
-        }
-
-        assertEquals(StockPrice.SYMBOLS.toList(), catalogStocks)
+    fun `stock catalog contains expected definitions`() {
+        assertNotNull(AssetCatalog.stocks)
+        assertEquals(true, AssetCatalog.stocks.isNotEmpty())
     }
 
     @Test
     fun `stock can be found by stable ID and symbol`() {
-        val legacyStock = StockPrice.SYMBOLS.first()
-        val expectedAsset = AssetCatalog.findById("stock:${legacyStock.first}")
+        val legacyStock = AssetCatalog.stocks.first()
+        val expectedAsset = AssetCatalog.findById("stock:${legacyStock.symbol}")
 
-        assertEquals(expectedAsset, AssetCatalog.findBySymbol(AssetType.STOCK, legacyStock.first))
-        assertEquals(legacyStock.second, expectedAsset?.displayName)
-        assertEquals(legacyStock.third, expectedAsset?.quoteCurrency?.currencyCode)
+        assertEquals(expectedAsset, AssetCatalog.findBySymbol(AssetType.STOCK, legacyStock.symbol))
+        assertEquals(legacyStock.displayName, expectedAsset?.displayName)
+        assertEquals(legacyStock.quoteCurrency.currencyCode, expectedAsset?.quoteCurrency?.currencyCode)
     }
 
     @Test

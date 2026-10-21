@@ -5,6 +5,7 @@ import com.sundbybergsit.cromfortune.algorithm.api.Recommendation
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.core.BuyStockCommand
 import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1RecommendationAlgorithm
+import com.sundbybergsit.cromfortune.domain.AssetCatalog
 import com.sundbybergsit.cromfortune.domain.AssetType
 import com.sundbybergsit.cromfortune.domain.StockEvent
 import com.sundbybergsit.cromfortune.domain.StockOrder
@@ -60,12 +61,12 @@ class StockOrderAggregateExtensionsKtTest {
 
     @Test
     fun `applyStockOrderForRecommendedEvent - after reverse split - returns no new event`() {
-        val ticker = StockPrice.SYMBOLS[0].first
+        val ticker = AssetCatalog.stocks[0].symbol
         val stockOrderAggregate = StockOrderAggregate(
             rateInSek = 1.0,
             displayName = "",
             stockSymbol = ticker,
-            currency = Currency.getInstance(StockPrice.SYMBOLS[0].third)
+            currency = Currency.getInstance(AssetCatalog.stocks[0].quoteCurrency.currencyCode)
         )
         val stockEvent1 = newBuyStockEvent(
             dateInMillis = 0L,
@@ -98,7 +99,7 @@ class StockOrderAggregateExtensionsKtTest {
 
     private fun newSellStockEvent(
         dateInMillis: Long,
-        ticker: String = StockPrice.SYMBOLS[0].first,
+        ticker: String = AssetCatalog.stocks[0].symbol,
         price: Double = 1.0
     ): StockEvent {
         return StockOrder(
@@ -114,7 +115,7 @@ class StockOrderAggregateExtensionsKtTest {
 
     private fun newBuyStockEvent(
         dateInMillis: Long,
-        ticker: String = StockPrice.SYMBOLS[0].first,
+        ticker: String = AssetCatalog.stocks[0].symbol,
         price: Double = 1.0,
         quantity: Int = 1,
     ): StockEvent {
@@ -130,7 +131,7 @@ class StockOrderAggregateExtensionsKtTest {
     }
 
     private fun aggregateWithOneShare(): StockOrderAggregate {
-        val ticker = StockPrice.SYMBOLS[0].first
+        val ticker = AssetCatalog.stocks[0].symbol
         return StockOrderAggregate(1.0, ticker, ticker, Currency.getInstance("SEK")).also {
             it.aggregate(newBuyStockEvent(0L, ticker, price = 100.0))
         }
@@ -140,7 +141,7 @@ class StockOrderAggregateExtensionsKtTest {
         dateInMillis = 10L,
         message = "recommendation",
         portfolioName = "Default",
-        stockSymbol = StockPrice.SYMBOLS[0].first,
+        stockSymbol = AssetCatalog.stocks[0].symbol,
         currencyCode = "SEK",
         pricePerStock = price
     )
@@ -162,7 +163,7 @@ class StockOrderAggregateExtensionsKtTest {
     @Test
     fun `applyStockOrderForRecommendedEvent with Dividend credits user and Crom wallets`() {
         val aggregate = aggregateWithOneShare()
-        val ticker = StockPrice.SYMBOLS[0].first
+        val ticker = AssetCatalog.stocks[0].symbol
         val dividendEvent = StockOrder(
             "Dividend",
             "SEK",
