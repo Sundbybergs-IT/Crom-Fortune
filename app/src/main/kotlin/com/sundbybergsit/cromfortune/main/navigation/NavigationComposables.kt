@@ -55,6 +55,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -521,7 +522,9 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                         sheetState.hide()
                         activeBottomSheet = null
                     }
-                }
+                },
+                scrimColor = BottomSheetDefaults.ScrimColor,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
                 AppTheme {
                     when (sheetKey) {
