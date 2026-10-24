@@ -103,6 +103,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.sundbybergsit.cromfortune.main.theme.AppTheme
 import com.sundbybergsit.cromfortune.algorithm.api.RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.algorithm.cromfortunev1.CromFortuneV1RecommendationAlgorithm
 import com.sundbybergsit.cromfortune.core.ui.BottomSheetContent
@@ -514,7 +515,8 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     }
                 }
             ) {
-                when (sheetKey) {
+                AppTheme {
+                    when (sheetKey) {
                             is BottomSheetsHome -> {
                                 val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
                                     HomeViewModelFactory(portfolioRepository = portfolioRepository)
@@ -647,6 +649,7 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                 }
             }
         }
+    }
 
 private fun androidxNavKey.isBottomSheet(): Boolean = this::class.simpleName?.startsWith("BottomSheets") == true
 
