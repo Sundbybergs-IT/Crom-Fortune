@@ -493,8 +493,16 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
                     .padding(innerPadding)
                     .fillMaxSize()
             ) {
+                val lastKey = currentBackStack.last()
+                val visibleBackStack =
+                    if (lastKey.isBottomSheet()) {
+                        currentBackStack.subList(0, currentBackStack.size - 1)
+                    } else {
+                        currentBackStack
+                    }
+
                 NavDisplay(
-                    backStack = currentBackStack,
+                    backStack = visibleBackStack,
                     onBack = onBack,
                     entryProvider = entryProvider
                 )

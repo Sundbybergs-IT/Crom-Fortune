@@ -30,7 +30,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 207
+        versionCode = 208
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LOGO_DEV_PUBLISHABLE_KEY", "\"$logoDevPublishableKey\"")
