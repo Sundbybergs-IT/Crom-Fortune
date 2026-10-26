@@ -505,186 +505,164 @@ internal fun AppNavigation(portfolioRepository: PortfolioRepository) {
         }
 
         if (isSheet) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(10f)
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            LaunchedEffect(lastKey) {
+                sheetState.show()
+            }
+            ModalBottomSheet(
+                sheetState = sheetState,
+                onDismissRequest = {
+                    scope.launch {
+                        sheetState.hide()
+                    }.invokeOnCompletion {
                         onBack()
-                    },
-                contentAlignment = Alignment.BottomCenter
+                    }
+                },
+                scrimColor = BottomSheetDefaults.ScrimColor,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .clickable(enabled = false, onClick = {}),
-                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 6.dp
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Surface(
-                                modifier = Modifier
-                                    .width(32.dp)
-                                    .height(4.dp),
-                                shape = RoundedCornerShape(2.dp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            ) {}
-                        }
-                        AppTheme {
-                            when (lastKey) {
-                                        is BottomSheetsHome -> {
-                                            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-                                                HomeViewModelFactory(portfolioRepository = portfolioRepository)
-                                            })
-                                            BottomSheetContent {
-                                                HomeItems(
-                                                    portfolioRepository = portfolioRepository,
-                                                    homeViewModel = homeViewModel,
-                                                    onBuy = {
-                                                        onBack()
-                                                        DialogHandler.showBuyStockDialog()
-                                                    },
-                                                    onSell = {
-                                                        onBack()
-                                                        DialogHandler.showSellStockDialog()
-                                                    },
-                                                    onSplit = {
-                                                        onBack()
-                                                        DialogHandler.showSplitStockDialog()
-                                                    },
-                                                    onAddDividend = {
-                                                        onBack()
-                                                        DialogHandler.showRegisterDividendDialog()
-                                                    },
-                                                    onAddPortfolio = {
-                                                        onBack()
-                                                        DialogHandler.showAddPortfolioDialog()
-                                                    },
-                                                    onDeletePortfolio = {
-                                                        onBack()
-                                                        DialogHandler.showDeletePortfolioDialog(it)
-                                                    },
-                                                )
-                                            }
-                                        }
-                                        is BottomSheetsHomeAllStocks -> {
-                                            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
-                                                HomeViewModelFactory(portfolioRepository = portfolioRepository)
-                                            })
-                                            BottomSheetContent {
-                                                BottomSheetMenuItem(
-                                                    onClick = {
-                                                        homeViewModel.sortNameAscending(lastKey.profile)
-                                                        onBack()
-                                                    },
-                                                    text = stringResource(id = R.string.home_sort_alphabetical_down)
-                                                )
-                                                BottomSheetMenuItem(
-                                                    onClick = {
-                                                        homeViewModel.sortNameDescending(lastKey.profile)
-                                                        onBack()
-                                                    },
-                                                    text = stringResource(id = R.string.home_sort_alphabetical_up)
-                                                )
-                                                BottomSheetMenuItem(
-                                                    onClick = {
-                                                        homeViewModel.sortProfitAscending(lastKey.profile)
-                                                        onBack()
-                                                    },
-                                                    text = stringResource(id = R.string.home_sort_profit_down)
-                                                )
-                                                BottomSheetMenuItem(
-                                                    onClick = {
-                                                        homeViewModel.sortProfitDescending(lastKey.profile)
-                                                        onBack()
-                                                    },
-                                                    text = stringResource(id = R.string.home_sort_profit_up)
-                                                )
-                                            }
-                                        }
-                                        is BottomSheetsHomeStock -> {
-                                            BottomSheetContent {
-                                                BottomSheetMenuItem(
-                                                    onClick = {
-                                                        onBack()
-                                                        DialogHandler.showAssetNoteDialog(lastKey.portfolioName, lastKey.stockSymbol)
-                                                    },
-                                                    text = stringResource(
-                                                        if (AssetNoteRepository.get(lastKey.portfolioName, lastKey.stockSymbol) == null) {
-                                                            R.string.action_note_add
-                                                        } else {
-                                                            R.string.action_note_edit
-                                                        }
-                                                    )
-                                                )
-                                                BottomSheetMenuItem(
-                                                    onClick = {
-                                                        onBack()
-                                                        DialogHandler.showDeleteDialog(
-                                                            portfolioName = lastKey.portfolioName,
-                                                            stockName = lastKey.stockSymbol
-                                                        )
-                                                    },
-                                                    text = stringResource(id = R.string.action_delete)
-                                                )
-                                            }
-                                        }
-                                        is BottomSheetsNotifications -> {
-                                            val localContext = LocalContext.current
-                                            val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
-                                                NotificationsViewModelFactory(context = localContext)
-                                            })
-                                            BottomSheetContent {
-                                                NotificationsItems(onClear = { notificationsViewModel.clearNotifications() })
-                                            }
-                                        }
-                                        is BottomSheetsSettings -> {
-                                            val localContext = LocalContext.current
-                                            BottomSheetContent {
-                                                SettingsItems(
-                                                    onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
-                                                    onShowSupportedCryptocurrencies = { DialogHandler.showSupportedCryptocurrenciesDialog() },
-                                                    onShowAbout = { DialogHandler.showAboutDialog() },
-                                                    onShowStockRetrievalTimeIntervals = {
-                                                        DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))
-                                                    },
-                                                    onShowTodo = {
-                                                        val browserIntent = Intent(
-                                                            Intent.ACTION_VIEW,
-                                                            "https://github.com/Sundbybergs-IT/Crom-Fortune/issues".toUri()
-                                                        )
-                                                        localContext.startActivity(browserIntent)
-                                                    }
-                                                )
-                                            }
-                                        }
-                                        else -> {}
-                                    }
-                                }
+                AppTheme {
+                    when (lastKey) {
+                        is BottomSheetsHome -> {
+                            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                                HomeViewModelFactory(portfolioRepository = portfolioRepository)
+                            })
+                            BottomSheetContent {
+                                HomeItems(
+                                    portfolioRepository = portfolioRepository,
+                                    homeViewModel = homeViewModel,
+                                    onBuy = {
+                                        onBack()
+                                        DialogHandler.showBuyStockDialog()
+                                    },
+                                    onSell = {
+                                        onBack()
+                                        DialogHandler.showSellStockDialog()
+                                    },
+                                    onSplit = {
+                                        onBack()
+                                        DialogHandler.showSplitStockDialog()
+                                    },
+                                    onAddDividend = {
+                                        onBack()
+                                        DialogHandler.showRegisterDividendDialog()
+                                    },
+                                    onAddPortfolio = {
+                                        onBack()
+                                        DialogHandler.showAddPortfolioDialog()
+                                    },
+                                    onDeletePortfolio = {
+                                        onBack()
+                                        DialogHandler.showDeletePortfolioDialog(it)
+                                    },
+                                )
                             }
                         }
+                        is BottomSheetsHomeAllStocks -> {
+                            val homeViewModel: HomeViewModel by activityBoundViewModel(factoryProducer = {
+                                HomeViewModelFactory(portfolioRepository = portfolioRepository)
+                            })
+                            BottomSheetContent {
+                                BottomSheetMenuItem(
+                                    onClick = {
+                                        homeViewModel.sortNameAscending(lastKey.profile)
+                                        onBack()
+                                    },
+                                    text = stringResource(id = R.string.home_sort_alphabetical_down)
+                                )
+                                BottomSheetMenuItem(
+                                    onClick = {
+                                        homeViewModel.sortNameDescending(lastKey.profile)
+                                        onBack()
+                                    },
+                                    text = stringResource(id = R.string.home_sort_alphabetical_up)
+                                )
+                                BottomSheetMenuItem(
+                                    onClick = {
+                                        homeViewModel.sortProfitAscending(lastKey.profile)
+                                        onBack()
+                                    },
+                                    text = stringResource(id = R.string.home_sort_profit_down)
+                                )
+                                BottomSheetMenuItem(
+                                    onClick = {
+                                        homeViewModel.sortProfitDescending(lastKey.profile)
+                                        onBack()
+                                    },
+                                    text = stringResource(id = R.string.home_sort_profit_up)
+                                )
+                            }
+                        }
+                        is BottomSheetsHomeStock -> {
+                            BottomSheetContent {
+                                BottomSheetMenuItem(
+                                    onClick = {
+                                        onBack()
+                                        DialogHandler.showAssetNoteDialog(lastKey.portfolioName, lastKey.stockSymbol)
+                                    },
+                                    text = stringResource(
+                                        if (AssetNoteRepository.get(lastKey.portfolioName, lastKey.stockSymbol) == null) {
+                                            R.string.action_note_add
+                                        } else {
+                                            R.string.action_note_edit
+                                        }
+                                    )
+                                )
+                                BottomSheetMenuItem(
+                                    onClick = {
+                                        onBack()
+                                        DialogHandler.showDeleteDialog(
+                                            portfolioName = lastKey.portfolioName,
+                                            stockName = lastKey.stockSymbol
+                                        )
+                                    },
+                                    text = stringResource(id = R.string.action_delete)
+                                )
+                            }
+                        }
+                        is BottomSheetsNotifications -> {
+                            val localContext = LocalContext.current
+                            val notificationsViewModel: NotificationsViewModel by activityBoundViewModel(factoryProducer = {
+                                NotificationsViewModelFactory(context = localContext)
+                            })
+                            BottomSheetContent {
+                                NotificationsItems(onClear = { notificationsViewModel.clearNotifications() })
+                            }
+                        }
+                        is BottomSheetsSettings -> {
+                            val localContext = LocalContext.current
+                            BottomSheetContent {
+                                SettingsItems(
+                                    onShowSupportedStocks = { DialogHandler.showSupportedStocksDialog() },
+                                    onShowSupportedCryptocurrencies = { DialogHandler.showSupportedCryptocurrenciesDialog() },
+                                    onShowAbout = { DialogHandler.showAboutDialog() },
+                                    onShowStockRetrievalTimeIntervals = {
+                                        DialogHandler.showStockRetrievalTimeIntervalsDialog(StockRetrievalSettings(localContext))
+                                    },
+                                    onShowTodo = {
+                                        val browserIntent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            "https://github.com/Sundbybergs-IT/Crom-Fortune/issues".toUri()
+                                        )
+                                        localContext.startActivity(browserIntent)
+                                    }
+                                )
+                            }
+                        }
+                        else -> {}
                     }
                 }
             }
         }
+            }
+        }
 
-private fun androidxNavKey.isBottomSheet(): Boolean = this::class.simpleName?.startsWith("BottomSheets") == true
+private fun androidxNavKey.isBottomSheet(): Boolean =
+    this is BottomSheetsHome ||
+    this is BottomSheetsHomeAllStocks ||
+    this is BottomSheetsHomeStock ||
+    this is BottomSheetsNotifications ||
+    this is BottomSheetsSettings
 
 private fun String.toNavKey(): NavKey {
     return when {
