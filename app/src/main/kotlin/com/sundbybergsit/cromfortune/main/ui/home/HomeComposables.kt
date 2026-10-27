@@ -257,6 +257,8 @@ fun Home(
                         Column {
                             val powerManager = localContext.getSystemService(Context.POWER_SERVICE) as PowerManager
                             val isPowerSaveMode = powerManager.isPowerSaveMode
+                            val isIgnoringBatteryOptimizations = powerManager.isIgnoringBatteryOptimizations(localContext.packageName)
+                            val showBatterySaverWarning = isPowerSaveMode && !isIgnoringBatteryOptimizations
                             val updatedAt = refreshStatus.value.lastSuccessfulAt?.atZone(ZoneId.systemDefault())
                                 ?.format(DateTimeFormatter.ofPattern("HH:mm"))
                             val baseUpdateStatusText = when {
@@ -272,7 +274,7 @@ fun Home(
                                 updatedAt != null -> stringResource(R.string.home_last_updated, updatedAt)
                                 else -> stringResource(R.string.home_not_updated)
                             }
-                            val updateStatusText = if (isPowerSaveMode) {
+                            val updateStatusText = if (showBatterySaverWarning) {
                                 "$baseUpdateStatusText (${stringResource(R.string.home_battery_saver_active)})"
                             } else {
                                 baseUpdateStatusText
