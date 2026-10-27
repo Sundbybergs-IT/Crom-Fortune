@@ -116,6 +116,7 @@
     <string name="home_update_failed">Uppdateringen misslyckades</string>
     <string name="home_update_failed_with_last_success">Uppdateringen misslyckades · Senast uppdaterad %1$s</string>
     <string name="home_not_updated">Uppdatera</string>
+    <string name="home_battery_saver_active">Energisparläge</string>
     <string name="home_buy">Köp</string>
     <string name="home_sell">Sälj</string>
     <string name="home_dividend">Utdelning</string>

@@ -30,7 +30,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 212
+        versionCode = 213
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LOGO_DEV_PUBLISHABLE_KEY", "\"$logoDevPublishableKey\"")
@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.androidxAppcompat)
     implementation(libs.androidxCore)
     implementation(libs.androidxLifecycleRuntime)
+    implementation(libs.androidxLifecycleRuntimeCompose)
     implementation(libs.androidxLifecycleViewmodel)
 
     implementation(libs.googlePlayAppUpdate)

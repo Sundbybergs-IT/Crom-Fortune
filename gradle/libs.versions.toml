@@ -50,6 +50,7 @@ androidxComposeUiTestJunit = { module = "androidx.compose.ui:ui-test-junit4" }
 androidxConstraintlayoutCompose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "androidx-constraintlayout-compose" }
 androidxCore = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidxLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
+androidxLifecycleRuntimeCompose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidxLifecycleViewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 androidxNavigationCompose = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 androidxNavigationFragment = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }

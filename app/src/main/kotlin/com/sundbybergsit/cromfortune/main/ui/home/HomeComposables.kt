@@ -1,6 +1,8 @@
 package com.sundbybergsit.cromfortune.main.ui.home
 
+import android.content.Context
 import android.net.Uri
+import android.os.PowerManager
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +52,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -74,6 +77,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.ktx.AppUpdateResult
@@ -129,8 +135,17 @@ fun Home(
             )
         }
     }
-    LaunchedEffect(key1 = Unit) {
-        viewModel.refreshAutomatically(localContext)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, viewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshAutomatically(localContext)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
     var expanded by remember { mutableStateOf(false) }
     val items = stringArrayResource(id = R.array.filter_array)
@@ -240,9 +255,11 @@ fun Home(
                         )
                         Spacer(Modifier.width(8.dp))
                         Column {
+                            val powerManager = localContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+                            val isPowerSaveMode = powerManager.isPowerSaveMode
                             val updatedAt = refreshStatus.value.lastSuccessfulAt?.atZone(ZoneId.systemDefault())
                                 ?.format(DateTimeFormatter.ofPattern("HH:mm"))
-                            val updateStatusText = when {
+                            val baseUpdateStatusText = when {
                                 refreshStatus.value.isRefreshing -> stringResource(R.string.home_updating)
                                 refreshStatus.value.lastError != null -> updatedAt?.let {
                                     stringResource(R.string.home_update_failed_with_last_success, it)
@@ -254,6 +271,11 @@ fun Home(
                                 )
                                 updatedAt != null -> stringResource(R.string.home_last_updated, updatedAt)
                                 else -> stringResource(R.string.home_not_updated)
+                            }
+                            val updateStatusText = if (isPowerSaveMode) {
+                                "$baseUpdateStatusText (${stringResource(R.string.home_battery_saver_active)})"
+                            } else {
+                                baseUpdateStatusText
                             }
                             Text(
                                 text = updateStatusText,

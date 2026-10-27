@@ -2,21 +2,22 @@ package com.sundbybergsit.cromfortune.main
 
 import android.content.Context
 import com.sundbybergsit.cromfortune.domain.AssetCatalog
+import com.sundbybergsit.cromfortune.main.settings.StockRetrievalSettings
 import com.sundbybergsit.cromfortune.main.stocks.StockPriceRepository
 import java.time.Duration
 import java.time.Instant
 
 object AssetRefreshCoordinator {
 
-    private val automaticRefreshMaxAge: Duration = Duration.ofHours(1)
-
     fun shouldRefreshAutomatically(context: Context, now: Instant = Instant.now()): Boolean {
+        val refreshInterval = StockRetrievalSettings(context).timeInterval.value.refreshInterval
+        val refreshMaxAge = Duration.ofMinutes(refreshInterval.minutes.toLong())
         val requiredAssetIds = AssetDataRetrievalCoroutineWorker.assetsToRefresh(context).mapTo(mutableSetOf()) { it.id }
         val statusesById = StockPriceRepository.assetPricesStateFlow.value.statuses
             .associateBy { it.assetPrice.assetId }
         return requiredAssetIds.any { assetId ->
             val status = statusesById[assetId] ?: return@any true
-            status.isStale || Duration.between(status.lastUpdatedAt, now) >= automaticRefreshMaxAge
+            status.isStale || Duration.between(status.lastUpdatedAt, now) >= refreshMaxAge
         }
     }
 

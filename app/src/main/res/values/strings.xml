@@ -116,6 +116,7 @@
     <string name="home_update_failed">Update failed</string>
     <string name="home_update_failed_with_last_success">Update failed · Last updated %1$s</string>
     <string name="home_not_updated">Update</string>
+    <string name="home_battery_saver_active">Battery Saver</string>
     <string name="home_buy">Buy</string>
     <string name="home_sell">Sell</string>
     <string name="home_dividend">Dividend</string>
