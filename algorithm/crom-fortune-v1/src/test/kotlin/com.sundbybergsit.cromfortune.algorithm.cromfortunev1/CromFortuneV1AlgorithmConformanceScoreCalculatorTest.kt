@@ -106,7 +106,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             SellRecommendationDummyAlgorithm(),
             setOf(
                 newBuyStockEvent(1),
-                newBuyStockEvent(2)
+                newSellStockEvent(2),
+                newBuyStockEvent(3)
             ),
             currencyRateApi
         )
@@ -120,10 +121,11 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
         val score = calculator.getScore(
             SellRecommendationDummyAlgorithm(),
             setOf(
+                newBuyStockEvent(1, ticker, quantity = 5),
                 StockSplit(true, 2L, ticker, 5).toStockEvent(),
-                newBuyStockEvent(1, ticker),
-                StockSplit(false, 2L, ticker, 5).toStockEvent(),
-                newBuyStockEvent(2, ticker)
+                newSellStockEvent(3, ticker, quantity = 1),
+                StockSplit(false, 4L, ticker, 5).toStockEvent(),
+                newBuyStockEvent(5, ticker, quantity = 5)
             ),
             currencyRateApi
         )
@@ -148,19 +150,19 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
     }
 
     @Test
-    fun `getScore - when 1 out of 2 correct decisions with split that should affect - returns 50`() = runBlocking {
+    fun `getScore - when correct decision with split that should affect - returns 100`() = runBlocking {
         val ticker = AssetCatalog.stocks[0].symbol
         val score = calculator.getScore(
             CromFortuneV1RecommendationAlgorithm(),
             setOf(
                 newBuyStockEvent(dateInMillis = 1, ticker = ticker, price = 5.0, quantity = 1000),
-                StockSplit(true, 2L, ticker, 1000).toStockEvent(),
+                StockSplit(false, 2L, ticker, 1000).toStockEvent(),
                 newSellStockEvent(dateInMillis = 300000000L, ticker = ticker, price = 5.0, quantity = 1)
             ),
             currencyRateApi
         )
 
-        assertScore(50, score)
+        assertScore(100, score)
     }
 
     @Test
@@ -184,7 +186,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
             setOf(
                 newBuyStockEvent(1),
                 newSellStockEvent(2),
-                newBuyStockEvent(3)
+                newBuyStockEvent(3),
+                newSellStockEvent(4)
             ),
             currencyRateApi
         )
@@ -200,7 +203,8 @@ class CromFortuneV1AlgorithmConformanceScoreCalculatorTest {
                 newBuyStockEvent(1),
                 newSellStockEvent(2),
                 newBuyStockEvent(3),
-                newBuyStockEvent(4)
+                newSellStockEvent(4),
+                newBuyStockEvent(5)
             ),
             currencyRateApi
         )

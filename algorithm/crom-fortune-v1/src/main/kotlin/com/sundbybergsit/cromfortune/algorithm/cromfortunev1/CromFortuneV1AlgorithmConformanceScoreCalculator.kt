@@ -27,6 +27,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
         currencyRateApi: CurrencyRateApi,
     ): ConformanceScore {
         var correctDecision = 0
+        var totalScoredOrders = 0
         val stockOrders: List<StockOrder> = stockEvents
             .filter { stockEvent -> stockEvent.stockOrder != null && stockEvent.stockOrder!!.orderAction != "Dividend" }
             .map { stockEvent -> stockEvent.stockOrder!! }
@@ -72,7 +73,6 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                         }
 
                         else -> {
-                            correctDecision += 1
                             firstItemAdded = true
                             stockOrderAggregate.aggregate(stockEvent)
                         }
@@ -85,6 +85,10 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
                     if (stockOrder.orderAction == "Dividend") {
                         return@forEachIndexed
                     }
+                    if (!currencyRatesByCode.containsKey(stockOrder.currency)) {
+                        return@forEachIndexed
+                    }
+                    totalScoredOrders += 1
                     val recommendation = recommendationAlgorithm.getRecommendation(
                         stockPrice = StockPrice(
                             stockSymbol = stockOrder.name,
@@ -113,7 +117,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
             }
         }
         return when {
-            evaluableStockOrders.size <= 1 -> {
+            totalScoredOrders == 0 -> {
                 ConformanceScore(100)
             }
 
@@ -122,7 +126,7 @@ class CromFortuneV1AlgorithmConformanceScoreCalculator : AlgorithmConformanceSco
             }
 
             else -> {
-                ConformanceScore(100 * correctDecision / evaluableStockOrders.size)
+                ConformanceScore(100 * correctDecision / totalScoredOrders)
             }
         }
     }
