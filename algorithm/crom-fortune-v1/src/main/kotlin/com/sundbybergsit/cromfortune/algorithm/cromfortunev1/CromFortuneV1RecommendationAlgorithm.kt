@@ -88,7 +88,8 @@ class CromFortuneV1RecommendationAlgorithm(
         val totalPricePerStockInSek = (accumulatedCostInSek - costToExcludeInSek) / netQuantity
         val totalPricePerStockInStockCurrency = totalPricePerStockInSek / rateInSek
         var tradeQuantity =
-            (netQuantity / 10).coerceAtMost((configuration.maxPurchaseOrderInSek / currentStockPriceInSek).toInt())
+            ((netQuantity / 10).coerceAtLeast(1))
+                .coerceAtMost((configuration.maxPurchaseOrderInSek / currentStockPriceInSek).toInt())
         var recommendation: Recommendation? = null
         var isOkToContinue = true
         var daysSinceLastBuy = Long.MAX_VALUE
