@@ -72,4 +72,5 @@ class NavigationComposablesTest {
         composeTestRule.onNodeWithText(context.getString(R.string.about_app_created_by)).assertIsDisplayed()
         composeTestRule.onNodeWithText(context.getString(R.string.action_close)).assertIsDisplayed()
     }
+
 }

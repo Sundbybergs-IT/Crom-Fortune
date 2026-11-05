@@ -21,8 +21,8 @@ dependencies {
     implementation(libs.kotlinStdlib)
 
     testImplementation(kotlin("test"))
-    testRuntimeOnly(libs.junit5Engine)
     testImplementation(libs.junit5Api)
     testImplementation(libs.junit5Reporting)
 
+    testRuntimeOnly(libs.junit5Engine)
 }

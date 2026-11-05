@@ -102,7 +102,6 @@ internal fun Project.configureKotlin() {
                 "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
                 "-opt-in=androidx.compose.runtime.ExperimentalComposeApi",
                 "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
-                "-opt-in=com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi",
                 "-opt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
                 "-opt-in=kotlin.ExperimentalUnsignedTypes",
                 "-opt-in=kotlin.RequiresOptIn",

@@ -25,9 +25,7 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.algorithm.algorithmApi)
     implementation(projects.algorithm.algorithmCore)
-
     implementation(libs.androidxAnnotation)
-
     implementation(libs.kotlinxCoroutinesCore)
 
     testImplementation(libs.androidxTestJunit)

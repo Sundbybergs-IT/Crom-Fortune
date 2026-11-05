@@ -30,7 +30,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.sundbybergsit.cromfortune"
-        versionCode = 215
+        versionCode = 216
         versionName = baseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LOGO_DEV_PUBLISHABLE_KEY", "\"$logoDevPublishableKey\"")
@@ -52,48 +52,44 @@ android {
 }
 
 dependencies {
+    api(projects.domain)
+
+    platform(libs.composeBom)
+
     implementation(projects.core.data)
     implementation(projects.core.ui)
     implementation(projects.feature.settings)
-    api(projects.domain)
     implementation(projects.algorithm.algorithmApi)
     implementation(projects.algorithm.algorithmCore)
     implementation(projects.algorithm.cromFortuneV1)
-
-    platform(libs.composeBom)
-    debugImplementation( libs.uiTestManifest)
-    implementation(libs.material3)
-    implementation(libs.uiTooling)
     implementation(libs.bundles.compose)
     implementation(libs.androidxComposeMaterialIconsExtended)
-    implementation(libs.coilCompose)
-    implementation(libs.coilNetworkOkhttp)
-
     implementation(libs.androidxWorkRuntime)
-    implementation(libs.roomRuntime)
-    implementation(libs.roomKtx)
-    implementation(libs.kotlinxCoroutinesCore)
-    implementation(libs.kotlinxSerializationCore)
-    implementation(libs.kotlinxSerializationJson)
-
-    implementation(libs.accompanistNavigationMaterial)
     implementation(libs.androidxNavigationFragment)
     implementation(libs.androidxNavigationUi)
     implementation(libs.androidxNavigation3Runtime)
     implementation(libs.androidxNavigation3Ui)
     implementation(libs.androidxLifecycleViewmodelNavigation3)
-
     implementation(libs.androidxAppcompat)
     implementation(libs.androidxCore)
     implementation(libs.androidxLifecycleRuntime)
     implementation(libs.androidxLifecycleRuntimeCompose)
     implementation(libs.androidxLifecycleViewmodel)
-
+    implementation(libs.coilCompose)
+    implementation(libs.coilNetworkOkhttp)
     implementation(libs.googlePlayAppUpdate)
     implementation(libs.googlePlayAppUpdateKtx)
     implementation(libs.googlePlayReview)
-
+    implementation(libs.kotlinxCoroutinesCore)
+    implementation(libs.kotlinxSerializationCore)
+    implementation(libs.kotlinxSerializationJson)
+    implementation(libs.material3)
+    implementation(libs.roomRuntime)
+    implementation(libs.roomKtx)
+    implementation(libs.uiTooling)
     implementation(libs.yahooFinance)
+
+    debugImplementation(libs.uiTestManifest)
 
     testImplementation(libs.androidxComposeUiTestJunit)
     testImplementation(libs.androidxTestJunit)

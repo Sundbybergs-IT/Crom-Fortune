@@ -18,7 +18,8 @@ dependencies {
     implementation(libs.kotlinxSerializationJson)
     implementation(libs.roomRuntime)
     implementation(libs.roomKtx)
-    implementation("androidx.datastore:datastore-preferences:1.1.3")
+    implementation(libs.androidxDatastorePreferences)
+
     ksp(libs.roomCompiler)
 
     testImplementation(libs.androidxTestJunit)

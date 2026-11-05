@@ -28,3 +28,14 @@
 -keepclassmembers class * implements android.os.Parcelable {
     public static final ** CREATOR;
 }
+
+# Navigation 3 NavKey implementations and serialization rules
+-keep class com.sundbybergsit.cromfortune.main.navigation.** { *; }
+-keep interface com.sundbybergsit.cromfortune.main.navigation.NavKey { *; }
+-keep class * implements com.sundbybergsit.cromfortune.main.navigation.NavKey {
+    <init>();
+    ** Companion;
+    ** serializer(...);
+    <fields>;
+}
+

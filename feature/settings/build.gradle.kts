@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.androidxLifecycleViewmodel)
 
     debugImplementation(libs.uiTestManifest)
+
     testImplementation(libs.androidxComposeUiTestJunit)
     testImplementation(libs.androidxTestJunit)
     testImplementation(libs.robolectric)
